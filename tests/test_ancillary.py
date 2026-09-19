@@ -283,3 +283,71 @@ def test_stage8_stsd_scene_json_roundtrip_is_lossless():
     encoded = scene_package_to_dict(result.scene)
     restored = scene_package_from_dict(encoded)
     assert restored == result.scene
+
+
+def test_stage8_ancillary_slices_are_stitched_at_inter_ring_boundaries():
+    n = 4
+    result = build_procedural_nominal_tunnel(
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=n,
+            ring_width_m=1.35,
+            displacement_amplitude_m=0.1,
+            axis_noise_sigma_m=0.005,
+            ring_rotation_strategy=RingRotationStrategy.RINGWISE_GAUSSIAN,
+        ),
+        include_bolts=False,
+        include_ancillary=True,
+        ancillary_sampling_policy=AncillarySamplingPolicy.REFERENCE,
+        seed=913,
+    )
+
+    by_ring = []
+    for ring_id in range(n):
+        objs = [
+            o
+            for o in result.scene.objects
+            if o.ring_id == ring_id and o.object_type.startswith("ancillary_")
+        ]
+        by_ring.append(objs)
+
+    for ring_id in range(n - 1):
+        assert len(by_ring[ring_id]) == len(by_ring[ring_id + 1]) == 10
+        for left, right in zip(by_ring[ring_id], by_ring[ring_id + 1]):
+            assert left.object_type == right.object_type
+            # Stage-8 reference meshes use front/centre/back cross-sections.
+            assert len(left.vertices) % 3 == 0
+            assert len(right.vertices) == len(left.vertices)
+            section = len(left.vertices) // 3
+            left_back = np.asarray(left.vertices[-section:])
+            right_front = np.asarray(right.vertices[:section])
+            assert np.allclose(left_back, right_front, atol=2e-12, rtol=0)
+
+
+def test_stage8_ancillary_centre_station_passes_through_ring_centre_offset():
+    result = build_procedural_nominal_tunnel(
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=3,
+            ring_width_m=1.35,
+            displacement_amplitude_m=0.1,
+            axis_noise_sigma_m=0.0,
+        ),
+        include_bolts=False,
+        include_ancillary=True,
+        seed=5812,
+    )
+    for ring_id, local_pkg in enumerate(result.ring_packages):
+        pose = result.assembly.poses[ring_id]
+        local = local_pkg.objects_of_type("ancillary_rail")[0]
+        world = [
+            o
+            for o in result.scene.objects_of_type("ancillary_rail")
+            if o.ring_id == ring_id
+        ][0]
+        section = len(local.vertices) // 3
+        local_mid = np.asarray(local.vertices[section : 2 * section])
+        world_mid = np.asarray(world.vertices[section : 2 * section])
+        expected = local_mid.copy()
+        expected[:, 0] += pose.translation_m[0]
+        expected[:, 1] += pose.translation_m[1]
+        expected[:, 2] += pose.translation_m[2]
+        assert np.allclose(world_mid, expected, atol=2e-12, rtol=0)

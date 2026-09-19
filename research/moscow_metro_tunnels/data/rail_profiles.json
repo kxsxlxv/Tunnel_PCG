@@ -1,0 +1,111 @@
+{
+  "schema_version": "0.1",
+  "units": "m",
+  "standard": "GOST_R_51685_2022",
+  "profiles": {
+    "R50": {
+      "nominal": {
+        "height": 0.152,
+        "head_width": 0.07159,
+        "base_width": 0.132,
+        "web_thickness": 0.016,
+        "web_region_height": 0.083,
+        "base_edge_height": 0.0105
+      },
+      "construction_constants": {
+        "A": 0.0200541,
+        "B": 0.0456848
+      },
+      "radii_m": [
+        0.5,
+        0.08,
+        0.015,
+        0.003,
+        0.01,
+        0.325,
+        0.35,
+        0.02,
+        0.004,
+        0.002
+      ],
+      "slopes": [
+        "1:20",
+        "~1:4 per appendix drawing"
+      ],
+      "control_template_mm": [
+        45.68,
+        70.24,
+        14.01,
+        136.6,
+        71.59,
+        27.5,
+        67.26,
+        93.5,
+        104.25,
+        1.28,
+        16.36,
+        45,
+        2.15,
+        9.66,
+        24.01,
+        20.91,
+        13.75,
+        1.39
+      ],
+      "exact_ordered_primitives": null,
+      "status": "construction parameters captured; ordered CAD primitive solve pending"
+    },
+    "R65": {
+      "nominal": {
+        "height": 0.18,
+        "head_width": 0.07459,
+        "base_width": 0.15,
+        "web_thickness": 0.018,
+        "web_region_height": 0.105,
+        "base_edge_height": 0.01125
+      },
+      "construction_constants": {
+        "A": 0.0200328,
+        "B": 0.0490859
+      },
+      "radii_m": [
+        0.5,
+        0.08,
+        0.015,
+        0.005,
+        0.012,
+        0.37,
+        0.4,
+        0.025,
+        0.002,
+        0.004
+      ],
+      "slopes": [
+        "1:20",
+        "1:4"
+      ],
+      "control_template_mm": [
+        49.09,
+        73,
+        13.94,
+        164.33,
+        74.59,
+        29.79,
+        85.71,
+        117.68,
+        126.88,
+        1.81,
+        20.64,
+        45,
+        3.08,
+        12.07,
+        24.51,
+        22.59,
+        16.5,
+        1.73
+      ],
+      "exact_ordered_primitives": null,
+      "status": "construction parameters captured; ordered CAD primitive solve pending"
+    }
+  }
+}

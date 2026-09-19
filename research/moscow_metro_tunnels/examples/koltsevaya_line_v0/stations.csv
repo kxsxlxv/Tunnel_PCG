@@ -1,0 +1,13 @@
+order,code,name,lat,lon,utm_e_m,utm_n_m,local_x_m,local_y_m,published_depth_m,depth_semantics,spline_chainage_m,depth_source
+0,067,"Белорусская",55.7764,37.5844,411206.377,6182101.019,0.000,0.000,42.5,published_station_depth_below_local_surface_datum_ambiguous,0.000,secondary_station_reference
+1,068,"Новослободская",55.7799,37.6028,412368.289,6182467.076,1161.912,366.056,40.0,published_station_depth_below_local_surface_datum_ambiguous,1257.620,secondary_station_reference
+2,069,"Проспект Мира",55.7798,37.6318,414186.807,6182419.648,2980.430,318.628,40.0,published_station_depth_below_local_surface_datum_ambiguous,3082.215,secondary_station_reference
+3,070,"Комсомольская",55.7748,37.6549,415624.733,6181834.868,4418.355,-266.151,37.0,published_station_depth_below_local_surface_datum_ambiguous,4679.168,secondary_station_reference
+4,071,"Курская",55.757,37.6595,415874.940,6179848.458,4668.563,-2252.561,40.0,published_station_depth_below_local_surface_datum_ambiguous,6707.845,secondary_station_reference
+5,072,"Таганская",55.7418,37.6517,415352.565,6178166.476,4146.188,-3934.543,53.0,published_station_depth_below_local_surface_datum_ambiguous,8480.277,secondary_station_reference
+6,073,"Павелецкая",55.7318,37.6379,414464.380,6177070.605,3258.003,-5030.414,40.0,published_station_depth_below_local_surface_datum_ambiguous,9900.853,secondary_station_reference
+7,074,"Добрынинская",55.7291,37.6243,413604.440,6176787.012,2398.063,-5314.007,35.5,published_station_depth_below_local_surface_datum_ambiguous,10821.484,secondary_station_reference
+8,075,"Октябрьская",55.7297,37.6091,412651.270,6176872.828,1444.893,-5228.192,40.0,published_station_depth_below_local_surface_datum_ambiguous,11788.379,secondary_station_reference
+9,076,"Парк культуры",55.7357,37.5915,411559.635,6177562.825,353.258,-4538.194,40.0,published_station_depth_below_local_surface_datum_ambiguous,13082.452,secondary_station_reference
+10,077,"Киевская",55.7446,37.5644,409878.656,6178588.123,-1327.721,-3512.896,53.0,published_station_depth_below_local_surface_datum_ambiguous,15092.914,news.metro.ru/f512.html
+11,078,"Краснопресненская",55.7613,37.5774,410732.833,6180429.677,-473.544,-1671.343,35.5,published_station_depth_below_local_surface_datum_ambiguous,17159.752,news.metro.ru/f511.html

@@ -24,7 +24,7 @@ Results:
 
 This deficit is itself useful: a station-to-station smooth spline demonstrably cannot replace physical track geometry. Intermediate OSM/project vertices are required.
 
-The inferred minimum sampled plan radius is about **Infinity m**. No sample falls below the current difficult-condition 300 m main-track reference, but some samples are below the normal 600 m value. That does **not** prove the real line has those exact radii; it only describes this fallback spline.
+The inferred minimum sampled plan radius is about **393 m**. **13** 25 m samples are below the current normal 600 m reference, and **0** are below the difficult-condition 300 m reference. That does **not** prove the real line has those exact radii; it only describes this fallback spline.
 
 ## Vertical profile
 

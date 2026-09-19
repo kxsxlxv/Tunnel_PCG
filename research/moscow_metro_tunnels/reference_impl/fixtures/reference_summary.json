@@ -7,13 +7,24 @@
       "status": "pass"
     },
     "stage5_alignment": {
-      "count": 7,
-      "status": "pass"
+      "count": 8,
+      "status": "pass",
+      "notes": "includes closed-loop holonomy/seam correction"
     },
     "stage5_geospatial_prepare": {
       "count": 1,
       "status": "pass",
       "requires_extra": "geo"
+    },
+    "stage5_osm_relation_parser": {
+      "count": 1,
+      "status": "pass",
+      "notes": "synthetic relation/full XML fixture"
+    },
+    "stage5_osm_track_stitch": {
+      "count": 4,
+      "status": "pass",
+      "notes": "open chain, reversed way, closed loop, branch rejection/filtering"
     }
   },
   "rail_reconstruction": {
@@ -31,13 +42,20 @@
     "default_public_metric_crs": "EPSG:32637",
     "supported_surface_preprocess": "GeoTIFF DEM",
     "vertical_datum_rule": "must be explicit and reconciled before depth/overburden calculations",
-    "route_alignment_schema": "schemas/route_alignment.schema.json"
+    "route_alignment_schema": "schemas/route_alignment.schema.json",
+    "osm_current_line5_relation": 1462012,
+    "osm_acquisition_paths": [
+      "BBBike Moscow.osm.pbf + pyosmium",
+      "OSM API /api/0.6/relation/1462012/full"
+    ],
+    "track_topology_qa": "TrackMap current Moscow track map; schematic QA only, not geodetic alignment"
   },
   "known_unresolved": [
     "complete lower Om multi-device polygon topology",
     "manufacturer rolling-caliber CAD equivalence for reconstructed R50/R65",
     "project-specific 10m-class finished lining diameter and track vertical placement",
     "project-specific ring taper/rotation and exact bolt-pocket patterns",
-    "survey-grade absolute XYZ for the complete Moscow Metro network is not publicly available as one verified dataset"
+    "survey-grade absolute XYZ for the complete Moscow Metro network is not publicly available as one verified dataset",
+    "exact current Line-5 OSM member-way bytes still need acquisition outside this restricted runtime"
   ]
 }

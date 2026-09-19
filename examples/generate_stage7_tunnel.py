@@ -28,6 +28,8 @@ def parse_args() -> argparse.Namespace:
         default=RingRotationStrategy.RINGWISE_GAUSSIAN.value,
     )
     parser.add_argument("--axis-noise-sigma", type=float, default=0.005)
+    parser.add_argument("--lateral-wavelength-m", type=float, default=50.0)
+    parser.add_argument("--vertical-wavelength-m", type=float, default=100.0)
     parser.add_argument("--sagitta-mm", type=float, default=2.0)
     parser.add_argument(
         "--output",
@@ -44,6 +46,8 @@ def main() -> None:
         n_rings=args.rings,
         ring_width_m=ring_cfg.width_m,
         axis_noise_sigma_m=args.axis_noise_sigma,
+        lateral_wavelength_m=args.lateral_wavelength_m,
+        vertical_wavelength_m=args.vertical_wavelength_m,
         ring_rotation_strategy=RingRotationStrategy(args.rotation_strategy),
     )
     build = build_procedural_nominal_tunnel(
@@ -59,7 +63,7 @@ def main() -> None:
     write_scene_package_json(build.scene, output)
 
     centreline = {
-        "stage": 7,
+        "stage": "7.1",
         "seed": args.seed,
         "ringCount": args.rings,
         "ringWidthM": ring_cfg.width_m,
@@ -79,7 +83,7 @@ def main() -> None:
     centreline_path.write_text(json.dumps(centreline, indent=2) + "\n", encoding="utf-8")
 
     summary = {
-        "stage": 7,
+        "stage": "7.1",
         "seed": args.seed,
         "ringCount": args.rings,
         "ringWidthM": ring_cfg.width_m,
@@ -94,8 +98,16 @@ def main() -> None:
         ),
         "boltHeads": len(build.scene.objects_of_type("bolt_head")),
         "boltPocketCutters": len(build.scene.objects_of_type("bolt_pocket_cutter")),
+        "frequencyParameterization": "physical_wavelength_by_chainage",
+        "lateralWavelengthM": assembly_cfg.resolved_lateral_wavelength_m,
+        "verticalWavelengthM": assembly_cfg.resolved_vertical_wavelength_m,
+        "omegaXRadPerM": assembly_cfg.resolved_omega_x_rad_per_m,
+        "omegaZRadPerM": assembly_cfg.resolved_omega_z_rad_per_m,
         "omegaXRadPerRing": assembly_cfg.resolved_omega_x,
         "omegaZRadPerRing": assembly_cfg.resolved_omega_z,
+        "deterministicAdjacentStepBoundXM": assembly_cfg.deterministic_adjacent_step_bound_x_m(),
+        "deterministicAdjacentStepBoundZM": assembly_cfg.deterministic_adjacent_step_bound_z_m(),
+        "deterministicAdjacentTransverseStepBoundM": assembly_cfg.deterministic_adjacent_transverse_step_bound_m(),
         "axisNoiseSigmaM": assembly_cfg.axis_noise_sigma_m,
         "lateralRecenterM": list(build.assembly.lateral_recenter_m),
         "sceneJson": output.name,

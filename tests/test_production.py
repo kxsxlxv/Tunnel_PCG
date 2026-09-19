@@ -161,7 +161,8 @@ def test_full_production_assets_have_only_two_end_caps_each():
         assert obj.custom_properties["capEnd"] is True
         n = obj.custom_properties["productionCrossSectionVertices"]
         station_count = obj.custom_properties["productionStationCount"]
-        expected_side_faces = (station_count - 1) * n
+        omitted = obj.custom_properties["omittedLongitudinalEdgeCount"]
+        expected_side_faces = (station_count - 1) * (n - omitted)
         assert len(obj.faces) == expected_side_faces + 2
 
 
@@ -403,3 +404,17 @@ def test_lining_cap_strip_preserves_tunnel_outer_end_caps():
         for obj in last
         for face in obj.faces
     )
+
+
+def test_hidden_contact_faces_are_omitted_from_production_pavement_and_rails():
+    prod = _production(4)
+    pavement = prod.scene.objects_of_type("production_pavement")[0]
+    rails = prod.scene.objects_of_type("production_rail")
+    assert pavement.custom_properties["omittedLongitudinalEdgeCount"] > 0
+    assert pavement.custom_properties["contactSurfacePolicy"] == "hidden_coplanar_contact_faces_omitted"
+    for rail in rails:
+        assert rail.custom_properties["omittedLongitudinalEdgeCount"] == 1
+        assert rail.custom_properties["contactSurfacePolicy"] == "hidden_coplanar_contact_faces_omitted"
+
+    for tube in prod.scene.objects_of_type("production_tube"):
+        assert tube.custom_properties["omittedLongitudinalEdgeCount"] == 0

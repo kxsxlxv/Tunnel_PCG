@@ -1,0 +1,16 @@
+id,title,url,authority,era_or_date,confidence,primary_use
+S001,СП 120.13330.2022 Метрополитены,https://www.minstroyrf.gov.ru/docs/306920/,Минстрой РФ,2023-current,A,current design requirements
+S002,СП 120.13330.2022 consolidated text,https://base.garant.ru/406472751/,Garant legal database,2023-current,A/B,searchable clauses
+S003,ГОСТ 23961-2024,https://protect.gost.ru/gost/details/d9e37be2-c5e8-4727-9df3-b84536ed7609,Росстандарт,2025-current,A,clearance profiles
+S004,Moscow Metro operating rules 468-ПП,https://base.garant.ru/73992414/53f89421bbdaf741eb2d1ecc4ddb4c33/,Правительство Москвы,2020-current,A,track gauge and operation
+S005,ГОСТ 23961-80,https://dokku.standartgost.ru/g/%D0%93%D0%9E%D0%A1%D0%A2_23961-80,USSR standard archive,1980-historical,A/B,legacy clearances
+S006,СНиП II-40-80,https://dokku.standartgost.ru/g/%D0%A1%D0%9D%D0%B8%D0%9F_II-40-80,USSR construction standard,1980-historical,A/B,legacy design
+S007,Обделки перегонных тоннелей,https://www.metro.ru/library/stroitelstvo_metropolitenov/482/,technical textbook archive,historical,C,lining dimensions and drawings
+S008,Перегонные тоннели,https://www.metro.ru/library/metropoliteny/233/,technical textbook archive,historical,C,tunnel lining families
+S009,Путевые устройства,https://www.metro.ru/library/metropoliteny/243/,technical textbook archive,historical,C,track construction
+S010,Основные элементы пути,https://www.metro.ru/library/stroitelstvo_metropolitenov/524/,technical textbook archive,historical,C,track slab and drainage
+S011,Контактный рельс монтаж,https://www.metro.ru/library/stroitelstvo_metropolitenov/491/,technical textbook archive,historical,C,third rail details
+S012,Moscow construction price bulletin 2012,https://www.mos.ru/upload/documents/oiv/inf_ceny_2012.pdf,Government of Moscow,2012,B,project-specific segment ring dimensions
+S013,Mosinzhproekt engineering magazine BCL TBMs,https://mosinzhproekt.ru/wp-content/uploads/2023/03/is_01-full_.pdf,Mosinzhproekt,2023,B,6m and 10m ring pitch/segment count
+S014,Nekrasovskaya 10m two-track first use,https://transport.mos.ru/mostrans/all_news/128989,Moscow Transport,official retrospective,B,large-diameter two-track use
+S015,Rublyovo-Arkhangelskaya Lilia >10m,https://stroi.mos.ru/news/sobianin-shchit-ghighant-postroit-uchastok-rubliovo-arkhanghiel-skoi-linii-mietro,Moscow construction complex,2024,B,modern two-track TBM

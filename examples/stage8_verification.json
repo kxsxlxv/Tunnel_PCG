@@ -1,0 +1,20 @@
+{
+  "stage": 8,
+  "sampledConfigs": 1000,
+  "ancillaryMeshesChecked": 10000,
+  "fullScenes": 100,
+  "fullSceneRings": 500,
+  "fullSceneObjectsChecked": 31400,
+  "fullSceneAncillaryObjects": 5000,
+  "jsonRoundtrips": 20,
+  "walkwaySidesObserved": ["left", "right"],
+  "maxSampledWalkwayDepthM": 1.0176455392949788,
+  "maxRailVertexRadiusM": 2.6800219652146096,
+  "maxTubeVertexRadiusM": 3.0,
+  "innerRadiusM": 3.0,
+  "maxAncillaryInterRingSeamErrorM": 8.881784197001252e-16,
+  "manifoldAndPositiveVolume": "PASS",
+  "stsdCoarseLabels": "PASS",
+  "ancillaryAxialRotationSuppression": "PASS",
+  "result": "PASS"
+}

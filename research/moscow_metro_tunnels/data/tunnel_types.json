@@ -1,0 +1,128 @@
+{
+  "schema_version": "0.1",
+  "units": "m",
+  "archetypes": [
+    {
+      "id": "CAST_IRON_6000_R075",
+      "lining": "cast_iron_tubing",
+      "shape": "circular",
+      "outer_diameter": 6,
+      "ring_pitch": 0.75,
+      "confidence": "C",
+      "notes": "First Moscow second-stage cast-iron running-tunnel type; inner diameter and exact segment layout pending drawing verification."
+    },
+    {
+      "id": "CAST_IRON_5500_R1000",
+      "lining": "cast_iron_tubing",
+      "shape": "circular",
+      "outer_diameter": 5.5,
+      "inner_diameter": 5.1,
+      "structural_depth": 0.2,
+      "ring_pitch": 1,
+      "rib_height": 0.2,
+      "bolt_diameter": 0.027,
+      "bolt_length": 0.12,
+      "confidence": "C"
+    },
+    {
+      "id": "CAST_IRON_5500_LIGHT",
+      "lining": "cast_iron_tubing",
+      "shape": "circular",
+      "outer_diameter": 5.5,
+      "inner_diameter": 5.1,
+      "ring_pitch": 1,
+      "rib_height": 0.15,
+      "confidence": "C"
+    },
+    {
+      "id": "MONOLITHIC_PRESSED_5500",
+      "lining": "monolithic_pressed_concrete",
+      "shape": "circular",
+      "inner_diameter": 5.5,
+      "lining_thickness_range": [
+        0.37,
+        0.4
+      ],
+      "confidence": "C"
+    },
+    {
+      "id": "TBM_5600_5100_RC_8SEG_R1400",
+      "lining": "precast_rc_segments",
+      "shape": "circular",
+      "outer_diameter": 5.6,
+      "inner_diameter": 5.1,
+      "structural_depth": 0.25,
+      "ring_pitch": 1.4,
+      "segment_count": 8,
+      "confidence": "B"
+    },
+    {
+      "id": "TBM_6000_5400_RC_7SEG_R1400",
+      "lining": "precast_rc_segments",
+      "shape": "circular",
+      "outer_diameter": 6,
+      "inner_diameter": 5.4,
+      "structural_depth": 0.3,
+      "ring_pitch": 1.4,
+      "segment_count": 7,
+      "confidence": "B",
+      "notes": "Documented as transition-tunnel Herrenknecht lining; not universal running-tunnel type."
+    },
+    {
+      "id": "TBM_6M_RC_6SEG_R1400",
+      "lining": "precast_rc_segments",
+      "shape": "circular",
+      "tbm_class_diameter": 6,
+      "ring_pitch": 1.4,
+      "segment_count": 6,
+      "ring_mass_t": 21,
+      "confidence": "B",
+      "notes": "BCL engineering infographic; exact finished diameters project-specific."
+    },
+    {
+      "id": "TBM_10M_RC_6SEG_R1800_2T",
+      "lining": "precast_rc_segments",
+      "shape": "circular",
+      "tracks": 2,
+      "tbm_class_diameter": 10,
+      "ring_pitch": 1.8,
+      "segment_count": 6,
+      "ring_mass_t": 70,
+      "confidence": "B",
+      "notes": "BCL 10 m-class two-track tunnel; exact lining ID/OD and track centers pending project drawing."
+    }
+  ],
+  "track_gauge_by_radius": [
+    {
+      "r_min_inclusive": 1200,
+      "gauge": 1.52
+    },
+    {
+      "r_min_exclusive": 600,
+      "r_max_exclusive": 1200,
+      "gauge": 1.524
+    },
+    {
+      "r_min_exclusive": 400,
+      "r_max_inclusive": 600,
+      "gauge": 1.53
+    },
+    {
+      "r_min_exclusive": 125,
+      "r_max_inclusive": 400,
+      "gauge": 1.535
+    },
+    {
+      "r_min_exclusive": 100,
+      "r_max_inclusive": 125,
+      "gauge": 1.54
+    }
+  ],
+  "source_urls": [
+    "https://www.metro.ru/library/stroitelstvo_metropolitenov/482/",
+    "https://www.metro.ru/library/metropoliteny/233/",
+    "https://www.mos.ru/upload/documents/oiv/inf_ceny_2012.pdf",
+    "https://mosinzhproekt.ru/wp-content/uploads/2023/03/is_01-full_.pdf",
+    "https://base.garant.ru/73992414/53f89421bbdaf741eb2d1ecc4ddb4c33/"
+  ]
+}

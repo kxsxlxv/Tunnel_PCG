@@ -1,0 +1,91 @@
+{
+  "schema_version": "0.1",
+  "examples": [
+    {
+      "id": "MOSCOW_1932_1937_EARLY_RC_BLOCK",
+      "date_range": [
+        1932,
+        1937
+      ],
+      "location_scope": "Moscow running tunnels; exact per-section assignment pending",
+      "archetype": "RC_BLOCK_EARLY_6500_5500_12SEG_R075",
+      "geometry": {
+        "outer_diameter_m": 6.5,
+        "inner_diameter_m": 5.5,
+        "thickness_m": 0.5,
+        "ring_pitch_m": 0.75,
+        "segment_count": 12
+      },
+      "documented_length_m": 3750,
+      "confidence": "C"
+    },
+    {
+      "id": "MOSCOW_SECOND_STAGE_EARLY_CAST_IRON",
+      "date_range": [
+        1937,
+        1945
+      ],
+      "location_scope": "Second construction-stage Moscow running tunnels; exact section map pending",
+      "archetype": "CAST_IRON_6000_R075_12SEG_EARLY",
+      "geometry": {
+        "outer_diameter_m": 6,
+        "ring_pitch_m": 0.75,
+        "segment_count": 12
+      },
+      "confidence": "C"
+    },
+    {
+      "id": "MOSCOW_SERPUKHOVSKY_NAKHIMOVSKY_SEVASTOPOLSKAYA_LEFT",
+      "date_range": [
+        1980,
+        1983
+      ],
+      "location_scope": "Nakhimovsky Prospekt – Sevastopolskaya, one track/tunnel per historical source",
+      "archetype": "MONOLITHIC_PRESSED_5500",
+      "construction": "TShB-7 shield, monolithic-pressed lining",
+      "confidence": "C",
+      "note": "Track/direction label to be verified against original historical source before route-level assignment."
+    },
+    {
+      "id": "MOSCOW_SERPUKHOVSKY_NAKHIMOVSKY_SEVASTOPOLSKAYA_OPPOSITE",
+      "date_range": [
+        1980,
+        1983
+      ],
+      "location_scope": "Nakhimovsky Prospekt – Sevastopolskaya, opposite tunnel",
+      "archetype": "LEGACY_PRECAST_RC_ASSEMBLED",
+      "construction": "KM-42 / ShNE-1 family cited in historical account",
+      "confidence": "C",
+      "note": "Demonstrates different lining construction in paired tunnels."
+    },
+    {
+      "id": "MOSCOW_BCL_10M_2TRACK",
+      "date_range": [
+        2018,
+        2022
+      ],
+      "location_scope": "Bolshaya Koltsevaya Line large-diameter two-track shield sections",
+      "archetype": "TBM_10M_RC_6SEG_R1800_2T",
+      "geometry": {
+        "ring_pitch_m": 1.8,
+        "segment_count": 6,
+        "ring_mass_t_approx": 70
+      },
+      "confidence": "B"
+    },
+    {
+      "id": "MOSCOW_RUBL_ARH_LILIA_10M_PLUS",
+      "date_range": [
+        2024,
+        2026
+      ],
+      "location_scope": "Rublyovo-Arkhangelskaya line, sections constructed by Lilia",
+      "archetype": "TBM_10M_CLASS_2TRACK_PROJECT_SPECIFIC",
+      "geometry": {
+        "tbm_diameter_class_m": ">10",
+        "finished_lining_diameters": null
+      },
+      "confidence": "B"
+    }
+  ]
+}

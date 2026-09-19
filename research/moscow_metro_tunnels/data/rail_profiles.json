@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.2",
+  "schema_version": "0.3",
   "units": "m",
   "standard": "GOST_R_51685_2022",
   "profiles": {
@@ -53,7 +53,6 @@
         1.39
       ],
       "exact_ordered_primitives": null,
-      "status": "construction parameters captured; ordered CAD primitive solve pending",
       "section_properties": {
         "area_m2": 0.006599,
         "centroid_z_from_base": 0.0705,
@@ -81,11 +80,26 @@
       },
       "control_template_units": "m",
       "validation": {
-        "exact_primitives_required_before_LIDAR_LOD0": true,
         "principal_dimensions_source": "GOST_R_51685_2022_Table_2",
         "construction_constants_source": "Appendix_G",
         "template_source": "Appendix_Zh",
-        "section_properties_source": "Appendix_D"
+        "section_properties_source": "Appendix_D",
+        "exact_primitives_required_before_LIDAR_LOD0": false,
+        "reference_impl_tested": true
+      },
+      "status": "engineering reconstruction implemented and unit-tested",
+      "engineering_reconstruction": {
+        "method": "Appendix G tangent-chain reconstruction",
+        "implementation": "reference_impl/tunnel_pcg_ref/rail_profiles.py",
+        "analytic_fixture": "reference_impl/fixtures/r50_analytic_primitives.json",
+        "sampled_fixture": "reference_impl/fixtures/r50_profile_0p05mm.csv",
+        "qa": {
+          "area_m2": 0.006614215335334166,
+          "area_relative_error": 0.00230570318747788,
+          "centroid_z_m": 0.07039348420502377,
+          "centroid_z_error_m": -0.00010651579497622521,
+          "head_width_m": 0.07158961682043019
+        }
       }
     },
     "R65": {
@@ -138,7 +152,6 @@
         1.73
       ],
       "exact_ordered_primitives": null,
-      "status": "construction parameters captured; ordered CAD primitive solve pending",
       "section_properties": {
         "area_m2": 0.008265,
         "centroid_z_from_base": 0.0813,
@@ -155,9 +168,9 @@
         "VIII": 0.11768,
         "IX": 0.12688,
         "X": 0.00181,
-        "XI": 0.020640000000000002,
+        "XI": 0.02064,
         "XII": 0.045,
-        "XIII": 0.0030800000000000003,
+        "XIII": 0.00308,
         "XIV": 0.01207,
         "XV": 0.02451,
         "XVI": 0.02259,
@@ -166,12 +179,32 @@
       },
       "control_template_units": "m",
       "validation": {
-        "exact_primitives_required_before_LIDAR_LOD0": true,
         "principal_dimensions_source": "GOST_R_51685_2022_Table_2",
         "construction_constants_source": "Appendix_G",
         "template_source": "Appendix_Zh",
-        "section_properties_source": "Appendix_D"
+        "section_properties_source": "Appendix_D",
+        "exact_primitives_required_before_LIDAR_LOD0": false,
+        "reference_impl_tested": true
+      },
+      "status": "engineering reconstruction implemented and unit-tested",
+      "engineering_reconstruction": {
+        "method": "Appendix G tangent-chain reconstruction",
+        "implementation": "reference_impl/tunnel_pcg_ref/rail_profiles.py",
+        "analytic_fixture": "reference_impl/fixtures/r65_analytic_primitives.json",
+        "sampled_fixture": "reference_impl/fixtures/r65_profile_0p05mm.csv",
+        "qa": {
+          "area_m2": 0.008277699063449918,
+          "area_relative_error": 0.001536486805797777,
+          "centroid_z_m": 0.08114555549858664,
+          "centroid_z_error_m": -0.00015444450141335886,
+          "head_width_m": 0.07458517237598575
+        }
       }
     }
+  },
+  "reconstruction_policy": {
+    "manufacturer_master_cad_available": false,
+    "statement": "Reference implementation is an engineering reconstruction from published GOST tangent geometry; it is not claimed to be manufacturer rolling-caliber CAD.",
+    "default_profile_chord_error_m": 0.00005
   }
 }

@@ -3,13 +3,17 @@ import tempfile
 import unittest
 from pathlib import Path
 
-import numpy as np
-import rasterio
-from rasterio.transform import from_origin
+try:
+    import numpy as np
+    import rasterio
+    from rasterio.transform import from_origin
+    from tools_prepare_geospatial import prepare
+    GEO_DEPS = True
+except ImportError:
+    GEO_DEPS = False
 
-from tools_prepare_geospatial import prepare
 
-
+@unittest.skipUnless(GEO_DEPS, "install package with [geo] extras")
 class GeospatialPrepareTests(unittest.TestCase):
     def test_prepare_synthetic_route_and_dem(self):
         with tempfile.TemporaryDirectory() as td_raw:

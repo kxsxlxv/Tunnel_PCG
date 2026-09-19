@@ -33,6 +33,7 @@ class SceneMode(str, Enum):
 
     NOMINAL_WITH_PRESCRIBED_JOINTS = "nominal_with_prescribed_joints"
     DEFORMED_WITH_DISPLACEMENT_JOINTS = "deformed_with_displacement_joints"
+    MULTI_RING_TUNNEL = "multi_ring_tunnel"
 
 
 class LabelPolicy(str, Enum):

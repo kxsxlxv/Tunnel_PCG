@@ -47,3 +47,8 @@ S045,BCL Karamyshevskaya-Narodnogo Opolcheniya tunnel depth constraints,https://
 S046,BCL Sokolniki-Rizhskaya tunnel depth range,https://stroi.mos.ru/photo_lines/tonnieliem-bol-shie-shchit-sofiia-finishiroval-na-stantsii-bkl-mietro-rizhskaia,Moscow construction complex,2020,B,2.25km tunnel 25-45m construction-depth range
 S047,Sokolnicheskaya current OSM relation identifier,https://www.wikidata.org/wiki/Q729631,Wikidata,current,C,current public cross-check relation 1475758
 S048,Moscow Open Data portal,https://data.mos.ru/,Government of Moscow,current,B,official station line entrance coordinate anchors when available
+S049,Koltsevaya Line current Wikidata metadata,https://www.wikidata.org/wiki/Q831673,Wikidata,2026,C,current OSM relation 1462012 line length 19.4km and line metadata
+S050,Moscow Metro official Koltsevaya station order,https://www.metro.ru/stations/koltsevaya/,metro.ru,current,B,official line station order and station pages
+S051,Kievskaya Line 5 station-specific depth,https://news.metro.ru/f512.html,Moscow Metro photo/reference archive,current/historical,C,Line 5 Kievskaya depth 53m
+S052,Krasnopresnenskaya Line 5 station-specific depth,https://news.metro.ru/f511.html,Moscow Metro photo/reference archive,current/historical,C,Line 5 Krasnopresnenskaya depth 35.5m
+S053,Koltsevaya aggregated station coordinates and depths,https://kiwix.scoggi.net/content/wikipedia_en_all_maxi_2023-11/A/List_of_Moscow_Metro_stations,Wikipedia mirror,2023,C,station coordinate/depth cross-check; contains a conflicting old Kievskaya depth

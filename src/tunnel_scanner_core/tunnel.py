@@ -11,6 +11,12 @@ from dataclasses import dataclass
 import numpy as np
 
 from .angles import sample_six_segment_angles
+from .ancillary import (
+    AncillaryConfig,
+    AncillarySamplingPolicy,
+    build_ancillary_set,
+    sample_ancillary_config,
+)
 from .assembly import (
     TunnelAssembly,
     TunnelAssemblyConfig,
@@ -27,7 +33,7 @@ from .config import RingConfig
 from .curved_mesh import SurfaceMeshingConfig
 from .joints import build_prescribed_joint_set, sample_joint_config
 from .mesh import build_ring_mesh
-from .scene import ScenePackage, build_nominal_scene_package
+from .scene import LabelPolicy, ScenePackage, build_nominal_scene_package
 
 
 @dataclass(frozen=True)
@@ -52,6 +58,10 @@ def build_procedural_nominal_tunnel(
     include_bolts: bool = True,
     bolt_layout: BoltLayoutType | str = BoltLayoutType.TYPE1_CENTERED,
     bolt_perturbation: BoltPerturbationConfig | None = None,
+    include_ancillary: bool = False,
+    ancillary_config: AncillaryConfig | None = None,
+    ancillary_sampling_policy: AncillarySamplingPolicy | str = AncillarySamplingPolicy.REFERENCE,
+    label_policy: LabelPolicy = LabelPolicy.SEG2TUNNEL_LIKE,
     include_terminal_circumferential_joint: bool = False,
     bolt_boolean_overlap_m: float = 0.005,
     seed: int = 5812,
@@ -66,6 +76,7 @@ def build_procedural_nominal_tunnel(
     surface_meshing = surface_meshing or SurfaceMeshingConfig()
     bolt_layout = BoltLayoutType(bolt_layout)
     bolt_perturbation = bolt_perturbation or BoltPerturbationConfig()
+    ancillary_sampling_policy = AncillarySamplingPolicy(ancillary_sampling_policy)
 
     if assembly_config is None:
         assembly_config = TunnelAssemblyConfig(ring_width_m=ring_config.width_m)
@@ -73,6 +84,20 @@ def build_procedural_nominal_tunnel(
         raise ValueError(
             "assembly_config.ring_width_m must equal ring_config.width_m so adjacent "
             "ring chainage is coherent"
+        )
+
+    ancillary_set = None
+    if include_ancillary:
+        if ancillary_config is None:
+            ancillary_config = sample_ancillary_config(
+                ring_config.inner_radius_m,
+                seed=_child_seed(seed, 0, 5_000),
+                policy=ancillary_sampling_policy,
+            )
+        ancillary_set = build_ancillary_set(
+            inner_radius_m=ring_config.inner_radius_m,
+            length_m=ring_config.width_m,
+            config=ancillary_config,
         )
 
     ring_packages: list[ScenePackage] = []
@@ -108,9 +133,11 @@ def build_procedural_nominal_tunnel(
                     ring_id < assembly_config.n_rings - 1
                     or include_terminal_circumferential_joint
                 ),
+                label_policy=label_policy,
                 surface_meshing=surface_meshing,
                 bolts=bolts,
                 bolt_boolean_overlap_m=bolt_boolean_overlap_m,
+                ancillary=ancillary_set,
             )
         )
 
@@ -121,7 +148,11 @@ def build_procedural_nominal_tunnel(
     scene = build_multi_ring_scene_package(
         tuple(ring_packages),
         assembly,
-        name=f"tunnel_scanner_stage7_{assembly_config.n_rings:02d}_rings",
+        name=(
+            f"tunnel_scanner_stage8_{assembly_config.n_rings:02d}_rings"
+            if include_ancillary
+            else f"tunnel_scanner_stage7_1_{assembly_config.n_rings:02d}_rings"
+        ),
     )
     metadata = dict(scene.metadata)
     metadata.update(
@@ -131,6 +162,15 @@ def build_procedural_nominal_tunnel(
                 "ringGeometryRandomizedIndependently": True,
                 "includeBolts": bool(include_bolts),
                 "boltLayout": bolt_layout.value if include_bolts else None,
+                "includeAncillary": bool(include_ancillary),
+                "ancillarySamplingPolicy": (
+                    ancillary_sampling_policy.value if include_ancillary else None
+                ),
+                "ancillarySceneGlobalCrossSection": bool(include_ancillary),
+                "ancillaryObjectCountPerRing": (
+                    len(ancillary_set.meshes) if ancillary_set is not None else 0
+                ),
+                "labelPolicy": label_policy.value,
                 "terminalCircumferentialJoint": bool(
                     include_terminal_circumferential_joint
                 ),

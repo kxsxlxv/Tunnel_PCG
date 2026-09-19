@@ -15,6 +15,7 @@ geometry into an engine-oriented representation:
 """
 
 from dataclasses import dataclass, field
+from enum import Enum
 import hashlib
 import math
 from typing import Any, Callable, Mapping, Sequence
@@ -756,6 +757,13 @@ def build_production_tunnel(
 # ---------------------------------------------------------------------------
 
 
+class ChunkBoundaryPolicy(str, Enum):
+    """Export partition policy; unrelated to coordinate precision."""
+
+    RING_ALIGNED = "ring_aligned"
+    EXACT_LENGTH = "exact_length"
+
+
 @dataclass(frozen=True)
 class ChunkDescriptor:
     chunk_id: int
@@ -772,30 +780,56 @@ def plan_chunks(
     assembly: TunnelAssembly,
     *,
     chunk_length_m: float,
+    boundary_policy: ChunkBoundaryPolicy | str = ChunkBoundaryPolicy.RING_ALIGNED,
 ) -> tuple[ChunkDescriptor, ...]:
     if not math.isfinite(chunk_length_m) or chunk_length_m <= 0.0:
         raise ValueError("chunk_length_m must be finite and positive")
+    policy = ChunkBoundaryPolicy(boundary_policy)
     total = assembly.length_by_chainage_m
     L = assembly.config.ring_width_m
-    chunks: list[ChunkDescriptor] = []
-    start = 0.0
+
+    if policy is ChunkBoundaryPolicy.RING_ALIGNED:
+        rings_per_chunk = max(1, int(round(chunk_length_m / L)))
+        chunks: list[ChunkDescriptor] = []
+        first_ring = 0
+        cid = 0
+        while first_ring < assembly.config.n_rings:
+            last_ring_exclusive = min(
+                assembly.config.n_rings,
+                first_ring + rings_per_chunk,
+            )
+            chunks.append(
+                ChunkDescriptor(
+                    chunk_id=cid,
+                    start_chainage_m=first_ring * L,
+                    end_chainage_m=last_ring_exclusive * L,
+                    ring_ids=tuple(range(first_ring, last_ring_exclusive)),
+                )
+            )
+            cid += 1
+            first_ring = last_ring_exclusive
+        return tuple(chunks)
+
+    chunks = []
+    start_chainage = 0.0
     cid = 0
-    while start < total - 1e-12:
-        end = min(total, start + chunk_length_m)
+    while start_chainage < total - 1e-12:
+        end_chainage = min(total, start_chainage + chunk_length_m)
         ring_ids = tuple(
             i
             for i in range(assembly.config.n_rings)
-            if start <= (i + 0.5) * L < end
+            if start_chainage <= (i + 0.5) * L < end_chainage
             or (
-                math.isclose(end, total, abs_tol=1e-12)
-                and math.isclose((i + 0.5) * L, end, abs_tol=1e-12)
+                math.isclose(end_chainage, total, abs_tol=1e-12)
+                and math.isclose((i + 0.5) * L, end_chainage, abs_tol=1e-12)
             )
         )
-        chunks.append(ChunkDescriptor(cid, start, end, ring_ids))
+        chunks.append(
+            ChunkDescriptor(cid, start_chainage, end_chainage, ring_ids)
+        )
         cid += 1
-        start = end
+        start_chainage = end_chainage
     return tuple(chunks)
-
 
 def _chunk_piece_key(spec: ContinuousAssetSpec, chunk: ChunkDescriptor) -> str:
     start_um = round(chunk.start_chainage_m * 1_000_000)
@@ -807,8 +841,14 @@ def build_chunk_scene_packages(
     production: ProductionTunnelBuild,
     *,
     chunk_length_m: float,
+    boundary_policy: ChunkBoundaryPolicy | str = ChunkBoundaryPolicy.RING_ALIGNED,
 ) -> tuple[ScenePackage, ...]:
-    chunks = plan_chunks(production.assembly, chunk_length_m=chunk_length_m)
+    policy = ChunkBoundaryPolicy(boundary_policy)
+    chunks = plan_chunks(
+        production.assembly,
+        chunk_length_m=chunk_length_m,
+        boundary_policy=policy,
+    )
     total = production.assembly.length_by_chainage_m
     source_continuous_ids = {spec.instance_id for spec in production.asset_specs}
     ring_objects = tuple(
@@ -870,6 +910,7 @@ def build_chunk_scene_packages(
                         "endChainageM": chunk.end_chainage_m,
                         "lengthM": chunk.length_m,
                         "ringIDs": list(chunk.ring_ids),
+                        "boundaryPolicy": policy.value,
                         "globalCoordinatesPreserved": True,
                         "internalLongitudinalCaps": False,
                         "sourceContinuousAssetIDsStableAcrossChunking": True,

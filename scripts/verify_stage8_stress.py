@@ -94,6 +94,7 @@ def main() -> None:
     total_scene_objects = 0
     total_ancillary = 0
     json_roundtrips = 0
+    max_ancillary_seam_error_m = 0.0
     for seed in range(FULL_SCENES):
         n = 5
         result = build_procedural_nominal_tunnel(
@@ -120,6 +121,31 @@ def main() -> None:
             if obj.object_type.startswith("ancillary_"):
                 assert obj.custom_properties["objectAppliedAxialRotationDeg"] == 0.0
                 assert obj.custom_properties["followRingAxialRotation"] is False
+                assert obj.custom_properties["followSceneAlignment"] is True
+                assert obj.custom_properties["objectTransformPolicy"] == "stitched_scene_alignment"
+
+        by_ring = [
+            [
+                obj
+                for obj in scene.objects
+                if obj.ring_id == ring_id and obj.object_type.startswith("ancillary_")
+            ]
+            for ring_id in range(n)
+        ]
+        for ring_id in range(n - 1):
+            for left, right in zip(by_ring[ring_id], by_ring[ring_id + 1]):
+                assert left.object_type == right.object_type
+                section = len(left.vertices) // 3
+                assert section > 0 and len(left.vertices) == len(right.vertices)
+                for a, b in zip(
+                    left.vertices[-section:],
+                    right.vertices[:section],
+                ):
+                    max_ancillary_seam_error_m = max(
+                        max_ancillary_seam_error_m,
+                        math.dist(a, b),
+                    )
+        assert max_ancillary_seam_error_m < 5e-12
 
         total_scene_objects += len(scene.objects)
         total_ancillary += sum(
@@ -143,6 +169,7 @@ def main() -> None:
         "maxRailVertexRadiusM": max_rail_extent_radius,
         "maxTubeVertexRadiusM": max_tube_vertex_radius,
         "innerRadiusM": r,
+        "maxAncillaryInterRingSeamErrorM": max_ancillary_seam_error_m,
         "manifoldPositiveVolume": "PASS",
         "stsdCoarseLabels": "PASS",
         "ancillaryAxialRotationSuppression": "PASS",

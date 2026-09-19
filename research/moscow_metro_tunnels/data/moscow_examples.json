@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.1",
+  "schema_version": "0.2",
   "examples": [
     {
       "id": "MOSCOW_1932_1937_EARLY_RC_BLOCK",
@@ -41,10 +41,15 @@
         1983
       ],
       "location_scope": "Nakhimovsky Prospekt – Sevastopolskaya, one track/tunnel per historical source",
-      "archetype": "MONOLITHIC_PRESSED_5500",
+      "archetype": "MONOLITHIC_PRESSED_TSHB7_ID5200",
       "construction": "TShB-7 shield, monolithic-pressed lining",
       "confidence": "C",
-      "note": "Track/direction label to be verified against original historical source before route-level assignment."
+      "note": "Track/direction label to be verified against original historical source before route-level assignment.",
+      "geometry": {
+        "inner_diameter_m": 5.2,
+        "shield_diameter_m": 5.9,
+        "lining_outer_diameter_m": null
+      }
     },
     {
       "id": "MOSCOW_SERPUKHOVSKY_NAKHIMOVSKY_SEVASTOPOLSKAYA_OPPOSITE",
@@ -86,6 +91,22 @@
         "finished_lining_diameters": null
       },
       "confidence": "B"
+    },
+    {
+      "id": "MOSCOW_RC_BLOCK_6100_5600_TECHNICAL_FAMILY",
+      "date_range": [
+        1950,
+        1980
+      ],
+      "location_scope": "Moscow Metro engineering family; exact per-section assignment pending",
+      "archetype": "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000",
+      "geometry": {
+        "outer_diameter_m": 6.1,
+        "inner_diameter_m": 5.6,
+        "ring_pitch_m": 1,
+        "segment_count": 10
+      },
+      "confidence": "C"
     }
   ]
 }

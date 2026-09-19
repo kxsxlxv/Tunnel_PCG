@@ -148,8 +148,8 @@ Defaults:
 
 Regression suite:
 
-    95 tests collected
-    95 passed
+    96 tests collected
+    96 passed
 
 New Stage-7.1 tests verify:
 

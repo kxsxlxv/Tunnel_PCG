@@ -120,3 +120,8 @@ Blender receives only local Cartesian metres and already solved engineering alig
 - one survey-grade public XYZ dataset for the entire Moscow Metro network does not appear to be available; Z therefore requires section-specific evidence and constrained reconstruction.
 
 The repository is suitable for an implementation agent to build both tunnel archetypes and geographically plausible 3D route alignments without silently confusing public-map geometry with survey truth.
+
+
+## Koltsevaya real-route pilot
+
+`examples/koltsevaya_line_v0/` contains the first real-route test: all 12 station anchors, current OSM relation 1462012, a clearly marked station-anchor XY fallback spline, curvature QA, Blender plan preview and a pyosmium relation extractor. See `20_koltsevaya_line_pilot.md`.

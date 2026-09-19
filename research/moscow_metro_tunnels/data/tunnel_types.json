@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.2",
+  "schema_version": "0.3",
   "units": "m",
   "confidence_legend": {
     "A": "direct current normative/design requirement or official primary drawing",
@@ -9,18 +9,27 @@
   },
   "archetypes": [
     {
-      "id": "CAST_IRON_6000_R075",
+      "id": "CAST_IRON_6000_R075_12SEG_EARLY",
       "lining": "cast_iron_tubing",
       "shape": "circular",
       "outer_diameter": 6,
       "inner_diameter": null,
       "structural_depth": null,
       "ring_pitch": 0.75,
-      "segment_count": null,
+      "segment_count": 12,
       "bolt_diameter": 0.03,
       "bolt_length": 0.13,
       "confidence": "C",
-      "notes": "Early Moscow 6.0 m cast-iron family; 0.75 m pitch documented for the first Moscow implementation. Do not apply this pitch to every later 6 m cast-iron tunnel."
+      "notes": "Moscow second-stage early cast-iron ring documented in 1938: OD 6.0 m, width 0.75 m, 12 segments (9 N + 2 adjacent + 1 key), 67 ring-connection bolts, 5 bolts per radial segment joint, 200 mm flanges/ribs, 35 mm back plate. Bolt length ~130 mm is corroborated by later technical literature.",
+      "segment_layout": {
+        "normal": 9,
+        "adjacent_to_key": 2,
+        "key": 1
+      },
+      "rib_height": 0.2,
+      "back_plate_thickness": 0.035,
+      "inter_ring_bolt_count": 67,
+      "radial_joint_bolts_per_joint": 5
     },
     {
       "id": "CAST_IRON_5500_R1000",
@@ -92,7 +101,7 @@
       "notes": "Moscow 2012 NFM running-tunnel lining family."
     },
     {
-      "id": "TBM_6000_5400_RC_CURRENT_GENERIC",
+      "id": "TBM_6000_5400_RC_NCS2026_REFERENCE",
       "lining": "high_precision_precast_rc_segments",
       "shape": "circular",
       "outer_diameter": 6,
@@ -103,7 +112,7 @@
       "concrete_volume_per_ring_m3": 7.615,
       "gasket_grooves_required": true,
       "confidence": "B",
-      "notes": "Contemporary 6.0/5.4 m high-precision RC lining family documented in current national metro construction cost norms. Ring width and segment count are project-family parameters."
+      "notes": "2026 national metro construction-cost reference: high-precision RC blocks, ID 5.4 m, OD 6.0 m, ring volume 7.615 m3. Segment count and ring width are not fixed by this cost-reference record."
     },
     {
       "id": "TBM_6000_5400_RC_7SEG_R1400",
@@ -161,6 +170,76 @@
       "tracks": null,
       "confidence": "C",
       "notes": "Documented historical full-section precast product family usable in one-/two-track assemblies. Not a universal Moscow rectangular-tunnel dimension."
+    },
+    {
+      "id": "RC_BLOCK_EARLY_6500_5500_12SEG_R075",
+      "lining": "legacy_precast_rc_rectangular_blocks",
+      "shape": "circular",
+      "outer_diameter": 6.5,
+      "inner_diameter": 5.5,
+      "structural_depth": 0.5,
+      "ring_pitch": 0.75,
+      "segment_count": 12,
+      "segment_layout": {
+        "identical_blocks": 12
+      },
+      "inter_ring_stagger_fraction": 0.5,
+      "tensile_joint_connections": false,
+      "internal_glued_waterproofing": true,
+      "supporting_rc_shell": true,
+      "documented_moscow_length_m": 3750,
+      "construction_period": [
+        1932,
+        1937
+      ],
+      "confidence": "C",
+      "notes": "Early Moscow precast RC block system. Historical engineering source states 12 identical blocks, no tensile ties in block/ring joints, adjacent rings staggered by half a block."
+    },
+    {
+      "id": "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000",
+      "lining": "legacy_precast_rc_blocks",
+      "shape": "circular",
+      "outer_diameter": 6.1,
+      "inner_diameter": 5.6,
+      "structural_depth": 0.25,
+      "ring_pitch": 1,
+      "segment_count": 10,
+      "segment_layout": {
+        "identical_blocks": 10
+      },
+      "block_volume_m3": 0.46,
+      "block_mass_t": 1.15,
+      "concrete_grade_historical": "400",
+      "working_rebar_diameter": 0.016,
+      "permanent_bolted_block_joints": false,
+      "assembly_pin_diameter": 0.022,
+      "confidence": "C",
+      "notes": "Moscow Metro precast RC lining described in 1975 engineering literature; blocks held during assembly by steel pins, not permanent bolted block connections."
+    },
+    {
+      "id": "MONOLITHIC_PRESSED_TSHB7_ID5200",
+      "lining": "monolithic_pressed_concrete",
+      "shape": "circular",
+      "inner_diameter": 5.2,
+      "outer_diameter": null,
+      "shield_outer_diameter": 5.9,
+      "lining_thickness": null,
+      "ring_or_formwork_cycle": null,
+      "confidence": "C",
+      "notes": "TShB-7 mechanized complex family, confirmed on one Nakhimovsky Prospekt–Sevastopolskaya running tunnel. Shield diameter is not lining OD and must not be used as such."
+    },
+    {
+      "id": "TBM_5650_5150_RC_NCS_REFERENCE",
+      "lining": "high_precision_precast_rc_segments",
+      "shape": "circular",
+      "outer_diameter": 5.65,
+      "inner_diameter": 5.15,
+      "structural_depth": 0.25,
+      "ring_pitch": null,
+      "segment_count": null,
+      "concrete_volume_per_ring_m3": 5.93,
+      "confidence": "B",
+      "notes": "Modern national metro cost-norm reference family (NCS 2023/2025 tables). Useful as a contemporary family reference; not automatically a Moscow project assignment."
     }
   ],
   "track_gauge_by_radius_current": [
@@ -199,6 +278,11 @@
     "https://www.mos.ru/upload/documents/oiv/inf_ceny_2012.pdf",
     "https://mosinzhproekt.ru/wp-content/uploads/2023/03/is_01-full_.pdf",
     "https://rags.ru/documents/prod/normativy/0/ntss_91321.html",
-    "https://protect.gost.ru/gost/details/d9e37be2-c5e8-4727-9df3-b84536ed7609"
+    "https://protect.gost.ru/gost/details/d9e37be2-c5e8-4727-9df3-b84536ed7609",
+    "https://dokumen.pub/4cd30a87e63ba1fc1631e37d4e1d9484.html",
+    "https://science.totalarch.com/magazine/sm/stroitelstvo-moskvy-1938-13.pdf",
+    "https://ru.djvu.online/file/ZsnjOuEnMIf4l",
+    "https://www.metro.ru/f/1/library/metrostroy/ms-1982-04.pdf",
+    "https://base.garant.ru/413970314/"
   ]
 }

@@ -1,6 +1,6 @@
 # Tunnel_PCG — Tunnel Scanner reimplementation
 
-Current milestone: **Stage 7.1 — physical-wavelength multi-ring tunnel assembly**.
+Current milestone: **Stage 8 — ancillary infrastructure**.
 
 The repository reconstructs and extends the geometry-generation side of Yang et al. (2026), *Tunnel scanner: Geometry-informed synthetic point cloud generation and transfer learning for tunnel segmentation*.
 
@@ -9,139 +9,141 @@ The repository reconstructs and extends the geometry-generation side of Yang et 
     Stage 1    six-segment K/B/A ring and angle constraints
     Stage 2    ring-wise dislocation/rotation closure solver
     Stage 3    deformation state -> rigid segment geometry
-    Stage 4    prescribed radial joints + provisional circumferential collar
-    Stage 5    engine-neutral ScenePackage + semantic IDs + Blender adapter
-    Stage 5.1  adaptive cylindrical render/LiDAR mesh
+    Stage 4    prescribed joints
+    Stage 5    ScenePackage + semantic IDs + Blender adapter
+    Stage 5.1  curved render/LiDAR lining mesh
     Stage 6    bolt pockets, heads, Blender Boolean embedding
-    Stage 7    Eq. (21) multi-ring S-curve/stagger assembly
-    Stage 7.1  wavelength-by-chainage correction for physical smoothness
+    Stage 7    multi-ring Eq. (21) assembly
+    Stage 7.1  physical-wavelength centreline correction
+    Stage 8    pavement, walkway, rails and tube-like services
 
-All reconstruction assumptions and discovered formula ambiguities are documented in STAGE*_REPORT.md.
+Detailed reconstruction assumptions are in the STAGE*_REPORT.md files.
 
-## Stage 7.1 axis model
+## Stage 8 reference geometry
 
-The paper gives the scene-level form
+For the default inner radius r=3 m:
 
-    x_i = A*sin(omega_x*i) + epsilon_x
-    y_i = i*L_seg
-    z_i = A*cos(omega_z*i) + epsilon_z
+    pavement height       0.75 m
+    walkway height        1.80 m above invert
+    walkway width         1.20 m
+    walkway depth         0.12 m
+    walkway side          right
 
-and provides A=0.1 m as an example, but it does not publish numerical values for omega_x or omega_z.
+    rail width            0.175 m
+    rail depth            0.175 m
+    rail centre spacing   1.50 m
 
-The original Stage-7 engineering default tied omega to N_ring, which meant a five-ring export was much more sharply curved than a thirty-ring export. Stage 7.1 fixes that.
+Reference tube-like services include pipes, cables and power tracks. Their exact count/angular positions are not published by the paper, so the Stage-8 layout is explicit engineering configuration rather than hidden author-code reconstruction.
 
-Production defaults are now physical wavelengths evaluated by chainage s=i*L_seg:
+## Ancillary transform
 
-    x(s) = A*sin(2*pi*s/lambda_x) + epsilon_x
-    z(s) = A*cos(2*pi*s/lambda_z) + epsilon_z
+Production default:
 
-Default reconstruction values:
+    gravity_stitched
 
-    A        = 0.1 m
-    lambda_x = 50 m
-    lambda_z = 100 m
-    sigma(epsilon_x,z) = 0.005 m
+Ancillary cross-sections pass through Stage-7.1 ring-centre offsets and share identical inter-ring boundary cross-sections. Pavement/rails/walkway/tubes do not spin with the independent segment-ring stagger angle.
 
-The wavelength values are explicit engineering defaults, not values recovered from the paper.
+A diagnostic literal mode is also implemented:
 
-For the default 1.35 m ring width, the deterministic sinusoidal centre-to-centre step is bounded by:
+    paper_ring_rigid
 
-    X:          16.944 mm
-    Z:           8.480 mm
-    transverse: 18.948 mm
+See STAGE8_REPORT.md for the rationale.
 
-Independent Gaussian axis noise is added on top of that bound.
+## Semantic policies
 
-Crucially, the centreline at a given chainage is now independent of how many rings are exported. Five-ring and thirty-ring scenes share exactly the same deterministic first five centre positions.
+Seg2Tunnel-like:
 
-Legacy omega_x_rad_per_ring / omega_z_rad_per_ring overrides remain supported for reproducing earlier scenes or explicit user input.
+    0      clutter / all non-lining
+    1..6   lining segments
 
-## Ring rotation modes
+STSD coarse:
 
-    continuous
-    paper_constant_nominal
-    ringwise_gaussian
+    0  clutter
+    1  segments
+    2  walkway
+    3  tubes
 
-ringwise_gaussian samples nominal stagger angles inside the Table-2 +/-6*theta_K bound and is the default of the CLI generator. The low-level assembly config defaults to continuous joints.
+The Stage-8 generator defaults to STSD coarse.
 
-## Canonical 13-ring scene
+## Generate a five-ring Stage-8 scene
 
-Seed 5812:
+    PYTHONPATH=src python examples/generate_stage8_tunnel.py --rings 5
 
-    13 rings
-    17.55 m chainage length
-    78 lining segments
-    78 radial joints
-    72 circumferential collar pieces (12 interfaces)
-    234 bolt heads
-    234 pocket cutters
-    696 pre-Boolean objects
-    468 planned Boolean operations
+Then verify in Blender:
 
-The generated full scene JSON is about 4–5 MB and is intentionally generated locally instead of committed.
+    blender --background --python scripts/blender_verify_stage8.py -- \
+        examples/stage8_tunnel_scene.json \
+        --report examples/blender_stage8_runtime_report.json \
+        --save-blend examples/stage8_tunnel_scene.blend
 
-## Generate a tunnel
+Expected five-ring scene:
 
-    PYTHONPATH=src python examples/generate_stage7_tunnel.py --rings 13
+    30 lining segments
+    30 radial joints
+    24 circumferential joint pieces
+    90 bolt heads
+    90 temporary pocket cutters
+     5 pavement
+     5 walkway
+    10 rails
+    30 tubes
 
-Optional wavelength controls:
+    314 objects before Boolean processing
+    180 Boolean operations
+     90 cutters removed
+    224 surviving objects
 
-    --lateral-wavelength-m 50
-    --vertical-wavelength-m 100
+See STAGE8_BLENDER_SMOKE_TEST.md.
 
-For a faster Blender check:
+## Tests and CI
 
-    PYTHONPATH=src python examples/generate_stage7_tunnel.py --rings 5
-
-## Blender verification
-
-    blender --background --python scripts/blender_verify_stage7.py -- \
-        examples/stage7_tunnel_scene.json \
-        --report examples/blender_stage7_runtime_report.json \
-        --save-blend examples/stage7_tunnel_scene.blend
-
-Stage 6 bolt Booleans and the Stage-7 multi-ring scene have already been visually confirmed in Blender. Stage 7.1 changes only ring X/Z positions, not mesh topology or Boolean identity.
-
-## Tests
+Install:
 
     python -m pip install -e '.[test]'
+
+Run:
+
     pytest
 
 Current regression result:
 
-    96 tests passed
+    112 tests passed
 
-Stage-7.1 stress verification:
+GitHub Actions additionally runs:
 
-    2,000 pose scenes
-    39,877 ring poses
-    50 full 5-ring scenes
-    13,200 SceneObjects
-    9,000 planned Boolean operations
-    10 JSON round-trips
+    scripts/verify_stage8_stress.py
+    scripts/verify_stage8_trimesh.py
 
-    axis-noise empirical std                 0.0049953 m
-    configured sigma                         0.0050000 m
-    max Y-spacing error                      0.0 m
-    max rigid transform error                1.78e-15 m
-    export-length invariance error           0.0 m
-    deterministic transverse step bound      0.0189477 m
-    max observed deterministic step          0.0189476 m
-    max nominal stagger                      134.902 deg
-    Table-2 nominal bound                    135.000 deg
+Latest successful Stage-8 verification:
+
+    1,000 sampled Table-4 configs
+    10,000 standalone ancillary meshes
+    100 complete five-ring scenes
+    31,400 full-scene objects
+    20 JSON round-trips
+
+    maximum inter-ring ancillary seam error:
+    8.88e-16 m
 
     PASS
 
-An independent trimesh 4.11.1 check reports all 696 mesh objects in the canonical pre-Boolean 13-ring scene as watertight, winding-consistent, and positive-volume.
+Independent trimesh 5.1.0 verification:
 
-## Important multi-ring Boolean fix
+    250 sampled ancillary configs
+    2,500 standalone ancillary meshes
+    314 canonical five-ring scene objects
+    0 failures
 
-Bolts are identified by
+    PASS
 
-    (ringID, boltIndex)
+## Source-fidelity notes
 
-rather than boltIndex alone, preventing collisions between rings.
+Stage 8 preserves the printed Table-4 bounds, including d_walk <= 0.34r.
 
-## Next stage
+The paper's prose and Table 4 disagree on whether l_rail is an offset from the centreline or total rail spacing. Both interpretations are implemented; the production default follows Table 4 and places rail centres at +/-l_rail/2.
 
-With Stage 7.1 complete, the next stage is ancillary infrastructure driven along the longitudinal tunnel assembly: pavement/walkway, rails, and tube-like services.
+The paper gives tube-radius bounds and says tube-like objects occupy predefined angular positions, but does not publish their count/angles. Those are explicit Stage-8 configuration values.
+
+## Next validation gate
+
+Before moving to virtual LiDAR/scanning, open the five-ring Stage-8 blend and visually confirm the pavement, walkway, rails, tube services and inter-ring continuity.

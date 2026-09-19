@@ -374,6 +374,14 @@ def build_nominal_scene_package(
                     "pocketMode": bolts.pocket_mode.value,
                     "assemblies": len(bolts.assemblies),
                     "entryOverlapM": float(bolt_boolean_overlap_m),
+                    "headHeightRatio": float(bolts.config.head_height_ratio),
+                    "headHeightRatioStatus": "engineering assumption; paper defines eta but publishes no value",
+                    "perturbationSigmaM": float(bolts.perturbation_config.sigma_m),
+                    "perturbationSigmaFraction": float(bolts.perturbation_config.sigma_fraction),
+                    "perturbationStatus": (
+                        "engineering interpretation of ambiguous printed N(0,0.001 m^2): "
+                        "sigma=1 mm, truncated at configured sigma bound"
+                    ),
                     "operations": [
                         "segment DIFFERENCE pocket_cutter",
                         "segment DIFFERENCE bolt_head",

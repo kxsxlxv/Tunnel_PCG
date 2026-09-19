@@ -145,3 +145,41 @@ def test_scene_object_rejects_invalid_face_indices():
         pass
     else:
         raise AssertionError("invalid face index must be rejected")
+
+
+
+def test_nominal_scene_can_include_stage6_bolt_boolean_tools():
+    from tunnel_scanner_core.bolts import (
+        BoltConfig,
+        BoltLayoutType,
+        BoltPerturbationConfig,
+        build_bolt_set,
+    )
+
+    _, _, ring, prescribed, _ = _fixture()
+    bolts = build_bolt_set(
+        ring,
+        BoltConfig(),
+        BoltLayoutType.TYPE1_CENTERED,
+        seed=5812,
+        perturbation_config=BoltPerturbationConfig(sigma_m=0.0, sigma_fraction=0.0),
+    )
+    package = build_nominal_scene_package(ring, prescribed, ring_id=12, bolts=bolts)
+    assert len(package.objects_of_type("bolt_pocket_cutter")) == 18
+    assert len(package.objects_of_type("bolt_head")) == 18
+    assert len(package.objects) == 54
+    assert package.metadata["boltBooleanPipeline"]["stage"] == "6"
+    assert package.metadata["boltBooleanPipeline"]["assemblies"] == 18
+
+    segment_names = {o.name for o in package.objects_of_type("lining_segment")}
+    for cutter in package.objects_of_type("bolt_pocket_cutter"):
+        props = cutter.custom_properties
+        assert props["labelID"] == 0
+        assert props["booleanTarget"] in segment_names
+        assert props["booleanOperation"] == "DIFFERENCE"
+        assert props["removeAfterBoolean"] is True
+    for head in package.objects_of_type("bolt_head"):
+        props = head.custom_properties
+        assert props["labelID"] == 0
+        assert props["booleanTarget"] in segment_names
+        assert props["cutTargetBeforeDisplay"] is True

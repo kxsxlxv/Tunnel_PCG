@@ -79,7 +79,7 @@ def test_printed_walkway_depth_upper_bound_is_preserved_not_silently_corrected()
     r = 3.0
     base = AncillaryConfig.reference(r)
     cfg = AncillaryConfig(
-        pavement_height_m=base.pavement_height_m,
+        pavement_height_m=0.30 * r,
         walkway_height_m=base.walkway_height_m,
         walkway_width_m=base.walkway_width_m,
         walkway_depth_m=0.34 * r,
@@ -225,6 +225,7 @@ def test_ancillary_does_not_follow_segment_ring_axial_stagger_rotation():
             axis_noise_sigma_m=0.0,
             ring_rotation_strategy=RingRotationStrategy.PAPER_CONSTANT_NOMINAL,
             nominal_stagger_deg=90.0,
+            angular_imperfection_fraction=0.0,
         ),
         seed=3,
     )

@@ -1,186 +1,179 @@
-# Tunnel Scanner reimplementation — Stage 5.1
+# Tunnel_PCG — Tunnel Scanner reimplementation
 
-Stage 5.1 fixes the visible/sensor-facing polygonization exposed by the first real Blender smoke test. Stages 1–5 remain intact as the analytical, kinematic, joint, semantic, and Blender-adapter layers; Stage 5.1 adds a **derived curved surface representation** for rendering and LiDAR ray intersection.
+Current milestone: **Stage 6 — curved segmental lining + bolt pockets/heads + Blender Boolean embedding**.
 
-## Why Stage 5 looked hexagonal
+The project reconstructs the geometry-generation side of Yang et al. (2026), *Tunnel scanner: Geometry-informed synthetic point cloud generation and transfer learning for tunnel segmentation*, while keeping every ambiguous or corrected part of the published formulation explicit.
 
-The Stage-1 analytical segment intentionally follows the paper's eight-corner/hexahedral description. With one chord across a 65–75° A/B segment, however, the chord-to-circle deviation is hundreds of millimetres. That control mesh is appropriate for published corner constraints, but not as final LiDAR/render geometry.
+## Implemented stages
 
-Stage 5.1 therefore keeps the eight-corner mesh as the source of truth for:
+- **Stage 1:** six-segment K/B/A ring, angle constraints, deterministic sampling.
+- **Stage 2:** ring-wise radial dislocation/rotation and exact closure solver.
+- **Stage 3:** mapping deformation states to rigid physical segment transforms.
+- **Stage 4:** prescribed radial-joint reconstruction and provisional circumferential collar.
+- **Stage 5:** engine-neutral ScenePackage, semantic IDs, JSON boundary, Blender adapter.
+- **Stage 5.1:** adaptive cylindrical tessellation for render/LiDAR geometry; the tunnel is now genuinely circular rather than a six-sided control mesh.
+- **Stage 6:** Table-3 bolt layouts, tapered bolt pockets, truncated-cone heads, Boolean-ready cutters, and Blender cavity/head embedding.
 
-- angular closure;
-- deformation/joint boundary conditions;
-- segment rigid transforms;
-- published reconstruction assumptions.
-
-It derives a separate adaptive cylindrical mesh for Blender/sensor export.
-
-## Adaptive meshing rule
-
-For radius `R` and requested maximum sagitta `eps`, the largest permitted chord angle is
+Detailed assumptions and verification are in the stage reports:
 
 ```text
-delta_max = 2 * acos(1 - eps / R)
+STAGE1_REPORT.md
+STAGE2_REPORT.md
+STAGE3_REPORT.md
+STAGE4_REPORT.md
+STAGE5_REPORT.md
+STAGE5_1_REPORT.md
+STAGE6_REPORT.md
 ```
 
-The default is:
+## Current geometry architecture
 
 ```text
-max_sagitta_m = 0.002   # 2 mm
+published / analytical parameters
+        |
+        v
+8-corner segment control geometry
+        |
+        +--> deformation / closure / joint constraints
+        |
+        v
+Stage-5.1 adaptive cylindrical surface
+        |
+        v
+ScenePackage + semantic metadata
+        |
+        +--> JSON
+        |
+        v
+Blender adapter
+        |
+        +--> Stage-6 pocket/head Boolean pipeline
+        |
+        v
+render / future LiDAR scanning
 ```
 
-A segment can have slightly different front/back angular boundaries. Stage 5.1 therefore uses a two-dimensional `(u,v)` surface grid rather than only subdividing around the circumference.
+The analytical hexahedron is intentionally retained as the structural control representation. It is **not** used directly as the final visible/LiDAR-facing tunnel surface.
 
-Let:
+## Stage-6 bolt geometry
+
+The implementation includes all three Table-3 placement families:
 
 ```text
-U = max(front_span, back_span)
-V = max(|back_start-front_start|, |back_end-front_end|)
+Type 1 centred:       18 assemblies / six-segment ring
+Type 2 lateral:       20 assemblies / six-segment ring
+Type 3 joint-aligned: 24 assemblies / six-segment ring
 ```
 
-The grid `(Nu,Nv)` is chosen to minimize cell count subject to the conservative diagonal bound:
+The canonical Blender sample uses Type 1: three recessed bolt locations per segment.
+
+Bolt heads and temporary pocket tools use `labelID=0` (clutter). The six lining segments retain labels `1..6`.
+
+### Important published-formula ambiguities
+
+Stage 6 does **not** silently copy several inconsistent expressions:
+
+- printed Eq. (20) sends the pocket apex toward the tunnel void despite defining the normal outward and calling the apex embedded;
+- Algorithm 1 adds an unscaled unit normal to a metric coordinate;
+- Algorithm 1 introduces height ratio `eta` but publishes no numeric value;
+- the pocket perturbation notation `N(0, 0.001 m^2)` conflicts with the text calling the disturbances small/bounded.
+
+Both the diagnostic printed variants and the physically usable reconstruction are documented in `STAGE6_REPORT.md`.
+
+## Tests
+
+Current regression suite:
 
 ```text
-U/Nu + V/Nv <= delta_max
+75 tests passed
 ```
 
-Every intrados/extrados grid vertex is placed directly on a cylinder:
+Stage-6 stress verification performed during development:
 
 ```text
-x = radius * sin(alpha)
-z = radius * cos(alpha)
-```
+1,000 rings
+18,000 Type-1 bolt assemblies
+100 rings with full manifold/volume checks
 
-so front/back taper never drags intermediate vertices off the cylindrical surface.
+max pocket depth:        0.13384377 m
+lining thickness:        0.35000000 m
+max head vertex radius:  3.10746688 m
+outer lining radius:     3.35000000 m
+minimum Boolean mouth
+overlap into tunnel:     0.00406394 m
 
-## Canonical seed 5812
-
-At the default 2 mm tolerance:
-
-```text
-segment   Nu   Nv   vertices   faces   conservative sagitta
-K          6    1       28       26       1.788 mm
-B1        20    1       84       82       1.894 mm
-A1        19    1       80       78       1.875 mm
-A2        18    1       76       74       1.851 mm
-A3        19    1       80       78       1.875 mm
-B2        20    1       84       82       1.894 mm
-```
-
-Total lining geometry for one ring is only 432 vertices / 420 faces, so the change is inexpensive.
-
-For the same seed, the old one-chord outer-surface sagitta was approximately:
-
-```text
-K     53 mm
-A   ~550 mm
-B   ~614 mm
-```
-
-The exported lining is therefore no longer the coarse six-sided control mesh.
-
-## What else was curved
-
-The Stage-4 circumferential outer-collar reconstruction spans an entire K/B/A segment, so leaving it as a hexahedron could reintroduce a polygonal outer silhouette. Stage 5.1 now tessellates those collar pieces around the cylinder as well.
-
-The narrow prescribed radial joints and displacement-gap joints remain their existing analytical solids. Their spans are small, and their exact boundary faces are useful for later reconstruction work.
-
-## Automated verification
-
-Regression suite:
-
-```text
-62 tests passed
-```
-
-Stage-5.1 geometric stress verification:
-
-```text
-5,000 nominal rings
-30,000 curved segment meshes
-1,000 deformed rings
-max conservative sagitta: 1.999982 mm
-max deformed local-radius error: 1.33e-15 m
-max deformation closure error: 1.20e-15 m
 PASS
 ```
 
-An independent `trimesh` check was also run on 500 rings / 3,000 curved segment meshes and on all 18 objects in the canonical nominal scene. Every checked mesh was watertight, winding-consistent, and positive-volume.
+An independent `trimesh 4.11.1` check validated 600 pocket/head/cutter meshes as watertight, winding-consistent, and positive-volume.
 
-The inherited Stage-5 serialization stress test also passes with the new geometry:
-
-```text
-2,000 ScenePackages
-30,000 SceneObjects
-2,000 JSON round-trips
-PASS
-```
-
-## Layout additions
-
-```text
-src/tunnel_scanner_core/
-    curved_mesh.py       # Stage 5.1 adaptive cylindrical surface generation
-    ... previous modules
-
-examples/
-    generate_stage5_1_scenes.py
-    stage5_1_nominal_scene.json
-    stage5_1_nominal_scene.obj
-    stage5_1_deformed_scene.json
-    stage5_1_deformed_scene.obj
-    stage5_1_geometry_metrics.json
-    stage5_1_verification.json
-    stage5_1_trimesh_verification.json
-
-scripts/
-    verify_stage5_1_stress.py
-    blender_import_scene.py
-```
-
-## Generate the Stage-5.1 examples
-
-From the repository root:
-
-```bash
-PYTHONPATH=src python examples/generate_stage5_1_scenes.py
-```
-
-## Run tests
+## Install and test
 
 ```bash
 python -m pip install -e '.[test]'
 pytest
 ```
 
-## Blender smoke test
-
-Use the new JSON, not the old Stage-5 sample:
+## Generate the Stage-6 Blender scene
 
 ```bash
-blender --background --python scripts/blender_import_scene.py -- \
-    examples/stage5_1_nominal_scene.json \
-    --save-blend examples/stage5_1_nominal_scene.blend
+PYTHONPATH=src python examples/generate_stage6_scene.py
 ```
 
-For visual inspection, omit `--background` or import from Blender's scripting workspace.
+This produces:
 
-The inner opening should now be circular (within the configured geometric tolerance), not a six-sided opening. Blender may still show facet shading if the object is flat-shaded; that is a normal/shading issue, not the old half-metre geometric chord error. LiDAR ray geometry is determined by the actual tessellated mesh.
+```text
+examples/stage6_nominal_bolts_scene.json
+examples/stage6_scene_summary.json
+```
 
-## Runtime status
+The JSON contains 54 pre-Boolean objects:
 
-The engine-neutral geometry, JSON boundary, and Blender adapter are regression-tested outside Blender. A real Blender executable is not present in the current execution environment, so Stage 5.1 still requires an external Blender smoke test. The user's previous Stage-5 test already confirmed the adapter path itself executes; the new test primarily verifies the changed mesh visually/runtime-side.
+```text
+6 lining segments
+6 radial joints
+6 circumferential collar pieces
+18 pocket cutters
+18 bolt heads
+```
 
-See `STAGE5_1_REPORT.md` for detailed design decisions and verification results.
-
-## Automated Blender-side verifier
-
-On a machine with Blender installed:
+## Run the real Blender verifier
 
 ```bash
-blender --background --python scripts/blender_verify_stage5_1.py -- \
-    examples/stage5_1_nominal_scene.json \
-    --report examples/blender_stage5_1_runtime_report.json
+blender --background --python scripts/blender_verify_stage6.py -- \
+    examples/stage6_nominal_bolts_scene.json \
+    --report examples/blender_stage6_runtime_report.json \
+    --save-blend examples/stage6_nominal_bolts_scene.blend
 ```
 
-See `BLENDER_SMOKE_TEST.md` for the expected per-segment vertex/face counts and visual checks.
+Expected invariants:
+
+```text
+36 Boolean operations applied
+18 pocket cutters removed
+18 bolt heads retained
+all 6 lining segments changed topology
+all 6 post-Boolean segment meshes manifold
+positive signed volume
+result: PASS
+```
+
+See `STAGE6_BLENDER_SMOKE_TEST.md` for visual inspection and debug-mode instructions.
+
+## Inspect cutters without applying Booleans
+
+```bash
+blender --python scripts/blender_import_scene.py -- \
+    examples/stage6_nominal_bolts_scene.json \
+    --no-bolt-booleans
+```
+
+## Current limitation
+
+The physical cavity is cut correctly and the head is retained as clutter. The cavity wall itself currently remains part of the lining segment object and therefore inherits the segment label.
+
+The paper describes an additional Boolean reconstruction intended to expose the pocket surface as a separately labelable clutter object, but the exact unpublished object sequence is not sufficiently specified to reproduce that semantics without risking a cavity-filling/occlusion artefact. That semantic refinement is intentionally deferred until the current real-Blender Boolean geometry is verified.
+
+## Next validation gate
+
+Before starting ancillary structures or multi-ring assembly, run the Stage-6 Blender verifier. The engine-neutral bolt geometry is tested; the remaining uncertainty is Blender Boolean runtime behaviour.

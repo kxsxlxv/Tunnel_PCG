@@ -87,6 +87,10 @@ from .assembly import (
     transform_point_by_ring_pose,
     transform_scene_object_by_ring_pose,
 )
+from .tunnel import (
+    ProceduralTunnelBuild,
+    build_procedural_nominal_tunnel,
+)
 from .deformed_mesh import (
     DeformedRingMesh,
     JointGapMesh,
@@ -184,6 +188,8 @@ __all__ = [
     "sample_tunnel_assembly",
     "transform_point_by_ring_pose",
     "transform_scene_object_by_ring_pose",
+    "ProceduralTunnelBuild",
+    "build_procedural_nominal_tunnel",
     "DeformationBounds",
     "KinematicIndexing",
     "KinematicStep",

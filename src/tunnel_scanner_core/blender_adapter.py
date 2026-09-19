@@ -359,10 +359,14 @@ def _strip_coincident_lining_interfaces_in_blender(
         tx = float(props["ringTranslationX"])
         ty = float(props["ringTranslationY"])
         tz = float(props["ringTranslationZ"])
-        if bool(props.get("coordinatesLocalizedToChunk", False)):
-            tx -= float(props.get("chunkWorldOriginX", 0.0))
-            ty -= float(props.get("chunkWorldOriginY", 0.0))
-            tz -= float(props.get("chunkWorldOriginZ", 0.0))
+        localized = bool(props.get("coordinatesLocalizedToChunk", False))
+        origin_x = float(props.get("chunkWorldOriginX", 0.0)) if localized else 0.0
+        origin_y = float(props.get("chunkWorldOriginY", 0.0)) if localized else 0.0
+        origin_z = float(props.get("chunkWorldOriginZ", 0.0)) if localized else 0.0
+        tx -= origin_x
+        ty -= origin_y
+        tz -= origin_z
+        stitched = bool(props.get("productionRingAlignmentStitched", False))
         rotation = math.radians(float(props["ringRotationDeg"]))
         c = math.cos(rotation)
         sr = math.sin(rotation)
@@ -386,11 +390,39 @@ def _strip_coincident_lining_interfaces_in_blender(
                 x = float(vertex.co.x)
                 y = float(vertex.co.y)
                 z = float(vertex.co.z)
-                dx = x - tx
-                dz = z - tz
+                local_y = y - ty
+                center_x = tx
+                center_z = tz
+                if stitched:
+                    front_x = float(props["productionRingFrontOffsetX"]) - origin_x
+                    front_z = float(props["productionRingFrontOffsetZ"]) - origin_z
+                    centre_x = float(props["productionRingCenterOffsetX"]) - origin_x
+                    centre_z = float(props["productionRingCenterOffsetZ"]) - origin_z
+                    back_x = float(props["productionRingBackOffsetX"]) - origin_x
+                    back_z = float(props["productionRingBackOffsetZ"]) - origin_z
+                    if local_y <= 0.0:
+                        u = min(
+                            1.0,
+                            max(
+                                0.0,
+                                (local_y + 0.5 * ring_width_m)
+                                / (0.5 * ring_width_m),
+                            ),
+                        )
+                        center_x = front_x + u * (centre_x - front_x)
+                        center_z = front_z + u * (centre_z - front_z)
+                    else:
+                        u = min(
+                            1.0,
+                            max(0.0, local_y / (0.5 * ring_width_m)),
+                        )
+                        center_x = centre_x + u * (back_x - centre_x)
+                        center_z = centre_z + u * (back_z - centre_z)
+
+                dx = x - center_x
+                dz = z - center_z
                 local_x = c * dx - sr * dz
                 local_z = sr * dx + c * dz
-                local_y = y - ty
                 samples.append(
                     (
                         local_y,

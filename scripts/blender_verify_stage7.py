@@ -63,11 +63,24 @@ def main() -> None:
         apply_bolt_booleans=not args.no_booleans,
     )
 
+    root = bpy.data.collections.get(result.root_collection_name)
+    if root is None:
+        raise RuntimeError(
+            f"missing imported root collection {result.root_collection_name!r}"
+        )
+
+    def collect_objects(collection):
+        found = list(collection.objects)
+        for child in collection.children:
+            found.extend(collect_objects(child))
+        return found
+
+    imported_objects = collect_objects(root)
     errors: list[str] = []
     ring_stats: list[dict] = []
     for ring_id in range(ring_count):
         ring_objects = [
-            obj for obj in bpy.data.objects if int(obj.get("ringID", -1)) == ring_id
+            obj for obj in imported_objects if int(obj.get("ringID", -1)) == ring_id
         ]
         if not ring_objects:
             errors.append(f"ring {ring_id}: no Blender objects")

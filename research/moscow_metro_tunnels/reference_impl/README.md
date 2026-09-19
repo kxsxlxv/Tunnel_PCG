@@ -25,7 +25,7 @@ WGS84/project coordinates
  -> Blender
 ```
 
-`alignment3d.py` deliberately contains no network/GIS dependency. It consumes already projected metre coordinates. This keeps the Blender-side kernel deterministic and portable.
+`alignment3d.py` deliberately contains no network/GIS dependency. For ring routes, `closed_parallel_transport_frames()` measures the residual parallel-transport roll around a non-planar loop and distributes the inverse correction by 3D chainage so the first/last frame closes without a Blender seam. It consumes already projected metre coordinates. This keeps the Blender-side kernel deterministic and portable.
 
 `tools_prepare_geospatial.py` is an **external preprocessing utility**. With the optional `geo` dependency group it:
 - reads a single route LineString GeoJSON;
@@ -50,7 +50,7 @@ Stage 4:
 - 11 engineering tests passed.
 
 Stage 5:
-- 7 pure-Python alignment tests passed;
+- 8 pure-Python alignment tests passed, including closed-loop holonomy/seam correction;
 - 1 GeoJSON+GeoTIFF preprocessing test passed with `geo` dependencies;
 - compileall passed.
 

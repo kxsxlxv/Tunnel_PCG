@@ -890,11 +890,39 @@ def _chunk_piece_key(spec: ContinuousAssetSpec, chunk: ChunkDescriptor) -> str:
     return f"{spec.persistent_key}/chunk-piece/{start_um}-{end_um}"
 
 
+def _translate_scene_object(
+    obj: SceneObject,
+    *,
+    dx: float,
+    dy: float,
+    dz: float,
+    extra_properties: Mapping[str, Any] | None = None,
+) -> SceneObject:
+    props = {**dict(obj.extra_properties), **dict(extra_properties or {})}
+    return SceneObject(
+        name=obj.name,
+        vertices=tuple((x + dx, y + dy, z + dz) for x, y, z in obj.vertices),
+        faces=obj.faces,
+        object_type=obj.object_type,
+        ring_id=obj.ring_id,
+        label_id=obj.label_id,
+        instance_id=obj.instance_id,
+        semantic_class=obj.semantic_class,
+        segment_id=obj.segment_id,
+        segment_name=obj.segment_name,
+        segment_kind=obj.segment_kind,
+        reconstruction=obj.reconstruction,
+        collection_path=obj.collection_path,
+        extra_properties=props,
+    )
+
+
 def build_chunk_scene_packages(
     production: ProductionTunnelBuild,
     *,
     chunk_length_m: float,
     boundary_policy: ChunkBoundaryPolicy | str = ChunkBoundaryPolicy.RING_ALIGNED,
+    localize_coordinates: bool = False,
 ) -> tuple[ScenePackage, ...]:
     policy = ChunkBoundaryPolicy(boundary_policy)
     chunks = plan_chunks(
@@ -949,6 +977,36 @@ def build_chunk_scene_packages(
                 )
             )
 
+        chunk_world_origin = (0.0, 0.0, 0.0)
+        if localize_coordinates:
+            midpoint = 0.5 * (
+                chunk.start_chainage_m + chunk.end_chainage_m
+            )
+            origin_station = sample_alignment_station(
+                production.alignment_stations, midpoint
+            )
+            chunk_world_origin = (
+                origin_station.offset_x_m,
+                origin_station.world_y_m,
+                origin_station.offset_z_m,
+            )
+            ox, oy, oz = chunk_world_origin
+            objects = [
+                _translate_scene_object(
+                    obj,
+                    dx=-ox,
+                    dy=-oy,
+                    dz=-oz,
+                    extra_properties={
+                        "coordinatesLocalizedToChunk": True,
+                        "chunkWorldOriginX": ox,
+                        "chunkWorldOriginY": oy,
+                        "chunkWorldOriginZ": oz,
+                    },
+                )
+                for obj in objects
+            ]
+
         packages.append(
             ScenePackage(
                 name=f"{production.scene.name}_chunk_{chunk.chunk_id:05d}",
@@ -964,7 +1022,10 @@ def build_chunk_scene_packages(
                         "lengthM": chunk.length_m,
                         "ringIDs": list(chunk.ring_ids),
                         "boundaryPolicy": policy.value,
-                        "globalCoordinatesPreserved": True,
+                        "vertexCoordinatesLocalized": bool(localize_coordinates),
+                        "globalCoordinatesPreserved": not localize_coordinates,
+                        "chunkWorldOrigin": list(chunk_world_origin),
+                        "worldTransformRestoresGlobalCoordinates": True,
                         "internalLongitudinalCaps": False,
                         "sourceContinuousAssetIDsStableAcrossChunking": True,
                     },

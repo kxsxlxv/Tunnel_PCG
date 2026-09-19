@@ -104,3 +104,127 @@ Useful for:
 https://protect.gost.ru/gost/details/d9e37be2-c5e8-4727-9df3-b84536ed7609
 
 These drawings must be vector-transcribed in Stage 2 into exact cross-section coordinates for Blender validation.
+
+
+# Stage 3 additions
+
+## P07 — Wartime cast-iron tunnel with dense service infrastructure
+Source page:
+https://russos.livejournal.com/1486834.html
+
+Direct image:
+https://russos.ru/img/metro/sem/semenovskaya-29.jpg
+
+Use for:
+- 0.75 m-class ring rhythm visual check;
+- cast-iron rib silhouette;
+- independent cable/pipe/bracket pitches;
+- walkway/track relation;
+- historical-modernized service layering.
+
+Dimensional calibration anchors:
+- use documented 0.75 m ring pitch only where this exact photographed section/family is confirmed;
+- running-rail gauge/profile can provide secondary scale.
+
+## P08 — Modern BCL 6 m-class single-track segment tunnel under construction
+Source page:
+https://www.m24.ru/news/transport/18112021/192552
+
+Use for:
+- smooth modern precast segment intrados;
+- segment seams and sockets;
+- temporary construction rails/services;
+- ring pitch visual comparison.
+
+Do not derive exact finished diameter from the photograph alone.
+
+## P09 — Completed large two-track circular BCL tunnel
+Source image/page family:
+https://sdelanounas.ru/blogs/150432/
+
+Use for:
+- two tracks within one circular lining;
+- central evacuation/service surface;
+- very dense cable racks;
+- yellow contact-rail covers;
+- emergency direction signs;
+- luminaires and cabinets.
+
+Dimensions must come from GOST/project data, not visual scaling alone.
+
+## P10 — Modern high-precision RC single-track tunnel
+Source:
+https://www.railway-technology.com/projects/the-big-circle-line-bcl-moscow/
+
+Use for:
+- modern ring seam topology;
+- visible sockets/anchors;
+- cable bracket density;
+- contact-rail protective cover;
+- modern ballastless permanent way.
+
+## D05 — ГОСТ 23961-2024 Figure 1, Cмк
+Readable PDF:
+https://spbssk.ru/wp-content/uploads/2025/06/gost-23961-2024_metropoliteny-gabarity-priblizheniya-stroenij-oborudovaniya-i-podvizhnogo-sostava.pdf
+
+Key dimensioned geometry:
+- R = 2450 mm clearance circle;
+- center height = 1700 mm R50 / 1670 mm R65;
+- lower walkway/drain/base reference lines.
+
+Use as validation envelope only.
+
+## D06 — ГОСТ 23961-2024 Figure 5, Cмкд
+Same PDF.
+
+Key geometry:
+- two-track circular clearance;
+- 3400 mm minimum track-center rule is stated immediately below;
+- tunnel-axis/UGR reference 2250/2230 mm in the figure;
+- >9400 mm tunnel diameter: vertical placement by calculation;
+- service platform >=1100 mm over UGR;
+- clear passage >=700 mm.
+
+## D07 — ГОСТ 23961-2024 Figures 6–7, Oм
+Same PDF.
+
+Use for:
+- exact upper equipment-envelope reference points;
+- lower contact-rail/auto-stop/sensor/sleeper exclusion zones;
+- curve-dependent validation.
+
+## D08 — 1938 detailed Moscow cast-iron ring
+Source:
+https://science.totalarch.com/magazine/sm/stroitelstvo-moskvy-1938-13.pdf
+
+Dimensioned data accompanying drawing:
+- OD 6000 mm;
+- ring 750 mm;
+- 12 segments = 9 N + 2 adjacent + 1 key;
+- 67 inter-ring bolts;
+- 5 Ø30 mm segment-joint bolts;
+- 200 mm ribs/flanges;
+- 35 mm back plate.
+
+## D09 — Early Moscow RC-block ring 1932–1937
+Source:
+https://dokumen.pub/4cd30a87e63ba1fc1631e37d4e1d9484.html
+
+Figures 1–2 in the cited engineering book accompany:
+- OD 6500 mm;
+- ID 5500 mm;
+- 12 identical blocks;
+- 500 mm thickness;
+- 750 mm ring width.
+
+## D10 — R50/R65 rail drawings and templates
+ГОСТ Р 51685-2022:
+https://base.garant.ru/406844406/
+
+Appendix G:
+https://base.garant.ru/406844406/172a6d689833ce3e42dc0a8a7b3cddf9/
+
+Appendix Zh:
+https://base.garant.ru/406844406/1a3794674ba91fb6f13d1885dca9f9e1/
+
+Use to solve exact analytic rail splines and validate with template dimensions.

@@ -13,7 +13,7 @@ cross-section closure) are explicit reconstruction metadata rather than hidden
 Blender assumptions.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
 import math
 from typing import Iterable
@@ -515,6 +515,8 @@ def sample_ancillary_config(
     *,
     seed: int | None = None,
     policy: AncillarySamplingPolicy | str = AncillarySamplingPolicy.PUBLISHED_UNIFORM,
+    rail_spacing_convention: RailSpacingConvention | str = RailSpacingConvention.TABLE4_CENTER_SPACING,
+    transform_policy: AncillaryTransformPolicy | str = AncillaryTransformPolicy.GRAVITY_STITCHED,
     max_attempts: int = 1000,
 ) -> AncillaryConfig:
     """Sample Table-4 bounds while retaining the unpublished default tube angles.
@@ -524,12 +526,18 @@ def sample_ancillary_config(
     intersects the pavement or rails leave the intrados.
     """
     policy = AncillarySamplingPolicy(policy)
+    rail_spacing_convention = RailSpacingConvention(rail_spacing_convention)
+    transform_policy = AncillaryTransformPolicy(transform_policy)
     r = float(inner_radius_m)
+    base = AncillaryConfig.reference(r)
     if policy is AncillarySamplingPolicy.REFERENCE:
-        return AncillaryConfig.reference(r)
+        return replace(
+            base,
+            rail_spacing_convention=rail_spacing_convention,
+            transform_policy=transform_policy,
+        )
 
     rng = np.random.default_rng(seed)
-    base = AncillaryConfig.reference(r)
     for _ in range(max_attempts):
         tube_specs = tuple(
             TubeSpec(
@@ -551,8 +559,9 @@ def sample_ancillary_config(
             rail_depth_m=float(rng.uniform(0.10, 0.50)),
             rail_width_m=float(rng.uniform(0.10, 0.50)),
             rail_spacing_m=float(rng.uniform(1.0, 2.0)),
-            rail_spacing_convention=RailSpacingConvention.TABLE4_CENTER_SPACING,
+            rail_spacing_convention=rail_spacing_convention,
             tubes=tube_specs,
+            transform_policy=transform_policy,
         )
         try:
             cfg.validate_against_table4(r)

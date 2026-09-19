@@ -1,0 +1,23 @@
+{
+  "stage": 6,
+  "rings": 1000,
+  "fullTopologyRings": 100,
+  "type1AssembliesChecked": 18000,
+  "layoutPlacementCounts": {
+    "type1_centered": {"min": 18, "max": 18, "unique": [18]},
+    "type2_lateral": {"min": 20, "max": 20, "unique": [20]},
+    "type3_joint_aligned": {"min": 24, "max": 24, "unique": [24]}
+  },
+  "maxPocketDepthM": 0.1338437695697229,
+  "liningThicknessM": 0.35,
+  "maxHeadRadiusM": 0.03990514832776477,
+  "maxHeadVertexRadiusFromTunnelAxisM": 3.1074668836970103,
+  "outerLiningRadiusM": 3.35,
+  "maxBooleanMouthRadiusMinusInnerM": -0.004063936866030016,
+  "minimumBooleanMouthOverlapIntoTunnelVoidM": 0.004063936866030016,
+  "maxMetricPocketPerturbationM": 0.0029970506775740756,
+  "manifoldAndPositiveVolume": "PASS",
+  "headInsideLining": "PASS",
+  "booleanMouthOverlap": "PASS",
+  "result": "PASS"
+}

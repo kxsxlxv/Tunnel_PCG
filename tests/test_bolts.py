@@ -191,3 +191,21 @@ def test_100_seed_bolt_geometry_stays_inside_lining_depth_and_is_manifold():
                 counts = _edge_counts(mesh.faces)
                 assert set(counts.values()) == {2}
                 assert _signed_volume(mesh.vertices, mesh.faces) > 0.0
+
+
+
+def test_boolean_cutter_moves_only_mouth_inward_and_remains_manifold():
+    from tunnel_scanner_core.bolts import build_pocket_boolean_cutter
+
+    ring = _ring()
+    cfg = BoltConfig()
+    placement = build_bolt_placements(ring, cfg, BoltLayoutType.TYPE1_CENTERED)[0]
+    pocket = build_bolt_pocket(ring, cfg, placement)
+    cutter = build_pocket_boolean_cutter(pocket, overlap_m=0.005)
+    n = np.asarray(pocket.surface_normal)
+    for i in range(4):
+        dv = np.asarray(cutter.vertices[i]) - np.asarray(pocket.vertices[i])
+        assert math.isclose(float(np.dot(dv, n)), -0.005, abs_tol=1e-12)
+    assert np.allclose(cutter.vertices[4], pocket.vertices[4], atol=1e-12, rtol=0)
+    assert set(_edge_counts(cutter.faces).values()) == {2}
+    assert _signed_volume(cutter.vertices, cutter.faces) > 0.0

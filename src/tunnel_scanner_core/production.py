@@ -922,6 +922,122 @@ def build_chunk_scene_packages(
 
 
 # ---------------------------------------------------------------------------
+# Render-surface cleanup
+# ---------------------------------------------------------------------------
+
+
+def strip_internal_lining_cap_faces(
+    scene: ScenePackage,
+    *,
+    ring_width_m: float | None = None,
+    tolerance_m: float = 1e-9,
+    require_boolean_tools_absent: bool = True,
+) -> ScenePackage:
+    """Remove hidden longitudinal end faces between neighbouring lining rings.
+
+    The closed Stage-5/6 solids are useful to Blender Boolean operations. For a
+    final realtime render mesh, however, the two end-cap layers at an internal
+    ring boundary are unnecessary and can overlap. This function is therefore a
+    post-Boolean/render finalization step.
+
+    It intentionally strips only lining_segment faces. Circumferential joint
+    solids and other reconstruction objects are left untouched.
+    """
+    if require_boolean_tools_absent and scene.objects_of_type("bolt_pocket_cutter"):
+        raise ValueError(
+            "strip_internal_lining_cap_faces must run after bolt cutters are baked/removed"
+        )
+    if not math.isfinite(tolerance_m) or tolerance_m <= 0.0:
+        raise ValueError("tolerance_m must be finite and positive")
+    if ring_width_m is None:
+        try:
+            ring_width_m = float(scene.metadata["ringWidthM"])
+        except Exception as exc:
+            raise ValueError("ring_width_m is required when scene metadata lacks ringWidthM") from exc
+    if not math.isfinite(ring_width_m) or ring_width_m <= 0.0:
+        raise ValueError("ring_width_m must be finite and positive")
+
+    lining = scene.objects_of_type("lining_segment")
+    if not lining:
+        return scene
+    max_ring_id = max(obj.ring_id for obj in lining)
+    removed_total = 0
+    objects: list[SceneObject] = []
+
+    for obj in scene.objects:
+        if obj.object_type != "lining_segment":
+            objects.append(obj)
+            continue
+
+        front_y = (obj.ring_id - 0.5) * ring_width_m
+        back_y = (obj.ring_id + 0.5) * ring_width_m
+        strip_front = obj.ring_id > 0
+        strip_back = obj.ring_id < max_ring_id
+
+        kept: list[Face] = []
+        removed = 0
+        for face in obj.faces:
+            ys = [obj.vertices[index][1] for index in face]
+            on_front = strip_front and all(
+                abs(y - front_y) <= tolerance_m for y in ys
+            )
+            on_back = strip_back and all(
+                abs(y - back_y) <= tolerance_m for y in ys
+            )
+            if on_front or on_back:
+                removed += 1
+            else:
+                kept.append(face)
+
+        props = dict(obj.extra_properties)
+        props.update(
+            {
+                "internalLongitudinalCapsStripped": True,
+                "longitudinalCapFacesRemoved": removed,
+                "renderSurfaceOpenAtInternalRingBoundaries": True,
+            }
+        )
+        removed_total += removed
+        objects.append(
+            SceneObject(
+                name=obj.name,
+                vertices=obj.vertices,
+                faces=tuple(kept),
+                object_type=obj.object_type,
+                ring_id=obj.ring_id,
+                label_id=obj.label_id,
+                instance_id=obj.instance_id,
+                semantic_class=obj.semantic_class,
+                segment_id=obj.segment_id,
+                segment_name=obj.segment_name,
+                segment_kind=obj.segment_kind,
+                reconstruction=(
+                    f"{obj.reconstruction}+stage9_internal_cap_strip"
+                    if obj.reconstruction
+                    else "stage9_internal_cap_strip"
+                ),
+                collection_path=obj.collection_path,
+                extra_properties=props,
+            )
+        )
+
+    metadata = dict(scene.metadata)
+    metadata["productionLiningCapStrip"] = {
+        "removedFaces": removed_total,
+        "internalBoundariesOnly": True,
+        "outerTunnelEndCapsPreserved": True,
+        "requiresBooleanBakeFirst": True,
+    }
+    return ScenePackage(
+        name=scene.name,
+        mode=scene.mode,
+        label_policy=scene.label_policy,
+        objects=tuple(objects),
+        metadata=metadata,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Topology audit
 # ---------------------------------------------------------------------------
 

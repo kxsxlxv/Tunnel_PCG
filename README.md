@@ -107,7 +107,7 @@ Run:
 
 Current regression result:
 
-    112 tests passed
+    113 tests passed
 
 GitHub Actions additionally runs:
 

@@ -45,6 +45,7 @@ def main() -> None:
         set_metric_units=True,
         apply_bolt_booleans=True,
         strip_internal_lining_caps=True,
+        strip_coincident_lining_interfaces=True,
     )
 
     errors = []
@@ -91,6 +92,8 @@ def main() -> None:
     ring_count = int(package.metadata.get("ringCount", 0))
     if ring_count > 1 and result.lining_cap_faces_removed <= 0:
         errors.append("no internal lining cap faces were removed")
+    if result.lining_interface_faces_removed <= 0:
+        errors.append("no coincident segment-interface faces were removed")
 
     report = {
         "stage": 9,
@@ -101,6 +104,7 @@ def main() -> None:
         "booleanOperationsApplied": result.boolean_operations_applied,
         "removedPocketCutters": len(result.removed_tool_names),
         "liningCapFacesRemoved": result.lining_cap_faces_removed,
+        "liningInterfaceFacesRemoved": result.lining_interface_faces_removed,
         "errors": errors,
         "result": "PASS" if not errors else "FAIL",
     }

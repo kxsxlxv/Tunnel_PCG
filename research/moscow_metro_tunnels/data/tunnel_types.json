@@ -1,15 +1,26 @@
 {
-  "schema_version": "0.1",
+  "schema_version": "0.2",
   "units": "m",
+  "confidence_legend": {
+    "A": "direct current normative/design requirement or official primary drawing",
+    "B": "official Moscow/project/engineering publication or current official estimating norm",
+    "C": "technical textbook/historical engineering secondary source",
+    "D": "photographic or visual inference"
+  },
   "archetypes": [
     {
       "id": "CAST_IRON_6000_R075",
       "lining": "cast_iron_tubing",
       "shape": "circular",
       "outer_diameter": 6,
+      "inner_diameter": null,
+      "structural_depth": null,
       "ring_pitch": 0.75,
+      "segment_count": null,
+      "bolt_diameter": 0.03,
+      "bolt_length": 0.13,
       "confidence": "C",
-      "notes": "First Moscow second-stage cast-iron running-tunnel type; inner diameter and exact segment layout pending drawing verification."
+      "notes": "Early Moscow 6.0 m cast-iron family; 0.75 m pitch documented for the first Moscow implementation. Do not apply this pitch to every later 6 m cast-iron tunnel."
     },
     {
       "id": "CAST_IRON_5500_R1000",
@@ -20,9 +31,11 @@
       "structural_depth": 0.2,
       "ring_pitch": 1,
       "rib_height": 0.2,
+      "segment_count": null,
       "bolt_diameter": 0.027,
       "bolt_length": 0.12,
-      "confidence": "C"
+      "confidence": "C",
+      "notes": "Classic Moscow/USSR metro cast-iron tubing family. Exact N/C/K angular topology remains series-specific."
     },
     {
       "id": "CAST_IRON_5500_LIGHT",
@@ -30,19 +43,40 @@
       "shape": "circular",
       "outer_diameter": 5.5,
       "inner_diameter": 5.1,
+      "structural_depth": null,
       "ring_pitch": 1,
       "rib_height": 0.15,
-      "confidence": "C"
+      "segment_count": null,
+      "confidence": "C",
+      "notes": "Lightweight historical family; lower part may use a flat combined RC/cast-iron invert element."
+    },
+    {
+      "id": "RC_BLOCK_UNIFIED_6N_1INVERT_EXPANDING",
+      "lining": "legacy_precast_rc_blocks",
+      "shape": "circular",
+      "outer_diameter": null,
+      "inner_diameter": null,
+      "ring_pitch": null,
+      "segment_layout": {
+        "normal_blocks": 6,
+        "invert_blocks": 1,
+        "expanding_fixing_inserts": true
+      },
+      "confidence": "C",
+      "notes": "Historical unified compressed lining topology. Diameter/pitch must be supplied by the exact series/project, not inferred."
     },
     {
       "id": "MONOLITHIC_PRESSED_5500",
       "lining": "monolithic_pressed_concrete",
       "shape": "circular",
       "inner_diameter": 5.5,
+      "outer_diameter": null,
       "lining_thickness_range": [
         0.37,
         0.4
       ],
+      "ring_pitch": null,
+      "segment_count": null,
       "confidence": "C"
     },
     {
@@ -54,7 +88,22 @@
       "structural_depth": 0.25,
       "ring_pitch": 1.4,
       "segment_count": 8,
-      "confidence": "B"
+      "confidence": "B",
+      "notes": "Moscow 2012 NFM running-tunnel lining family."
+    },
+    {
+      "id": "TBM_6000_5400_RC_CURRENT_GENERIC",
+      "lining": "high_precision_precast_rc_segments",
+      "shape": "circular",
+      "outer_diameter": 6,
+      "inner_diameter": 5.4,
+      "structural_depth": 0.3,
+      "ring_pitch": null,
+      "segment_count": null,
+      "concrete_volume_per_ring_m3": 7.615,
+      "gasket_grooves_required": true,
+      "confidence": "B",
+      "notes": "Contemporary 6.0/5.4 m high-precision RC lining family documented in current national metro construction cost norms. Ring width and segment count are project-family parameters."
     },
     {
       "id": "TBM_6000_5400_RC_7SEG_R1400",
@@ -65,19 +114,25 @@
       "structural_depth": 0.3,
       "ring_pitch": 1.4,
       "segment_count": 7,
+      "gasket_set_count": 7,
+      "grout_lifting_insert_count": 7,
+      "polyethylene_dowel_count": 26,
       "confidence": "B",
-      "notes": "Documented as transition-tunnel Herrenknecht lining; not universal running-tunnel type."
+      "notes": "Moscow 2012 Herrenknecht transition-tunnel lining; not a universal running-tunnel type."
     },
     {
       "id": "TBM_6M_RC_6SEG_R1400",
       "lining": "precast_rc_segments",
       "shape": "circular",
       "tbm_class_diameter": 6,
+      "outer_diameter": null,
+      "inner_diameter": null,
+      "structural_depth": null,
       "ring_pitch": 1.4,
       "segment_count": 6,
       "ring_mass_t": 21,
       "confidence": "B",
-      "notes": "BCL engineering infographic; exact finished diameters project-specific."
+      "notes": "BCL engineering infographic. Exact finished diameters must be selected by project family."
     },
     {
       "id": "TBM_10M_RC_6SEG_R1800_2T",
@@ -85,16 +140,32 @@
       "shape": "circular",
       "tracks": 2,
       "tbm_class_diameter": 10,
+      "outer_diameter": null,
+      "inner_diameter": null,
+      "structural_depth": null,
       "ring_pitch": 1.8,
       "segment_count": 6,
       "ring_mass_t": 70,
+      "minimum_track_center_spacing_straight_R_ge_500": 3.4,
       "confidence": "B",
-      "notes": "BCL 10 m-class two-track tunnel; exact lining ID/OD and track centers pending project drawing."
+      "notes": "BCL 10 m-class two-track family. For tunnel diameter >9.4 m, UGR-to-tunnel-axis placement is project-calculated under GOST 23961-2024."
+    },
+    {
+      "id": "CUT_COVER_FULL_SECTION_4400_5000_R1500",
+      "lining": "precast_rc_full_section",
+      "shape": "rectangular",
+      "external_width": 4.4,
+      "external_height": 5,
+      "section_length": 1.5,
+      "section_mass_t": 13.3,
+      "tracks": null,
+      "confidence": "C",
+      "notes": "Documented historical full-section precast product family usable in one-/two-track assemblies. Not a universal Moscow rectangular-tunnel dimension."
     }
   ],
-  "track_gauge_by_radius": [
+  "track_gauge_by_radius_current": [
     {
-      "r_min_inclusive": 1200,
+      "condition": "straight_or_R>=1200",
       "gauge": 1.52
     },
     {
@@ -116,6 +187,10 @@
       "r_min_exclusive": 100,
       "r_max_inclusive": 125,
       "gauge": 1.54
+    },
+    {
+      "r_max_inclusive": 100,
+      "gauge": 1.544
     }
   ],
   "source_urls": [
@@ -123,6 +198,7 @@
     "https://www.metro.ru/library/metropoliteny/233/",
     "https://www.mos.ru/upload/documents/oiv/inf_ceny_2012.pdf",
     "https://mosinzhproekt.ru/wp-content/uploads/2023/03/is_01-full_.pdf",
-    "https://base.garant.ru/73992414/53f89421bbdaf741eb2d1ecc4ddb4c33/"
+    "https://rags.ru/documents/prod/normativy/0/ntss_91321.html",
+    "https://protect.gost.ru/gost/details/d9e37be2-c5e8-4727-9df3-b84536ed7609"
   ]
 }

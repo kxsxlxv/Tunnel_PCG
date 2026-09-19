@@ -1074,7 +1074,13 @@ def strip_internal_lining_cap_faces(
     lining = scene.objects_of_type("lining_segment")
     if not lining:
         return scene
-    max_ring_id = max(obj.ring_id for obj in lining)
+    global_ring_count = int(
+        scene.metadata.get(
+            "ringCount",
+            max(obj.ring_id for obj in lining) + 1,
+        )
+    )
+    global_max_ring_id = global_ring_count - 1
     removed_total = 0
     objects: list[SceneObject] = []
 
@@ -1086,7 +1092,7 @@ def strip_internal_lining_cap_faces(
         front_y = (obj.ring_id - 0.5) * ring_width_m
         back_y = (obj.ring_id + 0.5) * ring_width_m
         strip_front = obj.ring_id > 0
-        strip_back = obj.ring_id < max_ring_id
+        strip_back = obj.ring_id < global_max_ring_id
 
         kept: list[Face] = []
         removed = 0

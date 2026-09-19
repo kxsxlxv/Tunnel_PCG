@@ -346,6 +346,7 @@ class ContinuousAssetSpec:
     cross_section_xz: tuple[tuple[float, float], ...]
     label_id: int
     semantic_class: str
+    omitted_longitudinal_edges: tuple[int, ...] = ()
     properties: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -353,6 +354,11 @@ class ContinuousAssetSpec:
             raise ValueError(f"{self.name}: cross-section needs >=3 vertices")
         if not self.persistent_key:
             raise ValueError("continuous asset persistent key is empty")
+        n = len(self.cross_section_xz)
+        if any(i < 0 or i >= n for i in self.omitted_longitudinal_edges):
+            raise ValueError(f"{self.name}: omitted edge index outside cross-section")
+        if len(set(self.omitted_longitudinal_edges)) != len(self.omitted_longitudinal_edges):
+            raise ValueError(f"{self.name}: duplicate omitted edge index")
 
     @property
     def instance_id(self) -> int:
@@ -395,6 +401,7 @@ def build_sweep_mesh(
     *,
     cap_start: bool = True,
     cap_end: bool = True,
+    omit_edge_indices: Sequence[int] = (),
 ) -> SweepMesh:
     points = _ensure_ccw_xz(cross_section_xz)
     if len(stations) < 2:
@@ -403,6 +410,9 @@ def build_sweep_mesh(
         raise ValueError("sweep stations must be strictly increasing")
 
     n = len(points)
+    omitted = set(int(i) for i in omit_edge_indices)
+    if any(i < 0 or i >= n for i in omitted):
+        raise ValueError("sweep omitted edge index outside cross-section")
     vertices: list[Vec3] = []
     for station in stations:
         for x, z in points:
@@ -419,6 +429,8 @@ def build_sweep_mesh(
         a0 = isec * n
         b0 = (isec + 1) * n
         for i in range(n):
+            if i in omitted:
+                continue
             j = (i + 1) % n
             faces.append((a0 + i, a0 + j, b0 + j, b0 + i))
 
@@ -435,6 +447,7 @@ def build_sweep_mesh(
         station_count=len(stations),
         cap_start=cap_start,
         cap_end=cap_end,
+        omit_edge_indices=spec.omitted_longitudinal_edges,
     )
 
 
@@ -464,6 +477,22 @@ def _ancillary_semantics(
     raise NotImplementedError(label_policy)
 
 
+def _edges_with_both_vertices_at_z(
+    points: Sequence[tuple[float, float]],
+    z_m: float,
+    *,
+    tolerance_m: float = 1e-10,
+) -> tuple[int, ...]:
+    result = []
+    n = len(points)
+    for i in range(n):
+        z0 = points[i][1]
+        z1 = points[(i + 1) % n][1]
+        if abs(z0 - z_m) <= tolerance_m and abs(z1 - z_m) <= tolerance_m:
+            result.append(i)
+    return tuple(result)
+
+
 def _rail_center_offsets(config: AncillaryConfig) -> tuple[float, float]:
     offset = (
         0.5 * config.rail_spacing_m
@@ -490,15 +519,27 @@ def build_continuous_asset_specs(
             continue
         label_id, semantic = _ancillary_semantics(label_policy, mesh.category)
         key = f"{namespace}/infrastructure/{mesh.category}/{mesh.name}"
+        section = _ensure_ccw_xz(_section_from_ancillary_mesh(mesh, ancillary))
+        omitted_edges: tuple[int, ...] = ()
+        if mesh.category == "pavement":
+            # Only the horizontal top edge is visible to the tunnel interior.
+            # The remaining circular-segment perimeter is a hidden contact
+            # surface against the lining intrados.
+            top_z = float(mesh.properties["pavementTopZ"])
+            top_edges = set(_edges_with_both_vertices_at_z(section, top_z))
+            if len(top_edges) != 1:
+                raise AssertionError("production pavement must have one horizontal top edge")
+            omitted_edges = tuple(i for i in range(len(section)) if i not in top_edges)
         specs.append(
             ContinuousAssetSpec(
                 persistent_key=key,
                 name=f"PROD_{mesh.name.upper()}",
                 object_type=f"production_{mesh.category}",
                 category=mesh.category,
-                cross_section_xz=_section_from_ancillary_mesh(mesh, ancillary),
+                cross_section_xz=section,
                 label_id=label_id,
                 semantic_class=semantic,
+                omitted_longitudinal_edges=omitted_edges,
                 properties={
                     **mesh.properties,
                     "sourceStage8Name": mesh.name,
@@ -509,7 +550,12 @@ def build_continuous_asset_specs(
 
     base_z = -ancillary.inner_radius_m + ancillary.config.pavement_height_m
     for rail_index, center_x in enumerate(_rail_center_offsets(ancillary.config)):
-        points = profile.points_xz(center_x_m=center_x, base_z_m=base_z)
+        points = _ensure_ccw_xz(
+            profile.points_xz(center_x_m=center_x, base_z_m=base_z)
+        )
+        bottom_edges = _edges_with_both_vertices_at_z(points, base_z)
+        if len(bottom_edges) != 1:
+            raise AssertionError("production rail must have one pavement-contact bottom edge")
         key = f"{namespace}/infrastructure/rail/{rail_index}"
         label_id, semantic = _ancillary_semantics(label_policy, "rail")
         specs.append(
@@ -521,6 +567,7 @@ def build_continuous_asset_specs(
                 cross_section_xz=points,
                 label_id=label_id,
                 semantic_class=semantic,
+                omitted_longitudinal_edges=bottom_edges,
                 properties={
                     "railIndex": rail_index,
                     "railCenterX": center_x,
@@ -569,6 +616,12 @@ def scene_object_from_continuous_asset(
         "productionStationCount": mesh.station_count,
         "capStart": cap_start,
         "capEnd": cap_end,
+        "omittedLongitudinalEdgeCount": len(spec.omitted_longitudinal_edges),
+        "contactSurfacePolicy": (
+            "hidden_coplanar_contact_faces_omitted"
+            if spec.omitted_longitudinal_edges
+            else "closed_longitudinal_perimeter"
+        ),
         **dict(extra_properties or {}),
     }
     category_folder = {

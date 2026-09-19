@@ -38,6 +38,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--save-blend", type=Path, default=None)
     parser.add_argument("--root-collection", default="TunnelScanner")
     parser.add_argument("--keep-existing-root", action="store_true")
+    parser.add_argument(
+        "--no-bolt-booleans",
+        action="store_true",
+        help="Create Stage-6 cutter/head objects without applying Boolean modifiers",
+    )
     return parser.parse_args(_argv_after_double_dash())
 
 
@@ -48,11 +53,17 @@ def main() -> None:
         package,
         root_collection_name=args.root_collection,
         clear_existing_root=not args.keep_existing_root,
+        apply_bolt_booleans=not args.no_bolt_booleans,
     )
     print(
-        f"Imported {len(result.object_names)} objects into collection "
+        f"Imported {len(result.object_names)} surviving objects into collection "
         f"{result.root_collection_name!r}."
     )
+    if result.boolean_operations_applied:
+        print(
+            f"Applied {result.boolean_operations_applied} Stage-6 Boolean operations; "
+            f"removed {len(result.removed_tool_names)} pocket cutters."
+        )
 
     if args.save_blend is not None:
         import bpy  # type: ignore

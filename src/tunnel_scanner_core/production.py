@@ -594,6 +594,7 @@ def scene_object_from_continuous_asset(
     namespace: str,
     name_override: str | None = None,
     instance_id_override: int | None = None,
+    ring_id_override: int | None = None,
     cap_start: bool = True,
     cap_end: bool = True,
     collection_prefix: tuple[str, ...] = (),
@@ -635,7 +636,7 @@ def scene_object_from_continuous_asset(
         vertices=mesh.vertices,
         faces=mesh.faces,
         object_type=spec.object_type,
-        ring_id=0,
+        ring_id=0 if ring_id_override is None else ring_id_override,
         label_id=spec.label_id,
         instance_id=spec.instance_id if instance_id_override is None else instance_id_override,
         semantic_class=spec.semantic_class,
@@ -952,6 +953,23 @@ def build_chunk_scene_packages(
             start_chainage_m=chunk.start_chainage_m,
             end_chainage_m=chunk.end_chainage_m,
         )
+        representative_ring_id = (
+            chunk.ring_ids[0]
+            if chunk.ring_ids
+            else min(
+                production.assembly.config.n_rings - 1,
+                max(
+                    0,
+                    int(
+                        math.floor(
+                            0.5
+                            * (chunk.start_chainage_m + chunk.end_chainage_m)
+                            / production.assembly.config.ring_width_m
+                        )
+                    ),
+                ),
+            )
+        )
         for spec in production.asset_specs:
             piece_key = _chunk_piece_key(spec, chunk)
             objects.append(
@@ -961,6 +979,7 @@ def build_chunk_scene_packages(
                     namespace=production.config.namespace,
                     name_override=f"CH{chunk.chunk_id:05d}__{spec.name}",
                     instance_id_override=stable_instance_id(piece_key),
+                    ring_id_override=representative_ring_id,
                     cap_start=math.isclose(
                         chunk.start_chainage_m, 0.0, abs_tol=1e-12
                     ),
@@ -975,6 +994,7 @@ def build_chunk_scene_packages(
                         "chunkPieceKey": piece_key,
                         "sourceInstanceID": spec.instance_id,
                         "sourcePersistentKey": spec.persistent_key,
+                        "representativeRingID": representative_ring_id,
                         "identityScope": "technical_chunk_piece",
                     },
                 )

@@ -57,6 +57,7 @@ from .curved_mesh import (
 from .bolts import (
     BoltAssembly,
     BoltBounds,
+    BoltBooleanCutterMesh,
     BoltConfig,
     BoltHeadMesh,
     BoltLayoutType,
@@ -71,6 +72,7 @@ from .bolts import (
     build_bolt_placements,
     build_bolt_pocket,
     build_bolt_set,
+    build_pocket_boolean_cutter,
     iter_meshes as iter_bolt_meshes,
     sample_bolt_config,
     sample_pocket_perturbation,
@@ -103,8 +105,10 @@ from .scene_io import (
 )
 from .blender_adapter import (
     BlenderBuildResult,
+    BoltBooleanOperation,
     blender_available,
     build_scene_package_in_blender,
+    plan_bolt_boolean_operations,
     create_blender_object,
 )
 
@@ -143,6 +147,7 @@ __all__ = [
     "sagitta_m",
     "BoltAssembly",
     "BoltBounds",
+    "BoltBooleanCutterMesh",
     "BoltConfig",
     "BoltHeadMesh",
     "BoltLayoutType",
@@ -157,6 +162,7 @@ __all__ = [
     "build_bolt_placements",
     "build_bolt_pocket",
     "build_bolt_set",
+    "build_pocket_boolean_cutter",
     "iter_bolt_meshes",
     "sample_bolt_config",
     "sample_pocket_perturbation",
@@ -199,7 +205,9 @@ __all__ = [
     "scene_package_to_dict",
     "write_scene_package_json",
     "BlenderBuildResult",
+    "BoltBooleanOperation",
     "blender_available",
     "build_scene_package_in_blender",
+    "plan_bolt_boolean_operations",
     "create_blender_object",
 ]

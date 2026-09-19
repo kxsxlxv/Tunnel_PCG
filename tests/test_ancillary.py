@@ -1,3 +1,4 @@
+from dataclasses import replace
 from collections import Counter
 import math
 
@@ -6,6 +7,7 @@ import numpy as np
 from tunnel_scanner_core import (
     AncillaryConfig,
     AncillarySamplingPolicy,
+    AncillaryTransformPolicy,
     LabelPolicy,
     RingConfig,
     RingRotationStrategy,
@@ -389,3 +391,47 @@ def test_rail_spacing_ambiguity_modes_are_explicit():
     )
     prose_centers = sorted(m.properties["railCenterX"] for m in prose.meshes_of_category("rail"))
     assert np.allclose(prose_centers, [-1.5, 1.5], atol=1e-12, rtol=0)
+
+
+def test_literal_paper_ring_rigid_policy_rotates_ancillary_with_ring():
+    cfg, ring, joints, _ = _ring_fixture()
+    base = AncillaryConfig.reference(cfg.inner_radius_m)
+    paper_cfg = replace(
+        base,
+        transform_policy=AncillaryTransformPolicy.PAPER_RING_RIGID,
+    )
+    ancillary = build_ancillary_set(
+        inner_radius_m=cfg.inner_radius_m,
+        length_m=cfg.width_m,
+        config=paper_cfg,
+    )
+    local = build_nominal_scene_package(
+        ring,
+        joints,
+        ring_id=0,
+        ancillary=ancillary,
+    )
+    assembly = sample_tunnel_assembly(
+        TunnelAssemblyConfig(
+            n_rings=1,
+            ring_width_m=cfg.width_m,
+            displacement_amplitude_m=0.0,
+            axis_noise_sigma_m=0.0,
+            ring_rotation_strategy=RingRotationStrategy.PAPER_CONSTANT_NOMINAL,
+            nominal_stagger_deg=90.0,
+            angular_imperfection_fraction=0.0,
+        ),
+        seed=3,
+    )
+    world = build_multi_ring_scene_package([local], assembly)
+    local_pavement = local.objects_of_type("ancillary_pavement")[0]
+    world_pavement = world.objects_of_type("ancillary_pavement")[0]
+    assert not np.allclose(
+        local_pavement.vertices,
+        world_pavement.vertices,
+        atol=1e-8,
+        rtol=0,
+    )
+    assert world_pavement.custom_properties["followSceneAlignment"] is False
+    assert world_pavement.custom_properties["followRingAxialRotation"] is True
+    assert world_pavement.custom_properties["objectAppliedAxialRotationDeg"] == 90.0

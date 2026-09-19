@@ -259,7 +259,13 @@ def _strip_internal_lining_caps_in_blender(
     lining_objects = [o for o in package.objects if o.object_type == "lining_segment"]
     if not lining_objects:
         return 0
-    max_ring_id = max(o.ring_id for o in lining_objects)
+    global_ring_count = int(
+        package.metadata.get(
+            "ringCount",
+            max(o.ring_id for o in lining_objects) + 1,
+        )
+    )
+    global_max_ring_id = global_ring_count - 1
     removed_total = 0
 
     for scene_object in lining_objects:
@@ -271,7 +277,7 @@ def _strip_internal_lining_caps_in_blender(
         front_y = (scene_object.ring_id - 0.5) * ring_width_m
         back_y = (scene_object.ring_id + 0.5) * ring_width_m
         strip_front = scene_object.ring_id > 0
-        strip_back = scene_object.ring_id < max_ring_id
+        strip_back = scene_object.ring_id < global_max_ring_id
 
         bm = bmesh.new()
         bm.from_mesh(obj.data)

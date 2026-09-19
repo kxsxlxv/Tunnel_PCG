@@ -1,248 +1,317 @@
 # Moscow Metro era / section / construction-archetype map
 
+Research snapshot: 2026-09-19.
+
 Purpose: prevent historically impossible combinations in procedural generation.
 
-This is not yet a complete kilometer-by-kilometer inventory. It is a growing set of **confirmed anchor examples** and era constraints.
+This is an evidence map, not a complete kilometre-by-kilometre tunnel inventory. A section is assigned an exact archetype only when a source supports that assignment.
 
-Confidence:
-- B = official Moscow/project publication;
-- C = engineering/history technical literature.
+## 1. 1930s: first-stage construction was not one tunnel type
 
----
+Official Moscow Metro history:
+- first stage opened 15 May 1935;
+- Sokolniki–Park Kultury with the Okhotny Ryad–Smolenskaya branch;
+- total first-stage length 11.2 km.
 
-## 1. 1932–1937: early reinforced-concrete block running tunnels
+Source ID: S029.
 
-A historical engineering source on precast RC tunnel linings describes approximately **3750 running metres** of Moscow running tunnels built in 1932–1937 with an early RC-block system:
+Engineering literature describes **wide use of monolithic concrete lining** on first-stage Moscow tunnels constructed mainly by mining methods.
 
-- outside diameter: **6.5 m**;
-- inside diameter: **5.5 m**;
-- radial block thickness: **0.50 m**;
-- ring width: **0.75 m**;
-- **12 identical RC blocks per ring**;
-- internal glued waterproofing with a supporting RC shell in the described system.
+Source ID: S026.
 
-This is a major correction to any assumption that the earliest Moscow deep running tunnels were all cast iron.
+At the same time, a dedicated early precast-RC system was used in Moscow in 1932–1937:
+- documented length: about 3750 running metres;
+- D_out = 6.5 m;
+- D_in = 5.5 m;
+- 12 identical rectangular RC blocks;
+- block/ring width along tunnel = 0.75 m;
+- block thickness = 0.50 m;
+- no tensile ties in block/ring joints in the described system;
+- adjacent rings were laid with a half-block stagger;
+- internal glued waterproofing plus supporting RC shell.
 
-Add archetype:
+Archetype:
 `RC_BLOCK_EARLY_6500_5500_12SEG_R075`.
 
-Source:
-historical tunnel-lining engineering literature, searchable archive:
-https://ru.djvu.online/
+Source IDs: S024, S026.
 
-The first Moscow Metro stage opened in 1935: Sokolniki–Park Kultury plus the Okhotny Ryad–Smolenskaya branch. Official historical source:
-https://www.mosmetro.ru/press/history/
-
-Applicability must still be established per exact interstation section before assigning this 6.5/5.5 family to a specific generated route.
+**Generator rule:** `ERA_1930S_FIRST_STAGE` must allow both monolithic/mined and early precast-RC families. Opening year alone cannot select the physical lining.
 
 ---
 
-## 2. Second construction stage: 6.0 m cast-iron tubing
+## 2. Second construction stage: exact early cast-iron family
 
-Historical engineering literature identifies the second Moscow construction stage as the first Moscow use of cast-iron tubing for running tunnels.
+A 1938 Moscow construction publication gives an unusually complete running-tunnel ring:
 
-Documented early family:
-- outside diameter: **6.0 m**;
-- ring width: **0.75 m**;
-- **12 tubings per running-tunnel ring** in a 1950s engineering description;
-- Ø30 mm-class ring bolts in the documented 6 m lining family.
+- D_out = **6000 mm**;
+- ring width = **750 mm**;
+- **12 segments**:
+  - 9 normal;
+  - 2 adjacent to key;
+  - 1 key;
+- **67 bolts** joining one ring to the next;
+- **5 bolts Ø30 mm** at each described segment connection;
+- flange/rib height = **200 mm**;
+- back-plate thickness = **35 mm**.
 
-In 1937 Moscow construction reportedly received large numbers of domestic shields:
-- 6 m-class shields for running tunnels;
-- 9.5 m-class shields for station tunnels.
-
-This establishes a distinct late-1930s/1940s deep-running-tunnel morphology:
-- dense 0.75 m ring rhythm;
-- cast-iron ribs/bolts;
-- 12-element ring topology with non-identical key/adjacent elements.
+Later technical literature also gives approximately 130 mm bolt length for the 6 m cast-iron family.
 
 Archetype:
 `CAST_IRON_6000_R075_12SEG_EARLY`.
 
----
+Source IDs: S025, S007.
 
-## 3. Post-war / mature 5.5 m cast-iron family
-
-The classic 5.5/5.1 m, 1.0 m ring cast-iron family became a standard metro running-tunnel solution.
-
-Use:
-`CAST_IRON_5500_R1000`.
-
-Do not assume a single year of transition from 6.0 m to 5.5 m across all lines. Construction method depends on geology, project and build period.
+This family creates a very distinctive LiDAR signature:
+- 0.75 m circumferential seam cadence;
+- dense radial ribs;
+- repeated bolt heads/nuts;
+- N/C/K asymmetry at the crown.
 
 ---
 
-## 4. 1950s–1960s: broad adoption of precast RC lining
+## 3. Mature classic cast-iron family
 
-Historical engineering literature reports active Moscow introduction/development of precast RC tunnel linings from the 1950s.
+Standard technical family:
+- D_out = 5.5 m;
+- D_in = 5.1 m;
+- ring width = 1.0 m;
+- traditional flange/rib height = 0.20 m;
+- later lightweight flange/rib height = 0.15 m;
+- Ø27 x ~120 mm fastening family.
 
-Examples/scope named in technical literature include many sections on:
+Archetypes:
+- `CAST_IRON_5500_R1000`;
+- `CAST_IRON_5500_LIGHT`.
+
+Source ID: S007.
+
+A current/recent national construction-cost reference also retains a close deep-tunnel cast-iron family:
+- D_out about 5.49 m;
+- ring width 1.0 m;
+- ring mass 5.443 t;
+- caulked joints and grout injection behind lining.
+
+This is evidence that “5.5 m cast iron” must still be treated as a real dimensional family, not only a historical visual style.
+
+---
+
+## 4. Moscow precast RC: 6.1 / 5.6 m, ten-block family
+
+A 1975 engineering text explicitly describes a Moscow Metro precast RC running-tunnel lining:
+
+- D_out = **6.1 m**;
+- D_in = **5.6 m**;
+- ring width = **1.0 m**;
+- **10 blocks**, identical in form/size;
+- block volume = **0.46 m³**;
+- block mass = **1.15 t**;
+- historical concrete grade 400;
+- working reinforcement Ø16 mm;
+- no permanent bolted connection between individual blocks;
+- during erection blocks are held by steel pins Ø22 mm placed in radial-end holes.
+
+Archetype:
+`RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000`.
+
+Source ID: S026.
+
+This is geometrically very different from both cast-iron tubing and modern high-precision TBM segments.
+
+---
+
+## 5. 1950s–1970s: industrialized RC transition
+
+Historical technical literature records broad development/adoption of precast RC metro linings in Moscow from the 1950s.
+
+Named development areas include:
 - Kaluzhsky radius;
 - Frunzensky radius;
 - Zhdanovsky radius.
 
-In 1956 precast RC roof structures were introduced over monolithic walls on some one-track tunnels and crossover chambers of the Frunzensky radius.
+Multiple series existed; some shallow/open-cut work also used prefabricated roofs/walls/full-section experiments.
 
-From 1958, serial precast RC solutions for two-track running tunnels were developed/applied, with multiple series.
+Do **not** map one generic RC ring to an entire named radius.
 
-Experimental full-section precast tunnel sections were used in Moscow:
-- Frunzensky radius: around **1958**;
-- Zhdanovsky radius: around **1964**.
-
-These references establish era/morphology but do not prove that every tunnel on the named radius used the same series.
-
----
-
-## 5. Unified RC-block circular family
-
-A historical source describes a unified flexible/hinged RC running-tunnel lining with approximately:
-- inside diameter: **5.1 m**;
-- radial thickness: **0.20 m**;
-- major block count described as **7** in the cited construction system;
-- special insert/expansion components.
-
-The textual source is not sufficiently unambiguous to freeze every segment class/count relation in LOD0, so exact angular topology remains unresolved.
-
-Use a guarded archetype rather than equal wedges:
-`RC_BLOCK_UNIFIED_ID5100_T200`.
+Applicable families include:
+- 6.1/5.6 m ten-block Moscow family;
+- unified compressed/flexible RC blocks;
+- ribbed RC tubing;
+- solid RC blocks;
+- rectangular precast/open-cut structures.
 
 ---
 
-## 6. Monolithic-pressed concrete: confirmed Moscow use
+## 6. Unified compressed RC-block family
 
-Monolithic-pressed lining is confirmed in Moscow construction literature and was used where shield tail void was filled by pressing fresh concrete directly against ground.
+Historical technical description:
+- ring begins with invert block plus normal blocks;
+- one documented system uses six normal blocks + one invert block + expanding/fixing inserts;
+- compressed against surrounding ground;
+- exact diameter/topology depends on series.
 
-Historical typical geometry:
-- internal running-tunnel diameter around **5.5 m**;
-- lining thickness around **0.37–0.40 m**.
+Archetype:
+`RC_BLOCK_UNIFIED_6N_1INVERT_EXPANDING`.
+
+Source ID: S021/S008 technical literature set.
+
+Keep unknown dimensions as null.
+
+---
+
+## 7. Monolithic-pressed concrete: confirmed Moscow examples
 
 ### Krasnopresnensky radius
-Technical literature describes use of monolithic-pressed concrete and RC compressed against ground in unstable sandy ground on shallow/dependent sections of the Krasnopresnensky radius.
+An industry article from 1972 discusses an experimental/working monolithic-pressed-concrete application on the Krasnopresnensky radius, especially in sandy ground.
 
-### Serpukhovsky radius: Nakhimovsky Prospekt – Sevastopolskaya
-A particularly valuable paired example:
-- one running tunnel was constructed with a **TShB-7** shield using monolithic-pressed lining;
-- the opposite tunnel used a different shield/construction method and assembled reinforced-concrete lining;
-- construction dates in the cited history are around the early 1980s.
+Source ID: S036.
 
-This means two tunnels of the **same interstation section can legitimately have different lining morphologies**.
+### Nakhimovsky Prospekt – Sevastopolskaya
+A primary industry article in “Metrostroy”, 1982, states:
 
-The route generator must support per-track archetype assignment.
+- **left tunnel**: TShB-7 mechanized complex; monolithic-pressed concrete lining;
+- **right tunnel**: ShNE-1 excavator-type shield as part of KM-42; assembled lining system.
 
----
+A later technical source gives the TShB-7 family:
+- shield diameter about **5.9 m**;
+- intended monolithic-pressed lining internal diameter about **5.2 m**.
 
-## 7. 2000s–2020s: modern high-precision segmental RC
+Archetype:
+`MONOLITHIC_PRESSED_TSHB7_ID5200`.
 
-Modern Moscow mechanized tunneling uses high-precision precast RC rings with elastic sealing gaskets.
+Source IDs: S027, S028.
 
-Known project-family examples already stored:
-- NFM 5.6/5.1 m, 1.4 m ring, 8 blocks;
-- Herrenknecht 6.0/5.4 m, 1.4 m ring, 7 blocks, documented as a transition-tunnel family in a Moscow 2012 publication;
-- BCL 6 m-class single-track family, 1.4 m ring, 6 blocks in Mosinzhproekt engineering material.
-
-Do not map the 2012 ring families to a specific line solely from date/TBM manufacturer until a project source explicitly links them.
+**Critical PCG consequence:** two tunnels of the same interstation section may legitimately use different lining systems. Store lining family per track/tunnel, not per station pair.
 
 ---
 
-## 8. Modern ~10 m two-track TBM tunnels
+## 8. Modern high-precision single-track RC segment families
 
-Official Moscow sources confirm the modern move from traditional ~6 m single-track shields to ~10 m shields producing one two-track circular tunnel.
+Do not collapse modern “6 m TBM” work into one geometry.
 
-Confirmed use includes:
-- Nekrasovskaya-line construction generation;
-- Bolshaya Koltsevaya Line sections;
-- later Rublyovo-Arkhangelskaya construction with the large-diameter shield “Lilia”.
+Documented reference families include:
+- Moscow NFM: 5.6/5.1 m; 1.4 m ring; 8 blocks;
+- Moscow Herrenknecht transition family: 6.0/5.4 m; 1.4 m ring; 7 blocks;
+- BCL engineering family: nominal 6 m shield class; ring 1.4 m; 6 blocks; ~21 t;
+- national reference family: 5.65/5.15 m; ring concrete volume 5.93 m³;
+- 2026 national reference family: 6.0/5.4 m; ring concrete volume 7.615 m³.
 
-For BCL engineering material:
-- 10 m-class shield;
-- ring width: **1.8 m**;
-- **6 blocks**;
-- ring mass about **70 t**.
+Source IDs: S012, S013, S017, S032, S033.
 
-Official Moscow construction reports large-diameter two-track tunnels including BCL underwater sections and western BCL construction.
-
-Visual morphology:
-- two tracks inside one circle;
-- central/side evacuation-service surface depending on project;
-- much wider equipment distribution than paired 5.1 m single-track tunnels;
-- smooth high-precision RC segments.
+These sources prove multiple contemporary geometries coexist. TBM nominal diameter is not enough to select lining ID/OD.
 
 ---
 
-## 9. Generation-era guardrails
+## 9. Modern large-diameter two-track shield tunnels
 
-Recommended top-level era presets:
+Official Moscow sources confirm large shields >10 m for one circular two-track tunnel.
+
+Confirmed examples:
+- shield “Lilia” on BCL;
+- “Lilia” previously used on Nekrasovskaya-line construction;
+- Rublyovo-Arkhangelskaya line, where official Moscow material states diameter >10 m and explicitly says this class is intended for two-track tunnels.
+
+On western BCL:
+- “Lilia” built the >2.2 km two-track Terekhovo–Kuntsevskaya tunnel;
+- Terekhovo/Kuntsevskaya stage is explicitly described as using 10 m shields and two-track tunnels.
+
+Source IDs: S030, S031, S037.
+
+Engineering BCL family data:
+- ring width 1.8 m;
+- 6 blocks;
+- ring mass ~70 t.
+
+Source ID: S013.
+
+---
+
+## 10. Current appearance modifiers independent of lining age
+
+Current SP changes what an old structural tunnel can look like after modernization.
+
+Examples:
+- all lining types: light-coloured waterproof noncombustible coating for **50 m from station ends**;
+- current evacuation signs;
+- current cable systems;
+- modern lighting;
+- modern track renewal / LVT may coexist with an older lining where a project has renewed permanent way.
+
+Therefore store:
+```
+civil_construction_era
+track_renewal_era
+services_renewal_era
+surface_condition_era
+```
+as independent attributes.
+
+---
+
+## 11. Era presets
 
 ### ERA_1930S_FIRST_STAGE
-Allowed:
-- early RC block 6.5/5.5 family where section-confirmed;
-- open-cut monolithic/RC structures;
-- period-specific rail/services.
-
-Disallow by default:
-- modern LVT;
-- modern segment gasket/pocket morphology;
-- modern 10 m two-track rings.
+Possible:
+- mined monolithic concrete;
+- early 6.5/5.5 RC block system;
+- early open-cut rectangular concrete.
 
 ### ERA_LATE_1930S_1940S_DEEP
-Allowed:
-- early 6.0 m cast-iron / 0.75 m ring family;
-- period cable/service morphology.
+Possible:
+- 6.0 m / 0.75 m / 12-segment cast iron;
+- historical service infrastructure.
 
 ### ERA_1950S_1970S
-Allowed:
-- classic 5.5 m cast iron;
-- legacy RC blocks;
-- experimental/full-section precast;
-- rectangular open-cut;
-- timber-in-concrete track.
+Possible:
+- classic 5.5/5.1 cast iron;
+- 6.1/5.6 ten-block Moscow RC;
+- unified/experimental RC systems;
+- open-cut rectangular structures.
 
 ### ERA_1970S_1990S
-Allowed:
-- classic cast iron;
-- improved RC block/tubing systems;
+Possible:
+- cast iron and RC families;
 - monolithic-pressed sections;
-- timber/concrete permanent way plus period-specific modernization.
+- mature timber-in-track-concrete permanent way.
 
 ### ERA_2000S_2020S_SINGLE_TRACK_TBM
-Allowed:
-- high-precision RC segmental rings;
-- modern elastomer gaskets;
-- modern cable systems;
-- timber or modern RC/LVT track depending on project.
+Possible:
+- multiple high-precision segment families;
+- modern gasketed joints;
+- modern track/services according to project.
 
 ### ERA_2010S_2020S_LARGE_2TRACK_TBM
-Allowed:
-- ~10 m-class two-track segmental circles;
-- modern evacuation/service geometry;
-- modern LVT/ballastless systems where project-confirmed.
+Possible:
+- large circular two-track segmental lining;
+- central/side evacuation geometry;
+- dense modern cable/services installation.
 
 ---
 
-## 10. Important rule for procedural realism
+## 12. Selection hierarchy
 
-A line opening year is **not sufficient** to choose tunnel geometry.
+For procedural generation choose geometry in this order:
 
-Selection hierarchy:
-1. named interstation construction source;
-2. exact tunnel/track direction if known;
-3. construction period;
-4. geology / construction method;
-5. generic era fallback only if no stronger data exists.
+1. exact tunnel/track construction source;
+2. exact interstation section source;
+3. named project/TBM/lining family;
+4. construction-era + engineering method evidence;
+5. generic era fallback only when explicitly permitted.
 
-Store:
+Schema:
 ```
 LineSectionTrack {
   line,
   station_from,
   station_to,
-  direction_or_track,
-  opening_year,
+  track_or_direction,
   construction_year_range,
-  lining_archetype,
+  opening_year,
+  structural_archetype,
+  track_archetype,
+  services_era,
   evidence_level,
   source_ids[]
 }
 ```
 
-Unknown exact assignment must stay `lining_archetype: null` rather than being guessed.
+Unknown assignment remains null.

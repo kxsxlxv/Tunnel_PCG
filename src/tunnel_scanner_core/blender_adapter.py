@@ -13,6 +13,7 @@ syntax, including the exact `labelID` and `ringID` names used by Tunnel Scanner.
 """
 
 from dataclasses import dataclass
+import math
 from typing import Any
 
 from .scene import SceneObject, ScenePackage
@@ -275,8 +276,14 @@ def _strip_internal_lining_caps_in_blender(
             raise RuntimeError(
                 f"lining object missing during cap cleanup: {scene_object.name}"
             )
-        front_y = (scene_object.ring_id - 0.5) * ring_width_m
-        back_y = (scene_object.ring_id + 0.5) * ring_width_m
+        props = scene_object.custom_properties
+        origin_y = (
+            float(props.get("chunkWorldOriginY", 0.0))
+            if bool(props.get("coordinatesLocalizedToChunk", False))
+            else 0.0
+        )
+        front_y = (scene_object.ring_id - 0.5) * ring_width_m - origin_y
+        back_y = (scene_object.ring_id + 0.5) * ring_width_m - origin_y
         strip_front = scene_object.ring_id > 0
         strip_back = scene_object.ring_id < global_max_ring_id
 
@@ -312,64 +319,118 @@ def _strip_coincident_lining_interfaces_in_blender(
     bpy,
     package: ScenePackage,
     *,
-    tolerance_m: float = 1e-8,
+    angle_tolerance_deg: float = 1e-3,
+    radial_span_tolerance_m: float = 1e-5,
+    y_span_tolerance_m: float = 1e-8,
 ) -> int:
-    """Remove exact shared radial faces between separate lining segment objects."""
+    """Remove radial segment-boundary surfaces independent of face tessellation."""
     try:
         import bmesh  # type: ignore
     except ImportError as exc:  # pragma: no cover - Blender runtime only
         raise RuntimeError("bmesh is required for lining interface cleanup") from exc
 
-    lining_names = [
-        scene_object.name
-        for scene_object in package.objects
-        if scene_object.object_type == "lining_segment"
-    ]
-    occurrences = {}
-    for name in lining_names:
-        obj = bpy.data.objects.get(name)
-        if obj is None:
-            raise RuntimeError(f"lining object missing during interface cleanup: {name}")
-        for polygon in obj.data.polygons:
-            coords = []
-            for vertex_index in polygon.vertices:
-                co = obj.data.vertices[vertex_index].co
-                coords.append(
-                    (
-                        round(float(co.x) / tolerance_m),
-                        round(float(co.y) / tolerance_m),
-                        round(float(co.z) / tolerance_m),
-                    )
-                )
-            signature = tuple(sorted(coords))
-            occurrences.setdefault(signature, []).append((name, int(polygon.index)))
+    if "ringWidthM" not in package.metadata:
+        raise ValueError("scene metadata lacks ringWidthM for lining interface cleanup")
+    ring_width_m = float(package.metadata["ringWidthM"])
 
-    remove_by_object = {}
-    for items in occurrences.values():
-        object_names = {name for name, _ in items}
-        if len(items) > 1 and len(object_names) > 1:
-            for name, face_index in items:
-                remove_by_object.setdefault(name, set()).add(face_index)
+    def angle_delta(a_deg: float, b_deg: float) -> float:
+        return (a_deg - b_deg + 180.0) % 360.0 - 180.0
 
     removed_total = 0
-    for name, face_indices in remove_by_object.items():
-        obj = bpy.data.objects.get(name)
+    for scene_object in package.objects:
+        if scene_object.object_type != "lining_segment":
+            continue
+        props = scene_object.custom_properties
+        required = (
+            "segmentFrontStartDeg",
+            "segmentFrontEndDeg",
+            "segmentBackStartDeg",
+            "segmentBackEndDeg",
+            "ringTranslationX",
+            "ringTranslationY",
+            "ringTranslationZ",
+            "ringRotationDeg",
+        )
+        if any(key not in props for key in required):
+            raise ValueError(
+                f"{scene_object.name}: missing angular boundary metadata for Stage-9 cleanup"
+            )
+
+        tx = float(props["ringTranslationX"])
+        ty = float(props["ringTranslationY"])
+        tz = float(props["ringTranslationZ"])
+        if bool(props.get("coordinatesLocalizedToChunk", False)):
+            tx -= float(props.get("chunkWorldOriginX", 0.0))
+            ty -= float(props.get("chunkWorldOriginY", 0.0))
+            tz -= float(props.get("chunkWorldOriginZ", 0.0))
+        rotation = math.radians(float(props["ringRotationDeg"]))
+        c = math.cos(rotation)
+        sr = math.sin(rotation)
+        fs = float(props["segmentFrontStartDeg"])
+        fe = float(props["segmentFrontEndDeg"])
+        bs = float(props["segmentBackStartDeg"])
+        be = float(props["segmentBackEndDeg"])
+
+        obj = bpy.data.objects.get(scene_object.name)
+        if obj is None:
+            raise RuntimeError(
+                f"lining object missing during interface cleanup: {scene_object.name}"
+            )
+
         bm = bmesh.new()
         bm.from_mesh(obj.data)
-        bm.faces.ensure_lookup_table()
-        remove = [
-            bm.faces[index]
-            for index in sorted(face_indices)
-            if index < len(bm.faces)
-        ]
+        remove = []
+        for face in bm.faces:
+            samples = []
+            for vertex in face.verts:
+                x = float(vertex.co.x)
+                y = float(vertex.co.y)
+                z = float(vertex.co.z)
+                dx = x - tx
+                dz = z - tz
+                local_x = c * dx - sr * dz
+                local_z = sr * dx + c * dz
+                local_y = y - ty
+                samples.append(
+                    (
+                        local_y,
+                        math.hypot(local_x, local_z),
+                        math.degrees(math.atan2(local_x, local_z)),
+                    )
+                )
+
+            ys = [sample[0] for sample in samples]
+            radii = [sample[1] for sample in samples]
+            if max(ys) - min(ys) <= y_span_tolerance_m:
+                continue
+            if max(radii) - min(radii) <= radial_span_tolerance_m:
+                continue
+
+            start_match = True
+            end_match = True
+            for local_y, _radius, alpha in samples:
+                v = (local_y + 0.5 * ring_width_m) / ring_width_m
+                v = min(1.0, max(0.0, v))
+                expected_start = fs + v * (bs - fs)
+                expected_end = fe + v * (be - fe)
+                start_match = start_match and (
+                    abs(angle_delta(alpha, expected_start)) <= angle_tolerance_deg
+                )
+                end_match = end_match and (
+                    abs(angle_delta(alpha, expected_end)) <= angle_tolerance_deg
+                )
+            if start_match or end_match:
+                remove.append(face)
+
         for face in remove:
             bm.faces.remove(face)
-        removed_total += len(remove)
+        removed = len(remove)
+        removed_total += removed
         bm.to_mesh(obj.data)
         bm.free()
         obj.data.update(calc_edges=True)
-        obj["coincidentSegmentInterfaceFacesStripped"] = True
-        obj["coincidentSegmentInterfaceFacesRemoved"] = int(len(remove))
+        obj["segmentBoundaryFacesStripped"] = True
+        obj["segmentBoundaryFacesRemoved"] = int(removed)
         obj["renderSurfaceOpenAtSegmentInterfaces"] = True
 
     return removed_total

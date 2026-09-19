@@ -1130,8 +1130,13 @@ def strip_internal_lining_cap_faces(
             objects.append(obj)
             continue
 
-        front_y = (obj.ring_id - 0.5) * ring_width_m
-        back_y = (obj.ring_id + 0.5) * ring_width_m
+        origin_y = (
+            float(obj.extra_properties.get("chunkWorldOriginY", 0.0))
+            if obj.extra_properties.get("coordinatesLocalizedToChunk", False)
+            else 0.0
+        )
+        front_y = (obj.ring_id - 0.5) * ring_width_m - origin_y
+        back_y = (obj.ring_id + 0.5) * ring_width_m - origin_y
         strip_front = obj.ring_id > 0
         strip_back = obj.ring_id < global_max_ring_id
 
@@ -1228,6 +1233,10 @@ def _face_follows_segment_boundary(
     tx = float(props["ringTranslationX"])
     ty = float(props["ringTranslationY"])
     tz = float(props["ringTranslationZ"])
+    if bool(props.get("coordinatesLocalizedToChunk", False)):
+        tx -= float(props.get("chunkWorldOriginX", 0.0))
+        ty -= float(props.get("chunkWorldOriginY", 0.0))
+        tz -= float(props.get("chunkWorldOriginZ", 0.0))
     rotation_deg = float(props["ringRotationDeg"])
     a = math.radians(rotation_deg)
     c = math.cos(a)

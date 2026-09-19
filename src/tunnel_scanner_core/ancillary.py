@@ -50,6 +50,13 @@ class RailSpacingConvention(str, Enum):
     PROSE_OFFSET_FROM_MIDLINE = "prose_offset_from_midline"
 
 
+class AncillaryTransformPolicy(str, Enum):
+    """How ancillary structures respond to Stage-7 ring axial rotation."""
+
+    GRAVITY_STITCHED = "gravity_stitched"
+    PAPER_RING_RIGID = "paper_ring_rigid"
+
+
 @dataclass(frozen=True)
 class TubeSpec:
     name: str
@@ -78,6 +85,7 @@ class AncillaryConfig:
     rail_spacing_m: float
     rail_spacing_convention: RailSpacingConvention
     tubes: tuple[TubeSpec, ...]
+    transform_policy: AncillaryTransformPolicy = AncillaryTransformPolicy.GRAVITY_STITCHED
     tube_circle_vertices: int = 12
     pavement_arc_max_sagitta_m: float = 0.01
     longitudinal_subdivisions: int = 2
@@ -204,8 +212,17 @@ class AncillaryConfig:
                 "paper states predefined angular positions but publishes neither count "
                 "nor angles; Stage-8 reference layout is an explicit engineering default"
             ),
-            "followRingAxialRotation": False,
-            "followSceneAlignment": True,
+            "transformPolicy": self.transform_policy.value,
+            "followRingAxialRotation": (
+                self.transform_policy is AncillaryTransformPolicy.PAPER_RING_RIGID
+            ),
+            "followSceneAlignment": (
+                self.transform_policy is AncillaryTransformPolicy.GRAVITY_STITCHED
+            ),
+            "transformPolicyStatus": (
+                "gravity_stitched is the Stage-8 physical default; paper_ring_rigid "
+                "retains the literal Section-2.5 ring-object rotation reading"
+            ),
         }
 
 

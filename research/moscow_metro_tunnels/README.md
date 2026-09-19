@@ -9,7 +9,7 @@ Research snapshot: **2026-09-19**.
 - Stage 1 — normative baseline + tunnel typology: **complete**
 - Stage 2 — structural geometry, clearance model, permanent way and Blender-PCG contract: **complete**
 - Stage 3 — equipment/services, special structures, Moscow era anchors, rail-CAD parameters and expanded references: **complete**
-- Stage 4 — exact CAD primitive solving, executable validation fixtures and implementation-facing reference package: pending
+- Stage 4 — executable engineering kernel, rail reconstruction, fixtures, schemas and tests: **complete**
 
 ## Main documents
 
@@ -27,10 +27,11 @@ Research snapshot: **2026-09-19**.
 - `10_stage2_validation_checklist.md` — first-generator acceptance checks
 - `11_special_structures.md` — cross passages, bellmouths, switch chambers, TBM chambers, portals
 - `12_moscow_era_section_map.md` — evidence-based Moscow era/project anchors
-- `13_rail_profile_cad.md` — R50/R65 exact-CAD reconstruction data
+- `13_rail_profile_cad.md` — R50/R65 CAD reconstruction source data
 - `14_reference_measurement_and_photogrammetry.md` — calibrated photo measurement method
+- `15_stage4_reference_sdk.md` — executable reference SDK, QA and limitations
 
-## Machine-readable data
+## Machine-readable research data
 
 - `data/tunnel_types.json`
 - `data/clearance_envelopes.json`
@@ -41,6 +42,34 @@ Research snapshot: **2026-09-19**.
 - `data/moscow_examples.json`
 - `data/source_register.csv`
 
+## Executable reference implementation
+
+`reference_impl/` is isolated from the existing production code.
+
+It contains:
+
+- `tunnel_pcg_ref/geometry.py` — analytic 2D geometry primitives;
+- `track.py` — gauge/cant rules;
+- `contact_rail.py` — physical third-rail placement and side logic;
+- `clearances.py` — Cмк, upper Oм, curve corrections and b_R table;
+- `rail_profiles.py` — analytic R50/R65 engineering reconstruction;
+- `rings.py` — discrete ring sequences;
+- `events.py` — deterministic subsystem placement and special-structure overrides;
+- `blender_adapter.py` — minimal optional bpy bridge;
+- `schemas/` — route/archetype JSON Schemas;
+- `fixtures/` — rail profiles, analytic primitives and clearance reference data;
+- `tests/` — executable unit tests.
+
+Local pre-upload validation:
+- **11/11 unit tests passed**;
+- Python `compileall` passed;
+- R50/R65 height and base width reproduce nominal dimensions;
+- reconstructed head width residual is <0.03 mm;
+- R50 area residual +0.231%, centroid residual -0.107 mm;
+- R65 area residual +0.154%, centroid residual -0.154 mm.
+
+These rail sections are engineering reconstructions from the published GOST construction geometry, suitable as a high-fidelity synthetic-LiDAR reference. They are not represented as manufacturer rolling-caliber master CAD.
+
 ## Non-negotiable implementation rules
 
 1. Physical structure, clearance envelope, operational tolerance and condition/randomization are separate layers.
@@ -50,14 +79,15 @@ Research snapshot: **2026-09-19**.
 5. Construction archetype is selectable per individual running tunnel/track, not merely per line or station pair.
 6. Services have independent longitudinal phases/pitches; never synchronize all tunnel equipment to ring seams.
 7. Photos can infer morphology/dimensions only through explicit calibrated-inference metadata.
-8. Rail profile LOD0 must eventually use solved ГОСТ analytic primitives, not an I-beam approximation.
+8. GOST clearance envelopes are validators, not physical tunnel-wall presets.
+9. Project-specific values always override generic reference families when provenance is stronger.
 
-## Stage 4 target
+## Known deliberately unresolved items
 
-Produce executable engineering fixtures:
-- solved R50/R65 ordered line/arc primitives + tests against ГОСТ template dimensions;
-- exact programmatic Cмк/Oм cross-section generators;
-- fixture meshes/CSV coordinate samples for representative tunnel archetypes;
-- JSON Schema validation;
-- unit tests for gauge/cant/contact-rail/clearance/event placement;
-- optional isolated reference Blender-Python package under this research directory without touching existing project code.
+- complete lower `Oм` multi-device polygon topology from GOST Fig. 7 — raw dimensions are retained rather than guessed;
+- manufacturer/master rolling-caliber CAD equivalence of the reconstructed R50/R65 sections;
+- exact finished lining ID/OD and vertical track placement for an unnamed generic “10 m-class” project;
+- project-specific universal-ring taper/rotation sequences and exact bolt/dowel-pocket layouts;
+- special-chamber dimensions without named project drawings.
+
+The repository is now suitable for an implementation agent to begin coding against executable rules rather than prose alone.

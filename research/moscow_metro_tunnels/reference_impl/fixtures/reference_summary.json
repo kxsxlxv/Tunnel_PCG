@@ -1,0 +1,16 @@
+{
+  "stage": 4,
+  "reference_impl_version": "0.1.0",
+  "test_count": 11,
+  "test_status": "pass",
+  "rail_reconstruction": {
+    "R50": {"area_rel_error": 0.00230570318747788, "centroid_z_error_m": -0.00010651579497622521},
+    "R65": {"area_rel_error": 0.001536486805797777, "centroid_z_error_m": -0.00015444450141335886}
+  },
+  "known_unresolved": [
+    "complete lower Om multi-device polygon topology",
+    "manufacturer rolling-caliber CAD equivalence for reconstructed R50/R65",
+    "project-specific 10m-class finished lining diameter and track vertical placement",
+    "project-specific ring taper/rotation and exact bolt-pocket patterns"
+  ]
+}

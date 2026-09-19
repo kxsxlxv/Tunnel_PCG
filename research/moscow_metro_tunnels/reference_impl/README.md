@@ -27,6 +27,15 @@ WGS84/project coordinates
 
 `alignment3d.py` deliberately contains no network/GIS dependency. It consumes already projected metre coordinates. This keeps the Blender-side kernel deterministic and portable.
 
+`tools_prepare_geospatial.py` is an **external preprocessing utility**. With the optional `geo` dependency group it:
+- reads a single route LineString GeoJSON;
+- transforms WGS84 to an engineering metric CRS (default EPSG:32637);
+- resamples by chainage;
+- samples a GeoTIFF DEM in its native CRS;
+- subtracts a local origin;
+- writes alignment JSON with surface Z;
+- deliberately leaves `z_ugr_m=null` until real vertical anchors are supplied.
+
 Published station depths are converted to UGR only when the depth datum is explicitly known; ambiguous depth definitions raise an error instead of being guessed.
 
 ## Important accuracy statement
@@ -40,13 +49,19 @@ The lower `O_m` equipment outline remains represented as dimensioned named const
 Stage 4:
 - 11 engineering tests passed.
 
-Stage 5 alignment kernel:
-- 7 independent tests passed;
+Stage 5:
+- 7 pure-Python alignment tests passed;
+- 1 GeoJSON+GeoTIFF preprocessing test passed with `geo` dependencies;
 - compileall passed.
 
-Run all tests in the package:
-
+Base tests:
 ```bash
+python -m unittest discover -s tests -v
+```
+
+Install and run geospatial tests:
+```bash
+pip install -e '.[geo]'
 python -m unittest discover -s tests -v
 ```
 

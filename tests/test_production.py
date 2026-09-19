@@ -418,3 +418,46 @@ def test_hidden_contact_faces_are_omitted_from_production_pavement_and_rails():
 
     for tube in prod.scene.objects_of_type("production_tube"):
         assert tube.custom_properties["omittedLongitudinalEdgeCount"] == 0
+
+
+def test_localized_chunks_preserve_world_origin_and_source_ids():
+    prod = _production(12, namespace="localized")
+    global_chunks = build_chunk_scene_packages(
+        prod,
+        chunk_length_m=5.0,
+        boundary_policy=ChunkBoundaryPolicy.RING_ALIGNED,
+        localize_coordinates=False,
+    )
+    local_chunks = build_chunk_scene_packages(
+        prod,
+        chunk_length_m=5.0,
+        boundary_policy=ChunkBoundaryPolicy.RING_ALIGNED,
+        localize_coordinates=True,
+    )
+    assert len(global_chunks) == len(local_chunks)
+
+    for global_pkg, local_pkg in zip(global_chunks, local_chunks):
+        meta = local_pkg.metadata["productionChunk"]
+        assert meta["vertexCoordinatesLocalized"] is True
+        ox, oy, oz = meta["chunkWorldOrigin"]
+        assert meta["worldTransformRestoresGlobalCoordinates"] is True
+
+        global_by_name = {obj.name: obj for obj in global_pkg.objects}
+        local_by_name = {obj.name: obj for obj in local_pkg.objects}
+        assert global_by_name.keys() == local_by_name.keys()
+        for name in global_by_name:
+            g = global_by_name[name]
+            l = local_by_name[name]
+            assert g.instance_id == l.instance_id
+            assert g.faces == l.faces
+            restored = np.asarray(l.vertices) + np.asarray((ox, oy, oz))
+            assert np.allclose(restored, np.asarray(g.vertices), atol=2e-12, rtol=0)
+
+
+def test_global_production_scene_never_requires_chunk_localization():
+    prod = _production(100, namespace="global-double")
+    assert prod.scene.metadata["productionGeometry"]["globalCoordinates"] is True
+    assert all(
+        not obj.custom_properties.get("coordinatesLocalizedToChunk", False)
+        for obj in prod.scene.objects
+    )

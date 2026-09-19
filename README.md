@@ -1,99 +1,149 @@
-# Tunnel Scanner reimplementation — Stage 5
+# Tunnel Scanner reimplementation — Stage 5.1
 
-Stage 5 introduces the **representation boundary** between the tested procedural geometry core and Blender (or future engine/sensor back ends).
+Stage 5.1 fixes the visible/sensor-facing polygonization exposed by the first real Blender smoke test. Stages 1–5 remain intact as the analytical, kinematic, joint, semantic, and Blender-adapter layers; Stage 5.1 adds a **derived curved surface representation** for rendering and LiDAR ray intersection.
 
-## What is implemented
+## Why Stage 5 looked hexagonal
 
-The project now includes all Stage 1–4 functionality plus:
+The Stage-1 analytical segment intentionally follows the paper's eight-corner/hexahedral description. With one chord across a 65–75° A/B segment, however, the chord-to-circle deviation is hundreds of millimetres. That control mesh is appropriate for published corner constraints, but not as final LiDAR/render geometry.
 
-- engine-neutral `SceneObject` and `ScenePackage` data models;
-- deterministic object names and instance IDs;
-- exact Blender custom-property names `labelID` and `ringID` used by Tunnel Scanner;
-- additional `segmentID`, `instanceID`, `objectType`, `semanticClass`, and reconstruction metadata;
-- a Seg2Tunnel-like label policy:
-  - lining segments: classes `1..6` in canonical generator order;
-  - joints: class `0` (clutter), matching the policy described in Yang et al. (2026);
-- two deliberately separate physically coherent package modes:
-  - nominal segments + prescribed Stage-4 joints;
-  - Stage-3 deformed segments + displacement-induced joints;
-- lossless JSON serialization / deserialization;
-- Blender adapter using the data-block API (`Mesh.from_pydata`, objects, collections, ID properties);
-- standalone Blender import script.
+Stage 5.1 therefore keeps the eight-corner mesh as the source of truth for:
 
-Automated test result:
+- angular closure;
+- deformation/joint boundary conditions;
+- segment rigid transforms;
+- published reconstruction assumptions.
+
+It derives a separate adaptive cylindrical mesh for Blender/sensor export.
+
+## Adaptive meshing rule
+
+For radius `R` and requested maximum sagitta `eps`, the largest permitted chord angle is
 
 ```text
-53 passed
+delta_max = 2 * acos(1 - eps / R)
 ```
 
-Stage-5 stress verification:
+The default is:
 
 ```text
-2,000 scene packages
-30,000 mesh objects validated
+max_sagitta_m = 0.002   # 2 mm
+```
+
+A segment can have slightly different front/back angular boundaries. Stage 5.1 therefore uses a two-dimensional `(u,v)` surface grid rather than only subdividing around the circumference.
+
+Let:
+
+```text
+U = max(front_span, back_span)
+V = max(|back_start-front_start|, |back_end-front_end|)
+```
+
+The grid `(Nu,Nv)` is chosen to minimize cell count subject to the conservative diagonal bound:
+
+```text
+U/Nu + V/Nv <= delta_max
+```
+
+Every intrados/extrados grid vertex is placed directly on a cylinder:
+
+```text
+x = radius * sin(alpha)
+z = radius * cos(alpha)
+```
+
+so front/back taper never drags intermediate vertices off the cylindrical surface.
+
+## Canonical seed 5812
+
+At the default 2 mm tolerance:
+
+```text
+segment   Nu   Nv   vertices   faces   conservative sagitta
+K          6    1       28       26       1.788 mm
+B1        20    1       84       82       1.894 mm
+A1        19    1       80       78       1.875 mm
+A2        18    1       76       74       1.851 mm
+A3        19    1       80       78       1.875 mm
+B2        20    1       84       82       1.894 mm
+```
+
+Total lining geometry for one ring is only 432 vertices / 420 faces, so the change is inexpensive.
+
+For the same seed, the old one-chord outer-surface sagitta was approximately:
+
+```text
+K     53 mm
+A   ~550 mm
+B   ~614 mm
+```
+
+The exported lining is therefore no longer the coarse six-sided control mesh.
+
+## What else was curved
+
+The Stage-4 circumferential outer-collar reconstruction spans an entire K/B/A segment, so leaving it as a hexahedron could reintroduce a polygonal outer silhouette. Stage 5.1 now tessellates those collar pieces around the cylinder as well.
+
+The narrow prescribed radial joints and displacement-gap joints remain their existing analytical solids. Their spans are small, and their exact boundary faces are useful for later reconstruction work.
+
+## Automated verification
+
+Regression suite:
+
+```text
+62 tests passed
+```
+
+Stage-5.1 geometric stress verification:
+
+```text
+5,000 nominal rings
+30,000 curved segment meshes
+1,000 deformed rings
+max conservative sagitta: 1.999982 mm
+max deformed local-radius error: 1.33e-15 m
+max deformation closure error: 1.20e-15 m
+PASS
+```
+
+An independent `trimesh` check was also run on 500 rings / 3,000 curved segment meshes and on all 18 objects in the canonical nominal scene. Every checked mesh was watertight, winding-consistent, and positive-volume.
+
+The inherited Stage-5 serialization stress test also passes with the new geometry:
+
+```text
+2,000 ScenePackages
+30,000 SceneObjects
 2,000 JSON round-trips
 PASS
 ```
 
-## Important semantic convention
-
-Yang et al. state that the Seg2Tunnel synthesis uses background/clutter `0` and lining segment classes `1..6`, and that joints/bolts are merged into clutter. The article does **not** publish the correspondence between its procedural K/B/A segment names and benchmark S1–S6 class numbers.
-
-Stage 5 therefore assigns `1..6` in the generator's canonical physical order:
-
-```text
-K, B1, A1, A2, A3, B2
-```
-
-and records that mapping in each scene package. This is an explicit reimplementation convention, not a claim about the unpublished author code.
-
-## Why nominal and deformed packages are separate
-
-Stage 4 reconstructs prescribed joint solids in the nominal ring frame. Stage 3 independently produces rigidly deformed segments and displacement-gap meshes. We have **not yet derived a defensible transform for the prescribed joint solids under ring-wise deformation**.
-
-Therefore Stage 5 refuses to silently combine them into one physical scene:
-
-```text
-nominal_with_prescribed_joints
-    segments + prescribed radial/circumferential joints
-
-deformed_with_displacement_joints
-    deformed segments + displacement-gap joints
-```
-
-This prevents a visually plausible but geometrically inconsistent Blender scene.
-
-## Layout
+## Layout additions
 
 ```text
 src/tunnel_scanner_core/
-    angles.py
-    config.py
-    mesh.py
-    deformation.py
-    deformed_mesh.py
-    joints.py
-    scene.py             # Stage 5 engine-neutral objects/packages
-    scene_io.py          # Stage 5 JSON schema
-    blender_adapter.py   # Stage 5 lazy-bpy adapter
-    io.py
-
-scripts/
-    blender_import_scene.py
-    verify_stage5_stress.py
-    ... previous verification scripts
+    curved_mesh.py       # Stage 5.1 adaptive cylindrical surface generation
+    ... previous modules
 
 examples/
-    stage5_nominal_scene.json
-    stage5_deformed_scene.json
-    stage5_verification.json
-    ... previous examples
+    generate_stage5_1_scenes.py
+    stage5_1_nominal_scene.json
+    stage5_1_nominal_scene.obj
+    stage5_1_deformed_scene.json
+    stage5_1_deformed_scene.obj
+    stage5_1_geometry_metrics.json
+    stage5_1_verification.json
+    stage5_1_trimesh_verification.json
+
+scripts/
+    verify_stage5_1_stress.py
+    blender_import_scene.py
 ```
 
-## Generate examples
+## Generate the Stage-5.1 examples
+
+From the repository root:
 
 ```bash
-PYTHONPATH=src python examples/generate_stage5_scenes.py
+PYTHONPATH=src python examples/generate_stage5_1_scenes.py
 ```
 
 ## Run tests
@@ -103,24 +153,34 @@ python -m pip install -e '.[test]'
 pytest
 ```
 
-## Import into Blender
+## Blender smoke test
 
-From the repository root:
+Use the new JSON, not the old Stage-5 sample:
 
 ```bash
 blender --background --python scripts/blender_import_scene.py -- \
-    examples/stage5_deformed_scene.json \
-    --save-blend examples/stage5_deformed_scene.blend
+    examples/stage5_1_nominal_scene.json \
+    --save-blend examples/stage5_1_nominal_scene.blend
 ```
 
-Or use the UI Blender executable without `--background` if visual inspection is desired.
+For visual inspection, omit `--background` or import from Blender's scripting workspace.
 
-The adapter creates a hierarchy under `TunnelScanner`, uses metric units, builds one Blender mesh/object per `SceneObject`, and writes semantic custom properties onto the Blender object.
+The inner opening should now be circular (within the configured geometric tolerance), not a six-sided opening. Blender may still show facet shading if the object is flat-shaded; that is a normal/shading issue, not the old half-metre geometric chord error. LiDAR ray geometry is determined by the actual tessellated mesh.
 
-## Blender-runtime status
+## Runtime status
 
-The adapter has been regression-tested with a purpose-built fake `bpy` data-block model, including hierarchy creation, meshes, validation calls, metric units, and object ID properties. Its source is also syntax-compiled outside Blender.
+The engine-neutral geometry, JSON boundary, and Blender adapter are regression-tested outside Blender. A real Blender executable is not present in the current execution environment, so Stage 5.1 still requires an external Blender smoke test. The user's previous Stage-5 test already confirmed the adapter path itself executes; the new test primarily verifies the changed mesh visually/runtime-side.
 
-**A real Blender executable is not installed in the current execution environment**, so a genuine `.blend` runtime test has not yet been performed. That is the only major Stage-5 verification item that remains external to this environment.
+See `STAGE5_1_REPORT.md` for detailed design decisions and verification results.
 
-See `STAGE5_REPORT.md` for the implementation decisions and verification details.
+## Automated Blender-side verifier
+
+On a machine with Blender installed:
+
+```bash
+blender --background --python scripts/blender_verify_stage5_1.py -- \
+    examples/stage5_1_nominal_scene.json \
+    --report examples/blender_stage5_1_runtime_report.json
+```
+
+See `BLENDER_SMOKE_TEST.md` for the expected per-segment vertex/face counts and visual checks.

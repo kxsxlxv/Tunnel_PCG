@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import acos, atan, cos, hypot, sin, sqrt
+from math import acos, atan, atan2, cos, hypot, sin, sqrt
 from typing import Iterable, Sequence
 
 
@@ -218,6 +218,20 @@ def _rotate_about_axis(v: Vec3, axis: Vec3, angle: float) -> Vec3:
     return v * c + a.cross(v) * s + a * (a.dot(v) * (1 - c))
 
 
+
+def _minimal_transport(v: Vec3, from_t: Vec3, to_t: Vec3) -> Vec3:
+    """Rotate a vector by the minimum rotation carrying one tangent to another."""
+    axis = from_t.cross(to_t)
+    n = axis.norm()
+    if n < 1e-12:
+        if from_t.dot(to_t) < -0.999999999:
+            raise ValueError("180-degree tangent reversal is ambiguous")
+        return v
+    axis = axis * (1.0 / n)
+    angle = acos(max(-1.0, min(1.0, from_t.dot(to_t))))
+    return _rotate_about_axis(v, axis, angle)
+
+
 def parallel_transport_frames(
     points: Sequence[Vec3], *, initial_up: Vec3 = Vec3(0, 0, 1)
 ) -> list[Frame3]:
@@ -265,6 +279,95 @@ def parallel_transport_frames(
         prev_t, prev_left, prev_up = t, left, up
 
     return frames
+
+
+
+def closed_parallel_transport_frames(
+    points: Sequence[Vec3], *, initial_up: Vec3 = Vec3(0, 0, 1)
+) -> tuple[list[Frame3], float]:
+    """Return low-twist frames for a closed route and its raw holonomy roll.
+
+    Input must contain at least three unique points and repeat the first point
+    at the end. A raw parallel-transport frame can return to the seam with a
+    residual roll (holonomy) on a non-planar closed curve. This function
+    measures that signed roll and distributes the opposite correction by 3D
+    arc length around the complete loop.
+
+    The returned final frame is at the repeated first point and closes
+    continuously with the first frame. This is the preferred frame generator
+    for ring routes such as Moscow Metro Line 5.
+    """
+    if len(points) < 4:
+        raise ValueError("closed loop needs >=3 unique points plus closure")
+    if (points[-1] - points[0]).norm() > 1e-7:
+        raise ValueError("closed loop input must repeat the first point at the end")
+
+    unique = list(points[:-1])
+    n = len(unique)
+    tangents = [
+        (unique[(i + 1) % n] - unique[(i - 1 + n) % n]).normalized()
+        for i in range(n)
+    ]
+
+    t0 = tangents[0]
+    up0 = initial_up - t0 * initial_up.dot(t0)
+    if up0.norm() < 1e-9:
+        alt = Vec3(0, 1, 0)
+        up0 = alt - t0 * alt.dot(t0)
+    up0 = up0.normalized()
+    left0 = up0.cross(t0).normalized()
+    up0 = t0.cross(left0).normalized()
+
+    raw = [Frame3(unique[0], t0, left0, up0)]
+    left, up = left0, up0
+    for i in range(1, n):
+        left = _minimal_transport(left, tangents[i - 1], tangents[i]).normalized()
+        up = _minimal_transport(up, tangents[i - 1], tangents[i]).normalized()
+        left = (left - tangents[i] * left.dot(tangents[i])).normalized()
+        up = tangents[i].cross(left).normalized()
+        raw.append(Frame3(unique[i], tangents[i], left, up))
+
+    # Close the *uncorrected* frame once to measure the signed residual roll.
+    closed_left = _minimal_transport(raw[-1].left, tangents[-1], t0).normalized()
+    closed_left = (closed_left - t0 * closed_left.dot(t0)).normalized()
+    residual = atan2(
+        t0.dot(left0.cross(closed_left)),
+        left0.dot(closed_left),
+    )
+
+    # 3D chainage including the final segment back to the first point.
+    ss = [0.0]
+    for a, b in zip(unique, unique[1:]):
+        ss.append(ss[-1] + (b - a).norm())
+    closing_len = (unique[0] - unique[-1]).norm()
+    total = ss[-1] + closing_len
+    if total <= 0:
+        raise ValueError("degenerate closed loop")
+
+    corrected: list[Frame3] = []
+    for frame, s_m in zip(raw, ss):
+        correction = -residual * (s_m / total)
+        left = _rotate_about_axis(
+            frame.left, frame.tangent, correction
+        ).normalized()
+        up = _rotate_about_axis(
+            frame.up, frame.tangent, correction
+        ).normalized()
+        corrected.append(Frame3(frame.p, frame.tangent, left, up))
+
+    # Continue both transport and the distributed correction through the seam.
+    seam_left = _minimal_transport(
+        corrected[-1].left, tangents[-1], t0
+    ).normalized()
+    seam_up = _minimal_transport(
+        corrected[-1].up, tangents[-1], t0
+    ).normalized()
+    remaining = -residual * (closing_len / total)
+    seam_left = _rotate_about_axis(seam_left, t0, remaining).normalized()
+    seam_up = _rotate_about_axis(seam_up, t0, remaining).normalized()
+    corrected.append(Frame3(points[-1], t0, seam_left, seam_up))
+
+    return corrected, residual
 
 
 def apply_cant(frame: Frame3, cant_angle_rad: float) -> Frame3:

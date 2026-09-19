@@ -1,0 +1,117 @@
+{
+  "schema_version": "0.2",
+  "units": "m",
+  "coordinate_system": {
+    "x": "lateral from track/gauge axis, positive left by project convention",
+    "z": "height above UGR"
+  },
+  "envelopes": {
+    "C_mk_R50": {
+      "type": "circle_with_lower_special_zones",
+      "circle": {
+        "radius": 2.45,
+        "center": [
+          0,
+          1.7
+        ]
+      },
+      "applicability": {
+        "shape": "circular_single_track",
+        "min_curve_radius_m": 200
+      },
+      "curve_axis_shift": {
+        "direction": "inside_curve",
+        "formula": "1.700*tan(alpha)"
+      },
+      "diameter_gt_5_2_rule": "calculate_project_specific_but_not_less_than_C_mk",
+      "source": "GOST_23961_2024_fig_1",
+      "confidence": "A"
+    },
+    "C_mk_R65": {
+      "type": "circle_with_lower_special_zones",
+      "circle": {
+        "radius": 2.45,
+        "center": [
+          0,
+          1.67
+        ]
+      },
+      "applicability": {
+        "shape": "circular_single_track",
+        "min_curve_radius_m": 200
+      },
+      "curve_axis_shift": {
+        "direction": "inside_curve",
+        "formula": "1.670*tan(alpha)"
+      },
+      "diameter_gt_5_2_rule": "calculate_project_specific_but_not_less_than_C_mk",
+      "source": "GOST_23961_2024_fig_1",
+      "confidence": "A"
+    },
+    "O_m_upper_straight": {
+      "type": "symmetric_polyline",
+      "points_right": [
+        [
+          1.48,
+          0.55
+        ],
+        [
+          1.62,
+          3.28
+        ],
+        [
+          1.325,
+          3.625
+        ],
+        [
+          1.005,
+          3.745
+        ],
+        [
+          0.355,
+          3.78
+        ],
+        [
+          0,
+          3.78
+        ]
+      ],
+      "note": "Transcribed principal coordinates from GOST 23961-2024 Fig. 6. Re-verify local point ordering and the 740 mm lower-side auxiliary line before using this polygon as a legally exact CAD substitute.",
+      "source": "GOST_23961_2024_fig_6",
+      "confidence": "A_for_dimensions_B_for_polyline_transcription"
+    }
+  },
+  "rules": {
+    "two_track_min_center_spacing_m": {
+      "value": 3.4,
+      "applicability": "main tracks, circular/rectangular tunnel without intermediate supports, straight or R>=500m"
+    },
+    "two_track_tunnel_diameter_gt_9_4": "vertical tunnel-axis to UGR placement by calculation",
+    "service_platform_min_height_above_UGR_m": 1.1,
+    "service_platform_min_clear_width_m": 0.7,
+    "drain_min_width_m": {
+      "running": 0.4,
+      "bulkhead_zone": 0.7,
+      "station": 0.9
+    },
+    "drain_min_longitudinal_slope": 0.003,
+    "lower_O_m_inside_curve_extra_mm": [
+      {
+        "radius": "<100",
+        "extra": 20
+      },
+      {
+        "radius": "100-124",
+        "extra": 16
+      },
+      {
+        "radius": "125-149",
+        "extra": 11
+      },
+      {
+        "radius": "150-199",
+        "extra": 6
+      }
+    ]
+  }
+}

@@ -653,6 +653,85 @@ def scene_object_from_continuous_asset(
 
 
 # ---------------------------------------------------------------------------
+# Ring-local production alignment
+# ---------------------------------------------------------------------------
+
+
+def stitch_ring_scene_object_to_alignment(
+    obj: SceneObject,
+    *,
+    assembly: TunnelAssembly,
+    stations: Sequence[AlignmentStation],
+) -> SceneObject:
+    """Warp a rigid Stage-7 ring-local object onto the continuous Stage-9 axis.
+
+    The map is a piecewise-linear X/Z translation as a function of local Y. It
+    preserves each ring's axial stagger rotation but makes the front/back centre
+    offsets identical on both sides of every inter-ring boundary. Bolt cutters,
+    heads and lining are transformed by the same map, so the Boolean relation is
+    preserved.
+    """
+    ring_id = obj.ring_id
+    if ring_id < 0 or ring_id >= assembly.config.n_rings:
+        raise ValueError(f"{obj.name}: ring_id outside assembly")
+    pose = assembly.poses[ring_id]
+    L = assembly.config.ring_width_m
+    center_chainage = (ring_id + 0.5) * L
+    front_station = sample_alignment_station(stations, ring_id * L)
+    center_station = sample_alignment_station(stations, center_chainage)
+    back_station = sample_alignment_station(stations, (ring_id + 1) * L)
+    center_x = float(pose.translation_m[0])
+    center_z = float(pose.translation_m[2])
+
+    vertices: list[Vec3] = []
+    for x, y, z in obj.vertices:
+        local_y = y - pose.chainage_m
+        chainage = center_chainage + local_y
+        station = sample_alignment_station(stations, chainage)
+        vertices.append(
+            (
+                x + station.offset_x_m - center_x,
+                y,
+                z + station.offset_z_m - center_z,
+            )
+        )
+
+    props = dict(obj.extra_properties)
+    props.update(
+        {
+            "productionRingAlignmentStitched": True,
+            "productionRingFrontOffsetX": float(front_station.offset_x_m),
+            "productionRingFrontOffsetZ": float(front_station.offset_z_m),
+            "productionRingCenterOffsetX": float(center_station.offset_x_m),
+            "productionRingCenterOffsetZ": float(center_station.offset_z_m),
+            "productionRingBackOffsetX": float(back_station.offset_x_m),
+            "productionRingBackOffsetZ": float(back_station.offset_z_m),
+            "productionRingAlignmentMap": "piecewise_linear_xz_by_local_y",
+        }
+    )
+    return SceneObject(
+        name=obj.name,
+        vertices=tuple(vertices),
+        faces=obj.faces,
+        object_type=obj.object_type,
+        ring_id=obj.ring_id,
+        label_id=obj.label_id,
+        instance_id=obj.instance_id,
+        semantic_class=obj.semantic_class,
+        segment_id=obj.segment_id,
+        segment_name=obj.segment_name,
+        segment_kind=obj.segment_kind,
+        reconstruction=(
+            f"{obj.reconstruction}+stage9_stitched_ring_alignment"
+            if obj.reconstruction
+            else "stage9_stitched_ring_alignment"
+        ),
+        collection_path=obj.collection_path,
+        extra_properties=props,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Production scene
 # ---------------------------------------------------------------------------
 
@@ -663,6 +742,7 @@ class ProductionConfig:
     rail_profile: RailProfile | None = None
     keep_stage8_ring_ancillary: bool = False
     keep_prescribed_outer_joint_solids: bool = False
+    stitch_ring_geometry: bool = True
     stable_reidentify_ring_objects: bool = True
 
     def __post_init__(self) -> None:
@@ -716,10 +796,21 @@ def build_production_scene(
             }
         ):
             continue
-        objects.append(
-            _copy_scene_object_with_stable_identity(obj, namespace=config.namespace)
-            if config.stable_reidentify_ring_objects
+        source_obj = (
+            stitch_ring_scene_object_to_alignment(
+                obj,
+                assembly=source_build.assembly,
+                stations=stations,
+            )
+            if config.stitch_ring_geometry
             else obj
+        )
+        objects.append(
+            _copy_scene_object_with_stable_identity(
+                source_obj, namespace=config.namespace
+            )
+            if config.stable_reidentify_ring_objects
+            else source_obj
         )
 
     objects.extend(
@@ -749,6 +840,12 @@ def build_production_scene(
                     "omits hidden outer solids by default"
                 ),
                 "continuousInfrastructureAssets": len(specs),
+                "ringGeometryStitchedToAlignment": config.stitch_ring_geometry,
+                "ringGeometryAlignmentMap": (
+                    "piecewise_linear_xz_by_local_y"
+                    if config.stitch_ring_geometry
+                    else "stage7_rigid_ring_translation"
+                ),
                 "internalAncillaryCaps": 0,
                 "railProfile": (
                     "stage9_generic_lowpoly_16"

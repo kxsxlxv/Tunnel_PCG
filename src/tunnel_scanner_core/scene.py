@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
+import math
 from typing import Any, Iterable, Mapping
 
 from .deformed_mesh import DeformedRingMesh
+from .ancillary import AncillarySet
 from .bolts import BoltSet, build_pocket_boolean_cutter
 from .curved_mesh import (
     SurfaceMeshingConfig,
@@ -40,6 +42,7 @@ class LabelPolicy(str, Enum):
     """Semantic ID policy written to Blender's `labelID` custom property."""
 
     SEG2TUNNEL_LIKE = "seg2tunnel_like"
+    STSD_COARSE = "stsd_coarse"
 
 
 @dataclass(frozen=True)
@@ -137,10 +140,34 @@ class ScenePackage:
         return tuple(sorted(keys))
 
 
-def _segment_label_map(ring: RingMesh) -> dict[str, int]:
-    if len(ring.segments) != 6:
-        raise ValueError("SEG2TUNNEL_LIKE currently requires exactly six segments")
-    return {segment.name: i + 1 for i, segment in enumerate(ring.segments)}
+def _segment_label_map(ring: RingMesh, label_policy: LabelPolicy) -> dict[str, int]:
+    if label_policy is LabelPolicy.SEG2TUNNEL_LIKE:
+        if len(ring.segments) != 6:
+            raise ValueError("SEG2TUNNEL_LIKE currently requires exactly six segments")
+        return {segment.name: i + 1 for i, segment in enumerate(ring.segments)}
+    if label_policy is LabelPolicy.STSD_COARSE:
+        return {segment.name: 1 for segment in ring.segments}
+    raise NotImplementedError(label_policy)
+
+
+def _segment_semantic_class(label_policy: LabelPolicy, label_id: int) -> str:
+    if label_policy is LabelPolicy.STSD_COARSE:
+        return "segments"
+    return f"lining_segment_{label_id}"
+
+
+def _ancillary_semantics(
+    label_policy: LabelPolicy, category: str
+) -> tuple[int, str]:
+    if label_policy is LabelPolicy.SEG2TUNNEL_LIKE:
+        return 0, "clutter"
+    if label_policy is LabelPolicy.STSD_COARSE:
+        if category == "walkway":
+            return 2, "walkway"
+        if category == "tube":
+            return 3, "tubes"
+        return 0, "clutter"
+    raise NotImplementedError(label_policy)
 
 
 def _instance_id(ring_id: int, local_index: int) -> int:
@@ -161,13 +188,11 @@ def build_nominal_scene_package(
     surface_meshing: SurfaceMeshingConfig | None = None,
     bolts: BoltSet | None = None,
     bolt_boolean_overlap_m: float = 0.005,
+    ancillary: AncillarySet | None = None,
 ) -> ScenePackage:
     if ring_id < 0:
         raise ValueError("ring_id must be non-negative")
-    if label_policy is not LabelPolicy.SEG2TUNNEL_LIKE:
-        raise NotImplementedError(label_policy)
-
-    label_map = _segment_label_map(ring)
+    label_map = _segment_label_map(ring, label_policy)
     segment_id_map = {segment.name: i for i, segment in enumerate(ring.segments)}
     surface_meshing = surface_meshing or SurfaceMeshingConfig()
     curved_ring = build_curved_ring_mesh(ring, meshing=surface_meshing)
@@ -187,7 +212,7 @@ def build_nominal_scene_package(
                 ring_id=ring_id,
                 label_id=label_map[segment.name],
                 instance_id=_instance_id(ring_id, local_index),
-                semantic_class=f"lining_segment_{label_map[segment.name]}",
+                semantic_class=_segment_semantic_class(label_policy, label_map[segment.name]),
                 segment_id=seg_id,
                 segment_name=segment.name,
                 segment_kind=segment.kind,
@@ -339,6 +364,51 @@ def build_nominal_scene_package(
             )
             local_index += 1
 
+    if ancillary is not None:
+        if not math.isclose(
+            ancillary.inner_radius_m,
+            ring.config.inner_radius_m,
+            rel_tol=0.0,
+            abs_tol=1e-12,
+        ):
+            raise ValueError("ancillary inner radius does not match ring inner radius")
+        if not math.isclose(
+            ancillary.length_m,
+            ring.config.width_m,
+            rel_tol=0.0,
+            abs_tol=1e-12,
+        ):
+            raise ValueError("ancillary extrusion length does not match ring width")
+        for mesh in ancillary.meshes:
+            label_id, semantic_class = _ancillary_semantics(
+                label_policy, mesh.category
+            )
+            object_type = f"ancillary_{mesh.category}"
+            objects.append(
+                SceneObject(
+                    name=f"R{ring_id:04d}_ANC_{mesh.name.upper()}",
+                    vertices=mesh.vertices,
+                    faces=mesh.faces,
+                    object_type=object_type,
+                    ring_id=ring_id,
+                    label_id=label_id,
+                    instance_id=_instance_id(ring_id, local_index),
+                    semantic_class=semantic_class,
+                    reconstruction="stage8_table4_extruded_cross_section",
+                    collection_path=(
+                        f"Ring_{ring_id:04d}",
+                        "Ancillary",
+                        mesh.category.capitalize(),
+                    ),
+                    extra_properties={
+                        "ancillaryCategory": mesh.category,
+                        "followRingAxialRotation": False,
+                        **mesh.properties,
+                    },
+                )
+            )
+            local_index += 1
+
     mapping = {name: label for name, label in label_map.items()}
     return ScenePackage(
         name=f"tunnel_scanner_nominal_ring_{ring_id:04d}",
@@ -346,7 +416,7 @@ def build_nominal_scene_package(
         label_policy=label_policy,
         objects=tuple(objects),
         metadata={
-            "sourceStages": [1, 4, 5],
+            "sourceStages": [1, 4, 5] + ([8] if ancillary is not None else []),
             "coordinateConvention": {
                 "longitudinalAxis": "+Y",
                 "crossSection": "XZ",
@@ -355,10 +425,33 @@ def build_nominal_scene_package(
             },
             "segmentLabelConvention": mapping,
             "segmentLabelConventionStatus": (
-                "Stage-5 generator order; article states labels 1..6 but does not "
-                "publish K/B/A-to-S1..S6 correspondence"
+                (
+                    "Stage-5 generator order; article states labels 1..6 but does not "
+                    "publish K/B/A-to-S1..S6 correspondence"
+                )
+                if label_policy is LabelPolicy.SEG2TUNNEL_LIKE
+                else "STSD-coarse: all lining segments merged into class 1"
             ),
-            "jointLabelConvention": "labelID=0 clutter, following Seg2Tunnel synthesis described by Yang et al. (2026)",
+            "jointLabelConvention": "labelID=0 clutter",
+            "ancillaryLabelConvention": (
+                "Seg2Tunnel-like: all ancillary objects are class 0 clutter"
+                if label_policy is LabelPolicy.SEG2TUNNEL_LIKE
+                else "STSD-coarse reclassification: clutter=0, segments=1, walkway=2, tubes=3; pavement/rails remain clutter"
+            ),
+            "ancillaryGeometry": (
+                None
+                if ancillary is None
+                else {
+                    "stage": 8,
+                    "meshCount": len(ancillary.meshes),
+                    "pavement": len(ancillary.meshes_of_category("pavement")),
+                    "walkway": len(ancillary.meshes_of_category("walkway")),
+                    "rails": len(ancillary.meshes_of_category("rail")),
+                    "tubes": len(ancillary.meshes_of_category("tube")),
+                    "followRingAxialRotation": False,
+                    "reconstruction": ancillary.config.reconstruction_metadata,
+                }
+            ),
             "surfaceMeshing": {
                 "stage": "5.1",
                 "representation": "adaptive cylindrical chord tessellation",
@@ -403,6 +496,7 @@ def build_nominal_scene_package(
                     if bolts is not None
                     else ""
                 )
+                + ("; Stage-8 ancillary structures" if ancillary is not None else "")
                 + "; no Stage-3 deformation"
             ),
         },
@@ -419,11 +513,8 @@ def build_deformed_scene_package(
 ) -> ScenePackage:
     if ring_id < 0:
         raise ValueError("ring_id must be non-negative")
-    if label_policy is not LabelPolicy.SEG2TUNNEL_LIKE:
-        raise NotImplementedError(label_policy)
-
     base_ring = deformed.base_ring
-    label_map = _segment_label_map(base_ring)
+    label_map = _segment_label_map(base_ring, label_policy)
     segment_id_map = {segment.name: i for i, segment in enumerate(base_ring.segments)}
     transform_map = {t.segment_name: t for t in deformed.segment_transforms}
     surface_meshing = surface_meshing or SurfaceMeshingConfig()
@@ -447,7 +538,7 @@ def build_deformed_scene_package(
                 ring_id=ring_id,
                 label_id=label_map[segment.name],
                 instance_id=_instance_id(ring_id, local_index),
-                semantic_class=f"lining_segment_{label_map[segment.name]}",
+                semantic_class=_segment_semantic_class(label_policy, label_map[segment.name]),
                 segment_id=seg_id,
                 segment_name=segment.name,
                 segment_kind=segment.kind,

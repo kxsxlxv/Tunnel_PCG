@@ -10,6 +10,7 @@ from tunnel_scanner_core import (
     audit_exact_coincident_faces,
     build_production_tunnel,
     build_procedural_nominal_tunnel,
+    finalize_production_render_scene,
 )
 
 
@@ -55,6 +56,13 @@ def main() -> None:
         object_filter=lambda obj: obj.object_type.startswith("production_"),
     )
     assert audit9_infra.duplicate_group_count == 0
+    # Default Stage-9 source omits Stage-4 outer joint solids, so only the
+    # six shared radial lining interfaces per ring remain before render cleanup.
+    assert audit9_all.duplicate_group_count == 5 * 6
+
+    finalized = finalize_production_render_scene(stage9.scene)
+    audit9_final = audit_exact_coincident_faces(finalized)
+    assert audit9_final.duplicate_group_count == 0
 
     result = {
         "stage": 9,
@@ -63,11 +71,23 @@ def main() -> None:
             "allDuplicateOccurrences": audit8.duplicate_face_occurrence_count,
             "pairBreakdown": pair_breakdown(stage8.scene, audit8),
         },
-        "stage9": {
+        "stage9Source": {
             "allDuplicateGroups": audit9_all.duplicate_group_count,
             "allDuplicateOccurrences": audit9_all.duplicate_face_occurrence_count,
             "pairBreakdown": pair_breakdown(stage9.scene, audit9_all),
             "productionInfrastructureDuplicateGroups": audit9_infra.duplicate_group_count,
+            "prescribedOuterJointSolidsPresent": False,
+        },
+        "stage9Finalized": {
+            "allDuplicateGroups": audit9_final.duplicate_group_count,
+            "allDuplicateOccurrences": audit9_final.duplicate_face_occurrence_count,
+            "pairBreakdown": pair_breakdown(finalized, audit9_final),
+            "liningCapFacesRemoved": finalized.metadata[
+                "productionLiningCapStrip"
+            ]["removedFaces"],
+            "segmentInterfaceFacesRemoved": finalized.metadata[
+                "productionSegmentInterfaceStrip"
+            ]["facesRemoved"],
         },
         "result": "PASS",
     }

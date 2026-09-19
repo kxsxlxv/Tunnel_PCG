@@ -1198,6 +1198,192 @@ def strip_internal_lining_cap_faces(
     )
 
 
+def _angle_delta_deg(a_deg: float, b_deg: float) -> float:
+    return (a_deg - b_deg + 180.0) % 360.0 - 180.0
+
+
+def _face_follows_segment_boundary(
+    obj: SceneObject,
+    face: Face,
+    *,
+    ring_width_m: float,
+    angle_tolerance_deg: float,
+    radial_span_tolerance_m: float,
+    y_span_tolerance_m: float,
+) -> bool:
+    props = obj.custom_properties
+    required = (
+        "segmentFrontStartDeg",
+        "segmentFrontEndDeg",
+        "segmentBackStartDeg",
+        "segmentBackEndDeg",
+        "ringTranslationX",
+        "ringTranslationY",
+        "ringTranslationZ",
+        "ringRotationDeg",
+    )
+    if any(key not in props for key in required):
+        return False
+
+    tx = float(props["ringTranslationX"])
+    ty = float(props["ringTranslationY"])
+    tz = float(props["ringTranslationZ"])
+    rotation_deg = float(props["ringRotationDeg"])
+    a = math.radians(rotation_deg)
+    c = math.cos(a)
+    sr = math.sin(a)
+
+    local_samples: list[tuple[float, float, float]] = []
+    for index in face:
+        x, y, z = obj.vertices[index]
+        dx = x - tx
+        dz = z - tz
+        # Inverse of Stage-7 axial rotation:
+        # world_x = c*x + s*z ; world_z = -s*x + c*z.
+        local_x = c * dx - sr * dz
+        local_z = sr * dx + c * dz
+        local_y = y - ty
+        radius = math.hypot(local_x, local_z)
+        alpha = math.degrees(math.atan2(local_x, local_z))
+        local_samples.append((local_y, radius, alpha))
+
+    ys = [sample[0] for sample in local_samples]
+    radii = [sample[1] for sample in local_samples]
+    if max(ys) - min(ys) <= y_span_tolerance_m:
+        return False
+    if max(radii) - min(radii) <= radial_span_tolerance_m:
+        return False
+
+    fs = float(props["segmentFrontStartDeg"])
+    fe = float(props["segmentFrontEndDeg"])
+    bs = float(props["segmentBackStartDeg"])
+    be = float(props["segmentBackEndDeg"])
+
+    start_matches = True
+    end_matches = True
+    for local_y, _radius, alpha in local_samples:
+        v = (local_y + 0.5 * ring_width_m) / ring_width_m
+        # Boolean operations can create vertices microscopically outside a source
+        # face. Clamp only for boundary classification.
+        v = min(1.0, max(0.0, v))
+        expected_start = fs + v * (bs - fs)
+        expected_end = fe + v * (be - fe)
+        start_matches = start_matches and (
+            abs(_angle_delta_deg(alpha, expected_start)) <= angle_tolerance_deg
+        )
+        end_matches = end_matches and (
+            abs(_angle_delta_deg(alpha, expected_end)) <= angle_tolerance_deg
+        )
+    return start_matches or end_matches
+
+
+def strip_lining_segment_boundary_faces(
+    scene: ScenePackage,
+    *,
+    ring_width_m: float | None = None,
+    angle_tolerance_deg: float = 1e-4,
+    radial_span_tolerance_m: float = 1e-5,
+    y_span_tolerance_m: float = 1e-8,
+    require_boolean_tools_absent: bool = True,
+) -> ScenePackage:
+    """Remove hidden radial boundary surfaces from every lining segment.
+
+    Unlike exact polygon-signature matching, this classifier is independent of
+    neighbouring tessellation density. A boundary face is identified against the
+    segment's front/back angular extent as a function of longitudinal position.
+    """
+    if require_boolean_tools_absent and scene.objects_of_type("bolt_pocket_cutter"):
+        raise ValueError(
+            "segment boundary cleanup must run after bolt cutters are baked/removed"
+        )
+    if ring_width_m is None:
+        try:
+            ring_width_m = float(scene.metadata["ringWidthM"])
+        except Exception as exc:
+            raise ValueError(
+                "ring_width_m is required when scene metadata lacks ringWidthM"
+            ) from exc
+    if not math.isfinite(ring_width_m) or ring_width_m <= 0.0:
+        raise ValueError("ring_width_m must be finite and positive")
+
+    objects: list[SceneObject] = []
+    removed_total = 0
+    affected_objects = 0
+    for obj in scene.objects:
+        if obj.object_type != "lining_segment":
+            objects.append(obj)
+            continue
+        remove = {
+            face_index
+            for face_index, face in enumerate(obj.faces)
+            if _face_follows_segment_boundary(
+                obj,
+                face,
+                ring_width_m=ring_width_m,
+                angle_tolerance_deg=angle_tolerance_deg,
+                radial_span_tolerance_m=radial_span_tolerance_m,
+                y_span_tolerance_m=y_span_tolerance_m,
+            )
+        }
+        if not remove:
+            objects.append(obj)
+            continue
+
+        affected_objects += 1
+        removed_total += len(remove)
+        props = dict(obj.extra_properties)
+        props.update(
+            {
+                "segmentBoundaryFacesStripped": True,
+                "segmentBoundaryFacesRemoved": len(remove),
+                "renderSurfaceOpenAtSegmentInterfaces": True,
+            }
+        )
+        objects.append(
+            SceneObject(
+                name=obj.name,
+                vertices=obj.vertices,
+                faces=tuple(
+                    face
+                    for face_index, face in enumerate(obj.faces)
+                    if face_index not in remove
+                ),
+                object_type=obj.object_type,
+                ring_id=obj.ring_id,
+                label_id=obj.label_id,
+                instance_id=obj.instance_id,
+                semantic_class=obj.semantic_class,
+                segment_id=obj.segment_id,
+                segment_name=obj.segment_name,
+                segment_kind=obj.segment_kind,
+                reconstruction=(
+                    f"{obj.reconstruction}+stage9_segment_boundary_strip"
+                    if obj.reconstruction
+                    else "stage9_segment_boundary_strip"
+                ),
+                collection_path=obj.collection_path,
+                extra_properties=props,
+            )
+        )
+
+    metadata = dict(scene.metadata)
+    metadata["productionSegmentBoundaryStrip"] = {
+        "facesRemoved": removed_total,
+        "objectsAffected": affected_objects,
+        "angleToleranceDeg": angle_tolerance_deg,
+        "radialSpanToleranceM": radial_span_tolerance_m,
+        "requiresBooleanBakeFirst": True,
+        "tessellationIndependent": True,
+    }
+    return ScenePackage(
+        name=scene.name,
+        mode=scene.mode,
+        label_policy=scene.label_policy,
+        objects=tuple(objects),
+        metadata=metadata,
+    )
+
+
 def strip_exact_coincident_lining_interface_faces(
     scene: ScenePackage,
     *,
@@ -1314,9 +1500,9 @@ def finalize_production_render_scene(
         ring_width_m=ring_width_m,
         tolerance_m=tolerance_m,
     )
-    return strip_exact_coincident_lining_interface_faces(
+    return strip_lining_segment_boundary_faces(
         no_caps,
-        tolerance_m=tolerance_m,
+        ring_width_m=ring_width_m,
     )
 
 

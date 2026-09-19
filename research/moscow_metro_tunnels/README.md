@@ -10,6 +10,7 @@ Research snapshot: **2026-09-19**.
 - Stage 2 — structural geometry, clearance model, permanent way and Blender-PCG contract: **complete**
 - Stage 3 — equipment/services, special structures, Moscow era anchors, rail-CAD parameters and expanded references: **complete**
 - Stage 4 — executable engineering kernel, rail reconstruction, fixtures, schemas and tests: **complete**
+- Stage 5 — georeferenced XY, terrain/vertical-profile methodology and 3D alignment pipeline: **complete**
 
 ## Main documents
 
@@ -30,6 +31,10 @@ Research snapshot: **2026-09-19**.
 - `13_rail_profile_cad.md` — R50/R65 CAD reconstruction source data
 - `14_reference_measurement_and_photogrammetry.md` — calibrated photo measurement method
 - `15_stage4_reference_sdk.md` — executable reference SDK, QA and limitations
+- `16_geospatial_alignment_sources.md` — OSM, terrain DEM, CRS and vertical datum sources
+- `17_vertical_profile_reconstruction.md` — reconstruction of tunnel Z from sparse public/project data
+- `18_blender_route_generation_pipeline.md` — 3D route to Blender generation architecture
+- `19_stage5_geospatial_alignment.md` — Stage-5 implementation summary
 
 ## Machine-readable research data
 
@@ -40,6 +45,7 @@ Research snapshot: **2026-09-19**.
 - `data/special_structures.json`
 - `data/rail_profiles.json`
 - `data/moscow_examples.json`
+- `data/geospatial_sources.json`
 - `data/source_register.csv`
 
 ## Executable reference implementation
@@ -55,20 +61,39 @@ It contains:
 - `rail_profiles.py` — analytic R50/R65 engineering reconstruction;
 - `rings.py` — discrete ring sequences;
 - `events.py` — deterministic subsystem placement and special-structure overrides;
+- `alignment3d.py` — 3D chainage, grades, depth-datum conversion, parallel-transport frames and cant;
 - `blender_adapter.py` — minimal optional bpy bridge;
-- `schemas/` — route/archetype JSON Schemas;
-- `fixtures/` — rail profiles, analytic primitives and clearance reference data;
+- `tools_prepare_geospatial.py` — external GeoJSON + GeoTIFF -> local route/surface preprocessing;
+- `schemas/route_alignment.schema.json` — georeferenced 3D alignment interchange;
+- `schemas/` — route/archetype schemas;
+- `fixtures/` — rail profiles, analytic primitives and clearance/reference metadata;
 - `tests/` — executable unit tests.
 
-Local pre-upload validation:
-- **11/11 unit tests passed**;
-- Python `compileall` passed;
-- R50/R65 height and base width reproduce nominal dimensions;
-- reconstructed head width residual is <0.03 mm;
-- R50 area residual +0.231%, centroid residual -0.107 mm;
-- R65 area residual +0.154%, centroid residual -0.154 mm.
+Validation status:
+- Stage 4 engineering kernel: **11 tests passed**;
+- Stage 5 pure alignment kernel: **7 tests passed**;
+- Stage 5 GeoJSON+GeoTIFF preprocessor: **1 test passed** with optional `geo` dependencies;
+- Python compileall passed for the tested Stage-5 modules.
 
-These rail sections are engineering reconstructions from the published GOST construction geometry, suitable as a high-fidelity synthetic-LiDAR reference. They are not represented as manufacturer rolling-caliber master CAD.
+## Geospatial route principle
+
+A credible 3D route is assembled as:
+
+```
+public/project XY
++ surface terrain
++ known Z anchors
++ metro engineering constraints
+= uncertainty-aware 3D UGR alignment
+```
+
+Public OSM geometry is not treated as as-built survey.
+
+Terrain DEM is not treated as tunnel elevation.
+
+Absolute heights from different vertical datums are never mixed without transformation/calibration.
+
+Blender receives only local Cartesian metres and already solved engineering alignment data.
 
 ## Non-negotiable implementation rules
 
@@ -81,13 +106,17 @@ These rail sections are engineering reconstructions from the published GOST cons
 7. Photos can infer morphology/dimensions only through explicit calibrated-inference metadata.
 8. GOST clearance envelopes are validators, not physical tunnel-wall presets.
 9. Project-specific values always override generic reference families when provenance is stronger.
+10. Geospatial XY/Z sources retain CRS, vertical datum, source class and uncertainty.
+11. Published station “depth” is not converted to UGR unless the depth datum is explicitly known.
+12. GIS reprojection/DEM processing occurs outside Blender; Blender consumes local-metre engineering data.
 
 ## Known deliberately unresolved items
 
-- complete lower `Oм` multi-device polygon topology from GOST Fig. 7 — raw dimensions are retained rather than guessed;
-- manufacturer/master rolling-caliber CAD equivalence of the reconstructed R50/R65 sections;
+- complete lower `Oм` multi-device polygon topology from GOST Fig. 7;
+- manufacturer/master rolling-caliber CAD equivalence of reconstructed R50/R65;
 - exact finished lining ID/OD and vertical track placement for an unnamed generic “10 m-class” project;
 - project-specific universal-ring taper/rotation sequences and exact bolt/dowel-pocket layouts;
-- special-chamber dimensions without named project drawings.
+- special-chamber dimensions without named project drawings;
+- one survey-grade public XYZ dataset for the entire Moscow Metro network does not appear to be available; Z therefore requires section-specific evidence and constrained reconstruction.
 
-The repository is now suitable for an implementation agent to begin coding against executable rules rather than prose alone.
+The repository is suitable for an implementation agent to build both tunnel archetypes and geographically plausible 3D route alignments without silently confusing public-map geometry with survey truth.

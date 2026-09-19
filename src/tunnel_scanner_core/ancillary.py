@@ -72,6 +72,7 @@ class AncillaryConfig:
     tubes: tuple[TubeSpec, ...]
     tube_circle_vertices: int = 12
     pavement_arc_max_sagitta_m: float = 0.01
+    longitudinal_subdivisions: int = 2
 
     def __post_init__(self) -> None:
         positive = (
@@ -88,6 +89,8 @@ class AncillaryConfig:
             raise ValueError("ancillary dimensions must be finite and positive")
         if self.tube_circle_vertices < 8:
             raise ValueError("tube_circle_vertices must be >= 8")
+        if self.longitudinal_subdivisions < 1:
+            raise ValueError("longitudinal_subdivisions must be >= 1")
         names = [tube.name for tube in self.tubes]
         if len(names) != len(set(names)):
             raise ValueError("tube names must be unique")
@@ -231,25 +234,36 @@ def _extrude_polygon_xz(
     points_xz: Iterable[tuple[float, float]],
     *,
     length_m: float,
+    longitudinal_subdivisions: int = 2,
 ) -> tuple[tuple[Vec3, ...], tuple[Face, ...]]:
     points = tuple((float(x), float(z)) for x, z in points_xz)
     if len(points) < 3:
         raise ValueError("cross-section polygon must contain at least three points")
     if length_m <= 0.0:
         raise ValueError("length_m must be positive")
+    if longitudinal_subdivisions < 1:
+        raise ValueError("longitudinal_subdivisions must be >= 1")
+
     y0 = -0.5 * length_m
-    y1 = +0.5 * length_m
     vertices: list[Vec3] = []
-    for y in (y0, y1):
+    for iv in range(longitudinal_subdivisions + 1):
+        y = y0 + length_m * iv / longitudinal_subdivisions
         vertices.extend((x, y, z) for x, z in points)
+
     n = len(points)
     faces: list[Face] = [
         tuple(reversed(tuple(range(n)))),
-        tuple(range(n, 2 * n)),
+        tuple(
+            longitudinal_subdivisions * n + i
+            for i in range(n)
+        ),
     ]
-    for i in range(n):
-        j = (i + 1) % n
-        faces.append((i, j, n + j, n + i))
+    for iv in range(longitudinal_subdivisions):
+        a0 = iv * n
+        b0 = (iv + 1) * n
+        for i in range(n):
+            j = (i + 1) % n
+            faces.append((a0 + i, a0 + j, b0 + j, b0 + i))
     vv = tuple(vertices)
     ff = _positive_winding(vv, tuple(faces))
     if abs(_signed_volume(vv, ff)) <= 1e-15:
@@ -285,7 +299,7 @@ def _pavement_mesh(r: float, length_m: float, cfg: AncillaryConfig) -> Ancillary
     for i in range(1, n_arc):
         a = alpha_right + span * i / n_arc
         points.append((r * math.sin(a), r * math.cos(a)))
-    vertices, faces = _extrude_polygon_xz(points, length_m=length_m)
+    vertices, faces = _extrude_polygon_xz(\n        points,\n        length_m=length_m,\n        longitudinal_subdivisions=cfg.longitudinal_subdivisions,\n    )
     return AncillaryMesh(
         name="pavement",
         category="pavement",

@@ -159,7 +159,7 @@ PAPER_RING_RIGID is the diagnostic literal pipeline reading:
 - ancillary objects receive the same rigid axial rotation as the ring;
 - continuous alignment stitching is disabled.
 
-The selected policy is recorded on every object.
+The selected policy is recorded on every object. Both transform policies and both rail-spacing conventions can also be selected from the Stage-8 generator CLI.
 
 ## Semantic policies
 
@@ -226,7 +226,7 @@ Canonical thirteen-ring scene:
 
 Current regression suite:
 
-    112 tests passed
+    113 tests passed
 
 Stage-8 tests cover Table-4 reference/bounds, the printed 0.34r depth bound, physical-clearance rejection, left/right walkway, pavement/rail geometry, both rail-spacing interpretations, tube containment, all three tube-like subtypes, manifold/positive volume, semantic policies, both ancillary transform policies, exact inter-ring stitching, centreline following, JSON round-trip and deterministic high-level assembly.
 

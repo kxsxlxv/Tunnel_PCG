@@ -24,9 +24,11 @@
     "spline_length_m": 18907.797147223853,
     "published_line_length_difference_m": 492.20285277614676,
     "published_line_length_difference_percent": 2.53712810709354,
-    "min_sampled_radius_m": null,
-    "samples_with_radius_below_600m": 0,
-    "rule": "This is a preview/fallback only. Replace with OSM relation 1462012 railway=subway ways or project alignment before high-fidelity generation."
+    "min_sampled_radius_m": 393.0818123587114,
+    "samples_with_radius_below_600m": 13,
+    "rule": "This is a preview/fallback only. Replace with OSM relation 1462012 railway=subway ways or project alignment before high-fidelity generation.",
+    "samples_with_radius_below_300m": 0,
+    "curvature_sample_note": "Radius estimated from neighboring 25 m plan samples; diagnostic only."
   },
   "vertical_model": {
     "z_ugr_resolved": false,

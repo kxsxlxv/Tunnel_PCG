@@ -915,6 +915,11 @@ def build_production_tunnel(
         surface_meshing=surface_meshing,
         include_bolts=include_bolts,
         include_ancillary=False,
+        include_prescribed_joint_solids=(
+            production_config.keep_prescribed_outer_joint_solids
+            if production_config is not None
+            else False
+        ),
         label_policy=label_policy,
         seed=seed,
     )

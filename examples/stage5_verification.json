@@ -1,0 +1,17 @@
+{
+  "stage": 5,
+  "nominalPackages": 1000,
+  "deformedPackages": 1000,
+  "totalPackages": 2000,
+  "objectsValidated": 30000,
+  "sceneJsonRoundtrips": 2000,
+  "maxCompactNominalJsonBytes": 21492,
+  "maxCompactDeformedJsonBytes": 15980,
+  "maxDeformationClosureErrorM": 1.1957467920563633e-15,
+  "maxDeformationClosureErrorDeg": 8.526512829121202e-14,
+  "labelPolicy": {
+    "segments": "1..6 in canonical generator order",
+    "joints": 0
+  },
+  "result": "PASS"
+}

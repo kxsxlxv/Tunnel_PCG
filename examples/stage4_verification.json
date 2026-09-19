@@ -1,0 +1,25 @@
+{
+  "stage": 4,
+  "default_geometry_cases": 3000,
+  "randomized_geometry_cases": 1000,
+  "total_cases": 4000,
+  "metrics": {
+    "max_base_arc_width_error_m": 1.3877787807814457e-17,
+    "max_cap_arc_width_error_m": 1.3877787807814457e-17,
+    "max_added_thickness_error_m": 4.440892098500626e-16,
+    "min_radial_clearance_from_extrados_m": -8.881784197001252e-16,
+    "min_radial_joint_angular_clearance_deg": 16.478759366560354,
+    "min_radial_signed_volume_m3": 0.001613366537790735,
+    "radial_nonmanifold_count": 0,
+    "radial_nonpositive_volume_count": 0,
+    "max_circumferential_tiling_error_deg": 1.1368683772161603e-13,
+    "max_circumferential_axial_width_error_m": 5.551115123125783e-17,
+    "min_circumferential_signed_volume_m3": 0.0016342268702544613,
+    "circumferential_nonmanifold_count": 0,
+    "circumferential_nonpositive_volume_count": 0
+  },
+  "interpretation": {
+    "radial_joint": "paper-literal outer-rib reconstruction",
+    "circumferential_joint": "provisional outer-collar reconstruction"
+  }
+}

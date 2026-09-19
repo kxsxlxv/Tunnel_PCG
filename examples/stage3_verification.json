@@ -1,0 +1,37 @@
+{
+  "default_geometry": {
+    "count": 3000,
+    "max_translation_closure_error_m": 1.1957467920563633e-15,
+    "max_angular_closure_error_deg": 1.1368683772161603e-13,
+    "max_duplicate_k_translation_error_m": 1.1957467920563635e-15,
+    "max_duplicate_k_rotation_error_deg": 1.1368683772161603e-13,
+    "max_relative_rotation_recovery_error_deg": 1.5652756868433926e-13,
+    "max_rigid_edge_length_error_m": 1.3322676295501878e-15,
+    "max_joint_corner_separation_m": 0.010223421194318285,
+    "min_nonzero_joint_corner_separation_m": 4.598666404550122e-06,
+    "min_joint_signed_volume_m3": -5.475796093188093e-16,
+    "nonmanifold_joint_count": 0,
+    "negative_winding_joint_count": 0,
+    "attempts_mean": 3.582333333333333,
+    "attempts_median": 3.0,
+    "attempts_p99": 14.009999999999764,
+    "attempts_max": 28
+  },
+  "random_geometry": {
+    "count": 1000,
+    "max_translation_closure_error_m": 1.9860273225978185e-15,
+    "max_duplicate_k_translation_error_m": 1.9860273225978185e-15,
+    "max_duplicate_k_rotation_error_deg": 1.1368683772161603e-13,
+    "attempts_max": 36
+  },
+  "closure_only_10000": {
+    "count": 10000,
+    "max_translation_closure_error_m": 1.3322676295501878e-15,
+    "max_angular_closure_error_deg": 1.1368683772161603e-13,
+    "max_duplicate_k_translation_error_m": 1.3322676295501878e-15,
+    "max_duplicate_k_rotation_error_deg": 1.1368683772161603e-13,
+    "attempts_mean": 3.599,
+    "attempts_p99": 14.0,
+    "attempts_max": 24
+  }
+}

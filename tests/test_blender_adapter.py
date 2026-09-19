@@ -1,0 +1,161 @@
+from __future__ import annotations
+
+from pathlib import Path
+import sys
+import types
+
+from tunnel_scanner_core import (
+    RingConfig,
+    build_prescribed_joint_set,
+    build_ring_mesh,
+    sample_joint_config,
+    sample_six_segment_angles,
+)
+from tunnel_scanner_core.blender_adapter import build_scene_package_in_blender
+from tunnel_scanner_core.scene import build_nominal_scene_package
+
+
+class _PropMixin:
+    def __init__(self):
+        self._props = {}
+
+    def __setitem__(self, key, value):
+        self._props[key] = value
+
+    def __getitem__(self, key):
+        return self._props[key]
+
+
+class _LinkList(list):
+    def link(self, item):
+        if item not in self:
+            self.append(item)
+
+
+class _FakeMesh:
+    def __init__(self, name):
+        self.name = name
+        self.vertices = []
+        self.faces = []
+        self.validate_called = False
+        self.update_called = False
+
+    def from_pydata(self, vertices, edges, faces):
+        self.vertices = list(vertices)
+        self.faces = list(faces)
+
+    def validate(self, verbose=False):
+        self.validate_called = True
+        return False
+
+    def update(self, calc_edges=False):
+        self.update_called = True
+
+
+class _FakeObject(_PropMixin):
+    def __init__(self, name, mesh):
+        super().__init__()
+        self.name = name
+        self.data = mesh
+
+
+class _FakeCollection(_PropMixin):
+    def __init__(self, name):
+        super().__init__()
+        self.name = name
+        self.children = _LinkList()
+        self.objects = _LinkList()
+
+
+class _Registry:
+    def __init__(self, factory):
+        self._items = {}
+        self.factory = factory
+
+    def get(self, name):
+        return self._items.get(name)
+
+    def new(self, name, *args):
+        item = self.factory(name, *args)
+        self._items[name] = item
+        return item
+
+    def remove(self, item, do_unlink=False):
+        self._items.pop(item.name, None)
+
+    def __iter__(self):
+        return iter(self._items.values())
+
+
+class _FakeUnitSettings:
+    def __init__(self):
+        self.system = "NONE"
+        self.scale_length = 99.0
+        self.length_unit = ""
+
+
+class _FakeScene:
+    def __init__(self):
+        self.collection = _FakeCollection("SCENE_ROOT")
+        self.unit_settings = _FakeUnitSettings()
+
+
+class _FakeBpy(types.SimpleNamespace):
+    def __init__(self):
+        collections = _Registry(lambda name: _FakeCollection(name))
+        meshes = _Registry(lambda name: _FakeMesh(name))
+        objects = _Registry(lambda name, mesh: _FakeObject(name, mesh))
+        super().__init__(
+            data=types.SimpleNamespace(
+                collections=collections,
+                meshes=meshes,
+                objects=objects,
+            ),
+            context=types.SimpleNamespace(scene=_FakeScene()),
+        )
+
+
+def _package():
+    cfg = RingConfig()
+    angles = sample_six_segment_angles(seed=5812)
+    ring = build_ring_mesh(cfg, angles)
+    joints = build_prescribed_joint_set(ring, sample_joint_config(seed=5812))
+    return build_nominal_scene_package(ring, joints, ring_id=12)
+
+
+def test_blender_adapter_builds_hierarchy_meshes_and_custom_props(monkeypatch):
+    fake = _FakeBpy()
+    monkeypatch.setitem(sys.modules, "bpy", fake)
+    package = _package()
+
+    result = build_scene_package_in_blender(package)
+    assert result.root_collection_name == "TunnelScanner"
+    assert len(result.object_names) == len(package.objects) == 18
+    assert len(result.mesh_names) == 18
+
+    root = fake.data.collections.get("TunnelScanner")
+    assert root["sceneMode"] == package.mode.value
+    assert root["labelPolicy"] == package.label_policy.value
+    assert fake.context.scene.unit_settings.system == "METRIC"
+    assert fake.context.scene.unit_settings.scale_length == 1.0
+    assert fake.context.scene.unit_settings.length_unit == "METERS"
+
+    first = fake.data.objects.get(package.objects[0].name)
+    assert first is not None
+    assert first["labelID"] == 1
+    assert first["ringID"] == 12
+    assert first["segmentID"] == 0
+    assert first["objectType"] == "lining_segment"
+    assert first.data.validate_called
+    assert first.data.update_called
+
+    # Qualified collection data-block names prevent identical short names from
+    # being accidentally reused across different ring parents in future scenes.
+    assert fake.data.collections.get("TunnelScanner::Ring_0012") is not None
+    assert fake.data.collections.get("TunnelScanner::Ring_0012::Segments") is not None
+    assert fake.data.collections.get("TunnelScanner::Ring_0012::Joints::PrescribedRadial") is not None
+
+
+def test_blender_import_script_compiles_without_blender_runtime():
+    script = Path(__file__).resolve().parents[1] / "scripts" / "blender_import_scene.py"
+    compile(script.read_text(encoding="utf-8"), str(script), "exec")

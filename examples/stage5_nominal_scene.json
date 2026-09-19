@@ -1,0 +1,2073 @@
+{
+  "schema": "tunnel_scanner_scene",
+  "schemaVersion": 1,
+  "name": "tunnel_scanner_nominal_ring_0012",
+  "mode": "nominal_with_prescribed_joints",
+  "labelPolicy": "seg2tunnel_like",
+  "metadata": {
+    "sourceStages": [
+      1,
+      4,
+      5
+    ],
+    "coordinateConvention": {
+      "longitudinalAxis": "+Y",
+      "crossSection": "XZ",
+      "alphaZero": "+Z crown",
+      "units": "metres"
+    },
+    "segmentLabelConvention": {
+      "K": 1,
+      "B1": 2,
+      "A1": 3,
+      "A2": 4,
+      "A3": 5,
+      "B2": 6
+    },
+    "segmentLabelConventionStatus": "Stage-5 generator order; article states labels 1..6 but does not publish K/B/A-to-S1..S6 correspondence",
+    "jointLabelConvention": "labelID=0 clutter, following Seg2Tunnel synthesis described by Yang et al. (2026)",
+    "physicalCoherence": "nominal Stage-1 segments + Stage-4 prescribed joints; no Stage-3 deformation"
+  },
+  "objects": [
+    {
+      "name": "R0012_SEG_00_K",
+      "vertices": [
+        [
+          -0.5336972252704707,
+          -0.675,
+          2.952146214491857
+        ],
+        [
+          0.5336972252704707,
+          -0.675,
+          2.952146214491857
+        ],
+        [
+          -0.5167670694311631,
+          0.675,
+          2.9551568141050533
+        ],
+        [
+          0.5167670694311631,
+          0.675,
+          2.9551568141050533
+        ],
+        [
+          -0.5959619015520257,
+          -0.675,
+          3.2965632728492404
+        ],
+        [
+          0.5959619015520257,
+          -0.675,
+          3.2965632728492404
+        ],
+        [
+          -0.5770565608647988,
+          0.675,
+          3.299925109083976
+        ],
+        [
+          0.5770565608647988,
+          0.675,
+          3.299925109083976
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          4,
+          5,
+          7,
+          6
+        ],
+        [
+          0,
+          4,
+          6,
+          2
+        ],
+        [
+          1,
+          3,
+          7,
+          5
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          2,
+          6,
+          7,
+          3
+        ]
+      ],
+      "objectType": "lining_segment",
+      "ringID": 12,
+      "labelID": 1,
+      "instanceID": 12000,
+      "semanticClass": "lining_segment_1",
+      "segmentID": 0,
+      "segmentName": "K",
+      "segmentKind": "K",
+      "reconstruction": "stage1_hexahedral_segment",
+      "collectionPath": [
+        "Ring_0012",
+        "Segments"
+      ],
+      "extraProperties": {},
+      "customProperties": {
+        "labelID": 1,
+        "ringID": 12,
+        "instanceID": 12000,
+        "objectType": "lining_segment",
+        "semanticClass": "lining_segment_1",
+        "segmentID": 0,
+        "segmentName": "K",
+        "segmentKind": "K",
+        "reconstruction": "stage1_hexahedral_segment"
+      }
+    },
+    {
+      "name": "R0012_SEG_01_B1",
+      "vertices": [
+        [
+          0.5336972252704707,
+          -0.675,
+          2.952146214491857
+        ],
+        [
+          2.9552593258684654,
+          -0.675,
+          0.5161805080274373
+        ],
+        [
+          0.5167670694311631,
+          0.675,
+          2.9551568141050533
+        ],
+        [
+          2.958169470378388,
+          0.675,
+          0.49923279591914416
+        ],
+        [
+          0.5959619015520257,
+          -0.675,
+          3.2965632728492404
+        ],
+        [
+          3.3000395805531197,
+          -0.675,
+          0.5764015672973051
+        ],
+        [
+          0.5770565608647988,
+          0.675,
+          3.299925109083976
+        ],
+        [
+          3.3032892419225335,
+          0.675,
+          0.5574766221097109
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          4,
+          5,
+          7,
+          6
+        ],
+        [
+          0,
+          4,
+          6,
+          2
+        ],
+        [
+          1,
+          3,
+          7,
+          5
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          2,
+          6,
+          7,
+          3
+        ]
+      ],
+      "objectType": "lining_segment",
+      "ringID": 12,
+      "labelID": 2,
+      "instanceID": 12001,
+      "semanticClass": "lining_segment_2",
+      "segmentID": 1,
+      "segmentName": "B1",
+      "segmentKind": "B",
+      "reconstruction": "stage1_hexahedral_segment",
+      "collectionPath": [
+        "Ring_0012",
+        "Segments"
+      ],
+      "extraProperties": {},
+      "customProperties": {
+        "labelID": 2,
+        "ringID": 12,
+        "instanceID": 12001,
+        "objectType": "lining_segment",
+        "semanticClass": "lining_segment_2",
+        "segmentID": 1,
+        "segmentName": "B1",
+        "segmentKind": "B",
+        "reconstruction": "stage1_hexahedral_segment"
+      }
+    },
+    {
+      "name": "R0012_SEG_02_A1",
+      "vertices": [
+        [
+          2.9552593258684654,
+          -0.675,
+          0.5161805080274373
+        ],
+        [
+          1.6471796580621372,
+          -0.675,
+          -2.5073490331555957
+        ],
+        [
+          2.958169470378388,
+          0.675,
+          0.49923279591914416
+        ],
+        [
+          1.6423860087349011,
+          0.675,
+          -2.5104916248240787
+        ],
+        [
+          3.3000395805531197,
+          -0.675,
+          0.5764015672973051
+        ],
+        [
+          1.8393506181693866,
+          -0.675,
+          -2.7998730870237485
+        ],
+        [
+          3.3032892419225335,
+          0.675,
+          0.5574766221097109
+        ],
+        [
+          1.833997709753973,
+          0.675,
+          -2.8033823143868877
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          4,
+          5,
+          7,
+          6
+        ],
+        [
+          0,
+          4,
+          6,
+          2
+        ],
+        [
+          1,
+          3,
+          7,
+          5
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          2,
+          6,
+          7,
+          3
+        ]
+      ],
+      "objectType": "lining_segment",
+      "ringID": 12,
+      "labelID": 3,
+      "instanceID": 12002,
+      "semanticClass": "lining_segment_3",
+      "segmentID": 2,
+      "segmentName": "A1",
+      "segmentKind": "A",
+      "reconstruction": "stage1_hexahedral_segment",
+      "collectionPath": [
+        "Ring_0012",
+        "Segments"
+      ],
+      "extraProperties": {},
+      "customProperties": {
+        "labelID": 3,
+        "ringID": 12,
+        "instanceID": 12002,
+        "objectType": "lining_segment",
+        "semanticClass": "lining_segment_3",
+        "segmentID": 2,
+        "segmentName": "A1",
+        "segmentKind": "A",
+        "reconstruction": "stage1_hexahedral_segment"
+      }
+    },
+    {
+      "name": "R0012_SEG_03_A2",
+      "vertices": [
+        [
+          1.6471796580621372,
+          -0.675,
+          -2.5073490331555957
+        ],
+        [
+          -1.647179658062138,
+          -0.675,
+          -2.507349033155595
+        ],
+        [
+          1.6423860087349011,
+          0.675,
+          -2.5104916248240787
+        ],
+        [
+          -1.6423860087349014,
+          0.675,
+          -2.5104916248240783
+        ],
+        [
+          1.8393506181693866,
+          -0.675,
+          -2.7998730870237485
+        ],
+        [
+          -1.8393506181693875,
+          -0.675,
+          -2.7998730870237485
+        ],
+        [
+          1.833997709753973,
+          0.675,
+          -2.8033823143868877
+        ],
+        [
+          -1.8339977097539735,
+          0.675,
+          -2.8033823143868872
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          4,
+          5,
+          7,
+          6
+        ],
+        [
+          0,
+          4,
+          6,
+          2
+        ],
+        [
+          1,
+          3,
+          7,
+          5
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          2,
+          6,
+          7,
+          3
+        ]
+      ],
+      "objectType": "lining_segment",
+      "ringID": 12,
+      "labelID": 4,
+      "instanceID": 12003,
+      "semanticClass": "lining_segment_4",
+      "segmentID": 3,
+      "segmentName": "A2",
+      "segmentKind": "A",
+      "reconstruction": "stage1_hexahedral_segment",
+      "collectionPath": [
+        "Ring_0012",
+        "Segments"
+      ],
+      "extraProperties": {},
+      "customProperties": {
+        "labelID": 4,
+        "ringID": 12,
+        "instanceID": 12003,
+        "objectType": "lining_segment",
+        "semanticClass": "lining_segment_4",
+        "segmentID": 3,
+        "segmentName": "A2",
+        "segmentKind": "A",
+        "reconstruction": "stage1_hexahedral_segment"
+      }
+    },
+    {
+      "name": "R0012_SEG_04_A3",
+      "vertices": [
+        [
+          -1.647179658062138,
+          -0.675,
+          -2.507349033155595
+        ],
+        [
+          -2.9552593258684654,
+          -0.675,
+          0.5161805080274366
+        ],
+        [
+          -1.6423860087349014,
+          0.675,
+          -2.5104916248240783
+        ],
+        [
+          -2.9581694703783885,
+          0.675,
+          0.4992327959191434
+        ],
+        [
+          -1.8393506181693875,
+          -0.675,
+          -2.7998730870237485
+        ],
+        [
+          -3.3000395805531197,
+          -0.675,
+          0.5764015672973042
+        ],
+        [
+          -1.8339977097539735,
+          0.675,
+          -2.8033823143868872
+        ],
+        [
+          -3.303289241922534,
+          0.675,
+          0.5574766221097102
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          4,
+          5,
+          7,
+          6
+        ],
+        [
+          0,
+          4,
+          6,
+          2
+        ],
+        [
+          1,
+          3,
+          7,
+          5
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          2,
+          6,
+          7,
+          3
+        ]
+      ],
+      "objectType": "lining_segment",
+      "ringID": 12,
+      "labelID": 5,
+      "instanceID": 12004,
+      "semanticClass": "lining_segment_5",
+      "segmentID": 4,
+      "segmentName": "A3",
+      "segmentKind": "A",
+      "reconstruction": "stage1_hexahedral_segment",
+      "collectionPath": [
+        "Ring_0012",
+        "Segments"
+      ],
+      "extraProperties": {},
+      "customProperties": {
+        "labelID": 5,
+        "ringID": 12,
+        "instanceID": 12004,
+        "objectType": "lining_segment",
+        "semanticClass": "lining_segment_5",
+        "segmentID": 4,
+        "segmentName": "A3",
+        "segmentKind": "A",
+        "reconstruction": "stage1_hexahedral_segment"
+      }
+    },
+    {
+      "name": "R0012_SEG_05_B2",
+      "vertices": [
+        [
+          -2.9552593258684654,
+          -0.675,
+          0.5161805080274366
+        ],
+        [
+          -0.5336972252704705,
+          -0.675,
+          2.952146214491857
+        ],
+        [
+          -2.9581694703783885,
+          0.675,
+          0.4992327959191434
+        ],
+        [
+          -0.5167670694311628,
+          0.675,
+          2.9551568141050533
+        ],
+        [
+          -3.3000395805531197,
+          -0.675,
+          0.5764015672973042
+        ],
+        [
+          -0.5959619015520253,
+          -0.675,
+          3.2965632728492404
+        ],
+        [
+          -3.303289241922534,
+          0.675,
+          0.5574766221097102
+        ],
+        [
+          -0.5770565608647984,
+          0.675,
+          3.299925109083976
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          4,
+          5,
+          7,
+          6
+        ],
+        [
+          0,
+          4,
+          6,
+          2
+        ],
+        [
+          1,
+          3,
+          7,
+          5
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          2,
+          6,
+          7,
+          3
+        ]
+      ],
+      "objectType": "lining_segment",
+      "ringID": 12,
+      "labelID": 6,
+      "instanceID": 12005,
+      "semanticClass": "lining_segment_6",
+      "segmentID": 5,
+      "segmentName": "B2",
+      "segmentKind": "B",
+      "reconstruction": "stage1_hexahedral_segment",
+      "collectionPath": [
+        "Ring_0012",
+        "Segments"
+      ],
+      "extraProperties": {},
+      "customProperties": {
+        "labelID": 6,
+        "ringID": 12,
+        "instanceID": 12005,
+        "objectType": "lining_segment",
+        "semanticClass": "lining_segment_6",
+        "segmentID": 5,
+        "segmentName": "B2",
+        "segmentKind": "B",
+        "reconstruction": "stage1_hexahedral_segment"
+      }
+    },
+    {
+      "name": "R0012_JRAD_00_K_B1",
+      "vertices": [
+        [
+          0.5783232300775956,
+          -0.675,
+          3.2997033565992897
+        ],
+        [
+          0.6135835274881152,
+          -0.675,
+          3.2933289017034486
+        ],
+        [
+          0.5594001805219991,
+          0.675,
+          3.302964038258963
+        ],
+        [
+          0.594696436394611,
+          0.675,
+          3.2967917963589315
+        ],
+        [
+          0.5888512577684188,
+          -0.675,
+          3.3579391585480027
+        ],
+        [
+          0.6241115609637673,
+          -0.675,
+          3.3515647026063644
+        ],
+        [
+          0.5695942338326124,
+          0.675,
+          3.361259229079209
+        ],
+        [
+          0.6048904954959526,
+          0.675,
+          3.355086986166555
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          4,
+          5,
+          7,
+          6
+        ],
+        [
+          0,
+          4,
+          6,
+          2
+        ],
+        [
+          1,
+          3,
+          7,
+          5
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          2,
+          6,
+          7,
+          3
+        ]
+      ],
+      "objectType": "prescribed_radial_joint",
+      "ringID": 12,
+      "labelID": 0,
+      "instanceID": 12006,
+      "semanticClass": "clutter",
+      "segmentID": 1,
+      "segmentName": "B1",
+      "segmentKind": null,
+      "reconstruction": "paper_literal_outer_rib",
+      "collectionPath": [
+        "Ring_0012",
+        "Joints",
+        "PrescribedRadial"
+      ],
+      "extraProperties": {
+        "previousSegment": "K",
+        "nextSegment": "B1",
+        "jointWidthM": 0.03583203161409586,
+        "jointAddedThicknessM": 0.05917896219683934
+      },
+      "customProperties": {
+        "labelID": 0,
+        "ringID": 12,
+        "instanceID": 12006,
+        "objectType": "prescribed_radial_joint",
+        "semanticClass": "clutter",
+        "segmentID": 1,
+        "segmentName": "B1",
+        "reconstruction": "paper_literal_outer_rib",
+        "previousSegment": "K",
+        "nextSegment": "B1",
+        "jointWidthM": 0.03583203161409586,
+        "jointAddedThicknessM": 0.05917896219683934
+      }
+    },
+    {
+      "name": "R0012_JRAD_01_B1_A1",
+      "vertices": [
+        [
+          3.29690976912213,
+          -0.675,
+          0.5940420643919632
+        ],
+        [
+          3.3030750051599704,
+          -0.675,
+          0.5587445841236052
+        ],
+        [
+          3.3002605953621194,
+          0.675,
+          0.5751347691629067
+        ],
+        [
+          3.3062234087128886,
+          0.675,
+          0.5398025302635487
+        ],
+        [
+          3.355206981138669,
+          -0.675,
+          0.6042245526324282
+        ],
+        [
+          3.3613722181879826,
+          -0.675,
+          0.5689270665731418
+        ],
+        [
+          3.3586152146459507,
+          0.675,
+          0.5849829367035025
+        ],
+        [
+          3.3645780289749827,
+          0.675,
+          0.5496506920075137
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          4,
+          5,
+          7,
+          6
+        ],
+        [
+          0,
+          4,
+          6,
+          2
+        ],
+        [
+          1,
+          3,
+          7,
+          5
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          2,
+          6,
+          7,
+          3
+        ]
+      ],
+      "objectType": "prescribed_radial_joint",
+      "ringID": 12,
+      "labelID": 0,
+      "instanceID": 12007,
+      "semanticClass": "clutter",
+      "segmentID": 2,
+      "segmentName": "A1",
+      "segmentKind": null,
+      "reconstruction": "paper_literal_outer_rib",
+      "collectionPath": [
+        "Ring_0012",
+        "Joints",
+        "PrescribedRadial"
+      ],
+      "extraProperties": {
+        "previousSegment": "B1",
+        "nextSegment": "A1",
+        "jointWidthM": 0.03583203161409586,
+        "jointAddedThicknessM": 0.05917896219683934
+      },
+      "customProperties": {
+        "labelID": 0,
+        "ringID": 12,
+        "instanceID": 12007,
+        "objectType": "prescribed_radial_joint",
+        "semanticClass": "clutter",
+        "segmentID": 2,
+        "segmentName": "A1",
+        "reconstruction": "paper_literal_outer_rib",
+        "previousSegment": "B1",
+        "nextSegment": "A1",
+        "jointWidthM": 0.03583203161409586,
+        "jointAddedThicknessM": 0.05917896219683934
+      }
+    },
+    {
+      "name": "R0012_JRAD_02_A1_A2",
+      "vertices": [
+        [
+          1.8542981441265245,
+          -0.675,
+          -2.7899961277193426
+        ],
+        [
+          1.8243504836119309,
+          -0.675,
+          -2.809669965128452
+        ],
+        [
+          1.8489640797468558,
+          0.675,
+          -2.793533932460077
+        ],
+        [
+          1.8189788842631853,
+          0.675,
+          -2.81315051474404
+        ],
+        [
+          1.8867913974284614,
+          -0.675,
+          -2.83945759237138
+        ],
+        [
+          1.8568437320006346,
+          -0.675,
+          -2.8591314330081916
+        ],
+        [
+          1.8813627706589413,
+          0.675,
+          -2.8430573897591356
+        ],
+        [
+          1.8513775702558801,
+          0.675,
+          -2.862673975261408
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          4,
+          5,
+          7,
+          6
+        ],
+        [
+          0,
+          4,
+          6,
+          2
+        ],
+        [
+          1,
+          3,
+          7,
+          5
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          2,
+          6,
+          7,
+          3
+        ]
+      ],
+      "objectType": "prescribed_radial_joint",
+      "ringID": 12,
+      "labelID": 0,
+      "instanceID": 12008,
+      "semanticClass": "clutter",
+      "segmentID": 3,
+      "segmentName": "A2",
+      "segmentKind": null,
+      "reconstruction": "paper_literal_outer_rib",
+      "collectionPath": [
+        "Ring_0012",
+        "Joints",
+        "PrescribedRadial"
+      ],
+      "extraProperties": {
+        "previousSegment": "A1",
+        "nextSegment": "A2",
+        "jointWidthM": 0.03583203161409586,
+        "jointAddedThicknessM": 0.05917896219683934
+      },
+      "customProperties": {
+        "labelID": 0,
+        "ringID": 12,
+        "instanceID": 12008,
+        "objectType": "prescribed_radial_joint",
+        "semanticClass": "clutter",
+        "segmentID": 3,
+        "segmentName": "A2",
+        "reconstruction": "paper_literal_outer_rib",
+        "previousSegment": "A1",
+        "nextSegment": "A2",
+        "jointWidthM": 0.03583203161409586,
+        "jointAddedThicknessM": 0.05917896219683934
+      }
+    },
+    {
+      "name": "R0012_JRAD_03_A2_A3",
+      "vertices": [
+        [
+          -1.8243504836119315,
+          -0.675,
+          -2.8096699651284514
+        ],
+        [
+          -1.8542981441265252,
+          -0.675,
+          -2.7899961277193426
+        ],
+        [
+          -1.8189788842631862,
+          0.675,
+          -2.8131505147440397
+        ],
+        [
+          -1.8489640797468565,
+          0.675,
+          -2.7935339324600768
+        ],
+        [
+          -1.856843732000635,
+          -0.675,
+          -2.859131433008191
+        ],
+        [
+          -1.8867913974284631,
+          -0.675,
+          -2.839457592371379
+        ],
+        [
+          -1.8513775702558792,
+          0.675,
+          -2.862673975261408
+        ],
+        [
+          -1.8813627706589404,
+          0.675,
+          -2.843057389759136
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          4,
+          5,
+          7,
+          6
+        ],
+        [
+          0,
+          4,
+          6,
+          2
+        ],
+        [
+          1,
+          3,
+          7,
+          5
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          2,
+          6,
+          7,
+          3
+        ]
+      ],
+      "objectType": "prescribed_radial_joint",
+      "ringID": 12,
+      "labelID": 0,
+      "instanceID": 12009,
+      "semanticClass": "clutter",
+      "segmentID": 4,
+      "segmentName": "A3",
+      "segmentKind": null,
+      "reconstruction": "paper_literal_outer_rib",
+      "collectionPath": [
+        "Ring_0012",
+        "Joints",
+        "PrescribedRadial"
+      ],
+      "extraProperties": {
+        "previousSegment": "A2",
+        "nextSegment": "A3",
+        "jointWidthM": 0.03583203161409586,
+        "jointAddedThicknessM": 0.05917896219683934
+      },
+      "customProperties": {
+        "labelID": 0,
+        "ringID": 12,
+        "instanceID": 12009,
+        "objectType": "prescribed_radial_joint",
+        "semanticClass": "clutter",
+        "segmentID": 4,
+        "segmentName": "A3",
+        "reconstruction": "paper_literal_outer_rib",
+        "previousSegment": "A2",
+        "nextSegment": "A3",
+        "jointWidthM": 0.03583203161409586,
+        "jointAddedThicknessM": 0.05917896219683934
+      }
+    },
+    {
+      "name": "R0012_JRAD_04_A3_B2",
+      "vertices": [
+        [
+          -3.3030750051599704,
+          -0.675,
+          0.5587445841236058
+        ],
+        [
+          -3.29690976912213,
+          -0.675,
+          0.5940420643919638
+        ],
+        [
+          -3.3062234087128886,
+          0.675,
+          0.5398025302635465
+        ],
+        [
+          -3.30026059536212,
+          0.675,
+          0.5751347691629044
+        ],
+        [
+          -3.3613722181879826,
+          -0.675,
+          0.5689270665731417
+        ],
+        [
+          -3.355206981138669,
+          -0.675,
+          0.6042245526324289
+        ],
+        [
+          -3.364578028974983,
+          0.675,
+          0.5496506920075114
+        ],
+        [
+          -3.3586152146459503,
+          0.675,
+          0.584982936703504
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          4,
+          5,
+          7,
+          6
+        ],
+        [
+          0,
+          4,
+          6,
+          2
+        ],
+        [
+          1,
+          3,
+          7,
+          5
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          2,
+          6,
+          7,
+          3
+        ]
+      ],
+      "objectType": "prescribed_radial_joint",
+      "ringID": 12,
+      "labelID": 0,
+      "instanceID": 12010,
+      "semanticClass": "clutter",
+      "segmentID": 5,
+      "segmentName": "B2",
+      "segmentKind": null,
+      "reconstruction": "paper_literal_outer_rib",
+      "collectionPath": [
+        "Ring_0012",
+        "Joints",
+        "PrescribedRadial"
+      ],
+      "extraProperties": {
+        "previousSegment": "A3",
+        "nextSegment": "B2",
+        "jointWidthM": 0.03583203161409586,
+        "jointAddedThicknessM": 0.05917896219683934
+      },
+      "customProperties": {
+        "labelID": 0,
+        "ringID": 12,
+        "instanceID": 12010,
+        "objectType": "prescribed_radial_joint",
+        "semanticClass": "clutter",
+        "segmentID": 5,
+        "segmentName": "B2",
+        "reconstruction": "paper_literal_outer_rib",
+        "previousSegment": "A3",
+        "nextSegment": "B2",
+        "jointWidthM": 0.03583203161409586,
+        "jointAddedThicknessM": 0.05917896219683934
+      }
+    },
+    {
+      "name": "R0012_JRAD_05_B2_K",
+      "vertices": [
+        [
+          -0.6135835274881164,
+          -0.675,
+          3.293328901703448
+        ],
+        [
+          -0.5783232300775938,
+          -0.675,
+          3.2997033565992897
+        ],
+        [
+          -0.5946964363946122,
+          0.675,
+          3.2967917963589315
+        ],
+        [
+          -0.5594001805219999,
+          0.675,
+          3.302964038258963
+        ],
+        [
+          -0.6241115609637685,
+          -0.675,
+          3.3515647026063644
+        ],
+        [
+          -0.588851257768417,
+          -0.675,
+          3.357939158548003
+        ],
+        [
+          -0.6048904954959538,
+          0.675,
+          3.355086986166555
+        ],
+        [
+          -0.5695942338326133,
+          0.675,
+          3.361259229079209
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          4,
+          5,
+          7,
+          6
+        ],
+        [
+          0,
+          4,
+          6,
+          2
+        ],
+        [
+          1,
+          3,
+          7,
+          5
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          2,
+          6,
+          7,
+          3
+        ]
+      ],
+      "objectType": "prescribed_radial_joint",
+      "ringID": 12,
+      "labelID": 0,
+      "instanceID": 12011,
+      "semanticClass": "clutter",
+      "segmentID": 0,
+      "segmentName": "K",
+      "segmentKind": null,
+      "reconstruction": "paper_literal_outer_rib",
+      "collectionPath": [
+        "Ring_0012",
+        "Joints",
+        "PrescribedRadial"
+      ],
+      "extraProperties": {
+        "previousSegment": "B2",
+        "nextSegment": "K",
+        "jointWidthM": 0.03583203161409586,
+        "jointAddedThicknessM": 0.05917896219683934
+      },
+      "customProperties": {
+        "labelID": 0,
+        "ringID": 12,
+        "instanceID": 12011,
+        "objectType": "prescribed_radial_joint",
+        "semanticClass": "clutter",
+        "segmentID": 0,
+        "segmentName": "K",
+        "reconstruction": "paper_literal_outer_rib",
+        "previousSegment": "B2",
+        "nextSegment": "K",
+        "jointWidthM": 0.03583203161409586,
+        "jointAddedThicknessM": 0.05917896219683934
+      }
+    },
+    {
+      "name": "R0012_JCIRC_BACK_00_K",
+      "vertices": [
+        [
+          -0.5770565608647988,
+          0.675,
+          3.299925109083976
+        ],
+        [
+          0.5770565608647988,
+          0.675,
+          3.299925109083976
+        ],
+        [
+          -0.5770565608647988,
+          0.7108320316140959,
+          3.299925109083976
+        ],
+        [
+          0.5770565608647988,
+          0.7108320316140959,
+          3.299925109083976
+        ],
+        [
+          -0.5872504738202783,
+          0.675,
+          3.3582194802131946
+        ],
+        [
+          0.5872504738202783,
+          0.675,
+          3.3582194802131946
+        ],
+        [
+          -0.5872504738202783,
+          0.7108320316140959,
+          3.3582194802131946
+        ],
+        [
+          0.5872504738202783,
+          0.7108320316140959,
+          3.3582194802131946
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          4,
+          5,
+          7,
+          6
+        ],
+        [
+          0,
+          4,
+          6,
+          2
+        ],
+        [
+          1,
+          3,
+          7,
+          5
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          2,
+          6,
+          7,
+          3
+        ]
+      ],
+      "objectType": "prescribed_circumferential_joint",
+      "ringID": 12,
+      "labelID": 0,
+      "instanceID": 12012,
+      "semanticClass": "clutter",
+      "segmentID": 0,
+      "segmentName": "K",
+      "segmentKind": null,
+      "reconstruction": "circumferential_outer_collar",
+      "collectionPath": [
+        "Ring_0012",
+        "Joints",
+        "Circumferential_back"
+      ],
+      "extraProperties": {
+        "jointSide": "back",
+        "jointWidthM": 0.03583203161409586,
+        "jointAddedThicknessM": 0.05917896219683934
+      },
+      "customProperties": {
+        "labelID": 0,
+        "ringID": 12,
+        "instanceID": 12012,
+        "objectType": "prescribed_circumferential_joint",
+        "semanticClass": "clutter",
+        "segmentID": 0,
+        "segmentName": "K",
+        "reconstruction": "circumferential_outer_collar",
+        "jointSide": "back",
+        "jointWidthM": 0.03583203161409586,
+        "jointAddedThicknessM": 0.05917896219683934
+      }
+    },
+    {
+      "name": "R0012_JCIRC_BACK_01_B1",
+      "vertices": [
+        [
+          0.5770565608647988,
+          0.675,
+          3.299925109083976
+        ],
+        [
+          3.3032892419225335,
+          0.675,
+          0.5574766221097109
+        ],
+        [
+          0.5770565608647988,
+          0.7108320316140959,
+          3.299925109083976
+        ],
+        [
+          3.3032892419225335,
+          0.7108320316140959,
+          0.5574766221097109
+        ],
+        [
+          0.5872504738202783,
+          0.675,
+          3.3582194802131946
+        ],
+        [
+          3.3616430416756558,
+          0.675,
+          0.5673246483620847
+        ],
+        [
+          0.5872504738202783,
+          0.7108320316140959,
+          3.3582194802131946
+        ],
+        [
+          3.3616430416756558,
+          0.7108320316140959,
+          0.5673246483620847
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          4,
+          5,
+          7,
+          6
+        ],
+        [
+          0,
+          4,
+          6,
+          2
+        ],
+        [
+          1,
+          3,
+          7,
+          5
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          2,
+          6,
+          7,
+          3
+        ]
+      ],
+      "objectType": "prescribed_circumferential_joint",
+      "ringID": 12,
+      "labelID": 0,
+      "instanceID": 12013,
+      "semanticClass": "clutter",
+      "segmentID": 1,
+      "segmentName": "B1",
+      "segmentKind": null,
+      "reconstruction": "circumferential_outer_collar",
+      "collectionPath": [
+        "Ring_0012",
+        "Joints",
+        "Circumferential_back"
+      ],
+      "extraProperties": {
+        "jointSide": "back",
+        "jointWidthM": 0.03583203161409586,
+        "jointAddedThicknessM": 0.05917896219683934
+      },
+      "customProperties": {
+        "labelID": 0,
+        "ringID": 12,
+        "instanceID": 12013,
+        "objectType": "prescribed_circumferential_joint",
+        "semanticClass": "clutter",
+        "segmentID": 1,
+        "segmentName": "B1",
+        "reconstruction": "circumferential_outer_collar",
+        "jointSide": "back",
+        "jointWidthM": 0.03583203161409586,
+        "jointAddedThicknessM": 0.05917896219683934
+      }
+    },
+    {
+      "name": "R0012_JCIRC_BACK_02_A1",
+      "vertices": [
+        [
+          3.3032892419225335,
+          0.675,
+          0.5574766221097109
+        ],
+        [
+          1.833997709753973,
+          0.675,
+          -2.8033823143868877
+        ],
+        [
+          3.3032892419225335,
+          0.7108320316140959,
+          0.5574766221097109
+        ],
+        [
+          1.833997709753973,
+          0.7108320316140959,
+          -2.8033823143868877
+        ],
+        [
+          3.3616430416756558,
+          0.675,
+          0.5673246483620847
+        ],
+        [
+          1.8663959429284864,
+          0.675,
+          -2.85290507737387
+        ],
+        [
+          3.3616430416756558,
+          0.7108320316140959,
+          0.5673246483620847
+        ],
+        [
+          1.8663959429284864,
+          0.7108320316140959,
+          -2.85290507737387
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          4,
+          5,
+          7,
+          6
+        ],
+        [
+          0,
+          4,
+          6,
+          2
+        ],
+        [
+          1,
+          3,
+          7,
+          5
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          2,
+          6,
+          7,
+          3
+        ]
+      ],
+      "objectType": "prescribed_circumferential_joint",
+      "ringID": 12,
+      "labelID": 0,
+      "instanceID": 12014,
+      "semanticClass": "clutter",
+      "segmentID": 2,
+      "segmentName": "A1",
+      "segmentKind": null,
+      "reconstruction": "circumferential_outer_collar",
+      "collectionPath": [
+        "Ring_0012",
+        "Joints",
+        "Circumferential_back"
+      ],
+      "extraProperties": {
+        "jointSide": "back",
+        "jointWidthM": 0.03583203161409586,
+        "jointAddedThicknessM": 0.05917896219683934
+      },
+      "customProperties": {
+        "labelID": 0,
+        "ringID": 12,
+        "instanceID": 12014,
+        "objectType": "prescribed_circumferential_joint",
+        "semanticClass": "clutter",
+        "segmentID": 2,
+        "segmentName": "A1",
+        "reconstruction": "circumferential_outer_collar",
+        "jointSide": "back",
+        "jointWidthM": 0.03583203161409586,
+        "jointAddedThicknessM": 0.05917896219683934
+      }
+    },
+    {
+      "name": "R0012_JCIRC_BACK_03_A2",
+      "vertices": [
+        [
+          1.833997709753973,
+          0.675,
+          -2.8033823143868877
+        ],
+        [
+          -1.8339977097539735,
+          0.675,
+          -2.8033823143868872
+        ],
+        [
+          1.833997709753973,
+          0.7108320316140959,
+          -2.8033823143868877
+        ],
+        [
+          -1.8339977097539735,
+          0.7108320316140959,
+          -2.8033823143868872
+        ],
+        [
+          1.8663959429284864,
+          0.675,
+          -2.85290507737387
+        ],
+        [
+          -1.8663959429284869,
+          0.675,
+          -2.8529050773738693
+        ],
+        [
+          1.8663959429284864,
+          0.7108320316140959,
+          -2.85290507737387
+        ],
+        [
+          -1.8663959429284869,
+          0.7108320316140959,
+          -2.8529050773738693
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          4,
+          5,
+          7,
+          6
+        ],
+        [
+          0,
+          4,
+          6,
+          2
+        ],
+        [
+          1,
+          3,
+          7,
+          5
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          2,
+          6,
+          7,
+          3
+        ]
+      ],
+      "objectType": "prescribed_circumferential_joint",
+      "ringID": 12,
+      "labelID": 0,
+      "instanceID": 12015,
+      "semanticClass": "clutter",
+      "segmentID": 3,
+      "segmentName": "A2",
+      "segmentKind": null,
+      "reconstruction": "circumferential_outer_collar",
+      "collectionPath": [
+        "Ring_0012",
+        "Joints",
+        "Circumferential_back"
+      ],
+      "extraProperties": {
+        "jointSide": "back",
+        "jointWidthM": 0.03583203161409586,
+        "jointAddedThicknessM": 0.05917896219683934
+      },
+      "customProperties": {
+        "labelID": 0,
+        "ringID": 12,
+        "instanceID": 12015,
+        "objectType": "prescribed_circumferential_joint",
+        "semanticClass": "clutter",
+        "segmentID": 3,
+        "segmentName": "A2",
+        "reconstruction": "circumferential_outer_collar",
+        "jointSide": "back",
+        "jointWidthM": 0.03583203161409586,
+        "jointAddedThicknessM": 0.05917896219683934
+      }
+    },
+    {
+      "name": "R0012_JCIRC_BACK_04_A3",
+      "vertices": [
+        [
+          -1.8339977097539735,
+          0.675,
+          -2.8033823143868872
+        ],
+        [
+          -3.303289241922534,
+          0.675,
+          0.5574766221097102
+        ],
+        [
+          -1.8339977097539735,
+          0.7108320316140959,
+          -2.8033823143868872
+        ],
+        [
+          -3.303289241922534,
+          0.7108320316140959,
+          0.5574766221097102
+        ],
+        [
+          -1.8663959429284869,
+          0.675,
+          -2.8529050773738693
+        ],
+        [
+          -3.361643041675656,
+          0.675,
+          0.567324648362084
+        ],
+        [
+          -1.8663959429284869,
+          0.7108320316140959,
+          -2.8529050773738693
+        ],
+        [
+          -3.361643041675656,
+          0.7108320316140959,
+          0.567324648362084
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          4,
+          5,
+          7,
+          6
+        ],
+        [
+          0,
+          4,
+          6,
+          2
+        ],
+        [
+          1,
+          3,
+          7,
+          5
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          2,
+          6,
+          7,
+          3
+        ]
+      ],
+      "objectType": "prescribed_circumferential_joint",
+      "ringID": 12,
+      "labelID": 0,
+      "instanceID": 12016,
+      "semanticClass": "clutter",
+      "segmentID": 4,
+      "segmentName": "A3",
+      "segmentKind": null,
+      "reconstruction": "circumferential_outer_collar",
+      "collectionPath": [
+        "Ring_0012",
+        "Joints",
+        "Circumferential_back"
+      ],
+      "extraProperties": {
+        "jointSide": "back",
+        "jointWidthM": 0.03583203161409586,
+        "jointAddedThicknessM": 0.05917896219683934
+      },
+      "customProperties": {
+        "labelID": 0,
+        "ringID": 12,
+        "instanceID": 12016,
+        "objectType": "prescribed_circumferential_joint",
+        "semanticClass": "clutter",
+        "segmentID": 4,
+        "segmentName": "A3",
+        "reconstruction": "circumferential_outer_collar",
+        "jointSide": "back",
+        "jointWidthM": 0.03583203161409586,
+        "jointAddedThicknessM": 0.05917896219683934
+      }
+    },
+    {
+      "name": "R0012_JCIRC_BACK_05_B2",
+      "vertices": [
+        [
+          -3.303289241922534,
+          0.675,
+          0.5574766221097102
+        ],
+        [
+          -0.5770565608647984,
+          0.675,
+          3.299925109083976
+        ],
+        [
+          -3.303289241922534,
+          0.7108320316140959,
+          0.5574766221097102
+        ],
+        [
+          -0.5770565608647984,
+          0.7108320316140959,
+          3.299925109083976
+        ],
+        [
+          -3.361643041675656,
+          0.675,
+          0.567324648362084
+        ],
+        [
+          -0.5872504738202778,
+          0.675,
+          3.3582194802131946
+        ],
+        [
+          -3.361643041675656,
+          0.7108320316140959,
+          0.567324648362084
+        ],
+        [
+          -0.5872504738202778,
+          0.7108320316140959,
+          3.3582194802131946
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          4,
+          5,
+          7,
+          6
+        ],
+        [
+          0,
+          4,
+          6,
+          2
+        ],
+        [
+          1,
+          3,
+          7,
+          5
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          2,
+          6,
+          7,
+          3
+        ]
+      ],
+      "objectType": "prescribed_circumferential_joint",
+      "ringID": 12,
+      "labelID": 0,
+      "instanceID": 12017,
+      "semanticClass": "clutter",
+      "segmentID": 5,
+      "segmentName": "B2",
+      "segmentKind": null,
+      "reconstruction": "circumferential_outer_collar",
+      "collectionPath": [
+        "Ring_0012",
+        "Joints",
+        "Circumferential_back"
+      ],
+      "extraProperties": {
+        "jointSide": "back",
+        "jointWidthM": 0.03583203161409586,
+        "jointAddedThicknessM": 0.05917896219683934
+      },
+      "customProperties": {
+        "labelID": 0,
+        "ringID": 12,
+        "instanceID": 12017,
+        "objectType": "prescribed_circumferential_joint",
+        "semanticClass": "clutter",
+        "segmentID": 5,
+        "segmentName": "B2",
+        "reconstruction": "circumferential_outer_collar",
+        "jointSide": "back",
+        "jointWidthM": 0.03583203161409586,
+        "jointAddedThicknessM": 0.05917896219683934
+      }
+    }
+  ]
+}

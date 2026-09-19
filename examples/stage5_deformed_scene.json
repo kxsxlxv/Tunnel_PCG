@@ -1,0 +1,1441 @@
+{
+  "schema": "tunnel_scanner_scene",
+  "schemaVersion": 1,
+  "name": "tunnel_scanner_deformed_ring_0012",
+  "mode": "deformed_with_displacement_joints",
+  "labelPolicy": "seg2tunnel_like",
+  "metadata": {
+    "sourceStages": [
+      1,
+      2,
+      3,
+      5
+    ],
+    "coordinateConvention": {
+      "longitudinalAxis": "+Y",
+      "crossSection": "XZ",
+      "alphaZero": "+Z crown",
+      "units": "metres"
+    },
+    "segmentLabelConvention": {
+      "K": 1,
+      "B1": 2,
+      "A1": 3,
+      "A2": 4,
+      "A3": 5,
+      "B2": 6
+    },
+    "segmentLabelConventionStatus": "Stage-5 generator order; article states labels 1..6 but does not publish K/B/A-to-S1..S6 correspondence",
+    "jointLabelConvention": "labelID=0 clutter, following Seg2Tunnel synthesis described by Yang et al. (2026)",
+    "physicalCoherence": "Stage-3 deformed segments + Stage-3 displacement gap meshes; nominal prescribed joints intentionally excluded",
+    "kinematicIndexing": "corrected_segment_indexed",
+    "closureTranslationErrorM": 4.965068306494546e-16,
+    "closureAngularErrorDeg": -2.842170943040401e-14
+  },
+  "objects": [
+    {
+      "name": "R0012_SEG_00_K",
+      "vertices": [
+        [
+          -0.5336972252704707,
+          -0.675,
+          2.952146214491857
+        ],
+        [
+          0.5336972252704707,
+          -0.675,
+          2.952146214491857
+        ],
+        [
+          -0.5167670694311631,
+          0.675,
+          2.9551568141050533
+        ],
+        [
+          0.5167670694311631,
+          0.675,
+          2.9551568141050533
+        ],
+        [
+          -0.5959619015520257,
+          -0.675,
+          3.2965632728492404
+        ],
+        [
+          0.5959619015520257,
+          -0.675,
+          3.2965632728492404
+        ],
+        [
+          -0.5770565608647988,
+          0.675,
+          3.299925109083976
+        ],
+        [
+          0.5770565608647988,
+          0.675,
+          3.299925109083976
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          4,
+          5,
+          7,
+          6
+        ],
+        [
+          0,
+          4,
+          6,
+          2
+        ],
+        [
+          1,
+          3,
+          7,
+          5
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          2,
+          6,
+          7,
+          3
+        ]
+      ],
+      "objectType": "lining_segment",
+      "ringID": 12,
+      "labelID": 1,
+      "instanceID": 12000,
+      "semanticClass": "lining_segment_1",
+      "segmentID": 0,
+      "segmentName": "K",
+      "segmentKind": "K",
+      "reconstruction": "stage3_rigid_segment_transform",
+      "collectionPath": [
+        "Ring_0012",
+        "Segments"
+      ],
+      "extraProperties": {
+        "rotationDeg": 0.0,
+        "centerOffsetX": 0.0,
+        "centerOffsetZ": 0.0
+      },
+      "customProperties": {
+        "labelID": 1,
+        "ringID": 12,
+        "instanceID": 12000,
+        "objectType": "lining_segment",
+        "semanticClass": "lining_segment_1",
+        "segmentID": 0,
+        "segmentName": "K",
+        "segmentKind": "K",
+        "reconstruction": "stage3_rigid_segment_transform",
+        "rotationDeg": 0.0,
+        "centerOffsetX": 0.0,
+        "centerOffsetZ": 0.0
+      }
+    },
+    {
+      "name": "R0012_SEG_01_B1",
+      "vertices": [
+        [
+          0.5345570564907657,
+          -0.675,
+          2.954771657594626
+        ],
+        [
+          2.9615406531031803,
+          -0.675,
+          0.5242074120134602
+        ],
+        [
+          0.5176202348423731,
+          0.675,
+          2.9577445281307835
+        ],
+        [
+          2.9644885511105645,
+          0.675,
+          0.5072662259831883
+        ],
+        [
+          0.5960541922567082,
+          -0.675,
+          3.299326591230157
+        ],
+        [
+          3.3061858751405713,
+          -0.675,
+          0.5851965169978554
+        ],
+        [
+          0.5771414080826697,
+          0.675,
+          3.3026462966621994
+        ],
+        [
+          3.3094776945821507,
+          0.675,
+          0.5662788592640517
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          4,
+          5,
+          7,
+          6
+        ],
+        [
+          0,
+          4,
+          6,
+          2
+        ],
+        [
+          1,
+          3,
+          7,
+          5
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          2,
+          6,
+          7,
+          3
+        ]
+      ],
+      "objectType": "lining_segment",
+      "ringID": 12,
+      "labelID": 2,
+      "instanceID": 12001,
+      "semanticClass": "lining_segment_2",
+      "segmentID": 1,
+      "segmentName": "B1",
+      "segmentKind": "B",
+      "reconstruction": "stage3_rigid_segment_transform",
+      "collectionPath": [
+        "Ring_0012",
+        "Segments"
+      ],
+      "extraProperties": {
+        "rotationDeg": 0.1276592211819434,
+        "centerOffsetX": 0.007438749925544828,
+        "centerOffsetZ": 0.0014436550043586936
+      },
+      "customProperties": {
+        "labelID": 2,
+        "ringID": 12,
+        "instanceID": 12001,
+        "objectType": "lining_segment",
+        "semanticClass": "lining_segment_2",
+        "segmentID": 1,
+        "segmentName": "B1",
+        "segmentKind": "B",
+        "reconstruction": "stage3_rigid_segment_transform",
+        "rotationDeg": 0.1276592211819434,
+        "centerOffsetX": 0.007438749925544828,
+        "centerOffsetZ": 0.0014436550043586936
+      }
+    },
+    {
+      "name": "R0012_SEG_02_A1",
+      "vertices": [
+        [
+          2.956564062724366,
+          -0.675,
+          0.5236279905939789
+        ],
+        [
+          1.6504129495617677,
+          -0.675,
+          -2.5007351776315074
+        ],
+        [
+          2.9594850152288936,
+          0.675,
+          0.5066821379084245
+        ],
+        [
+          1.6456213054311915,
+          0.675,
+          -2.503880825862516
+        ],
+        [
+          3.3013058406602904,
+          -0.675,
+          0.5840689249479228
+        ],
+        [
+          1.8427704309620558,
+          -0.675,
+          -2.7931366129038704
+        ],
+        [
+          3.3045675709570133,
+          0.675,
+          0.5651460561157203
+        ],
+        [
+          1.8374197616829122,
+          0.675,
+          -2.796649253428496
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          4,
+          5,
+          7,
+          6
+        ],
+        [
+          0,
+          4,
+          6,
+          2
+        ],
+        [
+          1,
+          3,
+          7,
+          5
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          2,
+          6,
+          7,
+          3
+        ]
+      ],
+      "objectType": "lining_segment",
+      "ringID": 12,
+      "labelID": 3,
+      "instanceID": 12002,
+      "semanticClass": "lining_segment_3",
+      "segmentID": 2,
+      "segmentName": "A1",
+      "segmentKind": "A",
+      "reconstruction": "stage3_rigid_segment_transform",
+      "collectionPath": [
+        "Ring_0012",
+        "Segments"
+      ],
+      "extraProperties": {
+        "rotationDeg": 0.03654100468048682,
+        "centerOffsetX": 0.001634537559298856,
+        "centerOffsetZ": 0.005562838988745888
+      },
+      "customProperties": {
+        "labelID": 3,
+        "ringID": 12,
+        "instanceID": 12002,
+        "objectType": "lining_segment",
+        "semanticClass": "lining_segment_3",
+        "segmentID": 2,
+        "segmentName": "A1",
+        "segmentKind": "A",
+        "reconstruction": "stage3_rigid_segment_transform",
+        "rotationDeg": 0.03654100468048682,
+        "centerOffsetX": 0.001634537559298856,
+        "centerOffsetZ": 0.005562838988745888
+      }
+    },
+    {
+      "name": "R0012_SEG_03_A2",
+      "vertices": [
+        [
+          1.647592259130378,
+          -0.675,
+          -2.497123569070685
+        ],
+        [
+          -1.6467545245740567,
+          -0.675,
+          -2.5062105064563043
+        ],
+        [
+          1.6428072963509652,
+          0.675,
+          -2.500279371261407
+        ],
+        [
+          -1.6419522251710512,
+          0.675,
+          -2.5093398636924196
+        ],
+        [
+          1.8405693666973584,
+          -0.675,
+          -2.7891164387697276
+        ],
+        [
+          -1.838117875105927,
+          -0.675,
+          -2.7992635188503363
+        ],
+        [
+          1.8352261582603473,
+          0.675,
+          -2.7926404178827005
+        ],
+        [
+          -1.832755307439238,
+          0.675,
+          -2.802757967763998
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          4,
+          5,
+          7,
+          6
+        ],
+        [
+          0,
+          4,
+          6,
+          2
+        ],
+        [
+          1,
+          3,
+          7,
+          5
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          2,
+          6,
+          7,
+          3
+        ]
+      ],
+      "objectType": "lining_segment",
+      "ringID": 12,
+      "labelID": 4,
+      "instanceID": 12003,
+      "semanticClass": "lining_segment_4",
+      "segmentID": 3,
+      "segmentName": "A2",
+      "segmentKind": "A",
+      "reconstruction": "stage3_rigid_segment_transform",
+      "collectionPath": [
+        "Ring_0012",
+        "Segments"
+      ],
+      "extraProperties": {
+        "rotationDeg": 0.1580409940590073,
+        "centerOffsetX": -0.006497234300880701,
+        "centerOffsetZ": 0.005672456921109866
+      },
+      "customProperties": {
+        "labelID": 4,
+        "ringID": 12,
+        "instanceID": 12003,
+        "objectType": "lining_segment",
+        "semanticClass": "lining_segment_4",
+        "segmentID": 3,
+        "segmentName": "A2",
+        "segmentKind": "A",
+        "reconstruction": "stage3_rigid_segment_transform",
+        "rotationDeg": 0.1580409940590073,
+        "centerOffsetX": -0.006497234300880701,
+        "centerOffsetZ": 0.005672456921109866
+      }
+    },
+    {
+      "name": "R0012_SEG_04_A3",
+      "vertices": [
+        [
+          -1.645779916890241,
+          -0.675,
+          -2.505037591971253
+        ],
+        [
+          -2.959166581925066,
+          -0.675,
+          0.5161904318368622
+        ],
+        [
+          -1.6409807568779842,
+          0.675,
+          -2.508171761629088
+        ],
+        [
+          -2.962046963470945,
+          0.675,
+          0.4992376359339917
+        ],
+        [
+          -1.8374369379329327,
+          -0.675,
+          -2.7978986277630455
+        ],
+        [
+          -3.3040520472218207,
+          -0.675,
+          0.5758059988226837
+        ],
+        [
+          -1.8320778759192464,
+          0.675,
+          -2.801398450547627
+        ],
+        [
+          -3.307268473281386,
+          0.675,
+          0.5568753767311452
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          4,
+          5,
+          7,
+          6
+        ],
+        [
+          0,
+          4,
+          6,
+          2
+        ],
+        [
+          1,
+          3,
+          7,
+          5
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          2,
+          6,
+          7,
+          3
+        ]
+      ],
+      "objectType": "lining_segment",
+      "ringID": 12,
+      "labelID": 5,
+      "instanceID": 12004,
+      "semanticClass": "lining_segment_5",
+      "segmentID": 4,
+      "segmentName": "A3",
+      "segmentKind": "A",
+      "reconstruction": "stage3_rigid_segment_transform",
+      "collectionPath": [
+        "Ring_0012",
+        "Segments"
+      ],
+      "extraProperties": {
+        "rotationDeg": 0.10060567746060656,
+        "centerOffsetX": -0.003005450810025086,
+        "centerOffsetZ": 0.005199857672677165
+      },
+      "customProperties": {
+        "labelID": 5,
+        "ringID": 12,
+        "instanceID": 12004,
+        "objectType": "lining_segment",
+        "semanticClass": "lining_segment_5",
+        "segmentID": 4,
+        "segmentName": "A3",
+        "segmentKind": "A",
+        "reconstruction": "stage3_rigid_segment_transform",
+        "rotationDeg": 0.10060567746060656,
+        "centerOffsetX": -0.003005450810025086,
+        "centerOffsetZ": 0.005199857672677165
+      }
+    },
+    {
+      "name": "R0012_SEG_05_B2",
+      "vertices": [
+        [
+          -2.951393322295322,
+          -0.675,
+          0.5148526531218874
+        ],
+        [
+          -0.5338829982128832,
+          -0.675,
+          2.954839489782712
+        ],
+        [
+          -2.954275296681735,
+          0.675,
+          0.49790012792915334
+        ],
+        [
+          -0.5169578691947142,
+          0.675,
+          2.9578782221652284
+        ],
+        [
+          -3.296273184701669,
+          -0.675,
+          0.5745006246429653
+        ],
+        [
+          -0.5967199894762787,
+          -0.675,
+          3.2991525922475526
+        ],
+        [
+          -3.2994913894331637,
+          0.675,
+          0.5555703048444124
+        ],
+        [
+          -0.5778202620726566,
+          0.675,
+          3.3025458434080295
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          4,
+          5,
+          7,
+          6
+        ],
+        [
+          0,
+          4,
+          6,
+          2
+        ],
+        [
+          1,
+          3,
+          7,
+          5
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          2,
+          6,
+          7,
+          3
+        ]
+      ],
+      "objectType": "lining_segment",
+      "ringID": 12,
+      "labelID": 6,
+      "instanceID": 12005,
+      "semanticClass": "lining_segment_6",
+      "segmentID": 5,
+      "segmentName": "B2",
+      "segmentKind": "B",
+      "reconstruction": "stage3_rigid_segment_transform",
+      "collectionPath": [
+        "Ring_0012",
+        "Segments"
+      ],
+      "extraProperties": {
+        "rotationDeg": 0.09522227231877878,
+        "centerOffsetX": 0.004719784044792932,
+        "centerOffsetZ": 0.003584325798362269
+      },
+      "customProperties": {
+        "labelID": 6,
+        "ringID": 12,
+        "instanceID": 12005,
+        "objectType": "lining_segment",
+        "semanticClass": "lining_segment_6",
+        "segmentID": 5,
+        "segmentName": "B2",
+        "segmentKind": "B",
+        "reconstruction": "stage3_rigid_segment_transform",
+        "rotationDeg": 0.09522227231877878,
+        "centerOffsetX": 0.004719784044792932,
+        "centerOffsetZ": 0.003584325798362269
+      }
+    },
+    {
+      "name": "R0012_JDISP_00_K_B1",
+      "vertices": [
+        [
+          0.5336972252704707,
+          -0.675,
+          2.952146214491857
+        ],
+        [
+          0.5345570564907657,
+          -0.675,
+          2.954771657594626
+        ],
+        [
+          0.5167670694311631,
+          0.675,
+          2.9551568141050533
+        ],
+        [
+          0.5176202348423731,
+          0.675,
+          2.9577445281307835
+        ],
+        [
+          0.5959619015520257,
+          -0.675,
+          3.2965632728492404
+        ],
+        [
+          0.5960541922567082,
+          -0.675,
+          3.299326591230157
+        ],
+        [
+          0.5770565608647988,
+          0.675,
+          3.299925109083976
+        ],
+        [
+          0.5771414080826697,
+          0.675,
+          3.3026462966621994
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          4,
+          5,
+          7,
+          6
+        ],
+        [
+          0,
+          4,
+          6,
+          2
+        ],
+        [
+          1,
+          3,
+          7,
+          5
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          2,
+          6,
+          7,
+          3
+        ]
+      ],
+      "objectType": "displacement_joint",
+      "ringID": 12,
+      "labelID": 0,
+      "instanceID": 12006,
+      "semanticClass": "clutter",
+      "segmentID": 1,
+      "segmentName": "B1",
+      "segmentKind": null,
+      "reconstruction": "stage3_displacement_gap_mesh",
+      "collectionPath": [
+        "Ring_0012",
+        "Joints",
+        "Displacement"
+      ],
+      "extraProperties": {
+        "previousSegment": "K",
+        "nextSegment": "B1",
+        "dislocationM": -0.002715841842533999,
+        "relativeRotationDeg": 0.12765922118196063,
+        "maxCornerSeparationM": 0.002764859137186248
+      },
+      "customProperties": {
+        "labelID": 0,
+        "ringID": 12,
+        "instanceID": 12006,
+        "objectType": "displacement_joint",
+        "semanticClass": "clutter",
+        "segmentID": 1,
+        "segmentName": "B1",
+        "reconstruction": "stage3_displacement_gap_mesh",
+        "previousSegment": "K",
+        "nextSegment": "B1",
+        "dislocationM": -0.002715841842533999,
+        "relativeRotationDeg": 0.12765922118196063,
+        "maxCornerSeparationM": 0.002764859137186248
+      }
+    },
+    {
+      "name": "R0012_JDISP_01_B1_A1",
+      "vertices": [
+        [
+          2.9615406531031803,
+          -0.675,
+          0.5242074120134602
+        ],
+        [
+          2.956564062724366,
+          -0.675,
+          0.5236279905939789
+        ],
+        [
+          2.9644885511105645,
+          0.675,
+          0.5072662259831883
+        ],
+        [
+          2.9594850152288936,
+          0.675,
+          0.5066821379084245
+        ],
+        [
+          3.3061858751405713,
+          -0.675,
+          0.5851965169978554
+        ],
+        [
+          3.3013058406602904,
+          -0.675,
+          0.5840689249479228
+        ],
+        [
+          3.3094776945821507,
+          0.675,
+          0.5662788592640517
+        ],
+        [
+          3.3045675709570133,
+          0.675,
+          0.5651460561157203
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          1,
+          3,
+          2
+        ],
+        [
+          4,
+          6,
+          7,
+          5
+        ],
+        [
+          0,
+          2,
+          6,
+          4
+        ],
+        [
+          1,
+          5,
+          7,
+          3
+        ],
+        [
+          0,
+          4,
+          5,
+          1
+        ],
+        [
+          2,
+          3,
+          7,
+          6
+        ]
+      ],
+      "objectType": "displacement_joint",
+      "ringID": 12,
+      "labelID": 0,
+      "instanceID": 12007,
+      "semanticClass": "clutter",
+      "segmentID": 2,
+      "segmentName": "A1",
+      "segmentKind": null,
+      "reconstruction": "stage3_displacement_gap_mesh",
+      "collectionPath": [
+        "Ring_0012",
+        "Joints",
+        "Displacement"
+      ],
+      "extraProperties": {
+        "previousSegment": "B1",
+        "nextSegment": "A1",
+        "dislocationM": 0.005016145942047571,
+        "relativeRotationDeg": -0.0911182165014821,
+        "maxCornerSeparationM": 0.005039102795836012
+      },
+      "customProperties": {
+        "labelID": 0,
+        "ringID": 12,
+        "instanceID": 12007,
+        "objectType": "displacement_joint",
+        "semanticClass": "clutter",
+        "segmentID": 2,
+        "segmentName": "A1",
+        "reconstruction": "stage3_displacement_gap_mesh",
+        "previousSegment": "B1",
+        "nextSegment": "A1",
+        "dislocationM": 0.005016145942047571,
+        "relativeRotationDeg": -0.0911182165014821,
+        "maxCornerSeparationM": 0.005039102795836012
+      }
+    },
+    {
+      "name": "R0012_JDISP_02_A1_A2",
+      "vertices": [
+        [
+          1.6504129495617677,
+          -0.675,
+          -2.5007351776315074
+        ],
+        [
+          1.647592259130378,
+          -0.675,
+          -2.497123569070685
+        ],
+        [
+          1.6456213054311915,
+          0.675,
+          -2.503880825862516
+        ],
+        [
+          1.6428072963509652,
+          0.675,
+          -2.500279371261407
+        ],
+        [
+          1.8427704309620558,
+          -0.675,
+          -2.7931366129038704
+        ],
+        [
+          1.8405693666973584,
+          -0.675,
+          -2.7891164387697276
+        ],
+        [
+          1.8374197616829122,
+          0.675,
+          -2.796649253428496
+        ],
+        [
+          1.8352261582603473,
+          0.675,
+          -2.7926404178827005
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          1,
+          3,
+          2
+        ],
+        [
+          4,
+          6,
+          7,
+          5
+        ],
+        [
+          0,
+          2,
+          6,
+          4
+        ],
+        [
+          1,
+          5,
+          7,
+          3
+        ],
+        [
+          0,
+          4,
+          5,
+          1
+        ],
+        [
+          2,
+          3,
+          7,
+          6
+        ]
+      ],
+      "objectType": "displacement_joint",
+      "ringID": 12,
+      "labelID": 0,
+      "instanceID": 12008,
+      "semanticClass": "clutter",
+      "segmentID": 3,
+      "segmentName": "A2",
+      "segmentKind": null,
+      "reconstruction": "stage3_displacement_gap_mesh",
+      "collectionPath": [
+        "Ring_0012",
+        "Joints",
+        "Displacement"
+      ],
+      "extraProperties": {
+        "previousSegment": "A1",
+        "nextSegment": "A2",
+        "dislocationM": 0.004561451010824053,
+        "relativeRotationDeg": 0.12149998937853809,
+        "maxCornerSeparationM": 0.004583283099063263
+      },
+      "customProperties": {
+        "labelID": 0,
+        "ringID": 12,
+        "instanceID": 12008,
+        "objectType": "displacement_joint",
+        "semanticClass": "clutter",
+        "segmentID": 3,
+        "segmentName": "A2",
+        "reconstruction": "stage3_displacement_gap_mesh",
+        "previousSegment": "A1",
+        "nextSegment": "A2",
+        "dislocationM": 0.004561451010824053,
+        "relativeRotationDeg": 0.12149998937853809,
+        "maxCornerSeparationM": 0.004583283099063263
+      }
+    },
+    {
+      "name": "R0012_JDISP_03_A2_A3",
+      "vertices": [
+        [
+          -1.6467545245740567,
+          -0.675,
+          -2.5062105064563043
+        ],
+        [
+          -1.645779916890241,
+          -0.675,
+          -2.505037591971253
+        ],
+        [
+          -1.6419522251710512,
+          0.675,
+          -2.5093398636924196
+        ],
+        [
+          -1.6409807568779842,
+          0.675,
+          -2.508171761629088
+        ],
+        [
+          -1.838117875105927,
+          -0.675,
+          -2.7992635188503363
+        ],
+        [
+          -1.8374369379329327,
+          -0.675,
+          -2.7978986277630455
+        ],
+        [
+          -1.832755307439238,
+          0.675,
+          -2.802757967763998
+        ],
+        [
+          -1.8320778759192464,
+          0.675,
+          -2.801398450547627
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          4,
+          5,
+          7,
+          6
+        ],
+        [
+          0,
+          4,
+          6,
+          2
+        ],
+        [
+          1,
+          3,
+          7,
+          5
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          2,
+          6,
+          7,
+          3
+        ]
+      ],
+      "objectType": "displacement_joint",
+      "ringID": 12,
+      "labelID": 0,
+      "instanceID": 12009,
+      "semanticClass": "clutter",
+      "segmentID": 4,
+      "segmentName": "A3",
+      "segmentKind": null,
+      "reconstruction": "stage3_displacement_gap_mesh",
+      "collectionPath": [
+        "Ring_0012",
+        "Joints",
+        "Displacement"
+      ],
+      "extraProperties": {
+        "previousSegment": "A2",
+        "nextSegment": "A3",
+        "dislocationM": 0.001511991499169586,
+        "relativeRotationDeg": -0.05743531659839693,
+        "maxCornerSeparationM": 0.0015253206593143888
+      },
+      "customProperties": {
+        "labelID": 0,
+        "ringID": 12,
+        "instanceID": 12009,
+        "objectType": "displacement_joint",
+        "semanticClass": "clutter",
+        "segmentID": 4,
+        "segmentName": "A3",
+        "reconstruction": "stage3_displacement_gap_mesh",
+        "previousSegment": "A2",
+        "nextSegment": "A3",
+        "dislocationM": 0.001511991499169586,
+        "relativeRotationDeg": -0.05743531659839693,
+        "maxCornerSeparationM": 0.0015253206593143888
+      }
+    },
+    {
+      "name": "R0012_JDISP_04_A3_B2",
+      "vertices": [
+        [
+          -2.959166581925066,
+          -0.675,
+          0.5161904318368622
+        ],
+        [
+          -2.951393322295322,
+          -0.675,
+          0.5148526531218874
+        ],
+        [
+          -2.962046963470945,
+          0.675,
+          0.4992376359339917
+        ],
+        [
+          -2.954275296681735,
+          0.675,
+          0.49790012792915334
+        ],
+        [
+          -3.3040520472218207,
+          -0.675,
+          0.5758059988226837
+        ],
+        [
+          -3.296273184701669,
+          -0.675,
+          0.5745006246429653
+        ],
+        [
+          -3.307268473281386,
+          0.675,
+          0.5568753767311452
+        ],
+        [
+          -3.2994913894331637,
+          0.675,
+          0.5555703048444124
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          1,
+          3,
+          2
+        ],
+        [
+          4,
+          6,
+          7,
+          5
+        ],
+        [
+          0,
+          2,
+          6,
+          4
+        ],
+        [
+          1,
+          5,
+          7,
+          3
+        ],
+        [
+          0,
+          4,
+          5,
+          1
+        ],
+        [
+          2,
+          3,
+          7,
+          6
+        ]
+      ],
+      "objectType": "displacement_joint",
+      "ringID": 12,
+      "labelID": 0,
+      "instanceID": 12010,
+      "semanticClass": "clutter",
+      "segmentID": 5,
+      "segmentName": "B2",
+      "segmentKind": null,
+      "reconstruction": "stage3_displacement_gap_mesh",
+      "collectionPath": [
+        "Ring_0012",
+        "Joints",
+        "Displacement"
+      ],
+      "extraProperties": {
+        "previousSegment": "A3",
+        "nextSegment": "B2",
+        "dislocationM": 0.007886710584179382,
+        "relativeRotationDeg": -0.005383405141759113,
+        "maxCornerSeparationM": 0.007887629799660865
+      },
+      "customProperties": {
+        "labelID": 0,
+        "ringID": 12,
+        "instanceID": 12010,
+        "objectType": "displacement_joint",
+        "semanticClass": "clutter",
+        "segmentID": 5,
+        "segmentName": "B2",
+        "reconstruction": "stage3_displacement_gap_mesh",
+        "previousSegment": "A3",
+        "nextSegment": "B2",
+        "dislocationM": 0.007886710584179382,
+        "relativeRotationDeg": -0.005383405141759113,
+        "maxCornerSeparationM": 0.007887629799660865
+      }
+    },
+    {
+      "name": "R0012_JDISP_05_B2_K",
+      "vertices": [
+        [
+          -0.5338829982128832,
+          -0.675,
+          2.954839489782712
+        ],
+        [
+          -0.5336972252704707,
+          -0.675,
+          2.952146214491857
+        ],
+        [
+          -0.5169578691947142,
+          0.675,
+          2.9578782221652284
+        ],
+        [
+          -0.5167670694311631,
+          0.675,
+          2.9551568141050533
+        ],
+        [
+          -0.5967199894762787,
+          -0.675,
+          3.2991525922475526
+        ],
+        [
+          -0.5959619015520257,
+          -0.675,
+          3.2965632728492404
+        ],
+        [
+          -0.5778202620726566,
+          0.675,
+          3.3025458434080295
+        ],
+        [
+          -0.5770565608647988,
+          0.675,
+          3.299925109083976
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          1,
+          3,
+          2
+        ],
+        [
+          4,
+          6,
+          7,
+          5
+        ],
+        [
+          0,
+          2,
+          6,
+          4
+        ],
+        [
+          1,
+          5,
+          7,
+          3
+        ],
+        [
+          0,
+          4,
+          5,
+          1
+        ],
+        [
+          2,
+          3,
+          7,
+          6
+        ]
+      ],
+      "objectType": "displacement_joint",
+      "ringID": 12,
+      "labelID": 0,
+      "instanceID": 12011,
+      "semanticClass": "clutter",
+      "segmentID": 0,
+      "segmentName": "K",
+      "segmentKind": null,
+      "reconstruction": "stage3_displacement_gap_mesh",
+      "collectionPath": [
+        "Ring_0012",
+        "Joints",
+        "Displacement"
+      ],
+      "extraProperties": {
+        "previousSegment": "B2",
+        "nextSegment": "K",
+        "dislocationM": 0.002698250544063922,
+        "relativeRotationDeg": -0.09522227231886057,
+        "maxCornerSeparationM": 0.0027297413672644965
+      },
+      "customProperties": {
+        "labelID": 0,
+        "ringID": 12,
+        "instanceID": 12011,
+        "objectType": "displacement_joint",
+        "semanticClass": "clutter",
+        "segmentID": 0,
+        "segmentName": "K",
+        "reconstruction": "stage3_displacement_gap_mesh",
+        "previousSegment": "B2",
+        "nextSegment": "K",
+        "dislocationM": 0.002698250544063922,
+        "relativeRotationDeg": -0.09522227231886057,
+        "maxCornerSeparationM": 0.0027297413672644965
+      }
+    }
+  ]
+}

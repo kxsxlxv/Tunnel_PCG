@@ -45,3 +45,42 @@ The next valid step is DEM/LandXML sampling followed by a constrained vertical-p
 - `blender_plan_preview.py`
 
 The Blender preview only visualizes XY at z=0. It is intentionally incapable of masquerading as a finished 3D tunnel.
+
+
+## Exact-XY acquisition tools
+
+Two alternatives are now supplied:
+
+1. `tools_extract_relation.py`
+   - reads a local current Moscow PBF with pyosmium;
+   - target relation: 1462012.
+
+2. `tools_fetch_relation_full.py`
+   - calls the standard OpenStreetMap API endpoint `/api/0.6/relation/1462012/full`;
+   - avoids downloading the full ~81 MB Moscow PBF;
+   - exports all returned member ways while preserving member order/roles.
+
+The core parser preserves OSM node IDs. The track stitcher then connects physical `railway=subway` ways only through shared endpoint node IDs and rejects branch/switch graphs rather than guessing.
+
+## Local vertical evidence: future Dostoevskaya zone
+
+Official Moscow documentation confirms that a 2024 Mosinzhproekt volume exists with:
+- line plan 1:2000;
+- line plan 1:500;
+- longitudinal profile 1:2000 / 1:200.
+
+It also identifies a 2022 Mosgorgeotrest engineering-geodetic survey for the same construction zone.
+
+A 2026 Moscow Metro publication states that the existing Line-5 tunnels in the reserved station zone have:
+- zero longitudinal grade;
+- construction depth greater than 38 m.
+
+These are stored in `vertical_constraints.json`. Exact chainage limits remain null until the project profile / physical track centerline is georeferenced.
+
+## Closed-loop Blender frames
+
+`blender_alignment3d_import.py` is the strict importer for the future resolved `alignment_3d.json`.
+
+It refuses null Z, verifies route closure, then uses the tested `closed_parallel_transport_frames()` solver so a non-planar ring does not accumulate an orientation seam at the closure point.
+
+See `ALIGNMENT_3D_CONTRACT.md`.

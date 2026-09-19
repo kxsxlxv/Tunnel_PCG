@@ -63,6 +63,7 @@ def build_procedural_nominal_tunnel(
     ancillary_sampling_policy: AncillarySamplingPolicy | str = AncillarySamplingPolicy.REFERENCE,
     label_policy: LabelPolicy = LabelPolicy.SEG2TUNNEL_LIKE,
     include_terminal_circumferential_joint: bool = False,
+    include_prescribed_joint_solids: bool = True,
     bolt_boolean_overlap_m: float = 0.005,
     seed: int = 5812,
 ) -> ProceduralTunnelBuild:
@@ -127,11 +128,14 @@ def build_procedural_nominal_tunnel(
                 ring,
                 joints,
                 ring_id=ring_id,
-                include_radial_joints=True,
+                include_radial_joints=include_prescribed_joint_solids,
                 include_circumferential_front=False,
                 include_circumferential_back=(
-                    ring_id < assembly_config.n_rings - 1
-                    or include_terminal_circumferential_joint
+                    include_prescribed_joint_solids
+                    and (
+                        ring_id < assembly_config.n_rings - 1
+                        or include_terminal_circumferential_joint
+                    )
                 ),
                 label_policy=label_policy,
                 surface_meshing=surface_meshing,
@@ -171,6 +175,9 @@ def build_procedural_nominal_tunnel(
                     len(ancillary_set.meshes) if ancillary_set is not None else 0
                 ),
                 "labelPolicy": label_policy.value,
+                "includePrescribedJointSolids": bool(
+                    include_prescribed_joint_solids
+                ),
                 "terminalCircumferentialJoint": bool(
                     include_terminal_circumferential_joint
                 ),

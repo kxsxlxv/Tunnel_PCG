@@ -59,7 +59,7 @@ class TunnelAssemblyConfig:
     theta_k_deg: float = 22.5
     stagger_sigma_fraction_of_bound: float = 1.0 / 3.0
     angular_imperfection_fraction: float = 0.1
-    recenter_lateral_offsets: bool = True
+    recenter_lateral_offsets: bool = False
 
     def __post_init__(self) -> None:
         if not 1 <= self.n_rings <= 10_000:
@@ -91,6 +91,13 @@ class TunnelAssemblyConfig:
                 raise ValueError(
                     f"nominal_stagger_deg must lie within Table-2 bound +/-{bound:g} deg"
                 )
+
+    def validate_against_paper_scene_bounds(self) -> None:
+        # Table 1 lists 10–30 rings per synthetic scene. The core accepts a
+        # wider range for unit tests and downstream applications, so source-bound
+        # validation is explicit rather than silently hard-coded.
+        if not 10 <= self.n_rings <= 30:
+            raise ValueError("Table-1 N_ring bounds are 10..30 rings per scene")
 
     @property
     def stagger_bound_deg(self) -> float:
@@ -347,6 +354,7 @@ def build_multi_ring_scene_package(
         "sourceStage": 7,
         "sourceEquation": "Yang et al. (2026) Eq. (21)",
         "ringCount": cfg.n_rings,
+        "paperRingCountBounds": [10, 30],
         "ringWidthM": cfg.ring_width_m,
         "chainageLengthM": assembly.length_by_chainage_m,
         "axisDisplacementAmplitudeM": cfg.displacement_amplitude_m,

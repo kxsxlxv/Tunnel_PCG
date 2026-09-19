@@ -301,3 +301,22 @@ def test_high_level_builder_is_fully_seed_deterministic():
     )
     assert a.scene == b.scene
     assert a.assembly == b.assembly
+
+
+def test_paper_scene_ring_count_bounds_are_explicit():
+    TunnelAssemblyConfig(n_rings=10).validate_against_paper_scene_bounds()
+    TunnelAssemblyConfig(n_rings=30).validate_against_paper_scene_bounds()
+    for n in (1, 9, 31):
+        try:
+            TunnelAssemblyConfig(n_rings=n).validate_against_paper_scene_bounds()
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("out-of-bound paper scene ring count must be rejected")
+
+
+def test_eq21_is_unrecentered_by_default():
+    cfg = TunnelAssemblyConfig(n_rings=5, axis_noise_sigma_m=0.0)
+    assembly = sample_tunnel_assembly(cfg, seed=0)
+    assert assembly.lateral_recenter_m == (0.0, 0.0)
+    assert math.isclose(assembly.poses[0].translation_m[2], 0.1, abs_tol=1e-14)

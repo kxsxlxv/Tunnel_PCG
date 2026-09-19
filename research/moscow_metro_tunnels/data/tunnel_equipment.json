@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.1",
+  "schema_version": "0.2",
   "units": "m",
   "cable_system": {
     "visible_open_routing": true,
@@ -40,7 +40,22 @@
       "unit": "m",
       "note": "Do not route through Cmk-Om crown space without explicit allowed design."
     },
-    "source": "SP_120.13330.2022_current"
+    "source": "SP_120.13330.2022_current",
+    "side_hierarchy": {
+      "strong_current": [
+        "6/10/20kV",
+        "825V",
+        "400/230V",
+        "control",
+        "trunk"
+      ],
+      "weak_current": [
+        "communications",
+        "signaling/interlocking",
+        "ATDP/control"
+      ]
+    },
+    "side_change_support_pitch": 1
   },
   "lighting": {
     "ordinary_tunnel_lux_at_UGR": 20,
@@ -75,7 +90,13 @@
       0.8
     ],
     "irrigation_tap_min_DN_mm": 20,
-    "irrigation_tap_max_pitch": 30
+    "irrigation_tap_max_pitch": 30,
+    "manual_isolation_valve_max_pitch": 500,
+    "washing_unit_fill_point_pitch": 450,
+    "washing_unit_fill_point_valves": {
+      "count": 2,
+      "diameter_mm": 50
+    }
   },
   "walkway": {
     "classic_circle_ID_le_5_2": {
@@ -85,5 +106,19 @@
     "current_side_passage_min_width": 0.6,
     "current_min_clear_height": 2,
     "current_width_at_1_5m_level_min": 0.7
+  },
+  "tunnel_surface_finish": {
+    "station_end_light_coating_length_each_end": 50,
+    "scope": "all lining types",
+    "properties": [
+      "water-resistant",
+      "noncombustible",
+      "light-coloured"
+    ],
+    "source": "SP_120.13330.2022_current"
+  },
+  "two_track_contact_rail_crossing": {
+    "bridge_or_steps_max_pitch": 200,
+    "additional_at": "current-separation points between stations"
   }
 }

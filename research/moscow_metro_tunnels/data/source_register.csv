@@ -20,3 +20,19 @@ S018,Moscow modern LVT track description 1,https://transport.mos.ru/mostrans/all
 S019,Moscow modern LVT track description 2,https://transport.mos.ru/mostrans/all_news/112173,Moscow Transport,current,B,modern ballastless track visual construction
 S020,RU186427U1 elastic boot for metro block,https://patents.google.com/patent/RU186427U1/ru,Russian patent,2019,C,LVT rubber boot construction details
 S021,Historical metro operating rules third rail geometry,https://ru.djvu.online/file/cs51hfxUuUfHk,technical rules archive,historical,C,third-rail 160mm and 690mm nominal geometry
+S022,SP 120.13330.2022 consolidated revision 19.01.2026,https://meganorm.ru/mega_doc/norm_update_01052026/metodika/0/sp_120_13330_2022_svod_pravil_metropoliteny_snip_32-02-2003.html,current published consolidated text,2026,A/B,current tunnel equipment evacuation lighting cables water
+S023,GOST 23961-2024 readable official-edition mirror PDF,https://spbssk.ru/wp-content/uploads/2025/06/gost-23961-2024_metropoliteny-gabarity-priblizheniya-stroenij-oborudovaniya-i-podvizhnogo-sostava.pdf,official-edition mirror,2024,A/B,dimensioned clearance figures 1 5 6 7
+S024,Tunnel linings of precast reinforced concrete early Moscow 1932-1937,https://dokumen.pub/4cd30a87e63ba1fc1631e37d4e1d9484.html,historical engineering book,historical,C,6500/5500 12-block 750mm early RC lining
+S025,Stroitelstvo Moskvy 1938 issue 13 cast-iron tunnel ring,https://science.totalarch.com/magazine/sm/stroitelstvo-moskvy-1938-13.pdf,historical Moscow construction publication,1938,B/C,6000mm 750mm 12-segment cast-iron detailed ring
+S026,Urban rapid passenger transport Samoilov 1975,https://ru.djvu.online/file/ZsnjOuEnMIf4l,engineering textbook,1975,C,first-stage monolithic and Moscow 6100/5600 ten-block RC lining
+S027,Metrostroy 1982-04 Nakhimovsky Prospekt-Sevastopolskaya mechanized complexes,https://www.metro.ru/f/1/library/metrostroy/ms-1982-04.pdf,industry journal,1982,B/C,paired tunnel TShB-7 versus ShNE-1 construction
+S028,Technical means of metro construction TShB-7,https://www.metro.ru/library/metropolitenov/234/,engineering textbook archive,historical,C,TShB-7 shield and monolithic-pressed ID 5.2m family
+S029,Moscow Metro official history,https://mosmetro.ru/about/history,Moscow Metro,official,B,opening chronology
+S030,BCL Terekhovo 10m shield two-track construction,https://stroi.mos.ru/news/kakoi-budiet-stantsiia-tieriekhovo-bkl-mietro-v-fotolientie,Moscow construction complex,2021,B,10m two-track BCL applicability
+S031,Rublyovo-Arkhangelskaya Lilia >10m,https://stroi.mos.ru/news/sobianin-shchit-ghighant-postroit-uchastok-rubliovo-arkhanghiel-skoi-linii-mietro,Moscow construction complex,2024,B,large two-track TBM reuse and route
+S032,NCS 81-02-10-2026 metro objects,https://base.garant.ru/413970314/,Minstroy cost-norm publication,2026,B,6000/5400 high-precision RC reference family
+S033,NCS 81-02-10-2023 metro objects,https://meganorm.ru/mega_doc/norm/normativy/1/ntss_81-02-10-2023_ukrupnennye_normativy_tseny_stroitelstva.html,Minstroy cost-norm publication,2023,B,5650/5150 high-precision RC and 5490 cast-iron reference families
+S034,GOST R 51685-2022 Appendix G,https://base.garant.ru/406844406/172a6d689833ce3e42dc0a8a7b3cddf9/,national standard readable text,current,A,R50 R65 construction constants
+S035,GOST R 51685-2022 Appendix Zh,https://base.garant.ru/406844406/1a3794674ba91fb6f13d1885dca9f9e1/,national standard readable text,current,A,R50 R65 control template dimensions
+S036,Metrostroy 1972-03 monolithic-pressed lining Krasnopresnensky radius,https://www.metro.ru/f/1/library/metrostroy/ms-1972-03.pdf,industry journal,1972,B/C,Moscow monolithic-pressed historical use
+S037,BCL western two-track tunnel completion Terekhovo-Kuntsevskaya,https://stroi.mos.ru/interviews/eto-nasha-s-toboi-bioghrafiia,Moscow construction complex,2022,B,Lilia two-track >2.2km confirmed section

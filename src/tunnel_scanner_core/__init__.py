@@ -107,6 +107,7 @@ from .tunnel import (
 )
 from .production import (
     AlignmentStation,
+    ChunkBoundaryPolicy,
     ChunkDescriptor,
     ContinuousAssetSpec,
     DuplicateFaceGroup,
@@ -240,6 +241,7 @@ __all__ = [
     "ProceduralTunnelBuild",
     "build_procedural_nominal_tunnel",
     "AlignmentStation",
+    "ChunkBoundaryPolicy",
     "ChunkDescriptor",
     "ContinuousAssetSpec",
     "DuplicateFaceGroup",

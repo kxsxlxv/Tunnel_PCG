@@ -224,6 +224,10 @@ def build_nominal_scene_package(
                     "surfaceAchievedMaxSagittaM": float(surface.achieved_max_sagitta_m),
                     "surfaceSubdivisions": int(surface.circumferential_subdivisions),
                     "surfaceLongitudinalSubdivisions": int(surface.longitudinal_subdivisions),
+                    "segmentFrontStartDeg": float(surface.angular_extent.front_start_deg),
+                    "segmentFrontEndDeg": float(surface.angular_extent.front_end_deg),
+                    "segmentBackStartDeg": float(surface.angular_extent.back_start_deg),
+                    "segmentBackEndDeg": float(surface.angular_extent.back_end_deg),
                 },
             )
         )

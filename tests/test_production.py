@@ -530,3 +530,77 @@ def test_full_render_finalizer_refuses_unbaked_bolt_tools():
         assert "after bolt cutters are baked" in str(exc)
     else:
         raise AssertionError("render finalization before Boolean bake must be rejected")
+
+
+def test_stitched_lining_ring_boundaries_share_one_physical_cross_section_centre():
+    prod = _production(
+        6,
+        include_bolts=False,
+        axis_noise_sigma_m=0.005,
+    )
+    r = RingConfig().inner_radius_m
+    R = RingConfig().outer_radius_m
+    L = prod.assembly.config.ring_width_m
+
+    for boundary_index in range(1, prod.assembly.config.n_rings):
+        chainage = boundary_index * L
+        station = next(
+            s
+            for s in prod.alignment_stations
+            if math.isclose(s.chainage_m, chainage, abs_tol=1e-12)
+        )
+        world_y = station.world_y_m
+        for ring_id in (boundary_index - 1, boundary_index):
+            boundary_vertices = []
+            for obj in prod.scene.objects_of_type("lining_segment"):
+                if obj.ring_id != ring_id:
+                    continue
+                boundary_vertices.extend(
+                    v
+                    for v in obj.vertices
+                    if math.isclose(v[1], world_y, abs_tol=1e-10)
+                )
+            assert boundary_vertices
+            max_radial_error = 0.0
+            for x, _y, z in boundary_vertices:
+                rho = math.hypot(
+                    x - station.offset_x_m,
+                    z - station.offset_z_m,
+                )
+                max_radial_error = max(
+                    max_radial_error,
+                    min(abs(rho - r), abs(rho - R)),
+                )
+            assert max_radial_error < 2e-12
+
+
+def test_production_stitches_bolt_tools_with_the_same_ring_alignment_map():
+    prod = _production(3, include_bolts=True)
+    for object_type in ("lining_segment", "bolt_pocket_cutter", "bolt_head"):
+        objects = prod.scene.objects_of_type(object_type)
+        assert objects
+        assert all(
+            obj.custom_properties["productionRingAlignmentStitched"] is True
+            for obj in objects
+        )
+
+
+def test_rigid_ring_debug_mode_remains_available():
+    build = build_production_tunnel(
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=3,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.005,
+        ),
+        include_bolts=False,
+        production_config=ProductionConfig(
+            namespace="rigid-debug",
+            stitch_ring_geometry=False,
+        ),
+        seed=5812,
+    )
+    assert build.scene.metadata["productionGeometry"]["ringGeometryStitchedToAlignment"] is False
+    assert all(
+        "productionRingAlignmentStitched" not in obj.custom_properties
+        for obj in build.scene.objects_of_type("lining_segment")
+    )

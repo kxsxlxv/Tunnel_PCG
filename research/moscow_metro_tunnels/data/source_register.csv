@@ -36,3 +36,14 @@ S034,GOST R 51685-2022 Appendix G,https://base.garant.ru/406844406/172a6d689833c
 S035,GOST R 51685-2022 Appendix Zh,https://base.garant.ru/406844406/1a3794674ba91fb6f13d1885dca9f9e1/,national standard readable text,current,A,R50 R65 control template dimensions
 S036,Metrostroy 1972-03 monolithic-pressed lining Krasnopresnensky radius,https://www.metro.ru/f/1/library/metrostroy/ms-1972-03.pdf,industry journal,1972,B/C,Moscow monolithic-pressed historical use
 S037,BCL western two-track tunnel completion Terekhovo-Kuntsevskaya,https://stroi.mos.ru/interviews/eto-nasha-s-toboi-bioghrafiia,Moscow construction complex,2022,B,Lilia two-track >2.2km confirmed section
+S038,OpenStreetMap Metro mapping,https://wiki.openstreetmap.org/wiki/Metro_Mapping,OpenStreetMap community,current,C,public subway track station and relation semantics plus accuracy caveats
+S039,BBBike current Moscow OSM extracts,https://download.bbbike.org/osm/bbbike/Moscow/,BBBike/OpenStreetMap,current,C,current vector XY source for Moscow subway ways and stations
+S040,Copernicus DEM GLO-30,https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM,Copernicus,current,B/C,30m DSM surface elevations WGS84 EGM2008
+S041,FABDEM V1-2,https://research-information.bris.ac.uk/en/datasets/fabdem-v1-2/,University of Bristol,2023,B/C,30m bare-earth modeled terrain with building/forest bias removed
+S042,Moscow requirements for engineering-survey information models,https://www.mos.ru/upload/documents/files/1115/06_TrebovaniyakrezyltatamII_10.pdf,Government of Moscow,official,A/B,LandXML terrain SHP elevations XYZ laser point cloud expected formats
+S043,Russian state height system BSV-77,https://base.garant.ru/71549536/,Government of Russian Federation,2016-current,A,vertical datum control and Kronstadt reference
+S044,Moscow mini-metro Kievskaya-Delovoy Tsentr plan and longitudinal profile,https://ru.djvu.online/file/pGZH0qOLpAG0I,engineering textbook,2006,C,public Moscow longitudinal-profile and plan example
+S045,BCL Karamyshevskaya-Narodnogo Opolcheniya tunnel depth constraints,https://stroi.mos.ru/photo_lines/bkl-kak-stroiat-stantsii-mietro-ulitsa-narodnogho-opolchieniia-i-michurinskii-prospiekt,Moscow construction complex,2019,B,1838m route minimum depth 44m canal-bottom clearance
+S046,BCL Sokolniki-Rizhskaya tunnel depth range,https://stroi.mos.ru/photo_lines/tonnieliem-bol-shie-shchit-sofiia-finishiroval-na-stantsii-bkl-mietro-rizhskaia,Moscow construction complex,2020,B,2.25km tunnel 25-45m construction-depth range
+S047,Sokolnicheskaya current OSM relation identifier,https://www.wikidata.org/wiki/Q729631,Wikidata,current,C,current public cross-check relation 1475758
+S048,Moscow Open Data portal,https://data.mos.ru/,Government of Moscow,current,B,official station line entrance coordinate anchors when available

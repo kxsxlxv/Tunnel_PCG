@@ -383,3 +383,21 @@ def test_explicit_per_ring_omega_override_preserves_legacy_equation():
     for i, pose in enumerate(assembly.poses):
         assert math.isclose(pose.translation_m[0], 0.1 * math.sin(0.25 * i), abs_tol=1e-14)
         assert math.isclose(pose.translation_m[2], 0.1 * math.cos(0.4 * i), abs_tol=1e-14)
+
+
+def test_zero_explicit_frequency_is_json_safe():
+    packages = [_ring_package(i, bolts=False) for i in range(2)]
+    cfg = TunnelAssemblyConfig(
+        n_rings=2,
+        ring_width_m=1.35,
+        axis_noise_sigma_m=0.0,
+        omega_x_rad_per_ring=0.0,
+        omega_z_rad_per_ring=0.0,
+    )
+    assembly = sample_tunnel_assembly(cfg, seed=1)
+    scene = build_multi_ring_scene_package(packages, assembly)
+    assert scene.metadata["lateralWavelengthM"] is None
+    assert scene.metadata["verticalWavelengthM"] is None
+    encoded = scene_package_to_dict(scene)
+    restored = scene_package_from_dict(encoded)
+    assert restored == scene

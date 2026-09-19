@@ -87,6 +87,7 @@ def test_printed_walkway_depth_upper_bound_is_preserved_not_silently_corrected()
         rail_depth_m=base.rail_depth_m,
         rail_width_m=base.rail_width_m,
         rail_spacing_m=base.rail_spacing_m,
+        rail_spacing_convention=base.rail_spacing_convention,
         tubes=base.tubes,
     )
     cfg.validate_against_table4(r)
@@ -351,3 +352,39 @@ def test_stage8_ancillary_centre_station_passes_through_ring_centre_offset():
         expected[:, 1] += pose.translation_m[1]
         expected[:, 2] += pose.translation_m[2]
         assert np.allclose(world_mid, expected, atol=2e-12, rtol=0)
+
+
+def test_rail_spacing_ambiguity_modes_are_explicit():
+    from tunnel_scanner_core import RailSpacingConvention
+
+    r = 3.0
+    base = AncillaryConfig.reference(r)
+    assert base.rail_spacing_convention is RailSpacingConvention.TABLE4_CENTER_SPACING
+
+    table = build_ancillary_set(
+        inner_radius_m=r,
+        length_m=1.35,
+        config=base,
+    )
+    table_centers = sorted(m.properties["railCenterX"] for m in table.meshes_of_category("rail"))
+    assert np.allclose(table_centers, [-0.75, 0.75], atol=1e-12, rtol=0)
+
+    prose_cfg = AncillaryConfig(
+        pavement_height_m=base.pavement_height_m,
+        walkway_height_m=base.walkway_height_m,
+        walkway_width_m=base.walkway_width_m,
+        walkway_depth_m=base.walkway_depth_m,
+        walkway_side=base.walkway_side,
+        rail_depth_m=base.rail_depth_m,
+        rail_width_m=base.rail_width_m,
+        rail_spacing_m=base.rail_spacing_m,
+        rail_spacing_convention=RailSpacingConvention.PROSE_OFFSET_FROM_MIDLINE,
+        tubes=base.tubes,
+    )
+    prose = build_ancillary_set(
+        inner_radius_m=r,
+        length_m=1.35,
+        config=prose_cfg,
+    )
+    prose_centers = sorted(m.properties["railCenterX"] for m in prose.meshes_of_category("rail"))
+    assert np.allclose(prose_centers, [-1.5, 1.5], atol=1e-12, rtol=0)

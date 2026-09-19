@@ -40,6 +40,46 @@ def main() -> None:
     q = (-1.1, 0.42, 2.0)
     d0 = math.dist(p, q)
 
+    # Stage 7.1 regression: deterministic curve must be independent of export length.
+    short_cfg = TunnelAssemblyConfig(
+        n_rings=5,
+        ring_width_m=ring_cfg.width_m,
+        axis_noise_sigma_m=0.0,
+        recenter_lateral_offsets=False,
+    )
+    long_cfg = TunnelAssemblyConfig(
+        n_rings=30,
+        ring_width_m=ring_cfg.width_m,
+        axis_noise_sigma_m=0.0,
+        recenter_lateral_offsets=False,
+    )
+    short = sample_tunnel_assembly(short_cfg, seed=0)
+    long = sample_tunnel_assembly(long_cfg, seed=0)
+    export_length_invariance_error = max(
+        math.dist(a.translation_m, b.translation_m)
+        for a, b in zip(short.poses, long.poses[:5])
+    )
+    assert export_length_invariance_error < 1e-14
+
+    deterministic_cfg = TunnelAssemblyConfig(
+        n_rings=100,
+        ring_width_m=ring_cfg.width_m,
+        axis_noise_sigma_m=0.0,
+        recenter_lateral_offsets=False,
+    )
+    deterministic = sample_tunnel_assembly(deterministic_cfg, seed=0)
+    max_observed_deterministic_transverse_step = max(
+        math.hypot(
+            b.translation_m[0] - a.translation_m[0],
+            b.translation_m[2] - a.translation_m[2],
+        )
+        for a, b in zip(deterministic.poses, deterministic.poses[1:])
+    )
+    assert (
+        max_observed_deterministic_transverse_step
+        <= deterministic_cfg.deterministic_adjacent_transverse_step_bound_m() + 1e-12
+    )
+
     for scene_index in range(POSE_SCENES):
         n = rng.randint(10, 30)
         cfg = TunnelAssemblyConfig(
@@ -121,7 +161,7 @@ def main() -> None:
             json_roundtrips_done += 1
 
     result = {
-        "stage": 7,
+        "stage": "7.1",
         "poseScenes": POSE_SCENES,
         "poseRings": total_pose_rings,
         "fullScenes": FULL_SCENES,
@@ -136,6 +176,14 @@ def main() -> None:
         "maxRigidTransformDistanceErrorM": max_rigid_error,
         "maxSampledNominalStaggerDeg": max_nominal_rotation,
         "staggerBoundDeg": 135.0,
+        "frequencyParameterization": "physical_wavelength_by_chainage",
+        "lateralWavelengthM": deterministic_cfg.lateral_wavelength_m,
+        "verticalWavelengthM": deterministic_cfg.vertical_wavelength_m,
+        "deterministicAdjacentStepBoundXM": deterministic_cfg.deterministic_adjacent_step_bound_x_m(),
+        "deterministicAdjacentStepBoundZM": deterministic_cfg.deterministic_adjacent_step_bound_z_m(),
+        "deterministicAdjacentTransverseStepBoundM": deterministic_cfg.deterministic_adjacent_transverse_step_bound_m(),
+        "maxObservedDeterministicTransverseStepM": max_observed_deterministic_transverse_step,
+        "exportLengthInvarianceErrorM": export_length_invariance_error,
         "result": "PASS",
     }
     OUTPUT.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")

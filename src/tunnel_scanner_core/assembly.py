@@ -318,14 +318,85 @@ def transform_point_by_ring_pose(point: Vec3, pose: RingPose) -> Vec3:
     return _transform_point_with_axial_rotation(point, pose, pose.rotation_y_deg)
 
 
-def transform_scene_object_by_ring_pose(obj: SceneObject, pose: RingPose) -> SceneObject:
+def _alignment_offset_xz_for_local_y(
+    assembly: TunnelAssembly,
+    ring_index: int,
+    local_y_m: float,
+) -> tuple[float, float]:
+    """Piecewise-linear X/Z alignment through ring centres.
+
+    Adjacent per-ring ancillary slices share the midpoint of neighbouring ring
+    centre offsets at their common longitudinal boundary. The local y=0 station
+    passes exactly through the current ring centre offset.
+    """
+    poses = assembly.poses
+    pose = poses[ring_index]
+    L = assembly.config.ring_width_m
+    u = float(local_y_m) / L
+    if u < -0.500000001 or u > 0.500000001:
+        raise ValueError(
+            f"ancillary local y={local_y_m:g} lies outside ring half-width +/-{0.5*L:g}"
+        )
+
+    cx, _cy, cz = pose.translation_m
+    if u >= 0.0:
+        if ring_index + 1 < len(poses):
+            nx, _ny, nz = poses[ring_index + 1].translation_m
+            dx, dz = nx - cx, nz - cz
+        elif ring_index > 0:
+            px, _py, pz = poses[ring_index - 1].translation_m
+            dx, dz = cx - px, cz - pz
+        else:
+            dx = dz = 0.0
+    else:
+        if ring_index > 0:
+            px, _py, pz = poses[ring_index - 1].translation_m
+            dx, dz = cx - px, cz - pz
+        elif ring_index + 1 < len(poses):
+            nx, _ny, nz = poses[ring_index + 1].translation_m
+            dx, dz = nx - cx, nz - cz
+        else:
+            dx = dz = 0.0
+    return (cx + u * dx, cz + u * dz)
+
+
+def _transform_point_follow_alignment(
+    point: Vec3,
+    pose: RingPose,
+    assembly: TunnelAssembly,
+) -> Vec3:
+    x, local_y, z = point
+    offset_x, offset_z = _alignment_offset_xz_for_local_y(
+        assembly, pose.ring_index, local_y
+    )
+    return (
+        x + offset_x,
+        pose.chainage_m + local_y,
+        z + offset_z,
+    )
+
+
+def transform_scene_object_by_ring_pose(
+    obj: SceneObject,
+    pose: RingPose,
+    assembly: TunnelAssembly | None = None,
+) -> SceneObject:
     if obj.ring_id != pose.ring_index:
         raise ValueError(
             f"scene object ring_id={obj.ring_id} does not match pose index={pose.ring_index}"
         )
     extra = dict(obj.extra_properties)
+    follow_scene_alignment = bool(extra.get("followSceneAlignment", False))
     follow_ring_rotation = bool(extra.get("followRingAxialRotation", True))
-    applied_rotation_deg = pose.rotation_y_deg if follow_ring_rotation else 0.0
+    if follow_scene_alignment and assembly is None:
+        raise ValueError(
+            f"{obj.name}: followSceneAlignment requires the full TunnelAssembly"
+        )
+    applied_rotation_deg = (
+        0.0
+        if follow_scene_alignment
+        else (pose.rotation_y_deg if follow_ring_rotation else 0.0)
+    )
     extra.update(
         {
             "ringTranslationX": float(pose.translation_m[0]),
@@ -336,14 +407,30 @@ def transform_scene_object_by_ring_pose(obj: SceneObject, pose: RingPose) -> Sce
             "ringNominalRotationDeg": float(pose.nominal_rotation_deg),
             "ringAngularImperfectionDeg": float(pose.angular_imperfection_deg),
             "ringChainageM": float(pose.chainage_m),
+            "objectTransformPolicy": (
+                "stitched_scene_alignment"
+                if follow_scene_alignment
+                else (
+                    "ring_translation_and_axial_rotation"
+                    if follow_ring_rotation
+                    else "ring_translation_only"
+                )
+            ),
         }
     )
-    return SceneObject(
-        name=obj.name,
-        vertices=tuple(
+    if follow_scene_alignment:
+        assert assembly is not None
+        transformed_vertices = tuple(
+            _transform_point_follow_alignment(v, pose, assembly) for v in obj.vertices
+        )
+    else:
+        transformed_vertices = tuple(
             _transform_point_with_axial_rotation(v, pose, applied_rotation_deg)
             for v in obj.vertices
-        ),
+        )
+    return SceneObject(
+        name=obj.name,
+        vertices=transformed_vertices,
         faces=obj.faces,
         object_type=obj.object_type,
         ring_id=obj.ring_id,
@@ -386,7 +473,8 @@ def build_multi_ring_scene_package(
                 f"ring package {i} must contain exactly ringID={i}; got {package.ring_ids}"
             )
         objects.extend(
-            transform_scene_object_by_ring_pose(obj, pose) for obj in package.objects
+            transform_scene_object_by_ring_pose(obj, pose, assembly)
+            for obj in package.objects
         )
         ring_metadata.append(
             {
@@ -455,15 +543,16 @@ def build_multi_ring_scene_package(
         },
         "ringPoses": ring_metadata,
         "ancillaryTransformPolicy": {
-            "objectsWithAlignmentOnlyRotation": sum(
+            "objectsWithStitchedAlignment": sum(
                 1
                 for obj in objects
-                if obj.extra_properties.get("followRingAxialRotation") is False
+                if obj.extra_properties.get("followSceneAlignment") is True
             ),
             "policy": (
-                "Stage-8 ancillary infrastructure follows X/Z/Y ring-centre translation "
-                "but not segment-ring axial staggering; rails/walkway/tubes/pavement "
-                "remain fixed relative to the tunnel gravity frame"
+                "Stage-8 ancillary infrastructure uses a piecewise-linear X/Z sweep "
+                "through ring centres with shared inter-ring boundary cross-sections; "
+                "it does not follow segment-ring axial staggering and remains fixed "
+                "relative to the tunnel gravity frame"
             ),
         },
         "booleanPipeline": (

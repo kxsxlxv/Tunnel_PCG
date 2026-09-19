@@ -1,15 +1,18 @@
 from __future__ import annotations
 
-"""Stage-7 multi-ring tunnel assembly.
+"""Stage-7/7.1 multi-ring tunnel assembly.
 
-This module implements the scene-level construction described around Eq. (21)
-of Yang et al. (2026): individual ring ScenePackages are placed along +Y with
-sinusoidal X/Z offsets and optional ring rotation about the tunnel axis.
+Stage 7 implements the scene-level construction described around Eq. (21) of
+Yang et al. (2026): individual ring ScenePackages are placed along +Y with
+sinusoidal X/Z offsets and optional axial ring rotation.
 
-The paper gives the form of Eq. (21), A≈0.1 m, the stagger-angle bounds and the
-noise distributions, but does not publish omega_x/omega_z numerical values or
-an unambiguous policy for how the nominal stagger angle phi is selected from
-ring to ring. Those choices are explicit configuration here.
+Stage 7.1 changes only the default parameterization of the unpublished spatial
+frequencies. The paper publishes omega_x and omega_z symbolically but does not
+give numeric values. A frequency tied to N_ring makes physical curvature change
+when the export window changes. Production defaults are therefore expressed as
+physical wavelengths in metres and evaluated at chainage s=i*L_seg. Explicit
+omega_*_rad_per_ring overrides are retained for exact reproduction of earlier
+scenes or user-specified paper-style inputs.
 """
 
 from dataclasses import dataclass
@@ -24,22 +27,7 @@ from .scene import SceneMode, SceneObject, ScenePackage
 
 
 class RingRotationStrategy(str, Enum):
-    """How Eq. (21)'s nominal stagger rotation is interpreted.
-
-    CONTINUOUS:
-        Continuous-joint tunnel; every ring has zero axial rotation.
-
-    PAPER_CONSTANT_NOMINAL:
-        Literal/common-phi reading of phi_i = phi + delta_i. A single
-        nominal phi is used for the whole scene, with independent imperfections.
-
-    RINGWISE_GAUSSIAN:
-        Engineering reconstruction consistent with Table 2 saying stagger-angle
-        bounds are Gaussian sampled: each ring receives its own nominal phi_i
-        from a truncated zero-mean Gaussian within +/-6*theta_K, then delta_i is
-        sampled with sigma=0.1*|phi_i|. This actually creates ring-to-ring
-        staggering and is therefore the production staggered mode.
-    """
+    """How Eq. (21)'s nominal stagger rotation is interpreted."""
 
     CONTINUOUS = "continuous"
     PAPER_CONSTANT_NOMINAL = "paper_constant_nominal"
@@ -51,8 +39,18 @@ class TunnelAssemblyConfig:
     n_rings: int = 13
     ring_width_m: float = 1.35
     displacement_amplitude_m: float = 0.1
+
+    # Stage-7.1 production defaults. These are engineering defaults, not values
+    # published by Yang et al. 50 m / 100 m preserve the earlier intent that Z
+    # changes more slowly than X, but make smoothness independent of N_ring.
+    lateral_wavelength_m: float = 50.0
+    vertical_wavelength_m: float = 100.0
+
+    # Compatibility / explicit paper-style overrides. If supplied, these take
+    # precedence over wavelength_m and are converted to rad/m internally.
     omega_x_rad_per_ring: float | None = None
     omega_z_rad_per_ring: float | None = None
+
     axis_noise_sigma_m: float = 0.005
     ring_rotation_strategy: RingRotationStrategy = RingRotationStrategy.CONTINUOUS
     nominal_stagger_deg: float | None = None
@@ -71,6 +69,12 @@ class TunnelAssemblyConfig:
             or self.displacement_amplitude_m < 0.0
         ):
             raise ValueError("displacement_amplitude_m must be finite and non-negative")
+        for value, name in (
+            (self.lateral_wavelength_m, "lateral_wavelength_m"),
+            (self.vertical_wavelength_m, "vertical_wavelength_m"),
+        ):
+            if not math.isfinite(value) or value <= 0.0:
+                raise ValueError(f"{name} must be finite and positive")
         if not math.isfinite(self.axis_noise_sigma_m) or self.axis_noise_sigma_m < 0.0:
             raise ValueError("axis_noise_sigma_m must be finite and non-negative")
         if not math.isfinite(self.theta_k_deg) or self.theta_k_deg <= 0.0:
@@ -93,9 +97,6 @@ class TunnelAssemblyConfig:
                 )
 
     def validate_against_paper_scene_bounds(self) -> None:
-        # Table 1 lists 10–30 rings per synthetic scene. The core accepts a
-        # wider range for unit tests and downstream applications, so source-bound
-        # validation is explicit rather than silently hard-coded.
         if not 10 <= self.n_rings <= 30:
             raise ValueError("Table-1 N_ring bounds are 10..30 rings per scene")
 
@@ -104,22 +105,62 @@ class TunnelAssemblyConfig:
         return 6.0 * self.theta_k_deg
 
     @property
-    def resolved_omega_x(self) -> float:
-        """Default: one complete lateral sine wave over the scene."""
+    def uses_legacy_omega_x_override(self) -> bool:
+        return self.omega_x_rad_per_ring is not None
+
+    @property
+    def uses_legacy_omega_z_override(self) -> bool:
+        return self.omega_z_rad_per_ring is not None
+
+    @property
+    def resolved_omega_x_rad_per_m(self) -> float:
         if self.omega_x_rad_per_ring is not None:
-            return self.omega_x_rad_per_ring
-        if self.n_rings <= 1:
-            return 0.0
-        return 2.0 * math.pi / (self.n_rings - 1)
+            return self.omega_x_rad_per_ring / self.ring_width_m
+        return 2.0 * math.pi / self.lateral_wavelength_m
+
+    @property
+    def resolved_omega_z_rad_per_m(self) -> float:
+        if self.omega_z_rad_per_ring is not None:
+            return self.omega_z_rad_per_ring / self.ring_width_m
+        return 2.0 * math.pi / self.vertical_wavelength_m
+
+    @property
+    def resolved_omega_x(self) -> float:
+        """Compatibility property: resolved angular increment per ring."""
+        return self.resolved_omega_x_rad_per_m * self.ring_width_m
 
     @property
     def resolved_omega_z(self) -> float:
-        """Default: half a cosine wave over the scene."""
+        """Compatibility property: resolved angular increment per ring."""
+        return self.resolved_omega_z_rad_per_m * self.ring_width_m
+
+    @property
+    def resolved_lateral_wavelength_m(self) -> float:
+        if self.omega_x_rad_per_ring is not None:
+            omega_m = abs(self.resolved_omega_x_rad_per_m)
+            return math.inf if omega_m == 0.0 else 2.0 * math.pi / omega_m
+        return self.lateral_wavelength_m
+
+    @property
+    def resolved_vertical_wavelength_m(self) -> float:
         if self.omega_z_rad_per_ring is not None:
-            return self.omega_z_rad_per_ring
-        if self.n_rings <= 1:
-            return 0.0
-        return math.pi / (self.n_rings - 1)
+            omega_m = abs(self.resolved_omega_z_rad_per_m)
+            return math.inf if omega_m == 0.0 else 2.0 * math.pi / omega_m
+        return self.vertical_wavelength_m
+
+    def deterministic_adjacent_step_bound_x_m(self) -> float:
+        phase = abs(self.resolved_omega_x)
+        return 2.0 * self.displacement_amplitude_m * abs(math.sin(0.5 * phase))
+
+    def deterministic_adjacent_step_bound_z_m(self) -> float:
+        phase = abs(self.resolved_omega_z)
+        return 2.0 * self.displacement_amplitude_m * abs(math.sin(0.5 * phase))
+
+    def deterministic_adjacent_transverse_step_bound_m(self) -> float:
+        return math.hypot(
+            self.deterministic_adjacent_step_bound_x_m(),
+            self.deterministic_adjacent_step_bound_z_m(),
+        )
 
 
 @dataclass(frozen=True)
@@ -181,21 +222,22 @@ def sample_tunnel_assembly(
     *,
     seed: int | None = None,
 ) -> TunnelAssembly:
-    """Sample ring poses from Eq. (21) plus explicit stagger policy."""
+    """Sample ring poses from Eq. (21) plus explicit Stage-7.1 frequency policy."""
     rng = np.random.default_rng(seed)
-    omega_x = config.resolved_omega_x
-    omega_z = config.resolved_omega_z
+    omega_x_m = config.resolved_omega_x_rad_per_m
+    omega_z_m = config.resolved_omega_z_rad_per_m
     A = config.displacement_amplitude_m
 
     eps_x = rng.normal(0.0, config.axis_noise_sigma_m, config.n_rings)
     eps_z = rng.normal(0.0, config.axis_noise_sigma_m, config.n_rings)
 
+    chainages = np.arange(config.n_rings, dtype=float) * config.ring_width_m
     raw_x = np.array(
-        [A * math.sin(omega_x * i) + float(eps_x[i]) for i in range(config.n_rings)],
+        [A * math.sin(omega_x_m * s) + float(eps_x[i]) for i, s in enumerate(chainages)],
         dtype=float,
     )
     raw_z = np.array(
-        [A * math.cos(omega_z * i) + float(eps_z[i]) for i in range(config.n_rings)],
+        [A * math.cos(omega_z_m * s) + float(eps_z[i]) for i, s in enumerate(chainages)],
         dtype=float,
     )
 
@@ -237,20 +279,17 @@ def sample_tunnel_assembly(
                 0.0 if sigma_delta == 0.0 else float(rng.normal(0.0, sigma_delta))
             )
 
+        chainage = float(chainages[i])
         poses.append(
             RingPose(
                 ring_index=i,
-                translation_m=(
-                    float(raw_x[i]),
-                    float(i * config.ring_width_m),
-                    float(raw_z[i]),
-                ),
+                translation_m=(float(raw_x[i]), chainage, float(raw_z[i])),
                 rotation_y_deg=float(nominal + delta),
                 nominal_rotation_deg=float(nominal),
                 angular_imperfection_deg=float(delta),
                 epsilon_x_m=float(eps_x[i]),
                 epsilon_z_m=float(eps_z[i]),
-                chainage_m=float(i * config.ring_width_m),
+                chainage_m=chainage,
             )
         )
 
@@ -303,9 +342,9 @@ def transform_scene_object_by_ring_pose(obj: SceneObject, pose: RingPose) -> Sce
         segment_name=obj.segment_name,
         segment_kind=obj.segment_kind,
         reconstruction=(
-            f"{obj.reconstruction}+stage7_ring_pose"
+            f"{obj.reconstruction}+stage7_1_ring_pose"
             if obj.reconstruction
-            else "stage7_ring_pose"
+            else "stage7_1_ring_pose"
         ),
         collection_path=obj.collection_path,
         extra_properties=extra,
@@ -316,7 +355,7 @@ def build_multi_ring_scene_package(
     ring_packages: Sequence[ScenePackage],
     assembly: TunnelAssembly,
     *,
-    name: str = "tunnel_scanner_stage7_tunnel",
+    name: str = "tunnel_scanner_stage7_1_tunnel",
 ) -> ScenePackage:
     """Merge ring-local packages into one world-space multi-ring scene."""
     if len(ring_packages) != assembly.config.n_rings:
@@ -350,25 +389,44 @@ def build_multi_ring_scene_package(
         )
 
     cfg = assembly.config
+    legacy_override = (
+        cfg.uses_legacy_omega_x_override or cfg.uses_legacy_omega_z_override
+    )
     metadata = {
-        "sourceStage": 7,
+        "sourceStage": "7.1",
         "sourceEquation": "Yang et al. (2026) Eq. (21)",
         "ringCount": cfg.n_rings,
         "paperRingCountBounds": [10, 30],
         "ringWidthM": cfg.ring_width_m,
         "chainageLengthM": assembly.length_by_chainage_m,
         "axisDisplacementAmplitudeM": cfg.displacement_amplitude_m,
+        "frequencyParameterization": (
+            "explicit_rad_per_ring_override"
+            if legacy_override
+            else "physical_wavelength_by_chainage"
+        ),
+        "lateralWavelengthM": cfg.resolved_lateral_wavelength_m,
+        "verticalWavelengthM": cfg.resolved_vertical_wavelength_m,
+        "omegaXRadPerM": cfg.resolved_omega_x_rad_per_m,
+        "omegaZRadPerM": cfg.resolved_omega_z_rad_per_m,
         "omegaXRadPerRing": cfg.resolved_omega_x,
         "omegaZRadPerRing": cfg.resolved_omega_z,
-        "omegaStatus": (
-            "user-specified"
-            if cfg.omega_x_rad_per_ring is not None
-            and cfg.omega_z_rad_per_ring is not None
-            else "contains Stage-7 engineering defaults because the paper publishes symbols but no numeric frequencies"
+        "frequencyStatus": (
+            "explicit omega override supplied by caller"
+            if legacy_override
+            else (
+                "Stage-7.1 engineering defaults: 50 m lateral wavelength and "
+                "100 m vertical wavelength; paper publishes omega symbols but no values"
+            )
+        ),
+        "deterministicAdjacentStepBoundXM": cfg.deterministic_adjacent_step_bound_x_m(),
+        "deterministicAdjacentStepBoundZM": cfg.deterministic_adjacent_step_bound_z_m(),
+        "deterministicAdjacentTransverseStepBoundM": (
+            cfg.deterministic_adjacent_transverse_step_bound_m()
         ),
         "axisNoiseSigmaM": cfg.axis_noise_sigma_m,
         "axisNoiseStatus": (
-            "Stage-7 interprets printed N(0,0.005 m^2) as sigma=0.005 m; "
+            "Stage-7.1 interprets printed N(0,0.005 m^2) as sigma=0.005 m; "
             "literal variance would imply ~70.7 mm sigma"
         ),
         "rotationStrategy": cfg.ring_rotation_strategy.value,
@@ -385,7 +443,7 @@ def build_multi_ring_scene_package(
         },
         "ringPoses": ring_metadata,
         "booleanPipeline": (
-            "Stage-6 cutter/head metadata is preserved after Stage-7 world transform; "
+            "Stage-6 cutter/head metadata is preserved after Stage-7.1 world transform; "
             "Blender Boolean targets remain ring-local stable names"
         ),
     }

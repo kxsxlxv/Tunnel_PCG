@@ -1,0 +1,40 @@
+{
+  "stage": 6,
+  "seed": 5812,
+  "ringId": 12,
+  "layout": "type1_centered",
+  "boltAssemblies": 18,
+  "sceneObjectsBeforeBlenderBoolean": 54,
+  "expectedPocketCuttersRemoved": 18,
+  "expectedObjectsAfterBlenderBoolean": 36,
+  "boltConfig": {
+    "topWidthM": 0.07066562529127669,
+    "bottomWidthM": 0.1236316036613989,
+    "pocketHeightM": 0.15399561049793883,
+    "penetrationM": 0.11600707478100696,
+    "headRadiusM": 0.025359471840235896,
+    "headThicknessM": 0.08415700975978598,
+    "protrusionM": 0.01223079696891986,
+    "jointArcOffsetM": 0.21525692202517294,
+    "headHeightRatio": 0.35
+  },
+  "booleanPipeline": {
+    "stage": "6",
+    "layout": "type1_centered",
+    "pocketMode": "physical_embedded",
+    "assemblies": 18,
+    "entryOverlapM": 0.005,
+    "headHeightRatio": 0.35,
+    "headHeightRatioStatus": "engineering assumption; paper defines eta but publishes no value",
+    "perturbationSigmaM": 0.001,
+    "perturbationSigmaFraction": 0.001,
+    "perturbationStatus": "engineering interpretation of ambiguous printed N(0,0.001 m^2): sigma=1 mm, truncated at configured sigma bound",
+    "operations": [
+      "segment DIFFERENCE pocket_cutter",
+      "segment DIFFERENCE bolt_head",
+      "remove pocket_cutter",
+      "retain bolt_head as labelID=0 clutter"
+    ],
+    "semanticLimitation": "cavity wall remains part of lining segment label; the paper's separate pocket-shell clutter reconstruction is deferred"
+  }
+}

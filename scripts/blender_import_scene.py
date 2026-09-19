@@ -48,6 +48,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="After Boolean bake, remove hidden internal ring end faces for realtime export",
     )
+    parser.add_argument(
+        "--strip-coincident-lining-interfaces",
+        action="store_true",
+        help="After Boolean bake, remove duplicated radial faces shared by adjacent segments",
+    )
     return parser.parse_args(_argv_after_double_dash())
 
 
@@ -60,6 +65,7 @@ def main() -> None:
         clear_existing_root=not args.keep_existing_root,
         apply_bolt_booleans=not args.no_bolt_booleans,
         strip_internal_lining_caps=args.strip_internal_lining_caps,
+        strip_coincident_lining_interfaces=args.strip_coincident_lining_interfaces,
     )
     print(
         f"Imported {len(result.object_names)} surviving objects into collection "
@@ -73,6 +79,10 @@ def main() -> None:
     if result.lining_cap_faces_removed:
         print(
             f"Removed {result.lining_cap_faces_removed} hidden internal lining cap faces."
+        )
+    if result.lining_interface_faces_removed:
+        print(
+            f"Removed {result.lining_interface_faces_removed} coincident segment-interface faces."
         )
 
     if args.save_blend is not None:

@@ -1,0 +1,89 @@
+{
+  "schema_version": "0.1",
+  "units": "m",
+  "cable_system": {
+    "visible_open_routing": true,
+    "min_vertical_between_bracket_horns": 0.125,
+    "min_vertical_between_shelves": 0.15,
+    "bracket_spacing_vertical_arrangement": [
+      1,
+      1.2
+    ],
+    "bracket_spacing_horizontal_arrangement": [
+      0.8,
+      1.1
+    ],
+    "cable_clearances": [
+      {
+        "classes": "power_le_3kV",
+        "vertical": 0.06,
+        "horizontal": 0.015
+      },
+      {
+        "classes": "6_10_20kV",
+        "vertical": 0.1,
+        "horizontal": null
+      },
+      {
+        "classes": "le_3kV_to_6_10_20kV",
+        "vertical": 0.1,
+        "horizontal": null
+      },
+      {
+        "classes": "le_1kV_to_control",
+        "vertical": 0.06,
+        "horizontal": 0.015
+      }
+    ],
+    "crown_crossing_restriction": {
+      "circular_tunnel_radius_le": 350,
+      "unit": "m",
+      "note": "Do not route through Cmk-Om crown space without explicit allowed design."
+    },
+    "source": "SP_120.13330.2022_current"
+  },
+  "lighting": {
+    "ordinary_tunnel_lux_at_UGR": 20,
+    "station_approach_lux": 60,
+    "station_approach_before_platform_m": 150,
+    "station_approach_after_platform_m": 25,
+    "historical_geometry_preset": {
+      "pitch": 9,
+      "z_above_UGR": 2.76,
+      "reflector_axis_deg_from_horizontal": 30,
+      "axis_yaw_deg_to_track": 5,
+      "confidence": "C"
+    },
+    "note": "Lux targets do not uniquely determine luminaire spacing."
+  },
+  "evacuation_signs": {
+    "max_pitch": 25,
+    "mounting_height_range_above_walkway": [
+      0.5,
+      1.5
+    ],
+    "information_sign_max_pitch": 160,
+    "source": "SP_120.13330.2022_current"
+  },
+  "water_main": {
+    "min_nominal_DN_mm": 80,
+    "default_side": "weak_current_side",
+    "position": "above_UGR",
+    "two_track": "both sides or project-specific central routing",
+    "historical_z_range_above_UGR": [
+      0.6,
+      0.8
+    ],
+    "irrigation_tap_min_DN_mm": 20,
+    "irrigation_tap_max_pitch": 30
+  },
+  "walkway": {
+    "classic_circle_ID_le_5_2": {
+      "side": "opposite_contact_rail",
+      "nominal_z_above_UGR": 0.2
+    },
+    "current_side_passage_min_width": 0.6,
+    "current_min_clear_height": 2,
+    "current_width_at_1_5m_level_min": 0.7
+  }
+}

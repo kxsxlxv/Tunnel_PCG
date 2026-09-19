@@ -1,5 +1,5 @@
 {
-  "stage": 7,
+  "stage": "7.1",
   "poseScenes": 2000,
   "poseRings": 39877,
   "fullScenes": 50,
@@ -14,5 +14,13 @@
   "maxRigidTransformDistanceErrorM": 1.7763568394002505e-15,
   "maxSampledNominalStaggerDeg": 134.9017558702821,
   "staggerBoundDeg": 135.0,
+  "frequencyParameterization": "physical_wavelength_by_chainage",
+  "lateralWavelengthM": 50.0,
+  "verticalWavelengthM": 100.0,
+  "deterministicAdjacentStepBoundXM": 0.01694426442841469,
+  "deterministicAdjacentStepBoundZM": 0.008479757491116822,
+  "deterministicAdjacentTransverseStepBoundM": 0.018947674900319334,
+  "maxObservedDeterministicTransverseStepM": 0.018947595443028434,
+  "exportLengthInvarianceErrorM": 0.0,
   "result": "PASS"
 }

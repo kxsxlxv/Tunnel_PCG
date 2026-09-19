@@ -130,6 +130,7 @@ from .production import (
     stable_instance_id,
     finalize_production_render_scene,
     strip_exact_coincident_lining_interface_faces,
+    strip_lining_segment_boundary_faces,
     strip_internal_lining_cap_faces,
 )
 from .deformed_mesh import (
@@ -267,6 +268,7 @@ __all__ = [
     "stable_instance_id",
     "finalize_production_render_scene",
     "strip_exact_coincident_lining_interface_faces",
+    "strip_lining_segment_boundary_faces",
     "strip_internal_lining_cap_faces",
     "DeformationBounds",
     "KinematicIndexing",

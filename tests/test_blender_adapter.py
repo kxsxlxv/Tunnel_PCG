@@ -159,3 +159,37 @@ def test_blender_adapter_builds_hierarchy_meshes_and_custom_props(monkeypatch):
 def test_blender_import_script_compiles_without_blender_runtime():
     script = Path(__file__).resolve().parents[1] / "scripts" / "blender_import_scene.py"
     compile(script.read_text(encoding="utf-8"), str(script), "exec")
+
+
+
+def test_stage6_boolean_plan_orders_pocket_before_head_for_each_bolt():
+    from tunnel_scanner_core.bolts import (
+        BoltConfig,
+        BoltLayoutType,
+        BoltPerturbationConfig,
+        build_bolt_set,
+    )
+    from tunnel_scanner_core.blender_adapter import plan_bolt_boolean_operations
+
+    cfg = RingConfig()
+    angles = sample_six_segment_angles(seed=5812)
+    ring = build_ring_mesh(cfg, angles)
+    joints = build_prescribed_joint_set(ring, sample_joint_config(seed=5812))
+    bolts = build_bolt_set(
+        ring,
+        BoltConfig(),
+        BoltLayoutType.TYPE1_CENTERED,
+        seed=5812,
+        perturbation_config=BoltPerturbationConfig(sigma_m=0.0, sigma_fraction=0.0),
+    )
+    package = build_nominal_scene_package(ring, joints, ring_id=12, bolts=bolts)
+    plan = plan_bolt_boolean_operations(package)
+    assert len(plan) == 36
+    for i in range(0, len(plan), 2):
+        pocket, head = plan[i : i + 2]
+        assert pocket.bolt_index == head.bolt_index
+        assert pocket.target_name == head.target_name
+        assert pocket.tool_type == "bolt_pocket_cutter"
+        assert pocket.remove_tool_after is True
+        assert head.tool_type == "bolt_head"
+        assert head.remove_tool_after is False

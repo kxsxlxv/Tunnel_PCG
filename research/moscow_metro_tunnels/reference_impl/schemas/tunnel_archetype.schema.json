@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/tunnel_archetype.schema.json",
+  "title": "Tunnel archetype",
+  "type": "object",
+  "required": ["id", "lining", "shape", "confidence"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "lining": {"type": "string", "minLength": 1},
+    "shape": {"enum": ["circular", "rectangular", "special"]},
+    "tracks": {"type": ["integer", "null"], "minimum": 1},
+    "outer_diameter": {"type": ["number", "null"], "exclusiveMinimum": 0},
+    "inner_diameter": {"type": ["number", "null"], "exclusiveMinimum": 0},
+    "ring_pitch": {"type": ["number", "null"], "exclusiveMinimum": 0},
+    "segment_count": {"type": ["integer", "null"], "minimum": 1},
+    "confidence": {"enum": ["A", "B", "C", "D"]},
+    "notes": {"type": "string"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"shape": {"const": "circular"}, "outer_diameter": {"type": "number"}, "inner_diameter": {"type": "number"}}, "required": ["outer_diameter", "inner_diameter"]},
+      "then": {"properties": {"outer_diameter": {"exclusiveMinimum": 0}}}
+    }
+  ],
+  "additionalProperties": true
+}

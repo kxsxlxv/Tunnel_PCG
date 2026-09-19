@@ -69,21 +69,52 @@ def test_eq21_without_noise_matches_sinusoidal_offsets_exactly():
         assert pose.rotation_y_deg == 0.0
 
 
-def test_default_frequencies_produce_smooth_scene_scale_curve():
+def test_default_wavelengths_are_physical_and_independent_of_scene_length():
+    short_cfg = TunnelAssemblyConfig(
+        n_rings=5,
+        axis_noise_sigma_m=0.0,
+        recenter_lateral_offsets=False,
+    )
+    long_cfg = TunnelAssemblyConfig(
+        n_rings=30,
+        axis_noise_sigma_m=0.0,
+        recenter_lateral_offsets=False,
+    )
+    short = sample_tunnel_assembly(short_cfg, seed=0)
+    long = sample_tunnel_assembly(long_cfg, seed=0)
+
+    assert short_cfg.lateral_wavelength_m == 50.0
+    assert short_cfg.vertical_wavelength_m == 100.0
+    assert math.isclose(
+        short_cfg.resolved_omega_x_rad_per_m, 2.0 * math.pi / 50.0, abs_tol=1e-15
+    )
+    assert math.isclose(
+        short_cfg.resolved_omega_z_rad_per_m, 2.0 * math.pi / 100.0, abs_tol=1e-15
+    )
+
+    # Same chainage => same deterministic curve regardless of export length.
+    for a, b in zip(short.poses, long.poses[:5]):
+        assert np.allclose(a.translation_m, b.translation_m, atol=1e-14, rtol=0)
+
+
+def test_default_five_ring_adjacent_sinusoidal_steps_are_centimetre_scale():
     cfg = TunnelAssemblyConfig(
-        n_rings=13,
+        n_rings=5,
         axis_noise_sigma_m=0.0,
         recenter_lateral_offsets=False,
     )
     assembly = sample_tunnel_assembly(cfg, seed=0)
-    xs = [p.translation_m[0] for p in assembly.poses]
-    zs = [p.translation_m[2] for p in assembly.poses]
-    assert math.isclose(xs[0], 0.0, abs_tol=1e-14)
-    assert math.isclose(xs[-1], 0.0, abs_tol=1e-14)
-    assert max(xs) > 0.099
-    assert min(xs) < -0.099
-    assert math.isclose(zs[0], 0.1, abs_tol=1e-14)
-    assert math.isclose(zs[-1], -0.1, abs_tol=1e-14)
+    transverse_steps = [
+        math.hypot(
+            b.translation_m[0] - a.translation_m[0],
+            b.translation_m[2] - a.translation_m[2],
+        )
+        for a, b in zip(assembly.poses, assembly.poses[1:])
+    ]
+    assert max(transverse_steps) < 0.020
+    assert cfg.deterministic_adjacent_step_bound_x_m() < 0.0171
+    assert cfg.deterministic_adjacent_step_bound_z_m() < 0.0085
+    assert cfg.deterministic_adjacent_transverse_step_bound_m() < 0.0191
 
 
 def test_lateral_recentering_makes_pose_means_zero():
@@ -320,3 +351,35 @@ def test_eq21_is_unrecentered_by_default():
     assembly = sample_tunnel_assembly(cfg, seed=0)
     assert assembly.lateral_recenter_m == (0.0, 0.0)
     assert math.isclose(assembly.poses[0].translation_m[2], 0.1, abs_tol=1e-14)
+
+
+def test_scene_metadata_records_physical_wavelength_policy():
+    packages = [_ring_package(i, bolts=False) for i in range(2)]
+    cfg = TunnelAssemblyConfig(
+        n_rings=2,
+        ring_width_m=1.35,
+        axis_noise_sigma_m=0.0,
+    )
+    assembly = sample_tunnel_assembly(cfg, seed=1)
+    scene = build_multi_ring_scene_package(packages, assembly)
+    assert scene.metadata["sourceStage"] == "7.1"
+    assert scene.metadata["frequencyParameterization"] == "physical_wavelength_by_chainage"
+    assert scene.metadata["lateralWavelengthM"] == 50.0
+    assert scene.metadata["verticalWavelengthM"] == 100.0
+    assert scene.metadata["deterministicAdjacentTransverseStepBoundM"] < 0.0191
+
+
+def test_explicit_per_ring_omega_override_preserves_legacy_equation():
+    cfg = TunnelAssemblyConfig(
+        n_rings=7,
+        ring_width_m=1.35,
+        axis_noise_sigma_m=0.0,
+        omega_x_rad_per_ring=0.25,
+        omega_z_rad_per_ring=0.4,
+    )
+    assembly = sample_tunnel_assembly(cfg, seed=3)
+    assert cfg.uses_legacy_omega_x_override
+    assert cfg.uses_legacy_omega_z_override
+    for i, pose in enumerate(assembly.poses):
+        assert math.isclose(pose.translation_m[0], 0.1 * math.sin(0.25 * i), abs_tol=1e-14)
+        assert math.isclose(pose.translation_m[2], 0.1 * math.cos(0.4 * i), abs_tol=1e-14)

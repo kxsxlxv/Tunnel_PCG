@@ -1330,10 +1330,14 @@ def _face_follows_segment_boundary(
     tx = float(props["ringTranslationX"])
     ty = float(props["ringTranslationY"])
     tz = float(props["ringTranslationZ"])
-    if bool(props.get("coordinatesLocalizedToChunk", False)):
-        tx -= float(props.get("chunkWorldOriginX", 0.0))
-        ty -= float(props.get("chunkWorldOriginY", 0.0))
-        tz -= float(props.get("chunkWorldOriginZ", 0.0))
+    localized = bool(props.get("coordinatesLocalizedToChunk", False))
+    origin_x = float(props.get("chunkWorldOriginX", 0.0)) if localized else 0.0
+    origin_y = float(props.get("chunkWorldOriginY", 0.0)) if localized else 0.0
+    origin_z = float(props.get("chunkWorldOriginZ", 0.0)) if localized else 0.0
+    tx -= origin_x
+    ty -= origin_y
+    tz -= origin_z
+    stitched = bool(props.get("productionRingAlignmentStitched", False))
     rotation_deg = float(props["ringRotationDeg"])
     a = math.radians(rotation_deg)
     c = math.cos(a)
@@ -1342,13 +1346,31 @@ def _face_follows_segment_boundary(
     local_samples: list[tuple[float, float, float]] = []
     for index in face:
         x, y, z = obj.vertices[index]
-        dx = x - tx
-        dz = z - tz
+        local_y = y - ty
+        center_x = tx
+        center_z = tz
+        if stitched:
+            front_x = float(props["productionRingFrontOffsetX"]) - origin_x
+            front_z = float(props["productionRingFrontOffsetZ"]) - origin_z
+            center_x_stitched = float(props["productionRingCenterOffsetX"]) - origin_x
+            center_z_stitched = float(props["productionRingCenterOffsetZ"]) - origin_z
+            back_x = float(props["productionRingBackOffsetX"]) - origin_x
+            back_z = float(props["productionRingBackOffsetZ"]) - origin_z
+            if local_y <= 0.0:
+                u = min(1.0, max(0.0, (local_y + 0.5 * ring_width_m) / (0.5 * ring_width_m)))
+                center_x = front_x + u * (center_x_stitched - front_x)
+                center_z = front_z + u * (center_z_stitched - front_z)
+            else:
+                u = min(1.0, max(0.0, local_y / (0.5 * ring_width_m)))
+                center_x = center_x_stitched + u * (back_x - center_x_stitched)
+                center_z = center_z_stitched + u * (back_z - center_z_stitched)
+
+        dx = x - center_x
+        dz = z - center_z
         # Inverse of Stage-7 axial rotation:
         # world_x = c*x + s*z ; world_z = -s*x + c*z.
         local_x = c * dx - sr * dz
         local_z = sr * dx + c * dz
-        local_y = y - ty
         radius = math.hypot(local_x, local_z)
         alpha = math.degrees(math.atan2(local_x, local_z))
         local_samples.append((local_y, radius, alpha))

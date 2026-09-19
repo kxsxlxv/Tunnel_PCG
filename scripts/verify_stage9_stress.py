@@ -16,11 +16,11 @@ from tunnel_scanner_core import (
     build_chunk_scene_packages,
     build_production_tunnel,
     build_procedural_nominal_tunnel,
+    finalize_production_render_scene,
     plan_chunks,
     production_alignment_stations,
     sample_tunnel_assembly,
     stable_instance_id,
-    strip_internal_lining_cap_faces,
 )
 
 
@@ -86,13 +86,22 @@ def main() -> None:
     before_lining_faces = sum(
         len(obj.faces) for obj in hundred.scene.objects_of_type("lining_segment")
     )
-    cleaned = strip_internal_lining_cap_faces(hundred.scene)
+    cleaned = finalize_production_render_scene(hundred.scene)
     removed_lining_faces = cleaned.metadata["productionLiningCapStrip"]["removedFaces"]
+    removed_interface_faces = cleaned.metadata[
+        "productionSegmentInterfaceStrip"
+    ]["facesRemoved"]
     after_lining_faces = sum(
         len(obj.faces) for obj in cleaned.objects_of_type("lining_segment")
     )
     assert removed_lining_faces > 0
-    assert before_lining_faces - after_lining_faces == removed_lining_faces
+    assert removed_interface_faces == 2 * 6 * hundred.assembly.config.n_rings
+    assert (
+        before_lining_faces - after_lining_faces
+        == removed_lining_faces + removed_interface_faces
+    )
+    finalized_audit = audit_exact_coincident_faces(cleaned)
+    assert finalized_audit.duplicate_group_count == 0
 
     # Chunking is optional and remains identity-preserving.
     chunks_50 = plan_chunks(km.assembly, chunk_length_m=50.0)
@@ -178,6 +187,8 @@ def main() -> None:
             "sceneObjects": len(hundred.scene.objects),
             "generationSecondsCI": time_100m,
             "liningCapFacesRemovedByFinalizer": removed_lining_faces,
+            "segmentInterfaceFacesRemovedByFinalizer": removed_interface_faces,
+            "exactDuplicateFaceGroupsAfterFinalizer": finalized_audit.duplicate_group_count,
         },
         "oneKilometre": {
             "rings": km.assembly.config.n_rings,

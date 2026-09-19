@@ -9,7 +9,7 @@ on:
 jobs:
   pytest:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -19,10 +19,26 @@ jobs:
       - name: Install
         run: python -m pip install -e '.[test]' trimesh
       - name: Compile standalone entry points
-        run: python -m py_compile examples/generate_stage8_tunnel.py scripts/blender_verify_stage8.py scripts/verify_stage8_stress.py scripts/verify_stage8_trimesh.py
+        run: >-
+          python -m py_compile
+          examples/generate_stage8_tunnel.py
+          examples/generate_stage9_production_tunnel.py
+          scripts/blender_verify_stage8.py
+          scripts/blender_verify_stage9.py
+          scripts/verify_stage8_stress.py
+          scripts/verify_stage8_trimesh.py
+          scripts/verify_stage9_stress.py
+          scripts/verify_stage9_trimesh.py
+          scripts/audit_stage9_topology.py
       - name: Unit and regression tests
         run: pytest
       - name: Stage 8 stress verification
         run: python scripts/verify_stage8_stress.py
       - name: Stage 8 independent trimesh verification
         run: python scripts/verify_stage8_trimesh.py
+      - name: Stage 9 topology audit
+        run: python scripts/audit_stage9_topology.py
+      - name: Stage 9 long-tunnel stress verification
+        run: python scripts/verify_stage9_stress.py
+      - name: Stage 9 independent production mesh verification
+        run: python scripts/verify_stage9_trimesh.py

@@ -1,0 +1,53 @@
+{
+  "schema_version": "0.1",
+  "route_id": "moscow_line_5_koltsevaya_v0",
+  "status": "pilot_station_anchor_reconstruction",
+  "line_number": 5,
+  "line_name_ru": "Кольцевая линия",
+  "official_public_length_m": 19400,
+  "stations": 12,
+  "osm_relation_current": 1462012,
+  "osm_relation_current_source": "Wikidata Q831673 retrieved 2026-09-19",
+  "osm_relation_legacy_do_not_use": 300607,
+  "source_crs": "EPSG:4326",
+  "engineering_crs": "EPSG:32637",
+  "local_origin": {
+    "station": "Белорусская",
+    "easting_m": 411206.37711503124,
+    "northing_m": 6182101.019251331,
+    "z_m": null
+  },
+  "horizontal_model": {
+    "method": "closed Catmull-Rom spline through public station coordinates",
+    "station_anchor_source": "public station coordinate table; exact OSM physical track geometry not fetched in this runtime",
+    "sample_step_m": 25,
+    "spline_length_m": 18907.797147223853,
+    "published_line_length_difference_m": 492.20285277614676,
+    "published_line_length_difference_percent": 2.53712810709354,
+    "min_sampled_radius_m": null,
+    "samples_with_radius_below_600m": 0,
+    "rule": "This is a preview/fallback only. Replace with OSM relation 1462012 railway=subway ways or project alignment before high-fidelity generation."
+  },
+  "vertical_model": {
+    "z_ugr_resolved": false,
+    "station_depths_available": true,
+    "station_depth_semantics": "published depth below local surface; datum is not reliably UGR for every source",
+    "surface_dem_loaded": false,
+    "rule": "Do not interpolate published depths as absolute tunnel Z. First sample a DEM/survey in a known vertical datum, then convert only depths with known datum and solve the constrained vertical profile."
+  },
+  "expected_upgrade_path": [
+    "fetch current OSM relation 1462012 physical railway=subway member ways",
+    "split inner/outer track if both ways are available",
+    "sample FABDEM/Copernicus or project LandXML surface",
+    "resolve vertical datum",
+    "attach station/profile Z anchors",
+    "solve grade and vertical curves",
+    "export alignment_3d.json to Blender"
+  ],
+  "warnings": [
+    "Station coordinates are not guaranteed to be platform-axis or tunnel-axis survey coordinates.",
+    "Spline is not an as-built track centerline.",
+    "Published station depth is retained as an anchor attribute only, not used as z_ugr.",
+    "Current OSM underground geometry may itself be approximate."
+  ]
+}

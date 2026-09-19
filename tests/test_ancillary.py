@@ -72,6 +72,7 @@ def test_reference_config_matches_table4_reference_values():
     assert math.isclose(cfg.rail_width_m, 0.175)
     assert math.isclose(cfg.rail_spacing_m, 1.5)
     assert len(cfg.tubes) == 6
+    assert {tube.kind.value for tube in cfg.tubes} == {"pipe", "cable", "power_track"}
     assert all(0.005 * r <= tube.radius_m <= 0.05 * r for tube in cfg.tubes)
 
 

@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.2",
+  "schema_version": "0.3",
   "units": "m",
   "coordinate_system": {
     "x": "lateral from track/gauge axis, positive left by project convention",
@@ -49,36 +49,94 @@
       "confidence": "A"
     },
     "O_m_upper_straight": {
-      "type": "symmetric_polyline",
-      "points_right": [
-        [
+      "type": "named_symmetric_reference_points",
+      "exact_polyline": null,
+      "named_points_right": {
+        "v": [
           1.48,
           0.55
         ],
-        [
+        "g": [
+          1.48,
+          0.74
+        ],
+        "d": [
           1.62,
           3.28
         ],
-        [
+        "e": [
           1.325,
           3.625
         ],
-        [
+        "zh": [
           1.005,
           3.745
         ],
-        [
+        "z": [
           0.355,
           3.78
-        ],
-        [
-          0,
-          3.78
         ]
-      ],
-      "note": "Transcribed principal coordinates from GOST 23961-2024 Fig. 6. Re-verify local point ordering and the 740 mm lower-side auxiliary line before using this polygon as a legally exact CAD substitute.",
+      },
+      "center_top_reference_z": 3.78,
+      "note": "Dimensions transcribed directly from GOST 23961-2024 Fig.6. Named points/dimensions are exact; full ordered edge topology remains null until CAD reconstruction is solved from the figure.",
       "source": "GOST_23961_2024_fig_6",
-      "confidence": "A_for_dimensions_B_for_polyline_transcription"
+      "confidence": "A_dimensions"
+    },
+    "O_m_lower_straight": {
+      "type": "dimensioned_figure_pending_vector_topology",
+      "exact_polyline": null,
+      "contact_rail_side_horizontal_callouts_m": [
+        1.66,
+        1.56,
+        1.48
+      ],
+      "opposite_or_device_side_horizontal_callouts_m": [
+        1.625,
+        1.6,
+        1.57,
+        1.48,
+        1.365,
+        1.25
+      ],
+      "central_device_callouts_m": [
+        0.76,
+        0.88,
+        0.995,
+        1.015,
+        1.325
+      ],
+      "vertical_callouts_m": [
+        0.55,
+        0.4,
+        0.154,
+        0.1,
+        0.09,
+        0.08,
+        0.065,
+        0.06,
+        0.055,
+        0.05,
+        0.035,
+        0.025
+      ],
+      "note": "Raw dimension callouts from GOST Fig.7 retained without guessing point mapping. Figure contains distinct lines for contact rail, thresholds/decking, raised auto-stop, picket bracket, automatic-driving sensors, contact-rail cable connection and sleeper underside.",
+      "source": "GOST_23961_2024_fig_7",
+      "confidence": "A_callouts"
+    },
+    "C_mkd_two_track": {
+      "type": "dimensioned_circle_project_dependent",
+      "min_track_center_spacing_straight_R_ge_500": 3.4,
+      "tunnel_axis_to_UGR_reference": {
+        "R50": 2.25,
+        "R65": 2.23,
+        "applicability": "figure reference; for tunnel diameter >9.4m determine by calculation"
+      },
+      "service_platform_min_z_above_UGR": 1.1,
+      "service_platform_min_clear_width": 0.7,
+      "exact_physical_tunnel_circle": null,
+      "note": "GOST Fig.5 is a clearance envelope. Do not derive physical lining diameter from these values.",
+      "source": "GOST_23961_2024_fig_5",
+      "confidence": "A"
     }
   },
   "rules": {
@@ -113,5 +171,15 @@
         "extra": 6
       }
     ]
+  },
+  "figure_sources": {
+    "official_register": "https://protect.gost.ru/gost/details/d9e37be2-c5e8-4727-9df3-b84536ed7609",
+    "readable_pdf": "https://spbssk.ru/wp-content/uploads/2025/06/gost-23961-2024_metropoliteny-gabarity-priblizheniya-stroenij-oborudovaniya-i-podvizhnogo-sostava.pdf",
+    "figures": {
+      "C_mk": 1,
+      "C_mkd": 5,
+      "O_m_upper": 6,
+      "O_m_lower": 7
+    }
   }
 }

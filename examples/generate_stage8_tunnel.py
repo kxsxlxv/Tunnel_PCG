@@ -13,12 +13,15 @@ if str(SRC) not in sys.path:
 
 from tunnel_scanner_core import (
     AncillarySamplingPolicy,
+    AncillaryTransformPolicy,
     LabelPolicy,
+    RailSpacingConvention,
     RingConfig,
     RingRotationStrategy,
     SurfaceMeshingConfig,
     TunnelAssemblyConfig,
     build_procedural_nominal_tunnel,
+    sample_ancillary_config,
 )
 from tunnel_scanner_core.scene_io import write_scene_package_json
 
@@ -37,6 +40,16 @@ def parse_args() -> argparse.Namespace:
         "--ancillary-sampling",
         choices=[x.value for x in AncillarySamplingPolicy],
         default=AncillarySamplingPolicy.REFERENCE.value,
+    )
+    parser.add_argument(
+        "--ancillary-transform-policy",
+        choices=[x.value for x in AncillaryTransformPolicy],
+        default=AncillaryTransformPolicy.GRAVITY_STITCHED.value,
+    )
+    parser.add_argument(
+        "--rail-spacing-convention",
+        choices=[x.value for x in RailSpacingConvention],
+        default=RailSpacingConvention.TABLE4_CENTER_SPACING.value,
     )
     parser.add_argument(
         "--rotation-strategy",
@@ -66,12 +79,20 @@ def main() -> None:
         vertical_wavelength_m=args.vertical_wavelength_m,
         ring_rotation_strategy=RingRotationStrategy(args.rotation_strategy),
     )
+    ancillary_cfg = sample_ancillary_config(
+        ring_cfg.inner_radius_m,
+        seed=args.seed,
+        policy=AncillarySamplingPolicy(args.ancillary_sampling),
+        transform_policy=AncillaryTransformPolicy(args.ancillary_transform_policy),
+        rail_spacing_convention=RailSpacingConvention(args.rail_spacing_convention),
+    )
     build = build_procedural_nominal_tunnel(
         ring_config=ring_cfg,
         assembly_config=assembly_cfg,
         surface_meshing=SurfaceMeshingConfig(max_sagitta_m=args.sagitta_mm / 1000.0),
         include_bolts=not args.no_bolts,
         include_ancillary=True,
+        ancillary_config=ancillary_cfg,
         ancillary_sampling_policy=AncillarySamplingPolicy(args.ancillary_sampling),
         label_policy=LabelPolicy(args.label_policy),
         seed=args.seed,
@@ -101,6 +122,8 @@ def main() -> None:
         "chainageLengthM": build.assembly.length_by_chainage_m,
         "labelPolicy": args.label_policy,
         "ancillarySampling": args.ancillary_sampling,
+        "ancillaryTransformPolicy": args.ancillary_transform_policy,
+        "railSpacingConvention": args.rail_spacing_convention,
         "includeBolts": not args.no_bolts,
         "sceneObjects": len(build.scene.objects),
         "counts": counts,

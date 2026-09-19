@@ -403,6 +403,7 @@ def build_nominal_scene_package(
                     extra_properties={
                         "ancillaryCategory": mesh.category,
                         "followRingAxialRotation": False,
+                        "followSceneAlignment": True,
                         **mesh.properties,
                     },
                 )

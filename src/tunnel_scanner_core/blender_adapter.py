@@ -25,6 +25,7 @@ class BlenderBuildResult:
     mesh_names: tuple[str, ...]
     boolean_operations_applied: int = 0
     removed_tool_names: tuple[str, ...] = ()
+    lining_cap_faces_removed: int = 0
 
 
 @dataclass(frozen=True)
@@ -240,6 +241,66 @@ def _apply_stage6_bolt_booleans(bpy, package: ScenePackage) -> tuple[int, tuple[
     return len(operations), tuple(removed)
 
 
+def _strip_internal_lining_caps_in_blender(
+    bpy,
+    package: ScenePackage,
+    *,
+    tolerance_m: float = 1e-8,
+) -> int:
+    """Post-Boolean realtime cleanup of hidden internal ring end faces."""
+    try:
+        import bmesh  # type: ignore
+    except ImportError as exc:  # pragma: no cover - Blender runtime only
+        raise RuntimeError("bmesh is required for lining cap cleanup") from exc
+
+    if "ringWidthM" not in package.metadata:
+        raise ValueError("scene metadata lacks ringWidthM for lining cap cleanup")
+    ring_width_m = float(package.metadata["ringWidthM"])
+    lining_objects = [o for o in package.objects if o.object_type == "lining_segment"]
+    if not lining_objects:
+        return 0
+    max_ring_id = max(o.ring_id for o in lining_objects)
+    removed_total = 0
+
+    for scene_object in lining_objects:
+        obj = bpy.data.objects.get(scene_object.name)
+        if obj is None:
+            raise RuntimeError(
+                f"lining object missing during cap cleanup: {scene_object.name}"
+            )
+        front_y = (scene_object.ring_id - 0.5) * ring_width_m
+        back_y = (scene_object.ring_id + 0.5) * ring_width_m
+        strip_front = scene_object.ring_id > 0
+        strip_back = scene_object.ring_id < max_ring_id
+
+        bm = bmesh.new()
+        bm.from_mesh(obj.data)
+        remove = []
+        for face in bm.faces:
+            ys = [float(vertex.co.y) for vertex in face.verts]
+            on_front = strip_front and all(
+                abs(y - front_y) <= tolerance_m for y in ys
+            )
+            on_back = strip_back and all(
+                abs(y - back_y) <= tolerance_m for y in ys
+            )
+            if on_front or on_back:
+                remove.append(face)
+
+        for face in remove:
+            bm.faces.remove(face)
+        removed = len(remove)
+        removed_total += removed
+        bm.to_mesh(obj.data)
+        bm.free()
+        obj.data.update(calc_edges=True)
+        obj["internalLongitudinalCapsStripped"] = True
+        obj["longitudinalCapFacesRemoved"] = int(removed)
+        obj["renderSurfaceOpenAtInternalRingBoundaries"] = True
+
+    return removed_total
+
+
 def build_scene_package_in_blender(
     package: ScenePackage,
     *,
@@ -248,6 +309,7 @@ def build_scene_package_in_blender(
     validate_mesh: bool = True,
     set_metric_units: bool = True,
     apply_bolt_booleans: bool = True,
+    strip_internal_lining_caps: bool = False,
 ) -> BlenderBuildResult:
     bpy = _require_bpy()
 
@@ -284,6 +346,12 @@ def build_scene_package_in_blender(
     if apply_bolt_booleans:
         boolean_count, removed_tools = _apply_stage6_bolt_booleans(bpy, package)
 
+    lining_cap_faces_removed = 0
+    if strip_internal_lining_caps:
+        lining_cap_faces_removed = _strip_internal_lining_caps_in_blender(
+            bpy, package
+        )
+
     surviving_object_names = tuple(
         name for name in object_names if bpy.data.objects.get(name) is not None
     )
@@ -298,4 +366,5 @@ def build_scene_package_in_blender(
         mesh_names=surviving_mesh_names,
         boolean_operations_applied=boolean_count,
         removed_tool_names=removed_tools,
+        lining_cap_faces_removed=lining_cap_faces_removed,
     )

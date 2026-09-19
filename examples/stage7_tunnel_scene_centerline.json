@@ -1,21 +1,21 @@
 {
-  "stage": 7,
+  "stage": "7.1",
   "seed": 5812,
   "ringCount": 13,
   "ringWidthM": 1.35,
   "points": [
     {"ringID":0,"chainageM":0.0,"translationM":[0.00704482564937132,0.0,0.1013848256296162],"rotationYDeg":40.49215592393332,"nominalRotationDeg":39.00217971750538,"angularImperfectionDeg":1.4899762064279423},
-    {"ringID":1,"chainageM":1.35,"translationM":[0.05762554853257038,1.35,0.10010157840894962],"rotationYDeg":-145.65122769626626,"nominalRotationDeg":-129.5825567747831,"angularImperfectionDeg":-16.068670921483186},
-    {"ringID":2,"chainageM":2.7,"translationM":[0.08773614269890868,2.7,0.09074409576950608],"rotationYDeg":-99.08259818510481,"nominalRotationDeg":-87.66435125479617,"angularImperfectionDeg":-11.418246930308639},
-    {"ringID":3,"chainageM":4.050000000000001,"translationM":[0.09990086835146725,4.050000000000001,0.06832122106010345],"rotationYDeg":-60.26735815841406,"nominalRotationDeg":-64.10501930358944,"angularImperfectionDeg":3.8376611451753795},
-    {"ringID":4,"chainageM":5.4,"translationM":[0.08876635768600293,5.4,0.047958355538438996],"rotationYDeg":44.376708980968836,"nominalRotationDeg":51.88956338818562,"angularImperfectionDeg":-7.512854407216785},
-    {"ringID":5,"chainageM":6.75,"translationM":[0.044290487324534104,6.75,0.02880886032684568],"rotationYDeg":8.681994948451267,"nominalRotationDeg":7.548888351906113,"angularImperfectionDeg":1.133106596545155},
-    {"ringID":6,"chainageM":8.100000000000001,"translationM":[0.001411174994156551,8.100000000000001,0.00021003952818640078],"rotationYDeg":-1.7339407308789103,"nominalRotationDeg":-1.8109099092361787,"angularImperfectionDeg":0.07696917835726833},
-    {"ringID":7,"chainageM":9.450000000000001,"translationM":[-0.05581551737604807,9.450000000000001,-0.027635905850394653],"rotationYDeg":8.508498880832082,"nominalRotationDeg":9.188858493907823,"angularImperfectionDeg":-0.6803596130757401},
-    {"ringID":8,"chainageM":10.8,"translationM":[-0.09428541038488512,10.8,-0.04983437771393364],"rotationYDeg":-42.27215638552604,"nominalRotationDeg":-42.572789562562214,"angularImperfectionDeg":0.300633177036177},
-    {"ringID":9,"chainageM":12.15,"translationM":[-0.09196306951601967,12.15,-0.08119812036064442],"rotationYDeg":-34.775600755564525,"nominalRotationDeg":-40.8213420198274,"angularImperfectionDeg":6.0457412642628725},
-    {"ringID":10,"chainageM":13.5,"translationM":[-0.08630286101011705,13.5,-0.0813786159945546],"rotationYDeg":72.0828611097993,"nominalRotationDeg":82.66809045717008,"angularImperfectionDeg":-10.585229347370788},
-    {"ringID":11,"chainageM":14.850000000000001,"translationM":[-0.05253919132950213,14.850000000000001,-0.10297077124971607],"rotationYDeg":12.053302508723032,"nominalRotationDeg":11.766762764737845,"angularImperfectionDeg":0.2865397439851882},
-    {"ringID":12,"chainageM":16.200000000000003,"translationM":[0.000993062522388504,16.200000000000003,-0.09315136853380267],"rotationYDeg":-25.32178560453295,"nominalRotationDeg":-25.934236664160935,"angularImperfectionDeg":0.6124510596279877}
+    {"ringID":1,"chainageM":1.35,"translationM":[0.02450889300384378,1.35,0.10314946434450202],"rotationYDeg":-145.65122769626626,"nominalRotationDeg":-129.5825567747831,"angularImperfectionDeg":-16.068670921483186},
+    {"ringID":2,"chainageM":2.7,"translationM":[0.034415556772763485,2.7,0.10270601490596201],"rotationYDeg":-99.08259818510481,"nominalRotationDeg":-87.66435125479617,"angularImperfectionDeg":-11.418246930308639},
+    {"ringID":3,"chainageM":4.050000000000001,"translationM":[0.04862588092400048,4.050000000000001,0.09439025297433523],"rotationYDeg":-60.26735815841406,"nominalRotationDeg":-64.10501930358944,"angularImperfectionDeg":3.8376611451753795},
+    {"ringID":4,"chainageM":5.4,"translationM":[0.06493295343662911,5.4,0.09225740912772543],"rotationYDeg":44.376708980968836,"nominalRotationDeg":51.88956338818562,"angularImperfectionDeg":-7.512854407216785},
+    {"ringID":5,"chainageM":6.75,"translationM":[0.06930159428758004,6.75,0.09406728348013811],"rotationYDeg":8.681994948451267,"nominalRotationDeg":7.548888351906113,"angularImperfectionDeg":1.133106596545155},
+    {"ringID":6,"chainageM":8.100000000000001,"translationM":[0.08651062317362573,8.100000000000001,0.08753628500917841],"rotationYDeg":-1.7339407308789103,"nominalRotationDeg":-1.8109099092361787,"angularImperfectionDeg":0.07696917835726833},
+    {"ringID":7,"chainageM":9.450000000000001,"translationM":[0.08692899795741806,9.450000000000001,0.0811302313503336],"rotationYDeg":8.508498880832082,"nominalRotationDeg":9.188858493907823,"angularImperfectionDeg":-0.6803596130757401},
+    {"ringID":8,"chainageM":10.8,"translationM":[0.09004394235037806,10.8,0.07801185244276868],"rotationYDeg":-42.27215638552604,"nominalRotationDeg":-42.572789562562214,"angularImperfectionDeg":0.300633177036177},
+    {"ringID":9,"chainageM":12.15,"translationM":[0.10794022395179281,12.15,0.061761022043345305],"rotationYDeg":-34.775600755564525,"nominalRotationDeg":-40.8213420198274,"angularImperfectionDeg":6.0457412642628725},
+    {"ringID":10,"chainageM":13.5,"translationM":[0.09951114949977463,13.5,0.07135511091625443],"rotationYDeg":72.0828611097993,"nominalRotationDeg":82.66809045717008,"angularImperfectionDeg":-10.585229347370788},
+    {"ringID":11,"chainageM":14.850000000000001,"translationM":[0.09313201382638096,14.850000000000001,0.05316019535002624],"rotationYDeg":12.053302508723032,"nominalRotationDeg":11.766762764737845,"angularImperfectionDeg":0.2865397439851882},
+    {"ringID":12,"chainageM":16.200000000000003,"translationM":[0.0903772049375149,16.200000000000003,0.05936609446232691],"rotationYDeg":-25.32178560453295,"nominalRotationDeg":-25.934236664160935,"angularImperfectionDeg":0.6124510596279877}
   ]
 }

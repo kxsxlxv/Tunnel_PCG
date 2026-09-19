@@ -1,0 +1,103 @@
+{
+  "schema_version": "0.1",
+  "research_date": "2026-09-19",
+  "horizontal_sources": [
+    {
+      "id": "GEO_OSM_BBBIKE_MOSCOW_PBF",
+      "type": "vector_network",
+      "url": "https://download.bbbike.org/osm/bbbike/Moscow/Moscow.osm.pbf",
+      "source_crs": "EPSG:4326",
+      "content": [
+        "railway=subway ways",
+        "stations",
+        "route relations"
+      ],
+      "confidence": "B/C",
+      "license": "OpenStreetMap ODbL",
+      "notes": "Best practical public XY base; underground ways can be schematic and are not survey-grade."
+    },
+    {
+      "id": "GEO_OSM_BBBIKE_MOSCOW_GPKG",
+      "type": "vector_network",
+      "url": "https://download.bbbike.org/osm/bbbike/Moscow/Moscow.osm.geopackage.zip",
+      "source_crs": "EPSG:4326",
+      "confidence": "B/C",
+      "license": "OpenStreetMap ODbL"
+    },
+    {
+      "id": "GEO_MOSCOW_OPEN_DATA",
+      "type": "official_station_line_anchors",
+      "url": "https://data.mos.ru/",
+      "confidence": "B",
+      "notes": "Portal/API structure changes; use as optional official cross-check, not single dependency."
+    }
+  ],
+  "terrain_sources": [
+    {
+      "id": "GEO_COPERNICUS_GLO30",
+      "type": "DSM",
+      "url": "https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM",
+      "horizontal_crs": "EPSG:4326",
+      "vertical_datum": "EGM2008",
+      "resolution_approx_m": 30,
+      "absolute_vertical_accuracy_90pct_m": 4,
+      "confidence": "B/C",
+      "notes": "Includes buildings/infrastructure/vegetation."
+    },
+    {
+      "id": "GEO_FABDEM_V1_2",
+      "type": "bare_earth_DTM_model",
+      "url": "https://research-information.bris.ac.uk/en/datasets/fabdem-v1-2/",
+      "horizontal_crs": "EPSG:4326",
+      "resolution_approx_m": 30,
+      "license": "CC BY-NC-SA 4.0",
+      "confidence": "B/C",
+      "notes": "Building/forest height bias removed from Copernicus GLO-30; licensing requires attention for commercial use."
+    }
+  ],
+  "engineering_surface_formats": [
+    {
+      "id": "GEO_MOSCOW_LANDXML_SURVEY",
+      "type": "project_survey",
+      "expected_formats": [
+        "LandXML",
+        "SHP",
+        "XYZ",
+        "DWG",
+        "DGN",
+        "CSV"
+      ],
+      "confidence": "A/project",
+      "reference": "https://www.mos.ru/upload/documents/files/1115/06_TrebovaniyakrezyltatamII_10.pdf"
+    }
+  ],
+  "vertical_datums": {
+    "copernicus": "EGM2008",
+    "russian_state_engineering": "Baltic Height System 1977 (BSV-77)",
+    "rule": "Do not combine absolute elevations from different vertical datums without a transformation or common-control calibration."
+  },
+  "recommended_crs_pipeline": {
+    "source": "EPSG:4326",
+    "public_metric_working": "EPSG:32637",
+    "blender": "local Cartesian metres after subtracting route/chunk origin",
+    "note": "If project survey has an engineering/local CRS, preserve it and store an explicit transform rather than forcing to UTM."
+  },
+  "source_classes": [
+    {
+      "class": "GEO_A",
+      "definition": "survey/project XY and absolute Z with known datum"
+    },
+    {
+      "class": "GEO_B",
+      "definition": "vector XY + official/project sparse Z anchors + constrained engineering interpolation"
+    },
+    {
+      "class": "GEO_C",
+      "definition": "OSM + terrain + published station/depth constraints"
+    },
+    {
+      "class": "GEO_D",
+      "definition": "schematic/visual reconstruction"
+    }
+  ]
+}

@@ -103,8 +103,8 @@ class AncillaryConfig:
         tubes = (
             TubeSpec("pipe_right_upper", TubeKind.PIPE, 60.0, 0.040 * r),
             TubeSpec("cable_right_mid", TubeKind.CABLE, 95.0, 0.010 * r),
-            TubeSpec("cable_right_lower", TubeKind.CABLE, 115.0, 0.008 * r),
-            TubeSpec("cable_left_lower", TubeKind.CABLE, 245.0, 0.008 * r),
+            TubeSpec("cable_right_lower", TubeKind.CABLE, 110.0, 0.008 * r),
+            TubeSpec("cable_left_lower", TubeKind.CABLE, 250.0, 0.008 * r),
             TubeSpec("cable_left_mid", TubeKind.CABLE, 265.0, 0.010 * r),
             TubeSpec("pipe_left_upper", TubeKind.PIPE, 300.0, 0.040 * r),
         )

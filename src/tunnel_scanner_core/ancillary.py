@@ -167,8 +167,19 @@ class AncillaryConfig:
                 f"walkway_bottom_z={walkway_bottom_z:g}, pavement_top_z={pavement_top_z:g}"
             )
         rail_top_z = pavement_top_z + self.rail_depth_m
-        half_rail_span = 0.5 * self.rail_spacing_m + 0.5 * self.rail_width_m
-        if math.hypot(half_rail_span, rail_top_z) >= r:
+        rail_center_offset = (
+            0.5 * self.rail_spacing_m
+            if self.rail_spacing_convention
+            is RailSpacingConvention.TABLE4_CENTER_SPACING
+            else self.rail_spacing_m
+        )
+        rail_outer_x = rail_center_offset + 0.5 * self.rail_width_m
+        # Check both lower and upper outer corners; the lower corner is often
+        # farther from the tunnel centre because pavement_top_z is negative.
+        if max(
+            math.hypot(rail_outer_x, pavement_top_z),
+            math.hypot(rail_outer_x, rail_top_z),
+        ) >= r:
             raise ValueError("rail prism exceeds tunnel intrados")
 
     @property

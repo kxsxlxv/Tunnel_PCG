@@ -77,6 +77,16 @@ from .bolts import (
     sample_bolt_config,
     sample_pocket_perturbation,
 )
+from .assembly import (
+    RingPose,
+    RingRotationStrategy,
+    TunnelAssembly,
+    TunnelAssemblyConfig,
+    build_multi_ring_scene_package,
+    sample_tunnel_assembly,
+    transform_point_by_ring_pose,
+    transform_scene_object_by_ring_pose,
+)
 from .deformed_mesh import (
     DeformedRingMesh,
     JointGapMesh,
@@ -166,6 +176,14 @@ __all__ = [
     "iter_bolt_meshes",
     "sample_bolt_config",
     "sample_pocket_perturbation",
+    "RingPose",
+    "RingRotationStrategy",
+    "TunnelAssembly",
+    "TunnelAssemblyConfig",
+    "build_multi_ring_scene_package",
+    "sample_tunnel_assembly",
+    "transform_point_by_ring_pose",
+    "transform_scene_object_by_ring_pose",
     "DeformationBounds",
     "KinematicIndexing",
     "KinematicStep",

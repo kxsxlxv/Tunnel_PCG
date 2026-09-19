@@ -1,179 +1,127 @@
 # Tunnel_PCG — Tunnel Scanner reimplementation
 
-Current milestone: **Stage 6 — curved segmental lining + bolt pockets/heads + Blender Boolean embedding**.
+Current milestone: **Stage 7 — multi-ring tunnel assembly**.
 
-The project reconstructs the geometry-generation side of Yang et al. (2026), *Tunnel scanner: Geometry-informed synthetic point cloud generation and transfer learning for tunnel segmentation*, while keeping every ambiguous or corrected part of the published formulation explicit.
+The repository reconstructs and extends the geometry-generation side of Yang et al. (2026), *Tunnel scanner: Geometry-informed synthetic point cloud generation and transfer learning for tunnel segmentation*.
 
-## Implemented stages
+## Implemented
 
-- **Stage 1:** six-segment K/B/A ring, angle constraints, deterministic sampling.
-- **Stage 2:** ring-wise radial dislocation/rotation and exact closure solver.
-- **Stage 3:** mapping deformation states to rigid physical segment transforms.
-- **Stage 4:** prescribed radial-joint reconstruction and provisional circumferential collar.
-- **Stage 5:** engine-neutral ScenePackage, semantic IDs, JSON boundary, Blender adapter.
-- **Stage 5.1:** adaptive cylindrical tessellation for render/LiDAR geometry; the tunnel is now genuinely circular rather than a six-sided control mesh.
-- **Stage 6:** Table-3 bolt layouts, tapered bolt pockets, truncated-cone heads, Boolean-ready cutters, and Blender cavity/head embedding.
+    Stage 1   six-segment K/B/A ring and angle constraints
+    Stage 2   ring-wise dislocation/rotation closure solver
+    Stage 3   deformation state -> rigid segment geometry
+    Stage 4   prescribed radial joints + provisional circumferential collar
+    Stage 5   engine-neutral ScenePackage + semantic IDs + Blender adapter
+    Stage 5.1 adaptive cylindrical render/LiDAR mesh
+    Stage 6   bolt pockets, heads, Blender Boolean embedding
+    Stage 7   Eq. (21) multi-ring S-curve/stagger assembly
 
-Detailed assumptions and verification are in the stage reports:
+All reconstruction assumptions and discovered formula ambiguities are documented in STAGE*_REPORT.md.
 
-```text
-STAGE1_REPORT.md
-STAGE2_REPORT.md
-STAGE3_REPORT.md
-STAGE4_REPORT.md
-STAGE5_REPORT.md
-STAGE5_1_REPORT.md
-STAGE6_REPORT.md
-```
+## Stage 7
 
-## Current geometry architecture
+A tunnel is now built from independent ring ScenePackages and placed with the paper's scene-level model:
 
-```text
-published / analytical parameters
-        |
-        v
-8-corner segment control geometry
-        |
-        +--> deformation / closure / joint constraints
-        |
-        v
-Stage-5.1 adaptive cylindrical surface
-        |
-        v
-ScenePackage + semantic metadata
-        |
-        +--> JSON
-        |
-        v
-Blender adapter
-        |
-        +--> Stage-6 pocket/head Boolean pipeline
-        |
-        v
-render / future LiDAR scanning
-```
+    x_i = A*sin(omega_x*i) + epsilon_x
+    y_i = i*L_seg
+    z_i = A*cos(omega_z*i) + epsilon_z
+    phi_i = axial ring rotation
 
-The analytical hexahedron is intentionally retained as the structural control representation. It is **not** used directly as the final visible/LiDAR-facing tunnel surface.
+Default amplitude:
 
-## Stage-6 bolt geometry
+    A = 0.1 m
 
-The implementation includes all three Table-3 placement families:
+The paper does not publish numeric omega_x/omega_z, so the implementation exposes both and marks its defaults as engineering choices.
 
-```text
-Type 1 centred:       18 assemblies / six-segment ring
-Type 2 lateral:       20 assemblies / six-segment ring
-Type 3 joint-aligned: 24 assemblies / six-segment ring
-```
+The printed N(0,0.005 m^2) axis-noise notation is treated explicitly as ambiguous; the working reconstruction uses sigma=0.005 m.
 
-The canonical Blender sample uses Type 1: three recessed bolt locations per segment.
+## Ring rotation modes
 
-Bolt heads and temporary pocket tools use `labelID=0` (clutter). The six lining segments retain labels `1..6`.
+    continuous
+    paper_constant_nominal
+    ringwise_gaussian
 
-### Important published-formula ambiguities
+ringwise_gaussian samples nominal stagger angles inside the Table-2 +/-6*theta_K bound and is the default of the Stage-7 CLI generator. The low-level assembly config defaults to continuous joints.
 
-Stage 6 does **not** silently copy several inconsistent expressions:
+## Canonical 13-ring scene
 
-- printed Eq. (20) sends the pocket apex toward the tunnel void despite defining the normal outward and calling the apex embedded;
-- Algorithm 1 adds an unscaled unit normal to a metric coordinate;
-- Algorithm 1 introduces height ratio `eta` but publishes no numeric value;
-- the pocket perturbation notation `N(0, 0.001 m^2)` conflicts with the text calling the disturbances small/bounded.
+Seed 5812:
 
-Both the diagnostic printed variants and the physically usable reconstruction are documented in `STAGE6_REPORT.md`.
+    13 rings
+    17.55 m chainage length
+    78 lining segments
+    78 radial joints
+    72 circumferential collar pieces (12 interfaces)
+    234 bolt heads
+    234 pocket cutters
+    696 pre-Boolean objects
+    468 planned Boolean operations
+
+The generated full scene JSON is about 4–5 MB and is intentionally generated locally instead of committed.
+
+## Generate a tunnel
+
+    PYTHONPATH=src python examples/generate_stage7_tunnel.py --rings 13
+
+Outputs:
+
+    examples/stage7_tunnel_scene.json
+    examples/stage7_tunnel_scene_centerline.json
+    examples/stage7_tunnel_scene_summary.json
+
+For a faster Blender smoke test:
+
+    PYTHONPATH=src python examples/generate_stage7_tunnel.py --rings 5
+
+## Blender verification
+
+    blender --background --python scripts/blender_verify_stage7.py -- \
+        examples/stage7_tunnel_scene.json \
+        --report examples/blender_stage7_runtime_report.json \
+        --save-blend examples/stage7_tunnel_scene.blend
+
+See STAGE7_BLENDER_SMOKE_TEST.md.
 
 ## Tests
 
-Current regression suite:
+    python -m pip install -e '.[test]'
+    pytest
 
-```text
-75 tests passed
-```
+Current regression result:
 
-Stage-6 stress verification performed during development:
+    92 tests passed
 
-```text
-1,000 rings
-18,000 Type-1 bolt assemblies
-100 rings with full manifold/volume checks
+Stage-7 stress verification:
 
-max pocket depth:        0.13384377 m
-lining thickness:        0.35000000 m
-max head vertex radius:  3.10746688 m
-outer lining radius:     3.35000000 m
-minimum Boolean mouth
-overlap into tunnel:     0.00406394 m
+    2,000 pose scenes
+    39,877 ring poses
+    50 full 5-ring scenes
+    13,200 SceneObjects
+    9,000 planned Boolean operations
+    10 JSON round-trips
 
-PASS
-```
+    axis-noise empirical std     0.0049953 m
+    configured sigma             0.0050000 m
+    max Y-spacing error          0.0 m
+    max rigid transform error    1.78e-15 m
+    max nominal stagger          134.902 deg
+    Table-2 nominal bound        135.000 deg
 
-An independent `trimesh 4.11.1` check validated 600 pocket/head/cutter meshes as watertight, winding-consistent, and positive-volume.
+    PASS
 
-## Install and test
+An independent trimesh 4.11.1 check also reports all 696 mesh objects in the canonical pre-Boolean 13-ring scene as watertight, winding-consistent, and positive-volume.
 
-```bash
-python -m pip install -e '.[test]'
-pytest
-```
+## Important Stage-7 fix
 
-## Generate the Stage-6 Blender scene
+Stage 6 used bolt indices local to one ring. Multi-ring assembly revealed that Boolean planning must identify a bolt by:
 
-```bash
-PYTHONPATH=src python examples/generate_stage6_scene.py
-```
+    (ringID, boltIndex)
 
-This produces:
+rather than boltIndex alone. This is fixed in the Blender adapter and regression-tested.
 
-```text
-examples/stage6_nominal_bolts_scene.json
-examples/stage6_scene_summary.json
-```
+## Current validation gate
 
-The JSON contains 54 pre-Boolean objects:
+The one-ring Stage-6 Boolean geometry has already passed a real Blender visual test. Before adding track/walkway/services, run the Stage-7 five-ring verifier to confirm that multi-ring Boolean identity and scene hierarchy behave correctly in the user's Blender version.
 
-```text
-6 lining segments
-6 radial joints
-6 circumferential collar pieces
-18 pocket cutters
-18 bolt heads
-```
+## Next stage
 
-## Run the real Blender verifier
-
-```bash
-blender --background --python scripts/blender_verify_stage6.py -- \
-    examples/stage6_nominal_bolts_scene.json \
-    --report examples/blender_stage6_runtime_report.json \
-    --save-blend examples/stage6_nominal_bolts_scene.blend
-```
-
-Expected invariants:
-
-```text
-36 Boolean operations applied
-18 pocket cutters removed
-18 bolt heads retained
-all 6 lining segments changed topology
-all 6 post-Boolean segment meshes manifold
-positive signed volume
-result: PASS
-```
-
-See `STAGE6_BLENDER_SMOKE_TEST.md` for visual inspection and debug-mode instructions.
-
-## Inspect cutters without applying Booleans
-
-```bash
-blender --python scripts/blender_import_scene.py -- \
-    examples/stage6_nominal_bolts_scene.json \
-    --no-bolt-booleans
-```
-
-## Current limitation
-
-The physical cavity is cut correctly and the head is retained as clutter. The cavity wall itself currently remains part of the lining segment object and therefore inherits the segment label.
-
-The paper describes an additional Boolean reconstruction intended to expose the pocket surface as a separately labelable clutter object, but the exact unpublished object sequence is not sufficiently specified to reproduce that semantics without risking a cavity-filling/occlusion artefact. That semantic refinement is intentionally deferred until the current real-Blender Boolean geometry is verified.
-
-## Next validation gate
-
-Before starting ancillary structures or multi-ring assembly, run the Stage-6 Blender verifier. The engine-neutral bolt geometry is tested; the remaining uncertainty is Blender Boolean runtime behaviour.
+After that smoke test, Stage 8 should add the ancillary infrastructure layer from the paper: pavement/walkway, rails, and tube-like services, driven by the Stage-7 longitudinal alignment rather than modeled as isolated primitives.

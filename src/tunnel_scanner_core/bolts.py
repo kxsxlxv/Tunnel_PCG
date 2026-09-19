@@ -231,6 +231,7 @@ class BoltSet:
     config: BoltConfig
     layout: BoltLayoutType
     assemblies: tuple[BoltAssembly, ...]
+    perturbation_config: BoltPerturbationConfig
     pocket_mode: BoltPocketMode
 
 
@@ -625,7 +626,13 @@ def build_bolt_set(
         )
         head = build_bolt_head(config, pocket)
         assemblies.append(BoltAssembly(placement, pocket, head))
-    return BoltSet(config, layout, tuple(assemblies), pocket_mode)
+    return BoltSet(
+        config=config,
+        layout=layout,
+        assemblies=tuple(assemblies),
+        perturbation_config=perturbation_config,
+        pocket_mode=pocket_mode,
+    )
 
 
 def iter_meshes(bolts: BoltSet) -> Iterable[tuple[str, tuple[Vec3, ...], tuple[Face, ...]]]:

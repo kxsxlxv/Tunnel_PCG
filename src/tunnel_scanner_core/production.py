@@ -842,7 +842,10 @@ def plan_chunks(
     L = assembly.config.ring_width_m
 
     if policy is ChunkBoundaryPolicy.RING_ALIGNED:
-        rings_per_chunk = max(1, int(round(chunk_length_m / L)))
+        rings_per_chunk = max(
+            1,
+            int(math.floor(chunk_length_m / L + 0.5)),
+        )
         chunks: list[ChunkDescriptor] = []
         first_ring = 0
         cid = 0

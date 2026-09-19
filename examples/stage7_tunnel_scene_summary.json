@@ -1,5 +1,5 @@
 {
-  "stage": 7,
+  "stage": "7.1",
   "seed": 5812,
   "ringCount": 13,
   "ringWidthM": 1.35,
@@ -12,10 +12,21 @@
   "circumferentialJointPieces": 72,
   "boltHeads": 234,
   "boltPocketCutters": 234,
-  "omegaXRadPerRing": 0.5235987755982988,
-  "omegaZRadPerRing": 0.2617993877991494,
+  "frequencyParameterization": "physical_wavelength_by_chainage",
+  "lateralWavelengthM": 50.0,
+  "verticalWavelengthM": 100.0,
+  "omegaXRadPerM": 0.12566370614359174,
+  "omegaZRadPerM": 0.06283185307179587,
+  "omegaXRadPerRing": 0.16964600329384885,
+  "omegaZRadPerRing": 0.08482300164692443,
+  "deterministicAdjacentStepBoundXM": 0.01694426442841469,
+  "deterministicAdjacentStepBoundZM": 0.008479757491116822,
+  "deterministicAdjacentTransverseStepBoundM": 0.018947674900319334,
   "axisNoiseSigmaM": 0.005,
-  "lateralRecenterM": [0.0, 0.0],
+  "lateralRecenterM": [
+    0.0,
+    0.0
+  ],
   "sceneJson": "stage7_tunnel_scene.json",
   "centrelineJson": "stage7_tunnel_scene_centerline.json"
 }

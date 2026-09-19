@@ -26,6 +26,7 @@ class BlenderBuildResult:
     boolean_operations_applied: int = 0
     removed_tool_names: tuple[str, ...] = ()
     lining_cap_faces_removed: int = 0
+    lining_interface_faces_removed: int = 0
 
 
 @dataclass(frozen=True)
@@ -307,6 +308,73 @@ def _strip_internal_lining_caps_in_blender(
     return removed_total
 
 
+def _strip_coincident_lining_interfaces_in_blender(
+    bpy,
+    package: ScenePackage,
+    *,
+    tolerance_m: float = 1e-8,
+) -> int:
+    """Remove exact shared radial faces between separate lining segment objects."""
+    try:
+        import bmesh  # type: ignore
+    except ImportError as exc:  # pragma: no cover - Blender runtime only
+        raise RuntimeError("bmesh is required for lining interface cleanup") from exc
+
+    lining_names = [
+        scene_object.name
+        for scene_object in package.objects
+        if scene_object.object_type == "lining_segment"
+    ]
+    occurrences = {}
+    for name in lining_names:
+        obj = bpy.data.objects.get(name)
+        if obj is None:
+            raise RuntimeError(f"lining object missing during interface cleanup: {name}")
+        for polygon in obj.data.polygons:
+            coords = []
+            for vertex_index in polygon.vertices:
+                co = obj.data.vertices[vertex_index].co
+                coords.append(
+                    (
+                        round(float(co.x) / tolerance_m),
+                        round(float(co.y) / tolerance_m),
+                        round(float(co.z) / tolerance_m),
+                    )
+                )
+            signature = tuple(sorted(coords))
+            occurrences.setdefault(signature, []).append((name, int(polygon.index)))
+
+    remove_by_object = {}
+    for items in occurrences.values():
+        object_names = {name for name, _ in items}
+        if len(items) > 1 and len(object_names) > 1:
+            for name, face_index in items:
+                remove_by_object.setdefault(name, set()).add(face_index)
+
+    removed_total = 0
+    for name, face_indices in remove_by_object.items():
+        obj = bpy.data.objects.get(name)
+        bm = bmesh.new()
+        bm.from_mesh(obj.data)
+        bm.faces.ensure_lookup_table()
+        remove = [
+            bm.faces[index]
+            for index in sorted(face_indices)
+            if index < len(bm.faces)
+        ]
+        for face in remove:
+            bm.faces.remove(face)
+        removed_total += len(remove)
+        bm.to_mesh(obj.data)
+        bm.free()
+        obj.data.update(calc_edges=True)
+        obj["coincidentSegmentInterfaceFacesStripped"] = True
+        obj["coincidentSegmentInterfaceFacesRemoved"] = int(len(remove))
+        obj["renderSurfaceOpenAtSegmentInterfaces"] = True
+
+    return removed_total
+
+
 def build_scene_package_in_blender(
     package: ScenePackage,
     *,
@@ -316,6 +384,7 @@ def build_scene_package_in_blender(
     set_metric_units: bool = True,
     apply_bolt_booleans: bool = True,
     strip_internal_lining_caps: bool = False,
+    strip_coincident_lining_interfaces: bool = False,
 ) -> BlenderBuildResult:
     bpy = _require_bpy()
 
@@ -358,6 +427,12 @@ def build_scene_package_in_blender(
             bpy, package
         )
 
+    lining_interface_faces_removed = 0
+    if strip_coincident_lining_interfaces:
+        lining_interface_faces_removed = (
+            _strip_coincident_lining_interfaces_in_blender(bpy, package)
+        )
+
     surviving_object_names = tuple(
         name for name in object_names if bpy.data.objects.get(name) is not None
     )
@@ -373,4 +448,5 @@ def build_scene_package_in_blender(
         boolean_operations_applied=boolean_count,
         removed_tool_names=removed_tools,
         lining_cap_faces_removed=lining_cap_faces_removed,
+        lining_interface_faces_removed=lining_interface_faces_removed,
     )

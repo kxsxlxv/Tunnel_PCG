@@ -16,6 +16,7 @@ from .alignment3d import (
     interpolate_profile,
     localize,
     parallel_transport_frames,
+    closed_parallel_transport_frames,
     apply_cant,
 )
 
@@ -24,5 +25,6 @@ __all__ = [
     "gauge_for_radius", "cant_angle", "cmk", "om_upper_polygon", "nominal_contact_rail", "rule_side",
     "AlignmentVec2", "Vec3", "Frame3", "ProfileAnchor", "chainage_xy", "resample_polyline_xy",
     "project_point_to_polyline_xy", "grade_permille", "vertical_curve_tangent_length_m",
+    "closed_parallel_transport_frames",
     "station_ugr_from_depth", "interpolate_profile", "localize", "parallel_transport_frames", "apply_cant",
 ]

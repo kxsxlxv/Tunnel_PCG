@@ -1,0 +1,100 @@
+{
+  "schema_version": "0.2",
+  "units": "m",
+  "gauge_rule_current": [
+    {
+      "condition": "straight_or_R>=1200",
+      "gauge": 1.52
+    },
+    {
+      "condition": "600<R<1200",
+      "gauge": 1.524
+    },
+    {
+      "condition": "400<R<=600",
+      "gauge": 1.53
+    },
+    {
+      "condition": "125<R<=400",
+      "gauge": 1.535
+    },
+    {
+      "condition": "100<R<=125",
+      "gauge": 1.54
+    },
+    {
+      "condition": "R<=100",
+      "gauge": 1.544
+    }
+  ],
+  "rail_profiles": {
+    "R50": {
+      "height": 0.152,
+      "head_width": 0.07159,
+      "base_width": 0.132,
+      "web_thickness": 0.016,
+      "web_height": 0.083,
+      "base_edge_height": 0.0105,
+      "source": "GOST_R_51685_2022"
+    },
+    "R65": {
+      "height": 0.18,
+      "head_width": 0.07459,
+      "base_width": 0.15,
+      "web_thickness": 0.018,
+      "web_height": 0.105,
+      "base_edge_height": 0.01125,
+      "source": "GOST_R_51685_2022"
+    }
+  },
+  "support_families": {
+    "legacy_wood_full": {
+      "straight_length": 2.75,
+      "curve_length": 2.65,
+      "cross_section": [
+        0.25,
+        0.16
+      ],
+      "historic_pitch_range": [
+        0.5,
+        0.5952
+      ],
+      "source": "metro.ru/stroitelstvo_metropolitenov/524"
+    },
+    "modern_rc_elastic_boot": {
+      "type": "independent_rc_blocks_or_half_sleepers_in_elastic_boots",
+      "source": "SP_120.13330.2022_and_Moscow_Transport"
+    }
+  },
+  "contact_rail": {
+    "collection": "bottom",
+    "nominal_working_surface_z": 0.16,
+    "working_surface_z_tolerance": 0.006,
+    "axis_offset_from_nearest_running_rail_inner_head_face": 0.69,
+    "lateral_tolerance": 0.008,
+    "default_side": "left_in_direction_of_travel",
+    "tight_curve_rule": "outside_curve_for_underground_R<200m",
+    "ordinary_bracket_pitch_range": [
+      4.5,
+      5.4
+    ],
+    "turnout_elastic_boot_bracket_pitch_range": [
+      2.2,
+      2.75
+    ],
+    "legacy_piece_lengths": [
+      12.5,
+      25
+    ],
+    "legacy_mass_kg_per_m": 51.79,
+    "air_gap": {
+      "main_accepting_ramp_ratio": "1:30",
+      "main_releasing_ramp_ratio": "1:25",
+      "station_connecting_ratio": "1:25",
+      "max_crossed_metal_gap": 10,
+      "min_non_crossed_metal_gap": 14,
+      "min_rail_with_end_ramps": 18.7,
+      "constrained_min_rail_with_end_ramps": 12.5
+    }
+  }
+}

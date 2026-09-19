@@ -70,6 +70,7 @@ def _copy_scene_object_with_stable_identity(
         {
             "persistentKey": key,
             "persistentInstanceID": stable_instance_id(key),
+            "tunnelInstanceID": stable_instance_id(f"{namespace}/tunnel"),
             "identityScope": "physical_ring_object",
             "sourceInstanceIDStage8": int(obj.instance_id),
         }
@@ -611,6 +612,8 @@ def scene_object_from_continuous_asset(
         **dict(spec.properties),
         "persistentKey": spec.persistent_key,
         "persistentInstanceID": spec.instance_id,
+        "tunnelInstanceID": stable_instance_id(f"{namespace}/tunnel"),
+        "infrastructureID": spec.instance_id,
         "identityScope": "continuous_infrastructure_asset",
         "sourceRingScope": "global",
         "productionCrossSectionVertices": mesh.cross_section_vertices,
@@ -828,6 +831,7 @@ def build_production_scene(
             "sourceStage": 9,
             "productionGeometry": {
                 "namespace": config.namespace,
+                "tunnelInstanceID": stable_instance_id(f"{config.namespace}/tunnel"),
                 "globalCoordinates": True,
                 "coordinatePrecisionIntent": "double/global; no mandatory rebasing",
                 "ringAncillaryRemoved": not config.keep_stage8_ring_ancillary,
@@ -1108,6 +1112,7 @@ def build_chunk_scene_packages(
                         "chunkEndChainageM": chunk.end_chainage_m,
                         "chunkPieceKey": piece_key,
                         "sourceInstanceID": spec.instance_id,
+                        "sourceInfrastructureID": spec.instance_id,
                         "sourcePersistentKey": spec.persistent_key,
                         "representativeRingID": representative_ring_id,
                         "identityScope": "technical_chunk_piece",

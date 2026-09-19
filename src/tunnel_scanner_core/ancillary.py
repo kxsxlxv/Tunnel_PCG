@@ -43,6 +43,13 @@ class AncillarySamplingPolicy(str, Enum):
     PUBLISHED_UNIFORM = "published_uniform"
 
 
+class RailSpacingConvention(str, Enum):
+    """Resolve a wording conflict between Section 2.4 prose and Table 4."""
+
+    TABLE4_CENTER_SPACING = "table4_center_spacing"
+    PROSE_OFFSET_FROM_MIDLINE = "prose_offset_from_midline"
+
+
 @dataclass(frozen=True)
 class TubeSpec:
     name: str
@@ -69,6 +76,7 @@ class AncillaryConfig:
     rail_depth_m: float
     rail_width_m: float
     rail_spacing_m: float
+    rail_spacing_convention: RailSpacingConvention
     tubes: tuple[TubeSpec, ...]
     tube_circle_vertices: int = 12
     pavement_arc_max_sagitta_m: float = 0.01
@@ -120,6 +128,7 @@ class AncillaryConfig:
             rail_depth_m=0.175,
             rail_width_m=0.175,
             rail_spacing_m=1.5,
+            rail_spacing_convention=RailSpacingConvention.TABLE4_CENTER_SPACING,
             tubes=tubes,
         )
 
@@ -174,9 +183,11 @@ class AncillaryConfig:
                 "h_walk interpreted as vertical height above tunnel invert; top surface "
                 "is z=-r+h_walk and depth extends downward"
             ),
-            "railSpacingConvention": (
-                "Table 4 describes l_rail as spacing between rails; centres are placed "
-                "at x=+/-l_rail/2"
+            "railSpacingConvention": self.rail_spacing_convention.value,
+            "railSpacingAmbiguity": (
+                "Table 4 defines l_rail as spacing between rails, while Section 2.4 prose "
+                "says rails are symmetrically offset from the midline by l_rail. "
+                "Stage-8 production default follows the Table-4 centre-to-centre reading."
             ),
             "tubePlacementStatus": (
                 "paper states predefined angular positions but publishes neither count "
@@ -456,11 +467,15 @@ def build_ancillary_set(
         _pavement_mesh(r, length_m, cfg),
         _walkway_mesh(r, length_m, cfg),
     ]
-    half_spacing = 0.5 * cfg.rail_spacing_m
+    rail_center_offset = (
+        0.5 * cfg.rail_spacing_m
+        if cfg.rail_spacing_convention is RailSpacingConvention.TABLE4_CENTER_SPACING
+        else cfg.rail_spacing_m
+    )
     meshes.extend(
         (
-            _rail_mesh(r, length_m, cfg, rail_index=0, center_x=-half_spacing),
-            _rail_mesh(r, length_m, cfg, rail_index=1, center_x=+half_spacing),
+            _rail_mesh(r, length_m, cfg, rail_index=0, center_x=-rail_center_offset),
+            _rail_mesh(r, length_m, cfg, rail_index=1, center_x=+rail_center_offset),
         )
     )
     meshes.extend(_tube_mesh(r, length_m, cfg, tube) for tube in cfg.tubes)
@@ -508,6 +523,7 @@ def sample_ancillary_config(
             rail_depth_m=float(rng.uniform(0.10, 0.50)),
             rail_width_m=float(rng.uniform(0.10, 0.50)),
             rail_spacing_m=float(rng.uniform(1.0, 2.0)),
+            rail_spacing_convention=RailSpacingConvention.TABLE4_CENTER_SPACING,
             tubes=tube_specs,
         )
         try:

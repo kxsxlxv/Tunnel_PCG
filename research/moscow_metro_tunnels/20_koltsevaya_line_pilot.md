@@ -151,3 +151,45 @@ Only after that should a grade/vertical-curve solver generate the tunnel profile
 It deliberately does **not** generate tunnel geometry or fake vertical relief.
 
 Once a resolved `alignment_3d.json` exists, the existing Stage-5 `parallel_transport_frames()` path is the correct input for rings/rails/third rail.
+
+
+## Continuation: exact OSM and closed-loop 3D
+
+The pilot now contains two exact-XY acquisition routes:
+
+- full Moscow PBF -> `tools_extract_relation.py`;
+- direct OSM API `relation/{id}/full` -> `tools_fetch_relation_full.py`.
+
+The direct API fetcher is nested-relation aware. If relation 1462012 resolves to a route master / parent relation, child route relations are downloaded and emitted separately. Opposite directions or route variants are never merged automatically.
+
+Core reference modules:
+- `osm_relation.py` preserves member order, role, way ID and all node IDs;
+- `osm_track_stitch.py` connects only physical `railway=subway` ways by shared OSM endpoint nodes;
+- graph branches (switches/crossovers) are rejected for explicit topology resolution.
+
+Synthetic QA:
+- OSM relation parser: pass;
+- OSM track stitching: 4/4 behavior tests pass.
+
+For 3D ring closure, `closed_parallel_transport_frames()` was added to `alignment3d.py`. It measures closed-curve parallel-transport holonomy and distributes inverse roll along 3D chainage, so the final local frame closes onto the first frame. Alignment QA is now 8/8 tests.
+
+The example also has:
+- `vertical_constraints.json`;
+- `VERTICAL_PROFILE_NOTES.md`;
+- `ALIGNMENT_3D_CONTRACT.md`;
+- `blender_alignment3d_import.py`.
+
+The Blender importer refuses unresolved `z_ugr_m`, verifies seam closure and only then builds the diagnostic 3D alignment/frames.
+
+## Current Line-5 vertical evidence
+
+Official Moscow documentation confirms a 2024 Mosinzhproekt volume containing:
+- plan 1:2000;
+- plan 1:500;
+- longitudinal profile 1:2000 / 1:200.
+
+The same published evidence lists a 2022 Mosgorgeotrest engineering-geodetic survey for the Dostoevskaya/Suvorovskaya zone.
+
+A 2026 construction statement confirms that the existing Line-5 tunnels in the reserved future-station zone have zero grade and lie at a construction depth greater than 38 m.
+
+These are stronger than interpolating generic station depths, so they are encoded separately as project/local profile constraints with unresolved exact chainage limits.

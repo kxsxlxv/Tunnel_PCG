@@ -662,6 +662,7 @@ class ProductionConfig:
     namespace: str = "default"
     rail_profile: RailProfile | None = None
     keep_stage8_ring_ancillary: bool = False
+    keep_prescribed_outer_joint_solids: bool = False
     stable_reidentify_ring_objects: bool = True
 
     def __post_init__(self) -> None:
@@ -706,6 +707,15 @@ def build_production_scene(
             and obj.object_type.startswith("ancillary_")
         ):
             continue
+        if (
+            not config.keep_prescribed_outer_joint_solids
+            and obj.object_type
+            in {
+                "prescribed_radial_joint",
+                "prescribed_circumferential_joint",
+            }
+        ):
+            continue
         objects.append(
             _copy_scene_object_with_stable_identity(obj, namespace=config.namespace)
             if config.stable_reidentify_ring_objects
@@ -730,6 +740,14 @@ def build_production_scene(
                 "globalCoordinates": True,
                 "coordinatePrecisionIntent": "double/global; no mandatory rebasing",
                 "ringAncillaryRemoved": not config.keep_stage8_ring_ancillary,
+                "prescribedOuterJointSolidsRemoved": (
+                    not config.keep_prescribed_outer_joint_solids
+                ),
+                "prescribedOuterJointReason": (
+                    "Stage-4 literal joint ribs/collars are extrados-only reconstruction "
+                    "solids; production interior geometry keeps segment boundaries but "
+                    "omits hidden outer solids by default"
+                ),
                 "continuousInfrastructureAssets": len(specs),
                 "internalAncillaryCaps": 0,
                 "railProfile": (
@@ -1177,6 +1195,128 @@ def strip_internal_lining_cap_faces(
         label_policy=scene.label_policy,
         objects=tuple(objects),
         metadata=metadata,
+    )
+
+
+def strip_exact_coincident_lining_interface_faces(
+    scene: ScenePackage,
+    *,
+    tolerance_m: float = 1e-9,
+    require_boolean_tools_absent: bool = True,
+) -> ScenePackage:
+    """Remove exact duplicate faces shared by separate lining segment objects.
+
+    In the nominal ring representation neighbouring segment solids each own the
+    same radial interface face. Closed solids are useful during Boolean authoring,
+    but both copies are unnecessary in the final realtime render surface.
+    """
+    if require_boolean_tools_absent and scene.objects_of_type("bolt_pocket_cutter"):
+        raise ValueError(
+            "coincident lining interface cleanup must run after bolt cutters are baked/removed"
+        )
+    if not math.isfinite(tolerance_m) or tolerance_m <= 0.0:
+        raise ValueError("tolerance_m must be finite and positive")
+
+    lining = scene.objects_of_type("lining_segment")
+    if not lining:
+        return scene
+
+    occurrences: dict[
+        tuple[tuple[int, int, int], ...],
+        list[tuple[str, int]],
+    ] = {}
+    for obj in lining:
+        for face_index, face in enumerate(obj.faces):
+            signature = tuple(
+                sorted(
+                    _quantized_vertex(obj.vertices[index], tolerance_m)
+                    for index in face
+                )
+            )
+            occurrences.setdefault(signature, []).append((obj.name, face_index))
+
+    remove_by_object: dict[str, set[int]] = {}
+    duplicate_groups = 0
+    for items in occurrences.values():
+        object_names = {name for name, _ in items}
+        if len(items) > 1 and len(object_names) > 1:
+            duplicate_groups += 1
+            for name, face_index in items:
+                remove_by_object.setdefault(name, set()).add(face_index)
+
+    removed_total = sum(len(indices) for indices in remove_by_object.values())
+    objects: list[SceneObject] = []
+    for obj in scene.objects:
+        remove = remove_by_object.get(obj.name)
+        if not remove:
+            objects.append(obj)
+            continue
+        props = dict(obj.extra_properties)
+        props.update(
+            {
+                "coincidentSegmentInterfaceFacesStripped": True,
+                "coincidentSegmentInterfaceFacesRemoved": len(remove),
+                "renderSurfaceOpenAtSegmentInterfaces": True,
+            }
+        )
+        objects.append(
+            SceneObject(
+                name=obj.name,
+                vertices=obj.vertices,
+                faces=tuple(
+                    face
+                    for face_index, face in enumerate(obj.faces)
+                    if face_index not in remove
+                ),
+                object_type=obj.object_type,
+                ring_id=obj.ring_id,
+                label_id=obj.label_id,
+                instance_id=obj.instance_id,
+                semantic_class=obj.semantic_class,
+                segment_id=obj.segment_id,
+                segment_name=obj.segment_name,
+                segment_kind=obj.segment_kind,
+                reconstruction=(
+                    f"{obj.reconstruction}+stage9_segment_interface_strip"
+                    if obj.reconstruction
+                    else "stage9_segment_interface_strip"
+                ),
+                collection_path=obj.collection_path,
+                extra_properties=props,
+            )
+        )
+
+    metadata = dict(scene.metadata)
+    metadata["productionSegmentInterfaceStrip"] = {
+        "duplicateGroupsRemoved": duplicate_groups,
+        "facesRemoved": removed_total,
+        "exactCoincidenceToleranceM": tolerance_m,
+        "requiresBooleanBakeFirst": True,
+    }
+    return ScenePackage(
+        name=scene.name,
+        mode=scene.mode,
+        label_policy=scene.label_policy,
+        objects=tuple(objects),
+        metadata=metadata,
+    )
+
+
+def finalize_production_render_scene(
+    scene: ScenePackage,
+    *,
+    ring_width_m: float | None = None,
+    tolerance_m: float = 1e-9,
+) -> ScenePackage:
+    """Apply post-Boolean lining cleanup for realtime rendering."""
+    no_caps = strip_internal_lining_cap_faces(
+        scene,
+        ring_width_m=ring_width_m,
+        tolerance_m=tolerance_m,
+    )
+    return strip_exact_coincident_lining_interface_faces(
+        no_caps,
+        tolerance_m=tolerance_m,
     )
 
 

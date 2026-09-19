@@ -23,6 +23,17 @@ class BlenderBuildResult:
     root_collection_name: str
     object_names: tuple[str, ...]
     mesh_names: tuple[str, ...]
+    boolean_operations_applied: int = 0
+    removed_tool_names: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class BoltBooleanOperation:
+    target_name: str
+    tool_name: str
+    bolt_index: int
+    tool_type: str
+    remove_tool_after: bool
 
 
 def blender_available() -> bool:
@@ -100,6 +111,123 @@ def create_blender_object(scene_object: SceneObject, collection, *, validate_mes
     return obj
 
 
+def plan_bolt_boolean_operations(package: ScenePackage) -> tuple[BoltBooleanOperation, ...]:
+    """Build deterministic Stage-6 Boolean order without importing bpy.
+
+    Each bolt first cuts its pocket volume, then cuts the head seating volume.
+    The pocket cutter is removed afterwards; the head remains as visible clutter.
+    """
+    grouped: dict[int, dict[str, SceneObject]] = {}
+    for obj in package.objects:
+        if obj.object_type not in {"bolt_pocket_cutter", "bolt_head"}:
+            continue
+        props = obj.custom_properties
+        if "boltIndex" not in props or "booleanTarget" not in props:
+            raise ValueError(f"{obj.name}: incomplete Stage-6 Boolean metadata")
+        idx = int(props["boltIndex"])
+        slot = grouped.setdefault(idx, {})
+        if obj.object_type in slot:
+            raise ValueError(f"duplicate {obj.object_type} for boltIndex={idx}")
+        slot[obj.object_type] = obj
+
+    operations: list[BoltBooleanOperation] = []
+    for idx in sorted(grouped):
+        slot = grouped[idx]
+        if set(slot) != {"bolt_pocket_cutter", "bolt_head"}:
+            raise ValueError(f"boltIndex={idx}: expected pocket cutter + head, got {sorted(slot)}")
+        cutter = slot["bolt_pocket_cutter"]
+        head = slot["bolt_head"]
+        cutter_target = str(cutter.custom_properties["booleanTarget"])
+        head_target = str(head.custom_properties["booleanTarget"])
+        if cutter_target != head_target:
+            raise ValueError(f"boltIndex={idx}: cutter/head target mismatch")
+        operations.extend(
+            (
+                BoltBooleanOperation(
+                    target_name=cutter_target,
+                    tool_name=cutter.name,
+                    bolt_index=idx,
+                    tool_type="bolt_pocket_cutter",
+                    remove_tool_after=True,
+                ),
+                BoltBooleanOperation(
+                    target_name=head_target,
+                    tool_name=head.name,
+                    bolt_index=idx,
+                    tool_type="bolt_head",
+                    remove_tool_after=False,
+                ),
+            )
+        )
+    return tuple(operations)
+
+
+def _apply_boolean_difference(bpy, target, tool, *, modifier_name: str) -> None:
+    modifier = target.modifiers.new(name=modifier_name, type="BOOLEAN")
+    modifier.operation = "DIFFERENCE"
+    if hasattr(modifier, "solver"):
+        modifier.solver = "EXACT"
+    modifier.object = tool
+
+    try:
+        if hasattr(bpy.context, "temp_override"):
+            with bpy.context.temp_override(
+                object=target,
+                active_object=target,
+                selected_objects=[target],
+                selected_editable_objects=[target],
+            ):
+                result = bpy.ops.object.modifier_apply(modifier=modifier.name)
+        else:
+            for obj in getattr(bpy.context, "selected_objects", []):
+                obj.select_set(False)
+            target.select_set(True)
+            bpy.context.view_layer.objects.active = target
+            result = bpy.ops.object.modifier_apply(modifier=modifier.name)
+    except Exception as exc:  # pragma: no cover - requires real Blender
+        raise RuntimeError(
+            f"Boolean DIFFERENCE failed: target={target.name!r}, tool={tool.name!r}"
+        ) from exc
+
+    if result is not None and "CANCELLED" in result:
+        raise RuntimeError(
+            f"Boolean DIFFERENCE cancelled: target={target.name!r}, tool={tool.name!r}"
+        )
+    if hasattr(target.data, "validate"):
+        target.data.validate(verbose=False)
+    if hasattr(target.data, "update"):
+        target.data.update(calc_edges=True)
+
+
+def _apply_stage6_bolt_booleans(bpy, package: ScenePackage) -> tuple[int, tuple[str, ...]]:
+    operations = plan_bolt_boolean_operations(package)
+    if not operations:
+        return 0, ()
+
+    removed: list[str] = []
+    for op in operations:
+        target = bpy.data.objects.get(op.target_name)
+        tool = bpy.data.objects.get(op.tool_name)
+        if target is None:
+            raise RuntimeError(f"Boolean target missing in Blender: {op.target_name}")
+        if tool is None:
+            raise RuntimeError(f"Boolean tool missing in Blender: {op.tool_name}")
+        _apply_boolean_difference(
+            bpy,
+            target,
+            tool,
+            modifier_name=f"TS_BOLT_{op.bolt_index:03d}_{op.tool_type}",
+        )
+        if op.remove_tool_after:
+            mesh = tool.data
+            bpy.data.objects.remove(tool, do_unlink=True)
+            removed.append(op.tool_name)
+            if getattr(mesh, "users", 1) == 0:
+                bpy.data.meshes.remove(mesh)
+
+    return len(operations), tuple(removed)
+
+
 def build_scene_package_in_blender(
     package: ScenePackage,
     *,
@@ -107,6 +235,7 @@ def build_scene_package_in_blender(
     clear_existing_root: bool = True,
     validate_mesh: bool = True,
     set_metric_units: bool = True,
+    apply_bolt_booleans: bool = True,
 ) -> BlenderBuildResult:
     bpy = _require_bpy()
 
@@ -138,8 +267,23 @@ def build_scene_package_in_blender(
         object_names.append(obj.name)
         mesh_names.append(obj.data.name)
 
+    boolean_count = 0
+    removed_tools: tuple[str, ...] = ()
+    if apply_bolt_booleans:
+        boolean_count, removed_tools = _apply_stage6_bolt_booleans(bpy, package)
+
+    surviving_object_names = tuple(
+        name for name in object_names if bpy.data.objects.get(name) is not None
+    )
+    surviving_mesh_names = tuple(
+        bpy.data.objects.get(name).data.name
+        for name in surviving_object_names
+        if getattr(bpy.data.objects.get(name), "data", None) is not None
+    )
     return BlenderBuildResult(
         root_collection_name=root.name,
-        object_names=tuple(object_names),
-        mesh_names=tuple(mesh_names),
+        object_names=surviving_object_names,
+        mesh_names=surviving_mesh_names,
+        boolean_operations_applied=boolean_count,
+        removed_tool_names=removed_tools,
     )

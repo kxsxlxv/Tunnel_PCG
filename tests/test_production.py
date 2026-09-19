@@ -4,6 +4,7 @@ import numpy as np
 
 from tunnel_scanner_core import (
     AncillaryConfig,
+    ChunkBoundaryPolicy,
     LabelPolicy,
     ProductionConfig,
     RailProfile,
@@ -165,9 +166,17 @@ def test_full_production_assets_have_only_two_end_caps_each():
 
 def test_chunk_plan_is_optional_and_global_coordinates_are_preserved():
     prod = _production(12)
-    chunks = plan_chunks(prod.assembly, chunk_length_m=5.0)
+    chunks = plan_chunks(
+        prod.assembly,
+        chunk_length_m=5.0,
+        boundary_policy=ChunkBoundaryPolicy.EXACT_LENGTH,
+    )
     assert len(chunks) == math.ceil(prod.assembly.length_by_chainage_m / 5.0)
-    packages = build_chunk_scene_packages(prod, chunk_length_m=5.0)
+    packages = build_chunk_scene_packages(
+        prod,
+        chunk_length_m=5.0,
+        boundary_policy=ChunkBoundaryPolicy.EXACT_LENGTH,
+    )
 
     assert len(packages) == len(chunks)
     for package, chunk in zip(packages, chunks):
@@ -180,7 +189,11 @@ def test_chunk_plan_is_optional_and_global_coordinates_are_preserved():
 
 def test_internal_chunk_boundaries_have_no_coincident_end_caps():
     prod = _production(12)
-    packages = build_chunk_scene_packages(prod, chunk_length_m=5.0)
+    packages = build_chunk_scene_packages(
+        prod,
+        chunk_length_m=5.0,
+        boundary_policy=ChunkBoundaryPolicy.EXACT_LENGTH,
+    )
     total = prod.assembly.length_by_chainage_m
 
     for package in packages:
@@ -312,3 +325,28 @@ def test_production_hierarchy_is_deterministic_and_semantic():
         assert obj.collection_path[0:2] == ("Tunnel", "hierarchy")
         assert "persistentKey" in obj.custom_properties
         assert obj.custom_properties["persistentInstanceID"] > 0
+
+
+def test_default_chunking_keeps_complete_rings_and_ring_aligned_boundaries():
+    prod = _production(20)
+    chunks = plan_chunks(prod.assembly, chunk_length_m=5.0)
+    L = prod.assembly.config.ring_width_m
+    for chunk in chunks:
+        assert math.isclose(chunk.start_chainage_m / L, round(chunk.start_chainage_m / L), abs_tol=1e-12)
+        assert math.isclose(chunk.end_chainage_m / L, round(chunk.end_chainage_m / L), abs_tol=1e-12)
+        if chunk.ring_ids:
+            assert chunk.ring_ids == tuple(range(chunk.ring_ids[0], chunk.ring_ids[-1] + 1))
+            for ring_id in chunk.ring_ids:
+                assert chunk.start_chainage_m <= ring_id * L
+                assert (ring_id + 1) * L <= chunk.end_chainage_m + 1e-12
+
+
+def test_exact_length_chunking_remains_available_for_blender_or_export_tools():
+    prod = _production(10)
+    chunks = plan_chunks(
+        prod.assembly,
+        chunk_length_m=5.0,
+        boundary_policy=ChunkBoundaryPolicy.EXACT_LENGTH,
+    )
+    assert math.isclose(chunks[0].length_m, 5.0, abs_tol=1e-12)
+    assert not math.isclose(chunks[0].end_chainage_m / 1.35, round(chunks[0].end_chainage_m / 1.35), abs_tol=1e-12)

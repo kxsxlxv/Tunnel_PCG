@@ -402,8 +402,13 @@ def build_nominal_scene_package(
                     ),
                     extra_properties={
                         "ancillaryCategory": mesh.category,
-                        "followRingAxialRotation": False,
-                        "followSceneAlignment": True,
+                        "ancillaryTransformPolicy": ancillary.config.transform_policy.value,
+                        "followRingAxialRotation": (
+                            ancillary.config.reconstruction_metadata["followRingAxialRotation"]
+                        ),
+                        "followSceneAlignment": (
+                            ancillary.config.reconstruction_metadata["followSceneAlignment"]
+                        ),
                         **mesh.properties,
                     },
                 )
@@ -449,7 +454,9 @@ def build_nominal_scene_package(
                     "walkway": len(ancillary.meshes_of_category("walkway")),
                     "rails": len(ancillary.meshes_of_category("rail")),
                     "tubes": len(ancillary.meshes_of_category("tube")),
-                    "followRingAxialRotation": False,
+                    "transformPolicy": ancillary.config.transform_policy.value,
+                    "followRingAxialRotation": ancillary.config.reconstruction_metadata["followRingAxialRotation"],
+                    "followSceneAlignment": ancillary.config.reconstruction_metadata["followSceneAlignment"],
                     "reconstruction": ancillary.config.reconstruction_metadata,
                 }
             ),

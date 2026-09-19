@@ -15,9 +15,11 @@ from tunnel_scanner_core import (
     build_chunk_scene_packages,
     build_production_tunnel,
     build_procedural_nominal_tunnel,
+    finalize_production_render_scene,
     plan_chunks,
     production_alignment_stations,
     stable_instance_id,
+    strip_exact_coincident_lining_interface_faces,
     strip_internal_lining_cap_faces,
 )
 
@@ -461,3 +463,65 @@ def test_global_production_scene_never_requires_chunk_localization():
         not obj.custom_properties.get("coordinatesLocalizedToChunk", False)
         for obj in prod.scene.objects
     )
+
+
+def test_production_default_omits_hidden_stage4_outer_joint_solids():
+    prod = _production(4, include_bolts=False)
+    assert len(prod.scene.objects_of_type("prescribed_radial_joint")) == 0
+    assert len(prod.scene.objects_of_type("prescribed_circumferential_joint")) == 0
+    assert prod.scene.metadata["productionGeometry"]["prescribedOuterJointSolidsRemoved"] is True
+
+
+def test_production_can_keep_stage4_outer_joint_solids_for_debugging():
+    build = build_production_tunnel(
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=3,
+            ring_width_m=1.35,
+        ),
+        include_bolts=False,
+        production_config=ProductionConfig(
+            namespace="keep-joints",
+            keep_prescribed_outer_joint_solids=True,
+        ),
+        seed=5812,
+    )
+    assert len(build.scene.objects_of_type("prescribed_radial_joint")) == 18
+    assert len(build.scene.objects_of_type("prescribed_circumferential_joint")) == 12
+
+
+def test_segment_interface_cleanup_removes_six_duplicate_face_groups_per_ring():
+    prod = _production(5, include_bolts=False, axis_noise_sigma_m=0.0)
+    before = audit_exact_coincident_faces(
+        prod.scene,
+        object_filter=lambda obj: obj.object_type == "lining_segment",
+    )
+    assert before.duplicate_group_count == 30
+
+    stripped = strip_exact_coincident_lining_interface_faces(prod.scene)
+    after = audit_exact_coincident_faces(
+        stripped,
+        object_filter=lambda obj: obj.object_type == "lining_segment",
+    )
+    assert after.duplicate_group_count == 0
+    meta = stripped.metadata["productionSegmentInterfaceStrip"]
+    assert meta["duplicateGroupsRemoved"] == 30
+    assert meta["facesRemoved"] == 60
+
+
+def test_full_production_render_finalizer_reaches_zero_exact_duplicate_faces():
+    prod = _production(5, include_bolts=False, axis_noise_sigma_m=0.0)
+    finalized = finalize_production_render_scene(prod.scene)
+    audit = audit_exact_coincident_faces(finalized)
+    assert audit.duplicate_group_count == 0
+    assert finalized.metadata["productionLiningCapStrip"]["removedFaces"] > 0
+    assert finalized.metadata["productionSegmentInterfaceStrip"]["facesRemoved"] == 60
+
+
+def test_full_render_finalizer_refuses_unbaked_bolt_tools():
+    prod = _production(2, include_bolts=True)
+    try:
+        finalize_production_render_scene(prod.scene)
+    except ValueError as exc:
+        assert "after bolt cutters are baked" in str(exc)
+    else:
+        raise AssertionError("render finalization before Boolean bake must be rejected")

@@ -1,0 +1,10 @@
+{
+  "stage": 8,
+  "trimeshVersion": "5.1.0",
+  "sampledAncillaryConfigs": 250,
+  "ancillaryMeshesChecked": 2500,
+  "canonicalFiveRingObjectsChecked": 314,
+  "failureCount": 0,
+  "failures": [],
+  "result": "PASS"
+}

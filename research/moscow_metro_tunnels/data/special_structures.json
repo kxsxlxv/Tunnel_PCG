@@ -1,12 +1,14 @@
 {
-  "schema_version": "0.1",
+  "schema_version": "0.2",
   "units": "m",
   "cross_passage": {
     "current": {
       "min_clear_width": 1.5,
       "min_clear_height": 2,
       "min_door_clear_width": 1,
-      "spacing_rule": "project_and_evacuation_design"
+      "spacing_rule": "project_and_evacuation_design",
+      "two_track_contact_rail_crossing_bridge_or_steps_pitch": 200,
+      "two_track_additional_locations": "current-separation points between stations"
     },
     "historical_spacing_presets": [
       {
@@ -57,5 +59,29 @@
     "PORTAL_TRANSITION",
     "EMERGENCY_EXIT"
   ],
-  "event_override_rule": "Special structure range overrides ordinary periodic equipment placement."
+  "event_override_rule": "Special structure range overrides ordinary periodic equipment placement.",
+  "circulation_passage_current": {
+    "first": {
+      "location": "station end or <=120 m from it",
+      "free_area_m2": [
+        40,
+        50
+      ]
+    },
+    "second": {
+      "max_distance_from_first": 250,
+      "min_distance_rule": "at least future design train length",
+      "free_area_m2": [
+        20,
+        30
+      ]
+    },
+    "turnout_station_rule": "provide only on side opposite track development",
+    "omission_rule": "may be omitted with calculation justification"
+  },
+  "emergency_exit": {
+    "station_platform_end_distance_trigger_m": 3000,
+    "location": "middle part of interstation section",
+    "two_track_exception": "may be omitted with calculation and total evacuation-path width >=1.2 m"
+  }
 }

@@ -105,10 +105,10 @@ class AncillaryConfig:
         # leaving crown/invert relatively clear.
         tubes = (
             TubeSpec("pipe_right_upper", TubeKind.PIPE, 60.0, 0.040 * r),
-            TubeSpec("cable_right_mid", TubeKind.CABLE, 95.0, 0.010 * r),
+            TubeSpec("power_track_right_mid", TubeKind.POWER_TRACK, 95.0, 0.010 * r),
             TubeSpec("cable_right_lower", TubeKind.CABLE, 110.0, 0.008 * r),
             TubeSpec("cable_left_lower", TubeKind.CABLE, 250.0, 0.008 * r),
-            TubeSpec("cable_left_mid", TubeKind.CABLE, 265.0, 0.010 * r),
+            TubeSpec("power_track_left_mid", TubeKind.POWER_TRACK, 265.0, 0.010 * r),
             TubeSpec("pipe_left_upper", TubeKind.PIPE, 300.0, 0.040 * r),
         )
         return cls(
@@ -183,6 +183,7 @@ class AncillaryConfig:
                 "nor angles; Stage-8 reference layout is an explicit engineering default"
             ),
             "followRingAxialRotation": False,
+            "followSceneAlignment": True,
         }
 
 

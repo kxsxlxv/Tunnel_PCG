@@ -128,6 +128,7 @@ from .production import (
     sample_alignment_station,
     scene_object_from_continuous_asset,
     stable_instance_id,
+    strip_internal_lining_cap_faces,
 )
 from .deformed_mesh import (
     DeformedRingMesh,
@@ -262,6 +263,7 @@ __all__ = [
     "sample_alignment_station",
     "scene_object_from_continuous_asset",
     "stable_instance_id",
+    "strip_internal_lining_cap_faces",
     "DeformationBounds",
     "KinematicIndexing",
     "KinematicStep",

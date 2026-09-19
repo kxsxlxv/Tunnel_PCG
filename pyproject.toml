@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tunnel-pcg"
-version = "0.6.0"
+version = "0.7.0"
 description = "Procedural segmental tunnel geometry and LiDAR-oriented Blender scene generation"
 requires-python = ">=3.12"
 dependencies = ["numpy>=2.0"]

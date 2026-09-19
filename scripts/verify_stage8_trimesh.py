@@ -21,8 +21,26 @@ OUTPUT = ROOT / "examples" / "stage8_trimesh_verification.json"
 ANCILLARY_CONFIGS = 250
 
 
+def triangulate_faces(faces):
+    triangles = []
+    for face in faces:
+        if len(face) == 3:
+            triangles.append(tuple(face))
+            continue
+        for i in range(1, len(face) - 1):
+            triangles.append((face[0], face[i], face[i + 1]))
+    return triangles
+
+
 def check_mesh(name, vertices, faces, failures):
-    mesh = trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
+    # trimesh 5.x requires a homogeneous triangular face array. The production
+    # meshes intentionally retain n-gon end caps, so triangulate only in this
+    # independent verifier without changing the source geometry.
+    mesh = trimesh.Trimesh(
+        vertices=vertices,
+        faces=triangulate_faces(faces),
+        process=False,
+    )
     if not mesh.is_watertight:
         failures.append({"name": name, "reason": "not_watertight"})
     if not mesh.is_winding_consistent:

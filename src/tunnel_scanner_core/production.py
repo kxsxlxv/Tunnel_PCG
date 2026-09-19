@@ -1,0 +1,932 @@
+from __future__ import annotations
+
+"""Stage-9 production geometry and long-tunnel assembly.
+
+Stage 1-8 remain the reference/reconstruction baseline. Stage 9 converts that
+geometry into an engine-oriented representation:
+
+* longitudinal infrastructure is built once as continuous swept geometry rather
+  than one closed solid per ring;
+* internal coincident ancillary end caps are removed by construction;
+* rail rectangles are replaced by a configurable low-poly rail cross-section;
+* global coordinates remain global doubles -- chunking is optional export
+  partitioning, not a precision workaround;
+* persistent logical IDs are deterministic and independent of chunk size.
+"""
+
+from dataclasses import dataclass, field
+import hashlib
+import math
+from typing import Any, Callable, Mapping, Sequence
+
+from .ancillary import (
+    AncillaryConfig,
+    AncillaryMesh,
+    AncillarySamplingPolicy,
+    AncillarySet,
+    RailSpacingConvention,
+    build_ancillary_set,
+    sample_ancillary_config,
+)
+from .assembly import TunnelAssembly, TunnelAssemblyConfig
+from .config import RingConfig
+from .curved_mesh import SurfaceMeshingConfig
+from .mesh import Face, Vec3
+from .scene import LabelPolicy, SceneMode, SceneObject, ScenePackage
+from .tunnel import ProceduralTunnelBuild, build_procedural_nominal_tunnel
+
+
+# ---------------------------------------------------------------------------
+# Stable identities
+# ---------------------------------------------------------------------------
+
+
+def stable_instance_id(key: str) -> int:
+    """Deterministic positive 63-bit ID independent of Python hash randomization."""
+    if not key:
+        raise ValueError("stable ID key must not be empty")
+    digest = hashlib.blake2b(
+        key.encode("utf-8"),
+        digest_size=8,
+        person=b"TPCG-v9",
+    ).digest()
+    value = int.from_bytes(digest, "big") & ((1 << 63) - 1)
+    return value or 1
+
+
+def _persistent_ring_key(namespace: str, obj: SceneObject) -> str:
+    return f"{namespace}/ring/{obj.ring_id:08d}/{obj.name}"
+
+
+def _copy_scene_object_with_stable_identity(
+    obj: SceneObject,
+    *,
+    namespace: str,
+) -> SceneObject:
+    key = _persistent_ring_key(namespace, obj)
+    props = dict(obj.extra_properties)
+    props.update(
+        {
+            "persistentKey": key,
+            "persistentInstanceID": stable_instance_id(key),
+            "identityScope": "physical_ring_object",
+            "sourceInstanceIDStage8": int(obj.instance_id),
+        }
+    )
+    return SceneObject(
+        name=obj.name,
+        vertices=obj.vertices,
+        faces=obj.faces,
+        object_type=obj.object_type,
+        ring_id=obj.ring_id,
+        label_id=obj.label_id,
+        instance_id=stable_instance_id(key),
+        semantic_class=obj.semantic_class,
+        segment_id=obj.segment_id,
+        segment_name=obj.segment_name,
+        segment_kind=obj.segment_kind,
+        reconstruction=obj.reconstruction,
+        collection_path=(
+            "Tunnel",
+            namespace,
+            "Rings",
+            f"Ring_{obj.ring_id:08d}",
+            *obj.collection_path[1:],
+        )
+        if obj.collection_path
+        else ("Tunnel", namespace, "Rings", f"Ring_{obj.ring_id:08d}"),
+        extra_properties=props,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Generic production rail profile
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class RailProfile:
+    """Low-poly generic rail profile, intentionally not a country-specific rail."""
+
+    overall_height_m: float
+    head_width_m: float
+    head_height_m: float
+    web_thickness_m: float
+    foot_width_m: float
+    foot_height_m: float
+
+    def __post_init__(self) -> None:
+        values = (
+            self.overall_height_m,
+            self.head_width_m,
+            self.head_height_m,
+            self.web_thickness_m,
+            self.foot_width_m,
+            self.foot_height_m,
+        )
+        if any((not math.isfinite(v) or v <= 0.0) for v in values):
+            raise ValueError("rail profile dimensions must be finite and positive")
+        if self.web_thickness_m >= self.head_width_m:
+            raise ValueError("rail web must be narrower than head")
+        if self.head_width_m > self.foot_width_m:
+            raise ValueError("rail head must not exceed foot width")
+        if self.foot_height_m + self.head_height_m >= self.overall_height_m:
+            raise ValueError("rail head+foot heights leave no web")
+
+    @classmethod
+    def generic_from_ancillary(cls, config: AncillaryConfig) -> "RailProfile":
+        return cls(
+            overall_height_m=config.rail_depth_m,
+            head_width_m=0.72 * config.rail_width_m,
+            head_height_m=0.30 * config.rail_depth_m,
+            web_thickness_m=0.28 * config.rail_width_m,
+            foot_width_m=config.rail_width_m,
+            foot_height_m=0.18 * config.rail_depth_m,
+        )
+
+    def points_xz(
+        self,
+        *,
+        center_x_m: float,
+        base_z_m: float,
+    ) -> tuple[tuple[float, float], ...]:
+        """Return a symmetric 16-vertex rail polygon."""
+        fw = self.foot_width_m
+        hw = self.head_width_m
+        ww = self.web_thickness_m
+        H = self.overall_height_m
+        fh = self.foot_height_m
+        hh = self.head_height_m
+        head_bottom = H - hh
+
+        local = (
+            (-0.50 * fw, 0.00),
+            (+0.50 * fw, 0.00),
+            (+0.50 * fw, 0.55 * fh),
+            (+0.32 * fw, 1.00 * fh),
+            (+0.50 * ww, 1.15 * fh),
+            (+0.50 * ww, head_bottom - 0.12 * hh),
+            (+0.42 * hw, head_bottom),
+            (+0.50 * hw, head_bottom + 0.35 * hh),
+            (+0.44 * hw, H),
+            (-0.44 * hw, H),
+            (-0.50 * hw, head_bottom + 0.35 * hh),
+            (-0.42 * hw, head_bottom),
+            (-0.50 * ww, head_bottom - 0.12 * hh),
+            (-0.50 * ww, 1.15 * fh),
+            (-0.32 * fw, 1.00 * fh),
+            (-0.50 * fw, 0.55 * fh),
+        )
+        return tuple((center_x_m + x, base_z_m + z) for x, z in local)
+
+
+# ---------------------------------------------------------------------------
+# Longitudinal alignment
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class AlignmentStation:
+    """Production alignment sample.
+
+    chainage_m starts at the front face of the first ring. world_y_m keeps the
+    existing Stage-7 coordinate convention, where ring-0 centre is y=0.
+    """
+
+    chainage_m: float
+    world_y_m: float
+    offset_x_m: float
+    offset_z_m: float
+    source: str
+
+
+def production_alignment_stations(
+    assembly: TunnelAssembly,
+) -> tuple[AlignmentStation, ...]:
+    poses = assembly.poses
+    if not poses:
+        raise ValueError("assembly has no poses")
+    L = assembly.config.ring_width_m
+    n = len(poses)
+
+    def xz(i: int) -> tuple[float, float]:
+        p = poses[i].translation_m
+        return float(p[0]), float(p[2])
+
+    stations: list[AlignmentStation] = []
+
+    c0x, c0z = xz(0)
+    if n > 1:
+        c1x, c1z = xz(1)
+        sx = c0x - 0.5 * (c1x - c0x)
+        sz = c0z - 0.5 * (c1z - c0z)
+    else:
+        sx, sz = c0x, c0z
+    stations.append(AlignmentStation(0.0, -0.5 * L, sx, sz, "tunnel_start"))
+
+    for i in range(n):
+        cx, cz = xz(i)
+        center_chainage = (i + 0.5) * L
+        stations.append(
+            AlignmentStation(
+                center_chainage,
+                poses[i].chainage_m,
+                cx,
+                cz,
+                f"ring_{i:08d}_center",
+            )
+        )
+        if i + 1 < n:
+            nx, nz = xz(i + 1)
+            boundary_chainage = (i + 1) * L
+            stations.append(
+                AlignmentStation(
+                    boundary_chainage,
+                    poses[i].chainage_m + 0.5 * L,
+                    0.5 * (cx + nx),
+                    0.5 * (cz + nz),
+                    f"ring_{i:08d}_{i+1:08d}_boundary",
+                )
+            )
+
+    clx, clz = xz(n - 1)
+    if n > 1:
+        px, pz = xz(n - 2)
+        ex = clx + 0.5 * (clx - px)
+        ez = clz + 0.5 * (clz - pz)
+    else:
+        ex, ez = clx, clz
+    stations.append(
+        AlignmentStation(
+            n * L,
+            poses[-1].chainage_m + 0.5 * L,
+            ex,
+            ez,
+            "tunnel_end",
+        )
+    )
+
+    result = tuple(stations)
+    if any(b.chainage_m <= a.chainage_m for a, b in zip(result, result[1:])):
+        raise AssertionError("production alignment stations are not strictly increasing")
+    return result
+
+
+def sample_alignment_station(
+    stations: Sequence[AlignmentStation],
+    chainage_m: float,
+) -> AlignmentStation:
+    if not stations:
+        raise ValueError("stations must not be empty")
+    start = stations[0].chainage_m
+    end = stations[-1].chainage_m
+    if chainage_m < start - 1e-12 or chainage_m > end + 1e-12:
+        raise ValueError("chainage outside station range")
+    if math.isclose(chainage_m, start, abs_tol=1e-12):
+        return stations[0]
+    if math.isclose(chainage_m, end, abs_tol=1e-12):
+        return stations[-1]
+    for a, b in zip(stations, stations[1:]):
+        if a.chainage_m - 1e-12 <= chainage_m <= b.chainage_m + 1e-12:
+            if math.isclose(chainage_m, a.chainage_m, abs_tol=1e-12):
+                return a
+            if math.isclose(chainage_m, b.chainage_m, abs_tol=1e-12):
+                return b
+            u = (chainage_m - a.chainage_m) / (b.chainage_m - a.chainage_m)
+            return AlignmentStation(
+                chainage_m=float(chainage_m),
+                world_y_m=a.world_y_m + u * (b.world_y_m - a.world_y_m),
+                offset_x_m=a.offset_x_m + u * (b.offset_x_m - a.offset_x_m),
+                offset_z_m=a.offset_z_m + u * (b.offset_z_m - a.offset_z_m),
+                source="interpolated",
+            )
+    raise AssertionError("failed to sample production alignment")
+
+
+def clipped_alignment_stations(
+    stations: Sequence[AlignmentStation],
+    *,
+    start_chainage_m: float,
+    end_chainage_m: float,
+) -> tuple[AlignmentStation, ...]:
+    if end_chainage_m <= start_chainage_m:
+        raise ValueError("chunk end must be greater than start")
+    first = sample_alignment_station(stations, start_chainage_m)
+    last = sample_alignment_station(stations, end_chainage_m)
+    middle = tuple(
+        s
+        for s in stations
+        if start_chainage_m < s.chainage_m < end_chainage_m
+    )
+    return (first, *middle, last)
+
+
+# ---------------------------------------------------------------------------
+# Continuous asset specs and sweep meshing
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class ContinuousAssetSpec:
+    persistent_key: str
+    name: str
+    object_type: str
+    category: str
+    cross_section_xz: tuple[tuple[float, float], ...]
+    label_id: int
+    semantic_class: str
+    properties: Mapping[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if len(self.cross_section_xz) < 3:
+            raise ValueError(f"{self.name}: cross-section needs >=3 vertices")
+        if not self.persistent_key:
+            raise ValueError("continuous asset persistent key is empty")
+
+    @property
+    def instance_id(self) -> int:
+        return stable_instance_id(self.persistent_key)
+
+
+@dataclass(frozen=True)
+class SweepMesh:
+    vertices: tuple[Vec3, ...]
+    faces: tuple[Face, ...]
+    cross_section_vertices: int
+    station_count: int
+    cap_start: bool
+    cap_end: bool
+
+
+def _polygon_signed_area_xz(points: Sequence[tuple[float, float]]) -> float:
+    area = 0.0
+    n = len(points)
+    for i in range(n):
+        x0, z0 = points[i]
+        x1, z1 = points[(i + 1) % n]
+        area += x0 * z1 - x1 * z0
+    return 0.5 * area
+
+
+def _ensure_ccw_xz(
+    points: Sequence[tuple[float, float]],
+) -> tuple[tuple[float, float], ...]:
+    result = tuple((float(x), float(z)) for x, z in points)
+    area = _polygon_signed_area_xz(result)
+    if abs(area) <= 1e-15:
+        raise ValueError("degenerate production cross-section")
+    return result if area > 0.0 else tuple(reversed(result))
+
+
+def build_sweep_mesh(
+    cross_section_xz: Sequence[tuple[float, float]],
+    stations: Sequence[AlignmentStation],
+    *,
+    cap_start: bool = True,
+    cap_end: bool = True,
+) -> SweepMesh:
+    points = _ensure_ccw_xz(cross_section_xz)
+    if len(stations) < 2:
+        raise ValueError("sweep needs at least two alignment stations")
+    if any(b.chainage_m <= a.chainage_m for a, b in zip(stations, stations[1:])):
+        raise ValueError("sweep stations must be strictly increasing")
+
+    n = len(points)
+    vertices: list[Vec3] = []
+    for station in stations:
+        for x, z in points:
+            vertices.append(
+                (
+                    x + station.offset_x_m,
+                    station.world_y_m,
+                    z + station.offset_z_m,
+                )
+            )
+
+    faces: list[Face] = []
+    for isec in range(len(stations) - 1):
+        a0 = isec * n
+        b0 = (isec + 1) * n
+        for i in range(n):
+            j = (i + 1) % n
+            faces.append((a0 + i, a0 + j, b0 + j, b0 + i))
+
+    if cap_start:
+        faces.append(tuple(reversed(tuple(range(n)))))
+    if cap_end:
+        base = (len(stations) - 1) * n
+        faces.append(tuple(base + i for i in range(n)))
+
+    return SweepMesh(
+        vertices=tuple(vertices),
+        faces=tuple(faces),
+        cross_section_vertices=n,
+        station_count=len(stations),
+        cap_start=cap_start,
+        cap_end=cap_end,
+    )
+
+
+def _section_from_ancillary_mesh(
+    mesh: AncillaryMesh,
+    ancillary: AncillarySet,
+) -> tuple[tuple[float, float], ...]:
+    sections = ancillary.config.longitudinal_subdivisions + 1
+    if len(mesh.vertices) % sections != 0:
+        raise ValueError(f"{mesh.name}: cannot infer Stage-8 cross-section size")
+    n = len(mesh.vertices) // sections
+    return tuple((float(v[0]), float(v[2])) for v in mesh.vertices[:n])
+
+
+def _ancillary_semantics(
+    label_policy: LabelPolicy,
+    category: str,
+) -> tuple[int, str]:
+    if label_policy is LabelPolicy.SEG2TUNNEL_LIKE:
+        return 0, "clutter"
+    if label_policy is LabelPolicy.STSD_COARSE:
+        if category == "walkway":
+            return 2, "walkway"
+        if category == "tube":
+            return 3, "tubes"
+        return 0, "clutter"
+    raise NotImplementedError(label_policy)
+
+
+def _rail_center_offsets(config: AncillaryConfig) -> tuple[float, float]:
+    offset = (
+        0.5 * config.rail_spacing_m
+        if config.rail_spacing_convention is RailSpacingConvention.TABLE4_CENTER_SPACING
+        else config.rail_spacing_m
+    )
+    return (-offset, +offset)
+
+
+def build_continuous_asset_specs(
+    *,
+    namespace: str,
+    ancillary: AncillarySet,
+    label_policy: LabelPolicy,
+    rail_profile: RailProfile | None = None,
+) -> tuple[ContinuousAssetSpec, ...]:
+    if not namespace:
+        raise ValueError("namespace must not be empty")
+    profile = rail_profile or RailProfile.generic_from_ancillary(ancillary.config)
+    specs: list[ContinuousAssetSpec] = []
+
+    for mesh in ancillary.meshes:
+        if mesh.category == "rail":
+            continue
+        label_id, semantic = _ancillary_semantics(label_policy, mesh.category)
+        key = f"{namespace}/infrastructure/{mesh.category}/{mesh.name}"
+        specs.append(
+            ContinuousAssetSpec(
+                persistent_key=key,
+                name=f"PROD_{mesh.name.upper()}",
+                object_type=f"production_{mesh.category}",
+                category=mesh.category,
+                cross_section_xz=_section_from_ancillary_mesh(mesh, ancillary),
+                label_id=label_id,
+                semantic_class=semantic,
+                properties={
+                    **mesh.properties,
+                    "sourceStage8Name": mesh.name,
+                    "productionContinuous": True,
+                },
+            )
+        )
+
+    base_z = -ancillary.inner_radius_m + ancillary.config.pavement_height_m
+    for rail_index, center_x in enumerate(_rail_center_offsets(ancillary.config)):
+        points = profile.points_xz(center_x_m=center_x, base_z_m=base_z)
+        key = f"{namespace}/infrastructure/rail/{rail_index}"
+        label_id, semantic = _ancillary_semantics(label_policy, "rail")
+        specs.append(
+            ContinuousAssetSpec(
+                persistent_key=key,
+                name=f"PROD_RAIL_{rail_index}",
+                object_type="production_rail",
+                category="rail",
+                cross_section_xz=points,
+                label_id=label_id,
+                semantic_class=semantic,
+                properties={
+                    "railIndex": rail_index,
+                    "railCenterX": center_x,
+                    "railSpacingM": ancillary.config.rail_spacing_m,
+                    "railProfile": "stage9_generic_lowpoly_16",
+                    "railProfileVertices": len(points),
+                    "railOverallHeightM": profile.overall_height_m,
+                    "railHeadWidthM": profile.head_width_m,
+                    "railHeadHeightM": profile.head_height_m,
+                    "railWebThicknessM": profile.web_thickness_m,
+                    "railFootWidthM": profile.foot_width_m,
+                    "railFootHeightM": profile.foot_height_m,
+                    "productionContinuous": True,
+                },
+            )
+        )
+
+    return tuple(specs)
+
+
+def scene_object_from_continuous_asset(
+    spec: ContinuousAssetSpec,
+    stations: Sequence[AlignmentStation],
+    *,
+    namespace: str,
+    name_override: str | None = None,
+    instance_id_override: int | None = None,
+    cap_start: bool = True,
+    cap_end: bool = True,
+    collection_prefix: tuple[str, ...] = (),
+    extra_properties: Mapping[str, Any] | None = None,
+) -> SceneObject:
+    mesh = build_sweep_mesh(
+        spec.cross_section_xz,
+        stations,
+        cap_start=cap_start,
+        cap_end=cap_end,
+    )
+    props = {
+        **dict(spec.properties),
+        "persistentKey": spec.persistent_key,
+        "persistentInstanceID": spec.instance_id,
+        "identityScope": "continuous_infrastructure_asset",
+        "sourceRingScope": "global",
+        "productionCrossSectionVertices": mesh.cross_section_vertices,
+        "productionStationCount": mesh.station_count,
+        "capStart": cap_start,
+        "capEnd": cap_end,
+        **dict(extra_properties or {}),
+    }
+    category_folder = {
+        "rail": "Rails",
+        "tube": "Tubes",
+        "walkway": "Walkway",
+        "pavement": "Pavement",
+    }.get(spec.category, spec.category.capitalize())
+    return SceneObject(
+        name=name_override or spec.name,
+        vertices=mesh.vertices,
+        faces=mesh.faces,
+        object_type=spec.object_type,
+        ring_id=0,
+        label_id=spec.label_id,
+        instance_id=spec.instance_id if instance_id_override is None else instance_id_override,
+        semantic_class=spec.semantic_class,
+        reconstruction="stage9_continuous_alignment_sweep",
+        collection_path=(
+            *collection_prefix,
+            "Tunnel",
+            namespace,
+            "Infrastructure",
+            category_folder,
+        ),
+        extra_properties=props,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Production scene
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class ProductionConfig:
+    namespace: str = "default"
+    rail_profile: RailProfile | None = None
+    keep_stage8_ring_ancillary: bool = False
+    stable_reidentify_ring_objects: bool = True
+
+    def __post_init__(self) -> None:
+        if not self.namespace:
+            raise ValueError("production namespace must not be empty")
+
+
+@dataclass(frozen=True)
+class ProductionTunnelBuild:
+    scene: ScenePackage
+    source_build: ProceduralTunnelBuild
+    ancillary: AncillarySet
+    asset_specs: tuple[ContinuousAssetSpec, ...]
+    alignment_stations: tuple[AlignmentStation, ...]
+    config: ProductionConfig
+
+    @property
+    def assembly(self) -> TunnelAssembly:
+        return self.source_build.assembly
+
+
+def build_production_scene(
+    source_build: ProceduralTunnelBuild,
+    *,
+    ancillary: AncillarySet,
+    config: ProductionConfig | None = None,
+) -> ProductionTunnelBuild:
+    config = config or ProductionConfig()
+    source_scene = source_build.scene
+    stations = production_alignment_stations(source_build.assembly)
+    specs = build_continuous_asset_specs(
+        namespace=config.namespace,
+        ancillary=ancillary,
+        label_policy=source_scene.label_policy,
+        rail_profile=config.rail_profile,
+    )
+
+    objects: list[SceneObject] = []
+    for obj in source_scene.objects:
+        if (
+            not config.keep_stage8_ring_ancillary
+            and obj.object_type.startswith("ancillary_")
+        ):
+            continue
+        objects.append(
+            _copy_scene_object_with_stable_identity(obj, namespace=config.namespace)
+            if config.stable_reidentify_ring_objects
+            else obj
+        )
+
+    objects.extend(
+        scene_object_from_continuous_asset(
+            spec,
+            stations,
+            namespace=config.namespace,
+        )
+        for spec in specs
+    )
+
+    metadata = dict(source_scene.metadata)
+    metadata.update(
+        {
+            "sourceStage": 9,
+            "productionGeometry": {
+                "namespace": config.namespace,
+                "globalCoordinates": True,
+                "coordinatePrecisionIntent": "double/global; no mandatory rebasing",
+                "ringAncillaryRemoved": not config.keep_stage8_ring_ancillary,
+                "continuousInfrastructureAssets": len(specs),
+                "internalAncillaryCaps": 0,
+                "railProfile": (
+                    "stage9_generic_lowpoly_16"
+                    if config.rail_profile is None
+                    else "custom"
+                ),
+                "identity": (
+                    "stable 63-bit BLAKE2b IDs from persistent semantic keys; "
+                    "independent of chunk length"
+                ),
+                "chunking": "optional export partitioning, not a precision requirement",
+            },
+            "productionAlignmentStations": len(stations),
+        }
+    )
+    scene = ScenePackage(
+        name=f"tunnel_production_{config.namespace}",
+        mode=SceneMode.MULTI_RING_TUNNEL,
+        label_policy=source_scene.label_policy,
+        objects=tuple(objects),
+        metadata=metadata,
+    )
+    return ProductionTunnelBuild(
+        scene=scene,
+        source_build=source_build,
+        ancillary=ancillary,
+        asset_specs=specs,
+        alignment_stations=stations,
+        config=config,
+    )
+
+
+def build_production_tunnel(
+    *,
+    ring_config: RingConfig | None = None,
+    assembly_config: TunnelAssemblyConfig | None = None,
+    surface_meshing: SurfaceMeshingConfig | None = None,
+    include_bolts: bool = True,
+    label_policy: LabelPolicy = LabelPolicy.STSD_COARSE,
+    ancillary_config: AncillaryConfig | None = None,
+    ancillary_sampling_policy: AncillarySamplingPolicy | str = AncillarySamplingPolicy.REFERENCE,
+    production_config: ProductionConfig | None = None,
+    seed: int = 5812,
+) -> ProductionTunnelBuild:
+    ring_config = ring_config or RingConfig()
+    if assembly_config is None:
+        assembly_config = TunnelAssemblyConfig(ring_width_m=ring_config.width_m)
+    if ancillary_config is None:
+        ancillary_config = sample_ancillary_config(
+            ring_config.inner_radius_m,
+            seed=seed,
+            policy=ancillary_sampling_policy,
+        )
+    ancillary = build_ancillary_set(
+        inner_radius_m=ring_config.inner_radius_m,
+        length_m=ring_config.width_m,
+        config=ancillary_config,
+    )
+
+    source = build_procedural_nominal_tunnel(
+        ring_config=ring_config,
+        assembly_config=assembly_config,
+        surface_meshing=surface_meshing,
+        include_bolts=include_bolts,
+        include_ancillary=False,
+        label_policy=label_policy,
+        seed=seed,
+    )
+    return build_production_scene(
+        source,
+        ancillary=ancillary,
+        config=production_config,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Optional chunking
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class ChunkDescriptor:
+    chunk_id: int
+    start_chainage_m: float
+    end_chainage_m: float
+    ring_ids: tuple[int, ...]
+
+    @property
+    def length_m(self) -> float:
+        return self.end_chainage_m - self.start_chainage_m
+
+
+def plan_chunks(
+    assembly: TunnelAssembly,
+    *,
+    chunk_length_m: float,
+) -> tuple[ChunkDescriptor, ...]:
+    if not math.isfinite(chunk_length_m) or chunk_length_m <= 0.0:
+        raise ValueError("chunk_length_m must be finite and positive")
+    total = assembly.length_by_chainage_m
+    L = assembly.config.ring_width_m
+    chunks: list[ChunkDescriptor] = []
+    start = 0.0
+    cid = 0
+    while start < total - 1e-12:
+        end = min(total, start + chunk_length_m)
+        ring_ids = tuple(
+            i
+            for i in range(assembly.config.n_rings)
+            if start <= (i + 0.5) * L < end
+            or (
+                math.isclose(end, total, abs_tol=1e-12)
+                and math.isclose((i + 0.5) * L, end, abs_tol=1e-12)
+            )
+        )
+        chunks.append(ChunkDescriptor(cid, start, end, ring_ids))
+        cid += 1
+        start = end
+    return tuple(chunks)
+
+
+def _chunk_piece_key(spec: ContinuousAssetSpec, chunk: ChunkDescriptor) -> str:
+    start_um = round(chunk.start_chainage_m * 1_000_000)
+    end_um = round(chunk.end_chainage_m * 1_000_000)
+    return f"{spec.persistent_key}/chunk-piece/{start_um}-{end_um}"
+
+
+def build_chunk_scene_packages(
+    production: ProductionTunnelBuild,
+    *,
+    chunk_length_m: float,
+) -> tuple[ScenePackage, ...]:
+    chunks = plan_chunks(production.assembly, chunk_length_m=chunk_length_m)
+    total = production.assembly.length_by_chainage_m
+    source_continuous_ids = {spec.instance_id for spec in production.asset_specs}
+    ring_objects = tuple(
+        obj
+        for obj in production.scene.objects
+        if obj.instance_id not in source_continuous_ids
+    )
+
+    packages: list[ScenePackage] = []
+    for chunk in chunks:
+        ring_id_set = set(chunk.ring_ids)
+        objects: list[SceneObject] = [
+            obj for obj in ring_objects if obj.ring_id in ring_id_set
+        ]
+        clipped = clipped_alignment_stations(
+            production.alignment_stations,
+            start_chainage_m=chunk.start_chainage_m,
+            end_chainage_m=chunk.end_chainage_m,
+        )
+        for spec in production.asset_specs:
+            piece_key = _chunk_piece_key(spec, chunk)
+            objects.append(
+                scene_object_from_continuous_asset(
+                    spec,
+                    clipped,
+                    namespace=production.config.namespace,
+                    name_override=f"CH{chunk.chunk_id:05d}__{spec.name}",
+                    instance_id_override=stable_instance_id(piece_key),
+                    cap_start=math.isclose(
+                        chunk.start_chainage_m, 0.0, abs_tol=1e-12
+                    ),
+                    cap_end=math.isclose(
+                        chunk.end_chainage_m, total, abs_tol=1e-12
+                    ),
+                    collection_prefix=("Chunks", f"Chunk_{chunk.chunk_id:05d}"),
+                    extra_properties={
+                        "chunkID": chunk.chunk_id,
+                        "chunkStartChainageM": chunk.start_chainage_m,
+                        "chunkEndChainageM": chunk.end_chainage_m,
+                        "chunkPieceKey": piece_key,
+                        "sourceInstanceID": spec.instance_id,
+                        "sourcePersistentKey": spec.persistent_key,
+                        "identityScope": "technical_chunk_piece",
+                    },
+                )
+            )
+
+        packages.append(
+            ScenePackage(
+                name=f"{production.scene.name}_chunk_{chunk.chunk_id:05d}",
+                mode=SceneMode.MULTI_RING_TUNNEL,
+                label_policy=production.scene.label_policy,
+                objects=tuple(objects),
+                metadata={
+                    **dict(production.scene.metadata),
+                    "productionChunk": {
+                        "chunkID": chunk.chunk_id,
+                        "startChainageM": chunk.start_chainage_m,
+                        "endChainageM": chunk.end_chainage_m,
+                        "lengthM": chunk.length_m,
+                        "ringIDs": list(chunk.ring_ids),
+                        "globalCoordinatesPreserved": True,
+                        "internalLongitudinalCaps": False,
+                        "sourceContinuousAssetIDsStableAcrossChunking": True,
+                    },
+                },
+            )
+        )
+    return tuple(packages)
+
+
+# ---------------------------------------------------------------------------
+# Topology audit
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class DuplicateFaceGroup:
+    signature: tuple[tuple[int, int, int], ...]
+    occurrences: tuple[tuple[str, int], ...]
+
+
+@dataclass(frozen=True)
+class TopologyAudit:
+    tolerance_m: float
+    duplicate_face_groups: tuple[DuplicateFaceGroup, ...]
+
+    @property
+    def duplicate_group_count(self) -> int:
+        return len(self.duplicate_face_groups)
+
+    @property
+    def duplicate_face_occurrence_count(self) -> int:
+        return sum(len(group.occurrences) for group in self.duplicate_face_groups)
+
+
+def _quantized_vertex(v: Vec3, tolerance_m: float) -> tuple[int, int, int]:
+    return (
+        round(float(v[0]) / tolerance_m),
+        round(float(v[1]) / tolerance_m),
+        round(float(v[2]) / tolerance_m),
+    )
+
+
+def audit_exact_coincident_faces(
+    scene: ScenePackage,
+    *,
+    tolerance_m: float = 1e-9,
+    object_filter: Callable[[SceneObject], bool] | None = None,
+) -> TopologyAudit:
+    if not math.isfinite(tolerance_m) or tolerance_m <= 0.0:
+        raise ValueError("tolerance_m must be finite and positive")
+    occurrences: dict[
+        tuple[tuple[int, int, int], ...],
+        list[tuple[str, int]],
+    ] = {}
+    for obj in scene.objects:
+        if object_filter is not None and not object_filter(obj):
+            continue
+        for face_index, face in enumerate(obj.faces):
+            signature = tuple(
+                sorted(_quantized_vertex(obj.vertices[i], tolerance_m) for i in face)
+            )
+            occurrences.setdefault(signature, []).append((obj.name, face_index))
+
+    groups = tuple(
+        DuplicateFaceGroup(signature, tuple(items))
+        for signature, items in occurrences.items()
+        if len(items) > 1
+    )
+    return TopologyAudit(tolerance_m, groups)

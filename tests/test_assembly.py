@@ -243,3 +243,61 @@ def test_transform_does_not_change_face_topology_or_object_counts():
                 math.dist(dst.vertices[0], dst.vertices[-1]),
                 abs_tol=1e-12,
             )
+
+
+def test_high_level_builder_has_n_minus_one_circumferential_interfaces():
+    from tunnel_scanner_core.tunnel import build_procedural_nominal_tunnel
+
+    n = 4
+    result = build_procedural_nominal_tunnel(
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=n,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.0,
+        ),
+        include_bolts=False,
+        seed=123,
+    )
+    assert (
+        result.scene.metadata["proceduralBuild"]["expectedCircumferentialInterfaces"]
+        == n - 1
+    )
+    assert (
+        len(result.scene.objects_of_type("prescribed_circumferential_joint"))
+        == (n - 1) * 6
+    )
+    assert len(result.scene.objects) == (n - 1) * 18 + 12
+
+
+def test_high_level_builder_with_bolts_preserves_multiring_boolean_plan():
+    from tunnel_scanner_core.tunnel import build_procedural_nominal_tunnel
+
+    n = 3
+    result = build_procedural_nominal_tunnel(
+        assembly_config=TunnelAssemblyConfig(n_rings=n, ring_width_m=1.35),
+        include_bolts=True,
+        seed=5812,
+    )
+    plan = plan_bolt_boolean_operations(result.scene)
+    assert len(result.scene.objects_of_type("bolt_head")) == n * 18
+    assert len(result.scene.objects_of_type("bolt_pocket_cutter")) == n * 18
+    assert len(plan) == n * 36
+    assert {op.ring_id for op in plan} == set(range(n))
+
+
+def test_high_level_builder_is_fully_seed_deterministic():
+    from tunnel_scanner_core.tunnel import build_procedural_nominal_tunnel
+
+    cfg = TunnelAssemblyConfig(n_rings=2, ring_width_m=1.35)
+    a = build_procedural_nominal_tunnel(
+        assembly_config=cfg,
+        include_bolts=True,
+        seed=77,
+    )
+    b = build_procedural_nominal_tunnel(
+        assembly_config=cfg,
+        include_bolts=True,
+        seed=77,
+    )
+    assert a.scene == b.scene
+    assert a.assembly == b.assembly

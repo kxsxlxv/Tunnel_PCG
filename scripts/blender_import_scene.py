@@ -43,6 +43,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Create Stage-6 cutter/head objects without applying Boolean modifiers",
     )
+    parser.add_argument(
+        "--strip-internal-lining-caps",
+        action="store_true",
+        help="After Boolean bake, remove hidden internal ring end faces for realtime export",
+    )
     return parser.parse_args(_argv_after_double_dash())
 
 
@@ -54,6 +59,7 @@ def main() -> None:
         root_collection_name=args.root_collection,
         clear_existing_root=not args.keep_existing_root,
         apply_bolt_booleans=not args.no_bolt_booleans,
+        strip_internal_lining_caps=args.strip_internal_lining_caps,
     )
     print(
         f"Imported {len(result.object_names)} surviving objects into collection "
@@ -63,6 +69,10 @@ def main() -> None:
         print(
             f"Applied {result.boolean_operations_applied} Stage-6 Boolean operations; "
             f"removed {len(result.removed_tool_names)} pocket cutters."
+        )
+    if result.lining_cap_faces_removed:
+        print(
+            f"Removed {result.lining_cap_faces_removed} hidden internal lining cap faces."
         )
 
     if args.save_blend is not None:

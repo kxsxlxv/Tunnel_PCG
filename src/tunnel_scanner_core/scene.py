@@ -5,6 +5,12 @@ from enum import Enum
 from typing import Any, Iterable, Mapping
 
 from .deformed_mesh import DeformedRingMesh
+from .curved_mesh import (
+    SurfaceMeshingConfig,
+    apply_rigid_transform_to_curved_segment,
+    build_curved_circumferential_collar_mesh,
+    build_curved_ring_mesh,
+)
 from .joints import PrescribedJointSet
 from .mesh import Face, RingMesh, Vec3
 
@@ -29,15 +35,7 @@ class SceneMode(str, Enum):
 
 
 class LabelPolicy(str, Enum):
-    """Semantic ID policy written to Blender's `labelID` custom property.
-
-    SEG2TUNNEL_LIKE reproduces the labeling strategy described in Yang et al.
-    (2026): background/clutter is 0 and the six lining segment classes are 1..6.
-    The paper does not publish a K/B/A -> S1..S6 lookup, so Stage 5 assigns 1..6
-    in the generator's canonical physical order and records that convention in
-    package metadata. Joints are class 0, matching the paper's statement that
-    joints and bolts are merged into clutter for Seg2Tunnel synthesis.
-    """
+    """Semantic ID policy written to Blender's `labelID` custom property."""
 
     SEG2TUNNEL_LIKE = "seg2tunnel_like"
 
@@ -81,12 +79,6 @@ class SceneObject:
 
     @property
     def custom_properties(self) -> dict[str, Any]:
-        """Blender-safe object custom properties used by Stage 5.
-
-        The two names explicitly used by Tunnel Scanner/BlAInder (`labelID` and
-        `ringID`) are kept verbatim. The additional properties are ours and are
-        intentionally descriptive rather than benchmark-specific.
-        """
         props: dict[str, Any] = {
             "labelID": int(self.label_id),
             "ringID": int(self.ring_id),
@@ -144,21 +136,12 @@ class ScenePackage:
 
 
 def _segment_label_map(ring: RingMesh) -> dict[str, int]:
-    """Assign six fine labels in canonical generator order.
-
-    Yang et al. state that Seg2Tunnel uses classes 1..6 for lining segments but
-    do not publish the correspondence between those dataset class numbers and
-    the K/B/A names used in their procedural geometry section. Stage 5 therefore
-    records and exposes its convention instead of pretending it is author code.
-    """
     if len(ring.segments) != 6:
         raise ValueError("SEG2TUNNEL_LIKE currently requires exactly six segments")
     return {segment.name: i + 1 for i, segment in enumerate(ring.segments)}
 
 
 def _instance_id(ring_id: int, local_index: int) -> int:
-    # Stable across independent ring builds while leaving room for future object
-    # categories. 1000 objects/ring is ample for the current staged prototype.
     if local_index >= 1000:
         raise ValueError("local object index exceeds Stage-5 instance-ID namespace")
     return ring_id * 1000 + local_index
@@ -173,6 +156,7 @@ def build_nominal_scene_package(
     include_circumferential_front: bool = False,
     include_circumferential_back: bool = True,
     label_policy: LabelPolicy = LabelPolicy.SEG2TUNNEL_LIKE,
+    surface_meshing: SurfaceMeshingConfig | None = None,
 ) -> ScenePackage:
     if ring_id < 0:
         raise ValueError("ring_id must be non-negative")
@@ -181,16 +165,20 @@ def build_nominal_scene_package(
 
     label_map = _segment_label_map(ring)
     segment_id_map = {segment.name: i for i, segment in enumerate(ring.segments)}
+    surface_meshing = surface_meshing or SurfaceMeshingConfig()
+    curved_ring = build_curved_ring_mesh(ring, meshing=surface_meshing)
+    curved_by_name = {segment.name: segment for segment in curved_ring.segments}
     objects: list[SceneObject] = []
     local_index = 0
 
     for segment in ring.segments:
         seg_id = segment_id_map[segment.name]
+        surface = curved_by_name[segment.name]
         objects.append(
             SceneObject(
                 name=f"R{ring_id:04d}_SEG_{seg_id:02d}_{segment.name}",
-                vertices=segment.vertices,
-                faces=segment.faces,
+                vertices=surface.vertices,
+                faces=surface.faces,
                 object_type="lining_segment",
                 ring_id=ring_id,
                 label_id=label_map[segment.name],
@@ -199,8 +187,15 @@ def build_nominal_scene_package(
                 segment_id=seg_id,
                 segment_name=segment.name,
                 segment_kind=segment.kind,
-                reconstruction="stage1_hexahedral_segment",
+                reconstruction="stage5_1_adaptive_cylindrical_surface",
                 collection_path=(f"Ring_{ring_id:04d}", "Segments"),
+                extra_properties={
+                    "analyticalSource": "stage1_hexahedral_segment",
+                    "surfaceToleranceM": float(surface.requested_max_sagitta_m),
+                    "surfaceAchievedMaxSagittaM": float(surface.achieved_max_sagitta_m),
+                    "surfaceSubdivisions": int(surface.circumferential_subdivisions),
+                    "surfaceLongitudinalSubdivisions": int(surface.longitudinal_subdivisions),
+                },
             )
         )
         local_index += 1
@@ -236,11 +231,14 @@ def build_nominal_scene_package(
         nonlocal local_index
         for i, joint in enumerate(pieces):
             seg_id = segment_id_map[joint.segment_name]
+            collar_surface = build_curved_circumferential_collar_mesh(
+                joint, meshing=surface_meshing
+            )
             objects.append(
                 SceneObject(
                     name=f"R{ring_id:04d}_JCIRC_{side.upper()}_{i:02d}_{joint.segment_name}",
-                    vertices=joint.vertices,
-                    faces=joint.faces,
+                    vertices=collar_surface.vertices,
+                    faces=collar_surface.faces,
                     object_type="prescribed_circumferential_joint",
                     ring_id=ring_id,
                     label_id=0,
@@ -248,12 +246,15 @@ def build_nominal_scene_package(
                     semantic_class="clutter",
                     segment_id=seg_id,
                     segment_name=joint.segment_name,
-                    reconstruction=joint.reconstruction.value,
+                    reconstruction=f"{joint.reconstruction.value}+stage5_1_curved_surface",
                     collection_path=(f"Ring_{ring_id:04d}", "Joints", f"Circumferential_{side}"),
                     extra_properties={
                         "jointSide": side,
                         "jointWidthM": float(joint.width_m),
                         "jointAddedThicknessM": float(joint.added_thickness_m),
+                        "surfaceToleranceM": float(collar_surface.requested_max_sagitta_m),
+                        "surfaceAchievedMaxSagittaM": float(collar_surface.achieved_max_sagitta_m),
+                        "surfaceSubdivisions": int(collar_surface.circumferential_subdivisions),
                     },
                 )
             )
@@ -284,8 +285,16 @@ def build_nominal_scene_package(
                 "publish K/B/A-to-S1..S6 correspondence"
             ),
             "jointLabelConvention": "labelID=0 clutter, following Seg2Tunnel synthesis described by Yang et al. (2026)",
+            "surfaceMeshing": {
+                "stage": "5.1",
+                "representation": "adaptive cylindrical chord tessellation",
+                "maxSagittaM": float(surface_meshing.max_sagitta_m),
+                "minSubdivisions": int(surface_meshing.min_subdivisions),
+                "maxSubdivisions": int(surface_meshing.max_subdivisions),
+            },
             "physicalCoherence": (
-                "nominal Stage-1 segments + Stage-4 prescribed joints; no Stage-3 deformation"
+                "Stage-1 analytical segments rendered as Stage-5.1 curved surfaces + "
+                "Stage-4 prescribed joints; no Stage-3 deformation"
             ),
         },
     )
@@ -297,6 +306,7 @@ def build_deformed_scene_package(
     ring_id: int = 0,
     include_displacement_joints: bool = True,
     label_policy: LabelPolicy = LabelPolicy.SEG2TUNNEL_LIKE,
+    surface_meshing: SurfaceMeshingConfig | None = None,
 ) -> ScenePackage:
     if ring_id < 0:
         raise ValueError("ring_id must be non-negative")
@@ -307,17 +317,23 @@ def build_deformed_scene_package(
     label_map = _segment_label_map(base_ring)
     segment_id_map = {segment.name: i for i, segment in enumerate(base_ring.segments)}
     transform_map = {t.segment_name: t for t in deformed.segment_transforms}
+    surface_meshing = surface_meshing or SurfaceMeshingConfig()
+    curved_base = build_curved_ring_mesh(base_ring, meshing=surface_meshing)
+    curved_base_by_name = {segment.name: segment for segment in curved_base.segments}
     objects: list[SceneObject] = []
     local_index = 0
 
     for segment in deformed.segments:
         seg_id = segment_id_map[segment.name]
         transform = transform_map[segment.name]
+        surface = apply_rigid_transform_to_curved_segment(
+            curved_base_by_name[segment.name], transform
+        )
         objects.append(
             SceneObject(
                 name=f"R{ring_id:04d}_SEG_{seg_id:02d}_{segment.name}",
-                vertices=segment.vertices,
-                faces=segment.faces,
+                vertices=surface.vertices,
+                faces=surface.faces,
                 object_type="lining_segment",
                 ring_id=ring_id,
                 label_id=label_map[segment.name],
@@ -326,12 +342,17 @@ def build_deformed_scene_package(
                 segment_id=seg_id,
                 segment_name=segment.name,
                 segment_kind=segment.kind,
-                reconstruction="stage3_rigid_segment_transform",
+                reconstruction="stage5_1_curved_surface_plus_stage3_rigid_transform",
                 collection_path=(f"Ring_{ring_id:04d}", "Segments"),
                 extra_properties={
+                    "analyticalSource": "stage1_hexahedral_segment",
                     "rotationDeg": float(transform.rotation_deg),
                     "centerOffsetX": float(transform.center_offset_xz_m[0]),
                     "centerOffsetZ": float(transform.center_offset_xz_m[1]),
+                    "surfaceToleranceM": float(surface.requested_max_sagitta_m),
+                    "surfaceAchievedMaxSagittaM": float(surface.achieved_max_sagitta_m),
+                    "surfaceSubdivisions": int(surface.circumferential_subdivisions),
+                    "surfaceLongitudinalSubdivisions": int(surface.longitudinal_subdivisions),
                 },
             )
         )
@@ -384,9 +405,17 @@ def build_deformed_scene_package(
                 "publish K/B/A-to-S1..S6 correspondence"
             ),
             "jointLabelConvention": "labelID=0 clutter, following Seg2Tunnel synthesis described by Yang et al. (2026)",
+            "surfaceMeshing": {
+                "stage": "5.1",
+                "representation": "adaptive cylindrical chord tessellation",
+                "maxSagittaM": float(surface_meshing.max_sagitta_m),
+                "minSubdivisions": int(surface_meshing.min_subdivisions),
+                "maxSubdivisions": int(surface_meshing.max_subdivisions),
+            },
             "physicalCoherence": (
-                "Stage-3 deformed segments + Stage-3 displacement gap meshes; "
-                "nominal prescribed joints intentionally excluded"
+                "Stage-1 analytical segments rendered as Stage-5.1 curved surfaces, "
+                "then transformed by Stage-3 rigid kinematics + Stage-3 displacement "
+                "gap meshes; nominal prescribed joints intentionally excluded"
             ),
             "kinematicIndexing": deformed.deformation.indexing.value,
             "closureTranslationErrorM": float(deformed.deformation.translation_closure_error_m),

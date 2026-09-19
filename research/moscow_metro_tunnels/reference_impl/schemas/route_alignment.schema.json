@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/route_alignment.schema.json",
+  "title": "Georeferenced 3D tunnel alignment",
+  "type": "object",
+  "required": [
+    "route_id",
+    "horizontal_source",
+    "vertical_datum",
+    "local_origin",
+    "samples"
+  ],
+  "properties": {
+    "route_id": {
+      "type": "string"
+    },
+    "geo_quality": {
+      "enum": [
+        "GEO_A",
+        "GEO_B",
+        "GEO_C",
+        "GEO_D"
+      ]
+    },
+    "source_crs": {
+      "type": "string"
+    },
+    "engineering_crs": {
+      "type": "string"
+    },
+    "vertical_datum": {
+      "type": "string"
+    },
+    "horizontal_source": {
+      "type": "object"
+    },
+    "vertical_sources": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "local_origin": {
+      "type": "object",
+      "required": [
+        "x_m",
+        "y_m",
+        "z_m"
+      ],
+      "properties": {
+        "x_m": {
+          "type": "number"
+        },
+        "y_m": {
+          "type": "number"
+        },
+        "z_m": {
+          "type": "number"
+        },
+        "absolute_crs": {
+          "type": "string"
+        },
+        "vertical_datum": {
+          "type": "string"
+        }
+      }
+    },
+    "samples": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "s_m",
+          "x_m",
+          "y_m",
+          "z_ugr_m"
+        ],
+        "properties": {
+          "s_m": {
+            "type": "number",
+            "minimum": 0
+          },
+          "x_m": {
+            "type": "number"
+          },
+          "y_m": {
+            "type": "number"
+          },
+          "z_ugr_m": {
+            "type": "number"
+          },
+          "surface_z_m": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "horizontal_radius_m": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0
+          },
+          "grade_permille": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "cant_mm": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "sigma_xy_m": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "sigma_z_m": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "source_class": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": true
+}

@@ -70,3 +70,22 @@ python -m unittest discover -s tests -v
 ```bash
 python tools_export_fixtures.py
 ```
+
+
+## OSM relation handling
+
+The reference package now contains:
+- `osm_relation.py` — parses standard OSM `/relation/{id}/full` XML while preserving member order, roles, way IDs and endpoint/node IDs;
+- `osm_track_stitch.py` — conservatively stitches only `railway=subway` ways by shared OSM node IDs.
+
+The stitcher:
+- automatically reverses a way when needed for continuity;
+- separates disconnected components;
+- accepts simple open chains or simple closed loops;
+- rejects any endpoint graph with degree >2.
+
+That last behavior is deliberate: a turnout/crossover must be resolved from explicit topology/route semantics rather than by choosing a geometrically convenient branch.
+
+Synthetic tests:
+- relation/full parser: 1/1 passed;
+- track stitching/filtering: 4/4 passed.

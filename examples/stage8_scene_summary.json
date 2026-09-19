@@ -1,0 +1,29 @@
+{
+  "stage": 8,
+  "seed": 5812,
+  "ringCount": 13,
+  "ringWidthM": 1.35,
+  "chainageLengthM": 17.55,
+  "labelPolicy": "stsd_coarse",
+  "ancillarySampling": "reference",
+  "ancillaryTransformPolicy": "gravity_stitched",
+  "includeBolts": true,
+  "sceneObjectsBeforeBoolean": 826,
+  "expectedBooleanOperations": 468,
+  "expectedPocketCuttersRemoved": 234,
+  "expectedSurvivingObjects": 592,
+  "counts": {
+    "lining_segment": 78,
+    "prescribed_radial_joint": 78,
+    "prescribed_circumferential_joint": 72,
+    "bolt_head": 234,
+    "bolt_pocket_cutter": 234,
+    "ancillary_pavement": 13,
+    "ancillary_walkway": 13,
+    "ancillary_rail": 26,
+    "ancillary_tube": 78
+  },
+  "ancillaryObjectsPerRing": 10,
+  "lateralWavelengthM": 50.0,
+  "verticalWavelengthM": 100.0
+}

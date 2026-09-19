@@ -447,7 +447,6 @@ def build_sweep_mesh(
         station_count=len(stations),
         cap_start=cap_start,
         cap_end=cap_end,
-        omit_edge_indices=spec.omitted_longitudinal_edges,
     )
 
 
@@ -605,6 +604,7 @@ def scene_object_from_continuous_asset(
         stations,
         cap_start=cap_start,
         cap_end=cap_end,
+        omit_edge_indices=spec.omitted_longitudinal_edges,
     )
     props = {
         **dict(spec.properties),

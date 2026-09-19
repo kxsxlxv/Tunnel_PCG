@@ -1,3 +1,4 @@
+import math
 import unittest
 
 from tunnel_pcg_ref.alignment3d import (
@@ -5,6 +6,7 @@ from tunnel_pcg_ref.alignment3d import (
     Vec2,
     Vec3,
     chainage_xy,
+    closed_parallel_transport_frames,
     grade_permille,
     interpolate_profile,
     parallel_transport_frames,
@@ -64,6 +66,30 @@ class Alignment3DTests(unittest.TestCase):
             self.assertAlmostEqual(frame.up.norm(), 1, places=10)
             self.assertAlmostEqual(frame.tangent.dot(frame.left), 0, places=10)
             self.assertAlmostEqual(frame.tangent.dot(frame.up), 0, places=10)
+
+
+    def test_closed_loop_frames_close_roll(self):
+        points = []
+        n = 200
+        for i in range(n):
+            a = 2 * math.pi * i / n
+            points.append(
+                Vec3(
+                    100 * math.cos(a),
+                    100 * math.sin(a),
+                    7 * math.sin(2 * a) + 2 * math.sin(3 * a),
+                )
+            )
+        points.append(points[0])
+
+        frames, residual = closed_parallel_transport_frames(points)
+        self.assertEqual(len(frames), len(points))
+        first, last = frames[0], frames[-1]
+        self.assertLess((first.p - last.p).norm(), 1e-10)
+        self.assertGreater(first.tangent.dot(last.tangent), 1 - 1e-12)
+        self.assertGreater(first.left.dot(last.left), 1 - 1e-12)
+        self.assertGreater(first.up.dot(last.up), 1 - 1e-12)
+        self.assertTrue(math.isfinite(residual))
 
     def test_preliminary_profile_interpolation(self):
         anchors = [ProfileAnchor(0, 100), ProfileAnchor(100, 103)]

@@ -5,6 +5,7 @@ from enum import Enum
 from typing import Any, Iterable, Mapping
 
 from .deformed_mesh import DeformedRingMesh
+from .bolts import BoltSet, build_pocket_boolean_cutter
 from .curved_mesh import (
     SurfaceMeshingConfig,
     apply_rigid_transform_to_curved_segment,
@@ -157,6 +158,8 @@ def build_nominal_scene_package(
     include_circumferential_back: bool = True,
     label_policy: LabelPolicy = LabelPolicy.SEG2TUNNEL_LIKE,
     surface_meshing: SurfaceMeshingConfig | None = None,
+    bolts: BoltSet | None = None,
+    bolt_boolean_overlap_m: float = 0.005,
 ) -> ScenePackage:
     if ring_id < 0:
         raise ValueError("ring_id must be non-negative")
@@ -265,6 +268,76 @@ def build_nominal_scene_package(
     if include_circumferential_back:
         append_circ(joints.circumferential_back, "back")
 
+    if bolts is not None:
+        for assembly in bolts.assemblies:
+            placement = assembly.placement
+            if placement.segment_name not in segment_id_map:
+                raise ValueError(f"bolt references unknown segment {placement.segment_name}")
+            seg_id = segment_id_map[placement.segment_name]
+            target_name = f"R{ring_id:04d}_SEG_{seg_id:02d}_{placement.segment_name}"
+            cutter = build_pocket_boolean_cutter(
+                assembly.pocket, overlap_m=bolt_boolean_overlap_m
+            )
+            bolt_index = placement.index
+            objects.append(
+                SceneObject(
+                    name=f"R{ring_id:04d}_BCUT_{bolt_index:03d}_{placement.segment_name}",
+                    vertices=cutter.vertices,
+                    faces=cutter.faces,
+                    object_type="bolt_pocket_cutter",
+                    ring_id=ring_id,
+                    label_id=0,
+                    instance_id=_instance_id(ring_id, local_index),
+                    semantic_class="clutter",
+                    segment_id=seg_id,
+                    segment_name=placement.segment_name,
+                    reconstruction=cutter.reconstruction,
+                    collection_path=(f"Ring_{ring_id:04d}", "Bolts", "Cutters"),
+                    extra_properties={
+                        "boltIndex": int(bolt_index),
+                        "boltLayout": placement.layout.value,
+                        "boltAlphaDeg": float(placement.alpha_deg),
+                        "boltYM": float(placement.y_m),
+                        "booleanTarget": target_name,
+                        "booleanOperation": "DIFFERENCE",
+                        "booleanEntryOverlapM": float(cutter.overlap_m),
+                        "removeAfterBoolean": True,
+                    },
+                )
+            )
+            local_index += 1
+
+            head = assembly.head
+            objects.append(
+                SceneObject(
+                    name=f"R{ring_id:04d}_BHEAD_{bolt_index:03d}_{placement.segment_name}",
+                    vertices=head.vertices,
+                    faces=head.faces,
+                    object_type="bolt_head",
+                    ring_id=ring_id,
+                    label_id=0,
+                    instance_id=_instance_id(ring_id, local_index),
+                    semantic_class="clutter",
+                    segment_id=seg_id,
+                    segment_name=placement.segment_name,
+                    reconstruction=head.reconstruction,
+                    collection_path=(f"Ring_{ring_id:04d}", "Bolts", "Heads"),
+                    extra_properties={
+                        "boltIndex": int(bolt_index),
+                        "boltLayout": placement.layout.value,
+                        "boltAlphaDeg": float(placement.alpha_deg),
+                        "boltYM": float(placement.y_m),
+                        "booleanTarget": target_name,
+                        "booleanOperation": "DIFFERENCE",
+                        "cutTargetBeforeDisplay": True,
+                        "boltHeadRadiusM": float(head.top_radius_m),
+                        "boltEmbeddedRadiusM": float(head.bottom_radius_m),
+                        "boltHeadThicknessM": float(head.thickness_m),
+                    },
+                )
+            )
+            local_index += 1
+
     mapping = {name: label for name, label in label_map.items()}
     return ScenePackage(
         name=f"tunnel_scanner_nominal_ring_{ring_id:04d}",
@@ -292,9 +365,36 @@ def build_nominal_scene_package(
                 "minSubdivisions": int(surface_meshing.min_subdivisions),
                 "maxSubdivisions": int(surface_meshing.max_subdivisions),
             },
+            "boltBooleanPipeline": (
+                None
+                if bolts is None
+                else {
+                    "stage": "6",
+                    "layout": bolts.layout.value,
+                    "pocketMode": bolts.pocket_mode.value,
+                    "assemblies": len(bolts.assemblies),
+                    "entryOverlapM": float(bolt_boolean_overlap_m),
+                    "operations": [
+                        "segment DIFFERENCE pocket_cutter",
+                        "segment DIFFERENCE bolt_head",
+                        "remove pocket_cutter",
+                        "retain bolt_head as labelID=0 clutter",
+                    ],
+                    "semanticLimitation": (
+                        "cavity wall remains part of lining segment label; the paper's "
+                        "separate pocket-shell clutter reconstruction is deferred"
+                    ),
+                }
+            ),
             "physicalCoherence": (
                 "Stage-1 analytical segments rendered as Stage-5.1 curved surfaces + "
-                "Stage-4 prescribed joints; no Stage-3 deformation"
+                "Stage-4 prescribed joints"
+                + (
+                    "; Stage-6 physical bolt cavity/head Boolean tools"
+                    if bolts is not None
+                    else ""
+                )
+                + "; no Stage-3 deformation"
             ),
         },
     )

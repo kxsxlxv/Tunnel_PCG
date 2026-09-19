@@ -435,3 +435,16 @@ def test_literal_paper_ring_rigid_policy_rotates_ancillary_with_ring():
     assert world_pavement.custom_properties["followSceneAlignment"] is False
     assert world_pavement.custom_properties["followRingAxialRotation"] is True
     assert world_pavement.custom_properties["objectAppliedAxialRotationDeg"] == 90.0
+
+
+def test_reference_sampler_accepts_explicit_ambiguity_policies():
+    from tunnel_scanner_core import RailSpacingConvention
+
+    cfg = sample_ancillary_config(
+        3.0,
+        policy=AncillarySamplingPolicy.REFERENCE,
+        rail_spacing_convention=RailSpacingConvention.PROSE_OFFSET_FROM_MIDLINE,
+        transform_policy=AncillaryTransformPolicy.PAPER_RING_RIGID,
+    )
+    assert cfg.rail_spacing_convention is RailSpacingConvention.PROSE_OFFSET_FROM_MIDLINE
+    assert cfg.transform_policy is AncillaryTransformPolicy.PAPER_RING_RIGID

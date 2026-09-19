@@ -21,6 +21,7 @@ from tunnel_scanner_core import (
     stable_instance_id,
     strip_exact_coincident_lining_interface_faces,
     strip_internal_lining_cap_faces,
+    strip_lining_segment_boundary_faces,
 )
 
 
@@ -489,23 +490,27 @@ def test_production_can_keep_stage4_outer_joint_solids_for_debugging():
     assert len(build.scene.objects_of_type("prescribed_circumferential_joint")) == 12
 
 
-def test_segment_interface_cleanup_removes_six_duplicate_face_groups_per_ring():
+def test_segment_boundary_cleanup_is_independent_of_neighbour_tessellation():
     prod = _production(5, include_bolts=False, axis_noise_sigma_m=0.0)
     before = audit_exact_coincident_faces(
         prod.scene,
         object_filter=lambda obj: obj.object_type == "lining_segment",
     )
-    assert before.duplicate_group_count == 30
+    # Exact polygon matching deliberately under-counts when neighbours use
+    # different longitudinal subdivisions.
+    assert before.duplicate_group_count > 0
 
-    stripped = strip_exact_coincident_lining_interface_faces(prod.scene)
+    stripped = strip_lining_segment_boundary_faces(prod.scene)
     after = audit_exact_coincident_faces(
         stripped,
         object_filter=lambda obj: obj.object_type == "lining_segment",
     )
     assert after.duplicate_group_count == 0
-    meta = stripped.metadata["productionSegmentInterfaceStrip"]
-    assert meta["duplicateGroupsRemoved"] == 30
-    assert meta["facesRemoved"] == 60
+    meta = stripped.metadata["productionSegmentBoundaryStrip"]
+    assert meta["tessellationIndependent"] is True
+    assert meta["objectsAffected"] == 5 * 6
+    # Two radial sides per segment, with one or more longitudinal faces each.
+    assert meta["facesRemoved"] >= 5 * 6 * 2
 
 
 def test_full_production_render_finalizer_reaches_zero_exact_duplicate_faces():
@@ -514,7 +519,7 @@ def test_full_production_render_finalizer_reaches_zero_exact_duplicate_faces():
     audit = audit_exact_coincident_faces(finalized)
     assert audit.duplicate_group_count == 0
     assert finalized.metadata["productionLiningCapStrip"]["removedFaces"] > 0
-    assert finalized.metadata["productionSegmentInterfaceStrip"]["facesRemoved"] == 60
+    assert finalized.metadata["productionSegmentBoundaryStrip"]["facesRemoved"] >= 60
 
 
 def test_full_render_finalizer_refuses_unbaked_bolt_tools():

@@ -135,17 +135,17 @@ class TunnelAssemblyConfig:
         return self.resolved_omega_z_rad_per_m * self.ring_width_m
 
     @property
-    def resolved_lateral_wavelength_m(self) -> float:
+    def resolved_lateral_wavelength_m(self) -> float | None:
         if self.omega_x_rad_per_ring is not None:
             omega_m = abs(self.resolved_omega_x_rad_per_m)
-            return math.inf if omega_m == 0.0 else 2.0 * math.pi / omega_m
+            return None if omega_m == 0.0 else 2.0 * math.pi / omega_m
         return self.lateral_wavelength_m
 
     @property
-    def resolved_vertical_wavelength_m(self) -> float:
+    def resolved_vertical_wavelength_m(self) -> float | None:
         if self.omega_z_rad_per_ring is not None:
             omega_m = abs(self.resolved_omega_z_rad_per_m)
-            return math.inf if omega_m == 0.0 else 2.0 * math.pi / omega_m
+            return None if omega_m == 0.0 else 2.0 * math.pi / omega_m
         return self.vertical_wavelength_m
 
     def deterministic_adjacent_step_bound_x_m(self) -> float:
@@ -301,15 +301,21 @@ def sample_tunnel_assembly(
     )
 
 
-def transform_point_by_ring_pose(point: Vec3, pose: RingPose) -> Vec3:
-    """Rotate about +Y then translate, matching Eq. (21) scene assembly."""
+def _transform_point_with_axial_rotation(
+    point: Vec3, pose: RingPose, rotation_y_deg: float
+) -> Vec3:
     x, y, z = point
-    a = math.radians(pose.rotation_y_deg)
+    a = math.radians(rotation_y_deg)
     c, s = math.cos(a), math.sin(a)
     xr = c * x + s * z
     zr = -s * x + c * z
     tx, ty, tz = pose.translation_m
     return (xr + tx, y + ty, zr + tz)
+
+
+def transform_point_by_ring_pose(point: Vec3, pose: RingPose) -> Vec3:
+    """Rotate lining-local geometry about +Y then translate."""
+    return _transform_point_with_axial_rotation(point, pose, pose.rotation_y_deg)
 
 
 def transform_scene_object_by_ring_pose(obj: SceneObject, pose: RingPose) -> SceneObject:
@@ -318,12 +324,15 @@ def transform_scene_object_by_ring_pose(obj: SceneObject, pose: RingPose) -> Sce
             f"scene object ring_id={obj.ring_id} does not match pose index={pose.ring_index}"
         )
     extra = dict(obj.extra_properties)
+    follow_ring_rotation = bool(extra.get("followRingAxialRotation", True))
+    applied_rotation_deg = pose.rotation_y_deg if follow_ring_rotation else 0.0
     extra.update(
         {
             "ringTranslationX": float(pose.translation_m[0]),
             "ringTranslationY": float(pose.translation_m[1]),
             "ringTranslationZ": float(pose.translation_m[2]),
             "ringRotationDeg": float(pose.rotation_y_deg),
+            "objectAppliedAxialRotationDeg": float(applied_rotation_deg),
             "ringNominalRotationDeg": float(pose.nominal_rotation_deg),
             "ringAngularImperfectionDeg": float(pose.angular_imperfection_deg),
             "ringChainageM": float(pose.chainage_m),
@@ -331,7 +340,10 @@ def transform_scene_object_by_ring_pose(obj: SceneObject, pose: RingPose) -> Sce
     )
     return SceneObject(
         name=obj.name,
-        vertices=tuple(transform_point_by_ring_pose(v, pose) for v in obj.vertices),
+        vertices=tuple(
+            _transform_point_with_axial_rotation(v, pose, applied_rotation_deg)
+            for v in obj.vertices
+        ),
         faces=obj.faces,
         object_type=obj.object_type,
         ring_id=obj.ring_id,
@@ -442,6 +454,18 @@ def build_multi_ring_scene_package(
             "units": "metres",
         },
         "ringPoses": ring_metadata,
+        "ancillaryTransformPolicy": {
+            "objectsWithAlignmentOnlyRotation": sum(
+                1
+                for obj in objects
+                if obj.extra_properties.get("followRingAxialRotation") is False
+            ),
+            "policy": (
+                "Stage-8 ancillary infrastructure follows X/Z/Y ring-centre translation "
+                "but not segment-ring axial staggering; rails/walkway/tubes/pavement "
+                "remain fixed relative to the tunnel gravity frame"
+            ),
+        },
         "booleanPipeline": (
             "Stage-6 cutter/head metadata is preserved after Stage-7.1 world transform; "
             "Blender Boolean targets remain ring-local stable names"

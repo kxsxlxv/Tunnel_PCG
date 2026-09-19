@@ -1,0 +1,18 @@
+{
+  "stage": 7,
+  "poseScenes": 2000,
+  "poseRings": 39877,
+  "fullScenes": 50,
+  "fullSceneRings": 250,
+  "fullSceneObjectsChecked": 13200,
+  "booleanOperationsPlanned": 9000,
+  "jsonRoundtrips": 10,
+  "empiricalAxisNoiseMeanM": 2.3611112555317973e-05,
+  "empiricalAxisNoiseStdM": 0.0049952990685575675,
+  "configuredAxisNoiseSigmaM": 0.005,
+  "maxLongitudinalSpacingErrorM": 0.0,
+  "maxRigidTransformDistanceErrorM": 1.7763568394002505e-15,
+  "maxSampledNominalStaggerDeg": 134.9017558702821,
+  "staggerBoundDeg": 135.0,
+  "result": "PASS"
+}

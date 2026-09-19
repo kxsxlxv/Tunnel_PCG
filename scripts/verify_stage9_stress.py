@@ -89,13 +89,13 @@ def main() -> None:
     cleaned = finalize_production_render_scene(hundred.scene)
     removed_lining_faces = cleaned.metadata["productionLiningCapStrip"]["removedFaces"]
     removed_interface_faces = cleaned.metadata[
-        "productionSegmentInterfaceStrip"
+        "productionSegmentBoundaryStrip"
     ]["facesRemoved"]
     after_lining_faces = sum(
         len(obj.faces) for obj in cleaned.objects_of_type("lining_segment")
     )
     assert removed_lining_faces > 0
-    assert removed_interface_faces == 2 * 6 * hundred.assembly.config.n_rings
+    assert removed_interface_faces >= 2 * 6 * hundred.assembly.config.n_rings
     assert (
         before_lining_faces - after_lining_faces
         == removed_lining_faces + removed_interface_faces

@@ -1,0 +1,61 @@
+{
+  "schema_version": "0.1",
+  "units": "m",
+  "cross_passage": {
+    "current": {
+      "min_clear_width": 1.5,
+      "min_clear_height": 2,
+      "min_door_clear_width": 1,
+      "spacing_rule": "project_and_evacuation_design"
+    },
+    "historical_spacing_presets": [
+      {
+        "era": "earlier_SP_generation",
+        "range": [
+          500,
+          700
+        ],
+        "confidence": "A_historical"
+      },
+      {
+        "era": "later_pre_current_generation",
+        "max": 1000,
+        "confidence": "A_historical"
+      }
+    ]
+  },
+  "circulation_passage_historical": {
+    "first": {
+      "distance_from_platform_end_range": [
+        70,
+        120
+      ],
+      "free_area_m2": [
+        40,
+        50
+      ]
+    },
+    "second": {
+      "max_distance_from_first": 250,
+      "free_area_m2": [
+        20,
+        30
+      ]
+    },
+    "note": "Design-generation values; later/current standards permit calculation-based omission/optimization."
+  },
+  "special_types": [
+    "CROSS_PASSAGE",
+    "VENTILATION_CONNECTION",
+    "CIRCULATION_PASSAGE",
+    "BELL_MOUTH",
+    "SWITCH_CHAMBER",
+    "CONNECTING_TUNNEL",
+    "HERMETIC_GATE_ZONE",
+    "TBM_LAUNCH_CHAMBER",
+    "TBM_RECEPTION_CHAMBER",
+    "PORTAL_TRANSITION",
+    "EMERGENCY_EXIT"
+  ],
+  "event_override_rule": "Special structure range overrides ordinary periodic equipment placement."
+}

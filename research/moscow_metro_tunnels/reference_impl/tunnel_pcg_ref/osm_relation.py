@@ -118,6 +118,9 @@ def parse_relation_full_xml(xml_bytes: bytes | str, relation_id: int) -> dict:
                     "member_index": member.index,
                     "member_role": member.role,
                     "osm_way_id": member.ref,
+                    "osm_first_node_id": way.node_refs[0],
+                    "osm_last_node_id": way.node_refs[-1],
+                    "osm_node_refs": list(way.node_refs),
                     **{f"osm_{k}": v for k, v in way.tags.items()},
                 },
                 "geometry": {
@@ -127,6 +130,16 @@ def parse_relation_full_xml(xml_bytes: bytes | str, relation_id: int) -> dict:
             }
         )
 
+    nested_relation_members = [
+        {
+            "member_index": m.index,
+            "relation_id": m.ref,
+            "role": m.role,
+        }
+        for m in members
+        if m.type == "relation"
+    ]
+
     return {
         "type": "FeatureCollection",
         "name": f"osm_relation_{relation_id}_way_members",
@@ -135,6 +148,7 @@ def parse_relation_full_xml(xml_bytes: bytes | str, relation_id: int) -> dict:
             "relation_tags": _tags(target),
             "member_count": len(members),
             "way_feature_count": len(features),
+            "nested_relation_members": nested_relation_members,
             "missing": missing,
             "warning": (
                 "Relation members are preserved, not automatically merged "

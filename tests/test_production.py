@@ -604,3 +604,32 @@ def test_rigid_ring_debug_mode_remains_available():
         "productionRingAlignmentStitched" not in obj.custom_properties
         for obj in build.scene.objects_of_type("lining_segment")
     )
+
+
+def test_tunnel_and_infrastructure_ids_are_stable_semantic_parents():
+    prod = _production(4, namespace="identity-contract")
+    tunnel_id = prod.scene.metadata["productionGeometry"]["tunnelInstanceID"]
+    assert tunnel_id == stable_instance_id("identity-contract/tunnel")
+    assert all(
+        obj.custom_properties["tunnelInstanceID"] == tunnel_id
+        for obj in prod.scene.objects
+    )
+    for obj in prod.scene.objects:
+        if obj.object_type.startswith("production_"):
+            assert obj.custom_properties["infrastructureID"] == obj.instance_id
+
+
+def test_chunk_piece_ids_are_technical_but_parent_infrastructure_ids_are_stable():
+    prod = _production(10, namespace="chunk-identity")
+    packages = build_chunk_scene_packages(prod, chunk_length_m=5.0)
+    parent_ids = {
+        spec.persistent_key: spec.instance_id for spec in prod.asset_specs
+    }
+    for package in packages:
+        for obj in package.objects:
+            if not obj.object_type.startswith("production_"):
+                continue
+            key = obj.custom_properties["sourcePersistentKey"]
+            assert obj.custom_properties["sourceInfrastructureID"] == parent_ids[key]
+            assert obj.custom_properties["sourceInstanceID"] == parent_ids[key]
+            assert obj.instance_id != parent_ids[key]

@@ -633,3 +633,43 @@ def iter_meshes(bolts: BoltSet) -> Iterable[tuple[str, tuple[Vec3, ...], tuple[F
         stem = f"bolt_{assembly.placement.index:03d}_{assembly.placement.segment_name}"
         yield f"{stem}_pocket", assembly.pocket.vertices, assembly.pocket.faces
         yield f"{stem}_head", assembly.head.vertices, assembly.head.faces
+
+
+@dataclass(frozen=True)
+class BoltBooleanCutterMesh:
+    """Pocket cutter enlarged slightly into the tunnel void for robust Booleans.
+
+    The paper places the pocket base coplanar with its planar lining surface.
+    Stage 5.1 uses a curved intrados, so a tangent trapezoid touches the cylinder
+    only at its centre. Shifting the four mouth vertices inward by a few mm makes
+    the cutter overlap the curved lining without changing the analytical pocket.
+    """
+
+    placement: BoltPlacement
+    vertices: tuple[Vec3, ...]
+    faces: tuple[Face, ...]
+    overlap_m: float
+    reconstruction: str = "stage6_curved_intrados_boolean_overlap"
+
+
+def build_pocket_boolean_cutter(
+    pocket: BoltPocketMesh,
+    *,
+    overlap_m: float = 0.005,
+) -> BoltBooleanCutterMesh:
+    if not math.isfinite(overlap_m) or overlap_m <= 0.0:
+        raise ValueError("overlap_m must be finite and positive")
+    n = _as_np(pocket.surface_normal)
+    vv = [_as_np(v).copy() for v in pocket.vertices]
+    # Only the mouth is moved toward the tunnel void. The embedded apex remains
+    # identical to the analytical pocket, so penetration depth is unchanged.
+    for i in range(4):
+        vv[i] -= overlap_m * n
+    vertices = tuple(_as_vec3(v) for v in vv)
+    faces = _positive_winding(vertices, pocket.faces)
+    return BoltBooleanCutterMesh(
+        placement=pocket.placement,
+        vertices=vertices,
+        faces=faces,
+        overlap_m=overlap_m,
+    )

@@ -18,6 +18,7 @@ from tunnel_scanner_core import (
     plan_chunks,
     production_alignment_stations,
     stable_instance_id,
+    strip_internal_lining_cap_faces,
 )
 
 
@@ -350,3 +351,55 @@ def test_exact_length_chunking_remains_available_for_blender_or_export_tools():
     )
     assert math.isclose(chunks[0].length_m, 5.0, abs_tol=1e-12)
     assert not math.isclose(chunks[0].end_chainage_m / 1.35, round(chunks[0].end_chainage_m / 1.35), abs_tol=1e-12)
+
+
+def test_internal_lining_caps_can_be_stripped_after_boolean_tools_are_absent():
+    prod = _production(4, include_bolts=False, axis_noise_sigma_m=0.0)
+    before_faces = sum(
+        len(obj.faces) for obj in prod.scene.objects_of_type("lining_segment")
+    )
+    cleaned = strip_internal_lining_cap_faces(prod.scene)
+    after_faces = sum(
+        len(obj.faces) for obj in cleaned.objects_of_type("lining_segment")
+    )
+    assert after_faces < before_faces
+    assert cleaned.metadata["productionLiningCapStrip"]["removedFaces"] > 0
+
+    L = prod.assembly.config.ring_width_m
+    internal_boundaries = {0.5 * L, 1.5 * L, 2.5 * L}
+    for obj in cleaned.objects_of_type("lining_segment"):
+        for face in obj.faces:
+            ys = [obj.vertices[index][1] for index in face]
+            for boundary in internal_boundaries:
+                assert not all(abs(y - boundary) < 1e-9 for y in ys)
+
+
+def test_lining_cap_strip_refuses_pre_boolean_scene_with_cutters():
+    prod = _production(2, include_bolts=True)
+    try:
+        strip_internal_lining_cap_faces(prod.scene)
+    except ValueError as exc:
+        assert "after bolt cutters are baked" in str(exc)
+    else:
+        raise AssertionError("cap stripping before Boolean bake must be rejected")
+
+
+def test_lining_cap_strip_preserves_tunnel_outer_end_caps():
+    prod = _production(3, include_bolts=False, axis_noise_sigma_m=0.0)
+    cleaned = strip_internal_lining_cap_faces(prod.scene)
+    L = prod.assembly.config.ring_width_m
+    front_y = -0.5 * L
+    back_y = (3 - 0.5) * L
+
+    first = [o for o in cleaned.objects_of_type("lining_segment") if o.ring_id == 0]
+    last = [o for o in cleaned.objects_of_type("lining_segment") if o.ring_id == 2]
+    assert any(
+        all(abs(obj.vertices[i][1] - front_y) < 1e-9 for i in face)
+        for obj in first
+        for face in obj.faces
+    )
+    assert any(
+        all(abs(obj.vertices[i][1] - back_y) < 1e-9 for i in face)
+        for obj in last
+        for face in obj.faces
+    )

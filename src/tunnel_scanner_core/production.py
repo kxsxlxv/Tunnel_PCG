@@ -313,12 +313,22 @@ def clipped_alignment_stations(
         raise ValueError("chunk end must be greater than start")
     first = sample_alignment_station(stations, start_chainage_m)
     last = sample_alignment_station(stations, end_chainage_m)
+    tol = 1e-10
     middle = tuple(
-        s
-        for s in stations
-        if start_chainage_m < s.chainage_m < end_chainage_m
+        station
+        for station in stations
+        if (
+            station.chainage_m > start_chainage_m + tol
+            and station.chainage_m < end_chainage_m - tol
+        )
     )
-    return (first, *middle, last)
+    result = (first, *middle, last)
+    if any(
+        b.chainage_m <= a.chainage_m + 1e-12
+        for a, b in zip(result, result[1:])
+    ):
+        raise AssertionError("clipped alignment contains duplicate/non-increasing stations")
+    return result
 
 
 # ---------------------------------------------------------------------------

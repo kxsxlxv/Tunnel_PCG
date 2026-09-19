@@ -78,14 +78,27 @@ def main() -> None:
     for obj in ancillary:
         object_type = str(obj.get("objectType"))
         stats[object_type] = stats.get(object_type, 0) + 1
-        if bool(obj.get("followRingAxialRotation", True)):
-            errors.append(f"{obj.name}: ancillary unexpectedly follows ring axial rotation")
-        if not math.isclose(
-            float(obj.get("objectAppliedAxialRotationDeg", 999.0)),
-            0.0,
-            abs_tol=1e-9,
-        ):
-            errors.append(f"{obj.name}: applied axial rotation is not zero")
+        policy = str(obj.get("ancillaryTransformPolicy", ""))
+        follow_ring = bool(obj.get("followRingAxialRotation", False))
+        follow_alignment = bool(obj.get("followSceneAlignment", False))
+        applied_rotation = float(obj.get("objectAppliedAxialRotationDeg", 999.0))
+        ring_rotation = float(obj.get("ringRotationDeg", 0.0))
+        object_policy = str(obj.get("objectTransformPolicy", ""))
+
+        if policy == "gravity_stitched":
+            if follow_ring or not follow_alignment:
+                errors.append(f"{obj.name}: invalid gravity_stitched transform flags")
+            if not math.isclose(applied_rotation, 0.0, abs_tol=1e-9):
+                errors.append(f"{obj.name}: gravity_stitched applied axial rotation != 0")
+            if object_policy != "stitched_scene_alignment":
+                errors.append(f"{obj.name}: unexpected transform policy {object_policy!r}")
+        elif policy == "paper_ring_rigid":
+            if not follow_ring or follow_alignment:
+                errors.append(f"{obj.name}: invalid paper_ring_rigid transform flags")
+            if not math.isclose(applied_rotation, ring_rotation, abs_tol=1e-9):
+                errors.append(f"{obj.name}: ring-rigid rotation mismatch")
+        else:
+            errors.append(f"{obj.name}: unknown ancillary transform policy {policy!r}")
 
         bm = bmesh.new()
         bm.from_mesh(obj.data)

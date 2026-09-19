@@ -1,0 +1,162 @@
+{
+  "schema_version": "0.1",
+  "route_id": "moscow_line_5_koltsevaya_v0",
+  "generated_date": "2026-09-20",
+  "policy": {
+    "station_depths_are_absolute_ugr": false,
+    "unresolved_chainage_allowed": true,
+    "exact_project_profile_preferred": true,
+    "never_interpolate_ambiguous_depth_as_ugr": true
+  },
+  "project_documents": [
+    {
+      "id": "KOL_DOST_PROFILE_2024",
+      "scope": "future Dostoevskaya insertion zone between Novoslobodskaya and Prospekt Mira",
+      "title": "ИМИП-МКЛ1-П-Г0201-ППО.02.01.00.ТРМ Том 02.02.01",
+      "organization": "ГК «Мосинжпроект»",
+      "year": 2024,
+      "contents": [
+        "plan 1:2000",
+        "plan 1:500",
+        "longitudinal profile 1:2000 horizontal / 1:200 vertical"
+      ],
+      "availability": "existence confirmed in published Moscow cultural-heritage expertise; standalone drawing volume not located publicly in this research pass",
+      "source_id": "S054",
+      "confidence": "B"
+    },
+    {
+      "id": "KOL_DOST_GEODETIC_2022",
+      "scope": "Suvorovskaya Square / future Dostoevskaya zone",
+      "title": "50/1037-22-ИГДИ",
+      "organization": "ГБУ «МОСГОРГЕСТРЕСТ»",
+      "year": 2022,
+      "contents": [
+        "engineering-geodetic survey report"
+      ],
+      "availability": "existence confirmed in published expertise; standalone report not located publicly",
+      "source_id": "S054",
+      "confidence": "B"
+    }
+  ],
+  "hard_relative_constraints": [
+    {
+      "id": "DOST_EXISTING_ZERO_GRADE_ZONE",
+      "segment_from": "Новослободская",
+      "segment_to": "Проспект Мира",
+      "chainage_start_m": null,
+      "chainage_end_m": null,
+      "scope": "existing tunnel zone reserved/planned for the future station",
+      "grade_permille": 0,
+      "grade_tolerance_permille": null,
+      "depth_min_m": 38,
+      "depth_semantics": "published existing construction depth; exact reference surface/UGR datum not stated in quoted public text",
+      "source_id": "S055",
+      "confidence": "B",
+      "note": "Do not apply zero grade to the entire interstation. Exact zone extents require project plan/profile."
+    }
+  ],
+  "station_depth_anchors": [
+    {
+      "station": "Белорусская",
+      "s_fallback_m": 0,
+      "depth_m": 42.5,
+      "datum": "ambiguous_published_station_depth",
+      "confidence": "C"
+    },
+    {
+      "station": "Новослободская",
+      "s_fallback_m": 1257.62,
+      "depth_m": 40,
+      "datum": "ambiguous_published_station_depth",
+      "confidence": "C"
+    },
+    {
+      "station": "Проспект Мира",
+      "s_fallback_m": 3082.215,
+      "depth_m": 40,
+      "datum": "ambiguous_published_station_depth",
+      "confidence": "C"
+    },
+    {
+      "station": "Комсомольская",
+      "s_fallback_m": 4679.168,
+      "depth_m": 37,
+      "datum": "ambiguous_published_station_depth",
+      "confidence": "C"
+    },
+    {
+      "station": "Курская",
+      "s_fallback_m": 6707.845,
+      "depth_m": 40,
+      "datum": "ambiguous_published_station_depth",
+      "confidence": "C"
+    },
+    {
+      "station": "Таганская",
+      "s_fallback_m": 8480.277,
+      "depth_m": 53,
+      "datum": "ambiguous_published_station_depth",
+      "confidence": "C"
+    },
+    {
+      "station": "Павелецкая",
+      "s_fallback_m": 9900.853,
+      "depth_m": 40,
+      "datum": "ambiguous_published_station_depth",
+      "confidence": "C"
+    },
+    {
+      "station": "Добрынинская",
+      "s_fallback_m": 10821.484,
+      "depth_m": 35.5,
+      "datum": "ambiguous_published_station_depth",
+      "confidence": "C"
+    },
+    {
+      "station": "Октябрьская",
+      "s_fallback_m": 11788.379,
+      "depth_m": 40,
+      "datum": "ambiguous_published_station_depth",
+      "confidence": "C"
+    },
+    {
+      "station": "Парк культуры",
+      "s_fallback_m": 13082.452,
+      "depth_m": 40,
+      "datum": "ambiguous_published_station_depth",
+      "confidence": "C"
+    },
+    {
+      "station": "Киевская",
+      "s_fallback_m": 15092.914,
+      "depth_m": 53,
+      "datum": "ambiguous_published_station_depth",
+      "confidence": "C",
+      "conflict": {
+        "alternate_depth_m": 48,
+        "rule": "retain both until source semantics/date are reconciled"
+      }
+    },
+    {
+      "station": "Краснопресненская",
+      "s_fallback_m": 17159.752,
+      "depth_m": 35.5,
+      "datum": "ambiguous_published_station_depth",
+      "confidence": "C"
+    }
+  ],
+  "engineering_constraints": {
+    "underground_max_grade_permille": 40,
+    "difficult_short_max_grade_permille": 45,
+    "vertical_curve_radius_main_near_station_m": 3000,
+    "vertical_curve_radius_main_interstation_m": 5000,
+    "difficult_vertical_curve_radius_near_station_m": 2000,
+    "difficult_vertical_curve_radius_interstation_m": 3000
+  },
+  "next_required_inputs": [
+    "physical OSM/project track centerline for each direction",
+    "surface DEM or project terrain with explicit vertical datum",
+    "exact Dostoevskaya project profile drawing if obtainable",
+    "depth datum definition or absolute rail-level marks for station anchors"
+  ]
+}

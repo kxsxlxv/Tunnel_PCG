@@ -1,0 +1,22 @@
+{
+  "units": "m",
+  "C_mk": {
+    "radius": 2.45,
+    "R50_center_z": 1.7,
+    "R65_center_z": 1.67,
+    "curve_shift": "center_y = +/- center_z * tan(cant_angle), sign toward inside of curve"
+  },
+  "O_m_upper_right": [
+    {"name": "v", "y": 1.48, "z": 0.55},
+    {"name": "g", "y": 1.48, "z": 0.74},
+    {"name": "d", "y": 1.62, "z": 3.28},
+    {"name": "e", "y": 1.325, "z": 3.625},
+    {"name": "zh", "y": 1.005, "z": 3.745},
+    {"name": "z", "y": 0.355, "z": 3.78},
+    {"name": "axis_top", "y": 0.0, "z": 3.78}
+  ],
+  "two_track": {
+    "minimum_track_center_spacing_straight_or_R_ge_500": 3.4,
+    "tunnel_diameter_gt_9_4_axis_to_UGR": "project calculation required"
+  }
+}

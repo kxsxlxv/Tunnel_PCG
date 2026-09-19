@@ -299,7 +299,11 @@ def _pavement_mesh(r: float, length_m: float, cfg: AncillaryConfig) -> Ancillary
     for i in range(1, n_arc):
         a = alpha_right + span * i / n_arc
         points.append((r * math.sin(a), r * math.cos(a)))
-    vertices, faces = _extrude_polygon_xz(\n        points,\n        length_m=length_m,\n        longitudinal_subdivisions=cfg.longitudinal_subdivisions,\n    )
+    vertices, faces = _extrude_polygon_xz(
+        points,
+        length_m=length_m,
+        longitudinal_subdivisions=cfg.longitudinal_subdivisions,
+    )
     return AncillaryMesh(
         name="pavement",
         category="pavement",
@@ -336,7 +340,11 @@ def _walkway_mesh(r: float, length_m: float, cfg: AncillaryConfig) -> AncillaryM
     for x, z in points:
         if math.hypot(x, z) > r + 1e-10:
             raise ValueError("walkway cross-section leaves tunnel intrados")
-    vertices, faces = _extrude_polygon_xz(points, length_m=length_m)
+    vertices, faces = _extrude_polygon_xz(
+        points,
+        length_m=length_m,
+        longitudinal_subdivisions=cfg.longitudinal_subdivisions,
+    )
     return AncillaryMesh(
         name=f"walkway_{cfg.walkway_side.value}",
         category="walkway",
@@ -370,7 +378,11 @@ def _rail_mesh(
         (center_x + half_w, z1),
         (center_x - half_w, z1),
     )
-    vertices, faces = _extrude_polygon_xz(points, length_m=length_m)
+    vertices, faces = _extrude_polygon_xz(
+        points,
+        length_m=length_m,
+        longitudinal_subdivisions=cfg.longitudinal_subdivisions,
+    )
     return AncillaryMesh(
         name=f"rail_{rail_index}",
         category="rail",
@@ -403,7 +415,11 @@ def _tube_mesh(r: float, length_m: float, cfg: AncillaryConfig, tube: TubeSpec) 
     for x, z in points:
         if math.hypot(x, z) > r + 1e-10:
             raise AssertionError("tube circle must remain inside intrados")
-    vertices, faces = _extrude_polygon_xz(points, length_m=length_m)
+    vertices, faces = _extrude_polygon_xz(
+        points,
+        length_m=length_m,
+        longitudinal_subdivisions=cfg.longitudinal_subdivisions,
+    )
     return AncillaryMesh(
         name=tube.name,
         category="tube",

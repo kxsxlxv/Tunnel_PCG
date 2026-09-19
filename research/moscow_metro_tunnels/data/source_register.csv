@@ -8,9 +8,15 @@ S006,СНиП II-40-80,https://dokku.standartgost.ru/g/%D0%A1%D0%9D%D0%B8%D0%9F_
 S007,Обделки перегонных тоннелей,https://www.metro.ru/library/stroitelstvo_metropolitenov/482/,technical textbook archive,historical,C,lining dimensions and drawings
 S008,Перегонные тоннели,https://www.metro.ru/library/metropoliteny/233/,technical textbook archive,historical,C,tunnel lining families
 S009,Путевые устройства,https://www.metro.ru/library/metropoliteny/243/,technical textbook archive,historical,C,track construction
-S010,Основные элементы пути,https://www.metro.ru/library/stroitelstvo_metropolitenov/524/,technical textbook archive,historical,C,track slab and drainage
+S010,Основные элементы пути,https://www.metro.ru/library/stroitelstvo_metropolitenov/524/,technical textbook archive,historical,C,track slab drainage sleepers
 S011,Контактный рельс монтаж,https://www.metro.ru/library/stroitelstvo_metropolitenov/491/,technical textbook archive,historical,C,third rail details
-S012,Moscow construction price bulletin 2012,https://www.mos.ru/upload/documents/oiv/inf_ceny_2012.pdf,Government of Moscow,2012,B,project-specific segment ring dimensions
-S013,Mosinzhproekt engineering magazine BCL TBMs,https://mosinzhproekt.ru/wp-content/uploads/2023/03/is_01-full_.pdf,Mosinzhproekt,2023,B,6m and 10m ring pitch/segment count
+S012,Moscow construction price bulletin 2012,https://www.mos.ru/upload/documents/oiv/inf_ceny_2012.pdf,Government of Moscow,2012,B,project-specific segment ring dimensions and hardware
+S013,Mosinzhproekt engineering magazine BCL TBMs,https://mosinzhproekt.ru/wp-content/uploads/2023/03/is_01-full_.pdf,Mosinzhproekt,2023,B,6m and 10m ring pitch segment count
 S014,Nekrasovskaya 10m two-track first use,https://transport.mos.ru/mostrans/all_news/128989,Moscow Transport,official retrospective,B,large-diameter two-track use
 S015,Rublyovo-Arkhangelskaya Lilia >10m,https://stroi.mos.ru/news/sobianin-shchit-ghighant-postroit-uchastok-rubliovo-arkhanghiel-skoi-linii-mietro,Moscow construction complex,2024,B,modern two-track TBM
+S016,ГОСТ Р 51685-2022 railway rails,https://protect.gost.ru/gost/details/8086c377-c8fe-49f0-9569-7e5c334554c3,Росстандарт,2022-current,A,R50 and R65 rail cross-sections
+S017,НЦС 81-02-10-2025 Метрополитены,https://rags.ru/documents/prod/normativy/0/ntss_91321.html,Минстрой cost-norm publication,2025-current,B,current 6.0/5.4m high-precision RC lining family
+S018,Moscow modern LVT track description 1,https://transport.mos.ru/mostrans/all_news/110412,Moscow Transport,current,B,RC blocks elastic pads rubber boots
+S019,Moscow modern LVT track description 2,https://transport.mos.ru/mostrans/all_news/112173,Moscow Transport,current,B,modern ballastless track visual construction
+S020,RU186427U1 elastic boot for metro block,https://patents.google.com/patent/RU186427U1/ru,Russian patent,2019,C,LVT rubber boot construction details
+S021,Historical metro operating rules third rail geometry,https://ru.djvu.online/file/cs51hfxUuUfHk,technical rules archive,historical,C,third-rail 160mm and 690mm nominal geometry

@@ -1229,6 +1229,30 @@ Stage 10.1 intentionally does **not** implement sleepers/KD-65/invert/drainage, 
 
 Detailed implementation/verification notes are in \`STAGE10_1_REPORT.md\`.
 
+
+### Stage 10.1 operator entry points
+
+The user-facing generate -> JSON -> Blender workflow is now restored for the
+Stage 10.1 mode:
+
+\`\`\`text
+python examples/generate_stage10_production_tunnel.py --rings 20 --namespace stage10-smoke
+
+blender --background --python scripts/blender_verify_stage10.py -- \
+  examples/stage10_production_scene.json \
+  --report examples/blender_stage10_runtime_report.json \
+  --save-blend examples/stage10_production_scene.blend
+\`\`\`
+
+The generator explicitly loads the initial Moscow profile and enables
+\`ProductionConfig.moscow_profile\`; the Stage-9 generator remains a separate
+generic-rail compatibility path. The Stage-10 Blender verifier validates R65,
+UGR, 13 mm gauge plane, exact 1.520 m working-face gauge, persistent IDs and the
+existing Boolean/topology finalization path.
+
+CI compiles both new entry points and runs a real Stage-10.1 CLI scene-generation
+smoke in addition to the existing 75-ring Stage-10.1 production verifier.
+
 ### Next implementation boundary
 
 Do not reopen Stage 10.1 geometry unless a regression or source correction requires it.

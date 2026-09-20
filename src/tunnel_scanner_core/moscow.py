@@ -315,6 +315,41 @@ class MoscowTrackConcreteProfile:
 
 
 @dataclass(frozen=True)
+class MoscowWalkwayProfile:
+    top_z_m: float
+    inner_edge_x_m: float
+    outer_edge_x_m: float
+    top_clear_width_m: float
+    side_profile_x_sign: int
+    geometry_mode: str
+    service_era_interpretation: str
+    sources: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        positive = (
+            self.inner_edge_x_m,
+            self.outer_edge_x_m,
+            self.top_clear_width_m,
+        )
+        if any((not math.isfinite(v) or v <= 0.0) for v in positive):
+            raise ValueError("walkway dimensions must be finite and positive")
+        if not math.isfinite(self.top_z_m):
+            raise ValueError("walkway top z must be finite")
+        if self.side_profile_x_sign not in (-1, 1):
+            raise ValueError("walkway profile-X side sign must be +/-1")
+        if self.outer_edge_x_m <= self.inner_edge_x_m:
+            raise ValueError("walkway outer edge must lie outside inner edge")
+        if not math.isclose(
+            self.outer_edge_x_m - self.inner_edge_x_m,
+            self.top_clear_width_m,
+            abs_tol=1e-12,
+        ):
+            raise ValueError("walkway width must match inner/outer edge difference")
+        if not self.sources:
+            raise ValueError("walkway requires provenance")
+
+
+@dataclass(frozen=True)
 class MoscowContactRailProfile:
     side_profile_x_sign: int
     collection: str
@@ -461,6 +496,9 @@ class MoscowStage10Profile:
     fastening: MoscowKD65Profile
     track_concrete: MoscowTrackConcreteProfile
     contact_rail: MoscowContactRailProfile
+    walkway: MoscowWalkwayProfile
+    civil_geometry_mode: str
+    civil_segment_surface_mode: str
     civil_family: str
     intrados_radius_m: float
     extrados_radius_m: float
@@ -486,6 +524,7 @@ class MoscowStage10Profile:
         coord = raw["coordinate_system"]
         mapping_contract = coord["core_mapping"]
         civil = raw["civil_lining"]
+        civil_geom_raw = civil["initial_geometry"]
         intrados = civil["intrados"]
         extrados = civil["extrados"]
         landmarks = civil["vertical_landmarks"]
@@ -506,6 +545,8 @@ class MoscowStage10Profile:
         concrete_raw = raw["track_concrete_and_invert"]
         drain_raw = concrete_raw["central_drain"]
         groove_raw = concrete_raw["water_release_groove"]
+        walkway_raw = raw["walkway"]
+        walkway_geom_raw = walkway_raw["initial_geometry"]
         contact_raw = raw["contact_rail"]
         contact_place_raw = contact_raw["placement"]
         contact_profile_raw = contact_raw["rail_profile"]
@@ -535,6 +576,7 @@ class MoscowStage10Profile:
             rail_pad_raw.get("source"),
             concrete_raw.get("source"),
             groove_raw.get("source"),
+            *walkway_raw.get("sources", ()),
             contact_place_raw.get("source"),
             contact_profile_raw.get("source"),
             contact_cover_raw.get("initial_geometry_source"),
@@ -730,6 +772,27 @@ class MoscowStage10Profile:
             concrete_material=str(concrete_raw["material"]),
             surface_reference_mode=str(concrete_reference["mode"]),
             groove_position_mode=str(groove_position["mode"]),
+        )
+
+        walkway_side = str(walkway_raw["side"])
+        if walkway_side == "x_positive_opposite_contact_rail":
+            walkway_side_sign = 1
+        elif walkway_side == "x_negative_opposite_contact_rail":
+            walkway_side_sign = -1
+        else:
+            raise ValueError(f"unsupported initial walkway side {walkway_side!r}")
+
+        walkway_profile = MoscowWalkwayProfile(
+            top_z_m=float(walkway_raw["top_z_m"]),
+            inner_edge_x_m=float(walkway_raw["inner_edge_x_m"]),
+            outer_edge_x_m=float(walkway_raw["outer_edge"]["x_m"]),
+            top_clear_width_m=float(walkway_raw["top_clear_width_m"]["value"]),
+            side_profile_x_sign=walkway_side_sign,
+            geometry_mode=str(walkway_geom_raw["mode"]),
+            service_era_interpretation=str(
+                walkway_raw["service_era_interpretation"]
+            ),
+            sources=tuple(str(v) for v in walkway_raw["sources"]),
         )
 
         side_name = str(contact_raw["side"])
@@ -928,6 +991,30 @@ class MoscowStage10Profile:
             abs_tol=1e-12,
         ):
             raise ValueError("initial contact-rail working surface must be +0.160 m")
+        if not math.isclose(
+            walkway_profile.top_z_m,
+            0.200,
+            abs_tol=1e-12,
+        ):
+            raise ValueError("initial Moscow walkway top must be +0.200 m")
+        if not math.isclose(
+            walkway_profile.inner_edge_x_m,
+            1.660,
+            abs_tol=1e-12,
+        ):
+            raise ValueError("initial Moscow walkway inner edge must be +1.660 m")
+        if not math.isclose(
+            walkway_profile.outer_edge_x_m,
+            math.sqrt(
+                float(intrados["radius_m"]) ** 2
+                - (
+                    walkway_profile.top_z_m
+                    - float(landmarks["lining_axis_z_m"])
+                ) ** 2
+            ),
+            abs_tol=1e-9,
+        ):
+            raise ValueError("walkway outer edge must close on physical intrados")
         if not contact_profile.cover_era_mismatch:
             raise ValueError(
                 "initial legacy contact-rail cover fallback must retain era mismatch"
@@ -945,6 +1032,11 @@ class MoscowStage10Profile:
             fastening=kd65_profile,
             track_concrete=concrete_profile,
             contact_rail=contact_profile,
+            walkway=walkway_profile,
+            civil_geometry_mode=str(civil_geom_raw["mode"]),
+            civil_segment_surface_mode=str(
+                civil_geom_raw["circumferential_segment_surface_mode"]
+            ),
             civil_family=str(civil["family"]),
             intrados_radius_m=float(intrados["radius_m"]),
             extrados_radius_m=float(extrados["radius_m"]),

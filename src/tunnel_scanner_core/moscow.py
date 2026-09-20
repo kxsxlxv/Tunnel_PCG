@@ -189,6 +189,10 @@ class MoscowKD65Profile:
     baseplate_hole_spacing_transverse_m: float
     baseplate_hole_spacing_longitudinal_m: float
     baseplate_hole_diameter_m: float
+    baseplate_outer_wing_top_height_m: float
+    baseplate_shoulder_inner_x_m: float
+    baseplate_shoulder_outer_x_m: float
+    baseplate_rail_seat_half_width_m: float
     under_pad_transverse_m: float
     under_pad_longitudinal_m: float
     under_pad_thickness_m: float
@@ -201,12 +205,24 @@ class MoscowKD65Profile:
     track_screw_diameter_m: float
     track_screw_length_m: float
     track_screws_per_baseplate: int
+    track_screw_head_radius_m: float
+    track_screw_head_height_m: float
     clamp_bolt_diameter_m: float
     clamp_bolt_length_m: float
     clamp_bolts_per_baseplate: int
     nut_height_m: float
     nuts_per_baseplate: int
     spring_clamps_per_baseplate: int
+    clamp_bolt_axis_offset_m: float
+    nut_circumradius_m: float
+    spring_clamp_center_offset_m: float
+    spring_clamp_box_transverse_m: float
+    spring_clamp_box_longitudinal_m: float
+    spring_clamp_box_height_m: float
+    spring_clamp_base_above_rail_seat_m: float
+    baseplate_mesh_mode: str
+    track_screw_head_mode: str
+    clamp_geometry_mode: str
     family: str
 
     def __post_init__(self) -> None:
@@ -218,6 +234,10 @@ class MoscowKD65Profile:
             self.baseplate_hole_spacing_transverse_m,
             self.baseplate_hole_spacing_longitudinal_m,
             self.baseplate_hole_diameter_m,
+            self.baseplate_outer_wing_top_height_m,
+            self.baseplate_shoulder_inner_x_m,
+            self.baseplate_shoulder_outer_x_m,
+            self.baseplate_rail_seat_half_width_m,
             self.under_pad_transverse_m,
             self.under_pad_longitudinal_m,
             self.under_pad_thickness_m,
@@ -229,9 +249,18 @@ class MoscowKD65Profile:
             self.rail_pad_raised_seat_transverse_m,
             self.track_screw_diameter_m,
             self.track_screw_length_m,
+            self.track_screw_head_radius_m,
+            self.track_screw_head_height_m,
             self.clamp_bolt_diameter_m,
             self.clamp_bolt_length_m,
             self.nut_height_m,
+            self.clamp_bolt_axis_offset_m,
+            self.nut_circumradius_m,
+            self.spring_clamp_center_offset_m,
+            self.spring_clamp_box_transverse_m,
+            self.spring_clamp_box_longitudinal_m,
+            self.spring_clamp_box_height_m,
+            self.spring_clamp_base_above_rail_seat_m,
         )
         if any((not math.isfinite(v) or v <= 0.0) for v in vals):
             raise ValueError("KD-65 dimensions must be finite and positive")
@@ -336,8 +365,12 @@ class MoscowStage10Profile:
         sleeper_density_raw = track["sleeper_density_per_km"]
         fastening_raw = track["fastening"]
         baseplate_raw = fastening_raw["baseplate"]
+        baseplate_mesh_raw = baseplate_raw["initial_mesh_profile"]
         under_pad_raw = fastening_raw["under_baseplate_pad"]
         rail_pad_raw = fastening_raw["rail_pad"]
+        track_screw_raw = fastening_raw["track_screw"]
+        screw_head_raw = track_screw_raw["initial_visual_head"]
+        clamp_geometry_raw = fastening_raw["initial_clamp_geometry"]
         concrete_raw = raw["track_concrete_and_invert"]
         drain_raw = concrete_raw["central_drain"]
         groove_raw = concrete_raw["water_release_groove"]
@@ -435,6 +468,18 @@ class MoscowStage10Profile:
             baseplate_hole_diameter_m=float(
                 baseplate_raw["holes"]["diameter_m"]
             ),
+            baseplate_outer_wing_top_height_m=float(
+                baseplate_mesh_raw["outer_wing_top_height_m"]
+            ),
+            baseplate_shoulder_inner_x_m=float(
+                baseplate_mesh_raw["shoulder_inner_x_m"]
+            ),
+            baseplate_shoulder_outer_x_m=float(
+                baseplate_mesh_raw["shoulder_outer_x_m"]
+            ),
+            baseplate_rail_seat_half_width_m=float(
+                baseplate_mesh_raw["rail_seat_half_width_m"]
+            ),
             under_pad_transverse_m=float(under_pad_raw["overall_plan_m"][0]),
             under_pad_longitudinal_m=float(under_pad_raw["overall_plan_m"][1]),
             under_pad_thickness_m=float(under_pad_raw["thickness_m"]),
@@ -450,15 +495,13 @@ class MoscowStage10Profile:
             rail_pad_raised_seat_transverse_m=float(
                 rail_pad_raw["raised_seat_length_m"]
             ),
-            track_screw_diameter_m=float(
-                fastening_raw["track_screw"]["diameter_m"]
-            ),
-            track_screw_length_m=float(
-                fastening_raw["track_screw"]["length_m"]
-            ),
+            track_screw_diameter_m=float(track_screw_raw["diameter_m"]),
+            track_screw_length_m=float(track_screw_raw["length_m"]),
             track_screws_per_baseplate=int(
-                fastening_raw["track_screw"]["quantity_per_baseplate"]
+                track_screw_raw["quantity_per_baseplate"]
             ),
+            track_screw_head_radius_m=float(screw_head_raw["radius_m"]),
+            track_screw_head_height_m=float(screw_head_raw["height_m"]),
             clamp_bolt_diameter_m=float(
                 fastening_raw["clamp_bolt"]["thread"].removeprefix("M")
             ) / 1000.0,
@@ -475,6 +518,32 @@ class MoscowStage10Profile:
             spring_clamps_per_baseplate=int(
                 fastening_raw["spring_clamp"]["quantity_per_baseplate"]
             ),
+            clamp_bolt_axis_offset_m=float(
+                clamp_geometry_raw["clamp_bolt_axis_offset_from_rail_center_m"]
+            ),
+            nut_circumradius_m=float(
+                clamp_geometry_raw["nut_circumradius_m"]
+            ),
+            spring_clamp_center_offset_m=float(
+                clamp_geometry_raw[
+                    "spring_clamp_center_offset_from_rail_center_m"
+                ]
+            ),
+            spring_clamp_box_transverse_m=float(
+                clamp_geometry_raw["spring_clamp_box_transverse_m"]
+            ),
+            spring_clamp_box_longitudinal_m=float(
+                clamp_geometry_raw["spring_clamp_box_longitudinal_m"]
+            ),
+            spring_clamp_box_height_m=float(
+                clamp_geometry_raw["spring_clamp_box_height_m"]
+            ),
+            spring_clamp_base_above_rail_seat_m=float(
+                clamp_geometry_raw["spring_clamp_base_above_rail_seat_m"]
+            ),
+            baseplate_mesh_mode=str(baseplate_mesh_raw["mode"]),
+            track_screw_head_mode=str(screw_head_raw["mode"]),
+            clamp_geometry_mode=str(clamp_geometry_raw["mode"]),
             family=str(fastening_raw["family"]),
         )
 
@@ -539,8 +608,8 @@ class MoscowStage10Profile:
             raise ValueError("initial Moscow extrados radius must be 2.750 m")
 
         support_gap = (
-            track_profile.rail_height_m * 0.0
-            + (-track_profile.rail_height_m)
+            datums.ugr_z_m
+            - track_profile.rail_height_m
             - sleeper_profile.top_z_m
         )
         support_stack = (

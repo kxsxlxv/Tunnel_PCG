@@ -35,6 +35,7 @@ jobs:
           scripts/verify_stage10_1.py
           scripts/verify_stage10_2.py
           scripts/verify_stage10_3.py
+          scripts/verify_stage10_4.py
       - name: Unit and regression tests
         run: pytest
       - name: Stage 10.1 CLI compatibility smoke
@@ -55,14 +56,22 @@ jobs:
           --no-bolts
           --axis-noise-sigma 0
           --output /tmp/stage10_2_production_scene.json
-      - name: Stage 10.3 CLI contact-rail smoke
+      - name: Stage 10.3 CLI contact-rail compatibility smoke
         run: >-
           python examples/generate_stage10_production_tunnel.py
-          --rings 20
+          --domain-stage 10.3
+          --rings 4
           --namespace stage10-3-ci
           --no-bolts
           --axis-noise-sigma 0
           --output /tmp/stage10_3_production_scene.json
+      - name: Stage 10.4 CLI civil-shell smoke
+        run: >-
+          python examples/generate_stage10_production_tunnel.py
+          --rings 4
+          --namespace stage10-4-ci
+          --axis-noise-sigma 0
+          --output /tmp/stage10_4_production_scene.json
       - name: Stage 8 stress verification
         run: python scripts/verify_stage8_stress.py
       - name: Stage 8 independent trimesh verification
@@ -79,3 +88,5 @@ jobs:
         run: python scripts/verify_stage10_2.py
       - name: Stage 10.3 contact-rail verification
         run: python scripts/verify_stage10_3.py
+      - name: Stage 10.4 civil-shell verification
+        run: python scripts/verify_stage10_4.py

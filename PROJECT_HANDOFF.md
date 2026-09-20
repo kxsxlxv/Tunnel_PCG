@@ -1,0 +1,1186 @@
+# PROJECT HANDOFF — Tunnel_PCG
+
+**Snapshot:** 2026-09-20  
+**Repository:** `kxsxlxv/Tunnel_PCG`  
+**Branch:** `master`  
+**Pre-handoff research HEAD:** `5795b81b1a2af62ae5c4b7322b15ac36e68217be`  
+**CI at that HEAD:** GitHub Actions PASS  
+**Production package version:** `0.9.0`
+
+This document is the continuation contract for a new ChatGPT conversation or implementation agent. Read this file first, then the stage reports and Stage-10 research files linked below.
+
+The project history is long. Do **not** restart the design from scratch and do not reinterpret already resolved ambiguities unless a new source or failing test justifies it.
+
+---
+
+## 1. User goal
+
+The current goal is **not LiDAR synthesis**.
+
+The user wants a **procedural tunnel geometry generator** whose output can later be loaded into **UNIGINE 2.22 SIM**.
+
+Important target facts:
+
+- UNIGINE-side world coordinates may use **double precision**.
+- Therefore the production core may keep vertices many kilometres from world origin.
+- Chunking exists for asset management, streaming, culling, export size and Blender convenience — **not because the core needs floating-origin precision**.
+- Blender is currently used as a geometry/runtime verifier and convenient preview backend.
+- LiDAR may be revisited later, but it is off the near-term roadmap.
+
+The user wants careful staged development, substantial verification, and immediate GitHub pushes for completed changes.
+
+---
+
+## 2. Working style / continuation rules
+
+The user repeatedly stated that time is not constrained and prefers correctness over speed.
+
+For every substantial stage:
+
+1. implement one bounded unit of work;
+2. add deterministic unit/regression tests;
+3. add stress tests where geometry/topology warrants them;
+4. use independent topology checks where practical;
+5. push completed changes to GitHub immediately;
+6. explicitly state whether the stage is ready to proceed or needs deeper checking;
+7. require a real Blender smoke test when the change depends on actual `bpy`/Boolean/runtime behaviour.
+
+Do not silently guess missing engineering dimensions. Explicit fallbacks are allowed only when tagged with provenance/confidence and when the research profile permits them.
+
+---
+
+# PART I — WHAT HAS ALREADY BEEN BUILT
+
+## 3. Stages 1–8: Tunnel Scanner reconstruction baseline
+
+The project began as a geometry-side reimplementation of:
+
+> Yang et al. (2026), *Tunnel scanner: Geometry-informed synthetic point cloud generation and transfer learning for tunnel segmentation*, Automation in Construction 187, 106924.
+
+The authors' original Tunnel Scanner code does not appear to be publicly released. The project therefore reconstructs the published geometry, records ambiguities, and preserves diagnostic modes rather than hiding them.
+
+Detailed reports are in:
+
+- `STAGE1_REPORT.md`
+- `STAGE2_REPORT.md`
+- `STAGE3_REPORT.md`
+- `STAGE4_REPORT.md`
+- `STAGE5_REPORT.md`
+- `STAGE5_1_REPORT.md`
+- `STAGE6_REPORT.md`
+- `STAGE7_REPORT.md`
+- `STAGE7_1_REPORT.md`
+- `STAGE8_REPORT.md`
+
+### Stage 1 — analytical six-segment ring
+
+Physical order:
+
+    K + B1 + A1 + A2 + A3 + B2
+
+Existing core convention:
+
+- +Y = tunnel longitudinal direction;
+- XZ = tunnel cross-section;
+- alpha = 0 at +Z crown, increasing toward +X.
+
+Base analytical segment is an 8-vertex hexahedron with inner radius `r = R - t_seg`.
+
+Important source ambiguity:
+
+- paper constraints require front/back angular sums to close separately;
+- a literal interpretation that every A-segment has identical front/back angle forces K front/back equality;
+- this conflicts with the paper's stated allowed K differences.
+
+Two conceptual modes were retained in the reconstruction:
+
+- equation-consistent geometry;
+- literal A-equal diagnostic interpretation.
+
+Do not collapse this ambiguity without reason.
+
+### Stage 2 — deformation closure
+
+The paper's printed deformation recurrence appears index-inconsistent: text says `d_i, phi_i` belong to segment `i` relative to `i-1`, but the printed recurrence references previous indices in a way that makes final closure variables ineffective.
+
+The project reconstructs the physically consistent segment-indexed recurrence.
+
+Closure is solved analytically, including a final exact 2x2 system. No SciPy dependency is required.
+
+### Stage 3 — deformed ring geometry
+
+Another likely paper sign issue was identified.
+
+Production/default interpretation uses:
+
+    theta_i = theta_(i-1) - alpha_i + phi_i
+
+because the +phi sign preserves the shared pivot under pure rotation.
+
+Diagnostic modes preserve the printed-sign and previous-index readings.
+
+Displacement-joint meshes bridge deformed segment end/start faces. They are not the same thing as the prescribed nominal joints from Stage 4.
+
+### Stage 4 — prescribed joints
+
+Radial prescribed joint interpretation:
+
+    theta_joi = w_joi / R_joi
+
+with the published geometry reconstructed as an **extrados outer rib/cap** occupying roughly `R ... R+t_joi`.
+
+It is deliberately **not** reinterpreted as an intrados groove.
+
+Circumferential joint reconstruction is more weakly specified by the paper and was implemented as a provisional outer collar. This is documented as reconstruction, not claimed as author-original CAD.
+
+### Stage 5 — engine-neutral ScenePackage
+
+Introduced the engine-neutral scene representation and Blender adapter.
+
+Semantic policy is explicit. The paper states six lining labels but does not publish K/B/A <-> class-index mapping. The implementation convention was recorded rather than presented as source truth.
+
+Blender adapter uses lazy `bpy` import and custom properties such as `labelID`, `ringID`, IDs and reconstruction metadata.
+
+### Stage 5.1 — curved lining surface
+
+Stage 5 initially exposed the analytical 8-vertex hexahedra directly, producing visibly polygonal lining in Blender.
+
+Stage 5.1 fixed this with adaptive cylindrical tessellation.
+
+Sagitta rule:
+
+    s = R * (1 - cos(delta/2))
+
+Default lining render/LiDAR tolerance was 2 mm.
+
+The final mesher is a 2D `(u,v)` grid, not only circumferential rails, because tapered front/back segment angles can otherwise create ruled surfaces that leave the cylinder.
+
+Conservative angular-cell diagonal constraint uses circumferential and longitudinal subdivision counts.
+
+This stage was heavily stress-tested and independently checked with trimesh.
+
+### Stage 6 — bolt pockets and heads
+
+Bolt pockets/heads were implemented as engine-neutral geometry plus Blender Boolean integration.
+
+Keep in mind that Boolean cutters are temporary production tools. Production render finalization must happen after the Boolean bake.
+
+### Stage 7 — multi-ring assembly
+
+Introduced multi-ring tunnel assembly and ring-wise transforms.
+
+### Stage 7.1 — physical wavelength centreline
+
+The original multi-ring perturbation behaviour was corrected to a physical-wavelength centreline model.
+
+The user's visual validation confirmed that the ring geometry and visible X/Z shifts looked correct.
+
+### Stage 8 — Tunnel Scanner ancillary infrastructure
+
+Implemented:
+
+- pavement;
+- walkway;
+- two running rails;
+- tube-like services: pipes/cables/power-track style objects.
+
+Important Stage-8 source/reconstruction decisions:
+
+- preserve the paper's printed walkway-depth upper bound `0.34r` literally rather than silently changing it;
+- physical-clearance validation rejects impossible samples;
+- the paper's prose/Table 4 disagree on rail spacing interpretation;
+- both interpretations exist, production/reference default follows Table 4;
+- tube radii are source-backed, but exact count/angular layout is not published, so the reference service layout is explicitly our engineering reconstruction;
+- production default ancillary frame is gravity-fixed/stiched, while a literal ring-rigid interpretation remains diagnostic.
+
+Stage 8 was the final geometry layer still closely tied to the paper.
+
+---
+
+# PART II — STAGE 9 PRODUCTION ARCHITECTURE
+
+## 4. Why Stage 9 exists
+
+Stage 9 deliberately stops treating the project as only a Tunnel Scanner reconstruction.
+
+It converts the geometry into a **production procedural asset generator**.
+
+Read in full:
+
+- `STAGE9_REPORT.md`
+- `STAGE9_BLENDER_SMOKE_TEST.md`
+
+The user has completed the Stage-9 Blender smoke test successfully.
+
+---
+
+## 5. Canonical coordinate policy
+
+The production core remains in **global coordinates**.
+
+There is no mandatory floating origin and no mandatory chunk-local rebasing.
+
+This is intentional because the eventual UNIGINE target can use double precision.
+
+Chunk localization is an optional Blender/export convenience only.
+
+---
+
+## 6. Physical geometry versus technical chunks
+
+Physical assets:
+
+- lining ring;
+- lining segment;
+- bolt pocket/head;
+- one continuous pavement;
+- one continuous walkway;
+- two continuous rails;
+- configured continuous tube/service runs.
+
+Technical asset:
+
+- optional `TunnelChunk`.
+
+A change in chunk size must not change physical geometry or stable parent identity.
+
+---
+
+## 7. Continuous longitudinal infrastructure
+
+Stage 8 created one closed ancillary solid per ring.
+
+That created coincident internal end caps.
+
+Stage 9 production mode does **not instantiate** Stage-8 ring-local ancillary solids.
+
+Instead, Stage-8 cross-sections are swept continuously over the production alignment.
+
+Reference production infrastructure therefore exists as ten logical assets:
+
+    1 pavement
+    1 walkway
+    2 rails
+    6 tube/service runs
+
+At an inter-ring boundary there is exactly one shared sweep station, not two overlapping caps.
+
+---
+
+## 8. Stage-9 centreline stitching
+
+Production alignment stations are:
+
+    tunnel start
+    ring 0 centre
+    boundary 0/1
+    ring 1 centre
+    boundary 1/2
+    ...
+    final ring centre
+    tunnel end
+
+For N rings:
+
+    stations = 2*N + 1
+
+Lining and bolt geometry use the same local-Y-dependent X/Z alignment map as continuous infrastructure.
+
+This was necessary because independently translating complete rings can leave small centreline discontinuities at shared boundaries.
+
+Diagnostic rigid-ring behaviour still exists; production default is stitched.
+
+---
+
+## 9. Z-fighting / hidden-surface policy
+
+Stage 9 intentionally removes or avoids hidden coincident surfaces.
+
+### Continuous infrastructure
+
+Internal ancillary end caps are eliminated by construction.
+
+### Pavement against lining
+
+Hidden perimeter/contact faces are omitted.
+
+### Rail foot against pavement
+
+Hidden rail-foot bottom surface is omitted from production mesh.
+
+### Stage-4 outer-joint reconstruction solids
+
+Extrados-only prescribed-joint solids are omitted from production scenes by default. They remain available for diagnostics.
+
+### Lining
+
+Lining remains closed until Blender bolt Booleans are baked.
+
+After Boolean processing, finalization removes:
+
+- internal front/back lining caps;
+- radial segment-to-segment coincident faces.
+
+Canonical five-ring topology audit:
+
+    Stage 8 duplicate groups      94
+    Stage 9 source               30
+    Stage 9 finalized             0
+
+This cleanup is a production invariant. Do not regress it in Stage 10.
+
+---
+
+## 10. Stage-9 rail profile
+
+Stage 8 rails were rectangular bars.
+
+Stage 9 replaced them with a generic low-poly rail-like profile:
+
+- foot;
+- narrow web;
+- head;
+- shoulder transitions;
+- 16 cross-section vertices.
+
+This is deliberately **not** a Moscow/Russian standard rail. Stage 10 replaces it with R65/R50 research geometry.
+
+---
+
+## 11. Long-tunnel verification
+
+Automated Stage-9 baseline includes:
+
+### ~100 m full geometry
+
+    75 rings
+    101.25 m generated
+    460 objects
+    zero exact duplicate faces after finalization
+
+### ~1 km full geometry
+
+    741 rings
+    1000.35 m
+    4456 objects
+    1483 alignment stations
+    ~23728 vertices per generic rail
+    ~22232 faces per generic rail
+
+### ~5 km alignment stress
+
+    3704 rings
+    5000.4 m
+    7409 alignment stations
+
+The 5 km case checks global-coordinate alignment without allocating every detailed lining object.
+
+---
+
+## 12. Chunking
+
+Default production chunk policy:
+
+    ring_aligned
+
+Requested chunk length is a target; boundaries snap to complete ring boundaries.
+
+There is also an exact-length diagnostic/export mode.
+
+For Blender:
+
+    --localize-chunks-for-blender
+
+For long export without a monolithic JSON:
+
+    --chunks-only
+
+Chunked infrastructure pieces carry stable parent asset IDs.
+
+Ring IDs remain global.
+
+---
+
+## 13. Stable identity contract
+
+Do not use Python runtime hash.
+
+Stage 9 uses deterministic positive 63-bit BLAKE2b IDs from semantic persistent keys.
+
+Typical keys:
+
+    <namespace>/tunnel
+    <namespace>/ring/<global-ring-id>/<object-name>
+    <namespace>/infrastructure/rail/0
+    <namespace>/infrastructure/rail/1
+
+Physical parent identity is independent of chunk size.
+
+Chunk-piece IDs are technical IDs and retain links to source parent identity.
+
+---
+
+## 14. Blender 5.2 large-integer compatibility
+
+This was discovered in the user's actual Blender 5.2.2 LTS runtime.
+
+Problem:
+
+    OverflowError: Python int too large to convert to C int
+
+Cause:
+
+Stage-9 IDs are 63-bit integers, while Blender scalar custom-property assignment can route through signed 32-bit C int.
+
+Resolved backend policy:
+
+    fits signed int32    -> native Blender integer
+    larger integer ID   -> exact decimal string
+
+Engine-neutral ScenePackage/JSON remains a real 63-bit integer.
+
+Inside Blender, consumers should use:
+
+    int(value)
+
+This has regression coverage, including `2^63-1`.
+
+Do not replace stable IDs with 32-bit IDs merely for Blender.
+
+---
+
+## 15. Current automated quality gate
+
+At the Stage-9K code baseline:
+
+    150 tests passed
+
+and:
+
+- Stage 8 stress: PASS;
+- Stage 8 independent trimesh: PASS;
+- Stage 9 topology audit: PASS;
+- Stage 9 long-tunnel stress: PASS;
+- Stage 9 independent trimesh: PASS.
+
+Later research-only commits also pass CI.
+
+The user's real Blender Stage-9 smoke test succeeded after the 63-bit ID adapter fix.
+
+**Therefore Stage 9 is closed.**
+
+---
+
+# PART III — STAGE 10 MOSCOW METRO
+
+## 16. Stage-10 direction
+
+Stage 10 is not another Tunnel Scanner reconstruction.
+
+It introduces a **Moscow Metro domain profile** over the production architecture.
+
+Planned Moscow-specific systems include:
+
+- Moscow lining dimensions and archetypes;
+- actual R50/R65 rails;
+- Russian/Moscow track gauge rules;
+- timber sleepers / modern supports;
+- KD-65 fastening;
+- track concrete;
+- central drainage trough;
+- Moscow walkway/service geometry;
+- contact/third rail;
+- cable/service layouts;
+- later: historically/project-specific lining details and special structures.
+
+Civil construction era and service-renewal era must remain separate.
+
+---
+
+## 17. Research location
+
+Everything gathered by the external research agent is under:
+
+    research/moscow_metro_tunnels/
+
+Read first:
+
+1. `research/moscow_metro_tunnels/README.md`
+2. `research/moscow_metro_tunnels/21_stage10_initial_archetype.md`
+3. `research/moscow_metro_tunnels/data/stage10_initial_profile.json`
+4. `research/moscow_metro_tunnels/data/stage10_source_pinpoints.json`
+5. `research/moscow_metro_tunnels/09_parameter_confidence_matrix.md`
+6. `research/moscow_metro_tunnels/15_stage4_reference_sdk.md`
+
+Do not begin Stage 10 from the earlier generic research summary alone. The research agent subsequently performed a focused Stage-10 pass and resolved many previously missing parameters.
+
+---
+
+## 18. Research evidence policy
+
+Confidence classes:
+
+- A — normative / primary;
+- B — official project / engineering;
+- C — technical secondary / historical;
+- D — visual inference.
+
+Non-negotiable rules from the research package:
+
+1. physical geometry != clearance envelope;
+2. nominal TBM diameter != finished lining;
+3. unknown project dimensions stay unresolved or use explicit fallback metadata;
+4. project-specific evidence overrides generic family values;
+5. construction archetype belongs to an individual tunnel/track, not merely a line;
+6. service systems must have independent pitches/phases;
+7. photos do not create exact dimensions unless calibrated;
+8. civil era, track-renewal era and services era are separate;
+9. public OSM is not as-built survey;
+10. published station depth is not automatically UGR elevation.
+
+---
+
+## 19. Selected first Stage-10 archetype
+
+The research agent selected:
+
+    CAST_IRON_5500_R1000
+    +
+    LEGACY_R65_TIMBER_KD65_2001_REFERENCE
+
+This is now the preferred first implementation target.
+
+Why:
+
+A 2001 engineering source provides a directly applicable cross-section for a **5.1 m internal-diameter circular cast-iron running tunnel with R65 track concrete**.
+
+The initial target is a deterministic civil/track/contact-rail geometry fixture.
+
+The exact cast-iron tubing CAD remains intentionally less detailed until source gaps are closed.
+
+---
+
+## 20. Stage-10 coordinate datum
+
+Research uses UGR (top plane through running-rail heads) as the primary vertical datum.
+
+Initial profile 2D cross-section uses:
+
+    origin: track centerline at UGR
+    lateral axis: positive toward walkway / opposite contact rail
+    z: up
+
+Important integration warning:
+
+The existing Tunnel_PCG core historically uses:
+
+    +Y longitudinal
+    XZ cross-section
+
+Some research documents use an engineering route convention:
+
+    +X chainage
+    +Y left
+    +Z up
+
+Do **not** silently change the production core axes in Stage 10.
+
+Recommended integration:
+
+- keep the production ScenePackage/world convention stable;
+- treat Moscow research cross-sections as local engineering 2D data;
+- add an explicit mapping layer between research track-frame coordinates and the existing production tunnel frame.
+
+Axis conversion must be unit-tested.
+
+---
+
+## 21. Initial civil shell — source-backed and ready
+
+Initial circular shell:
+
+    inner diameter          5.100 m
+    inner radius            2.550 m
+    outer diameter          5.500 m
+    outer radius            2.750 m
+    ring pitch              1.000 m
+
+Relative to UGR:
+
+    lining center z        +1.670 m
+    intrados invert        -0.880 m
+    intrados crown         +4.220 m
+    extrados invert        -1.080 m
+    extrados crown         +4.420 m
+
+This finally resolves the previously missing vertical placement of track relative to the classic 5.1 m intrados.
+
+Do not derive this placement from Cmk.
+
+---
+
+## 22. Walkway — resolved for the initial preset
+
+For the selected legacy civil/service combination, the walkway is real geometry, not simply removed.
+
+Source-backed values:
+
+    top z above UGR          +0.200 m
+    inner edge lateral        1.660 m from track/tunnel axis
+
+Intersection of the physical intrados with z=+0.2 gives approximately:
+
+    outer physical x          2.0836516 m
+
+Therefore the implied clear top width is approximately:
+
+    0.4236516 m
+
+This width comes from the **physical lining circle + source dimension**, not from the Cmk clearance envelope.
+
+This supersedes the earlier informal idea that a Moscow preset would simply have no walking pad.
+
+---
+
+## 23. Drainage / track concrete — initial geometry ready
+
+Central drainage trough:
+
+    clear width               0.900 m
+    depth below UGR           0.530 m
+
+General source range is 0.5–0.6 m, but the selected running-tunnel drawing gives 0.530 m and that exact value should be used for the deterministic initial profile.
+
+Additional source-backed track-concrete facts:
+
+    transverse fall toward drain   0.03
+    water-release groove           25 x 50 mm
+    concrete under timber sleeper
+      straight                     0.160 m minimum
+      curves/turnouts              0.100 m minimum
+    concrete surface near sleeper  ~10 mm below sleeper top
+
+The deterministic v1 drain may use a rectangular trough; exact local corner radii/hand finishing are not source-resolved.
+
+---
+
+## 24. R65 running rail — use research reference implementation, not Stage-9 generic rail
+
+The research package contains an engineering reconstruction from GOST R 51685-2022.
+
+Relevant files:
+
+    research/moscow_metro_tunnels/reference_impl/tunnel_pcg_ref/rail_profiles.py
+    research/moscow_metro_tunnels/reference_impl/fixtures/r65_analytic_primitives.json
+    research/moscow_metro_tunnels/reference_impl/fixtures/r65_profile_0p05mm.csv
+
+R65 principal dimensions:
+
+    height             0.18000 m
+    head width         0.07459 m
+    base width         0.15000 m
+    web thickness      0.01800 m
+
+The reconstruction is source-derived tangent geometry and was validated against GOST area/centroid/template data.
+
+It is suitable for production visual geometry.
+
+Do not keep the Stage-9 generic 16-vertex rail for the Moscow profile.
+
+---
+
+## 25. Gauge rule
+
+Current Moscow gauge depends on horizontal curve radius.
+
+Research rule:
+
+    straight or R >= 1200 m     1.520 m
+    600 < R < 1200 m            1.524 m
+    400 < R <= 600 m            1.530 m
+    125 < R <= 400 m            1.535 m
+    100 < R <= 125 m            1.540 m
+    R <= 100 m                  1.544 m
+
+Gauge is measured between **inner rail-head working faces**, not rail profile centrelines.
+
+Therefore rail placement must know the reconstructed R65/R50 working-face datum.
+
+For the first straight deterministic fixture, use 1.520 m.
+
+---
+
+## 26. Legacy timber sleepers
+
+Selected first preset uses metro timber sleepers.
+
+Source-backed geometry:
+
+    length                2.650 m
+    thickness             0.165 m
+    upper face width      0.165 m
+    lower face width      0.250 m
+    sawn side height      0.135 m
+
+Initial sleeper top:
+
+    z = -0.220 m
+
+This is based on the source drawing interpretation in the Stage-10 profile.
+
+Sleeper density:
+
+    straight / R >= 1200       1680 per km
+    tighter curves             1840 per km
+
+Do not blindly reuse Stage-8 rail spacing logic.
+
+---
+
+## 27. KD-65 fastening
+
+The focused research pass now gives enough geometry for an initial KD-65 family.
+
+Baseplate:
+
+    370 x 165 mm
+    4 holes
+    hole diameter ~26 mm with source tolerance
+    hole centres 310 x 100 mm
+    max section envelope ~55.6 mm
+    source-specific slopes/radii/profile callouts available
+
+Under-baseplate pad:
+
+    370 x 165 x 6 mm
+    4 x Ø28 holes
+    same 310 x 100 mm centres
+    R10 max corner
+
+Rail-foot pad:
+
+    190 x 148 mm
+    base thickness 7 mm
+    total raised thickness 14 mm
+    raised seat length 170 mm
+    21 x Ø20 perforations
+
+Metro-specific track screw:
+
+    24 x 150 mm
+
+Do not replace it with the general-railway 24 x 170 mm drawing.
+
+Clamp bolt:
+
+    M22 x 75
+
+Spring clamp:
+
+    KDP-2 / KD-family
+
+Exact spring-clamp solid can remain simplified in the first implementation if marked as such.
+
+---
+
+## 28. Contact rail — initial geometry now implementable
+
+Placement:
+
+    horizontal offset from nearest running-rail inner working face:
+        0.690 m ± 0.008 m
+
+    contact working surface:
+        +0.160 m ± 0.006 m above UGR
+
+Published metro contact rail RK section:
+
+    height             118 mm
+    top width           80 mm
+    base width          90 mm
+    web width           20 mm
+
+Support/bracket envelope:
+
+    540 x 620 x 100 mm
+
+Reference support pitch range:
+
+    4.5–5.4 m
+
+Deterministic initial fallback:
+
+    5.0 m
+
+Legacy support attaches to timber sleeper using three track screws according to the focused research source.
+
+The exact historic protective-cover extrusion is still unresolved.
+
+For v1:
+
+- preserve historical clearances/support geometry;
+- if a modern cover profile is used as silhouette fallback, tag it explicitly as era-mismatched C-confidence;
+- do not present that cover as historic fact.
+
+---
+
+## 29. Initial cast-iron ring detail — IMPORTANT LIMIT
+
+The classic 5.5/5.1 cast-iron family is **not yet series-accurate LOD0-ready**.
+
+The focused research pass identifies a useful coarse candidate:
+
+    DZMO_5500_5100_11_SEGMENT_REFERENCE
+
+Possible coarse ring rhythm:
+
+    total 11
+    normal 8
+    adjacent-to-key 2
+    key 1
+
+But the public research set still does not uniquely provide, for one named factory series:
+
+- exact N/C/K central angles;
+- exact key wedge angle/dimensions;
+- exact rib positions per segment type;
+- complete bolt-hole coordinates;
+- grout-plug coordinate;
+- exact flange/falts/rebate profile.
+
+Therefore the first Stage-10 implementation may use:
+
+- correct 5.5/5.1 civil shell;
+- 1.0 m ring seams;
+- optionally the 11-piece DZMO rhythm as an explicitly coarse reference;
+
+but it must **not fabricate series-accurate ribs/bolts/pockets**.
+
+The existing Tunnel Scanner six-segment ring must not be cosmetically rescaled and called a Moscow cast-iron ring.
+
+---
+
+## 30. Stage-10 profile machine data
+
+The focused research pass produced:
+
+    research/moscow_metro_tunnels/data/stage10_initial_profile.json
+
+Properties:
+
+- deterministic first profile;
+- no null values in required v1 fields;
+- unresolved data is encoded as `not_required_for_initial_profile` or explicit fallback;
+- source IDs are attached.
+
+Source pinpoints:
+
+    research/moscow_metro_tunnels/data/stage10_source_pinpoints.json
+
+This maps critical dimensions to printed pages / PDF pages / figures / tables / clauses.
+
+Use these files as the Stage-10 implementation input, not prose copied into code.
+
+---
+
+## 31. Reference engineering kernel
+
+The research package includes an isolated reference implementation under:
+
+    research/moscow_metro_tunnels/reference_impl/
+
+Important modules:
+
+- `geometry.py` — analytic 2D primitives;
+- `track.py` — gauge/cant;
+- `contact_rail.py` — placement logic;
+- `clearances.py` — Cmk/Om logic;
+- `rail_profiles.py` — R50/R65 reconstruction;
+- `rings.py` — ring sequences;
+- `events.py` — deterministic periodic systems;
+- `alignment3d.py` — chainage/grade/parallel-transport frames;
+- schemas and fixtures.
+
+This reference package is intentionally isolated from production code.
+
+Stage 10 should **consume/port tested engineering logic deliberately**, not duplicate constants ad hoc.
+
+---
+
+# PART IV — RECOMMENDED NEXT IMPLEMENTATION PLAN
+
+## 32. Stage 10 should begin now
+
+After the focused research commits, the initial Moscow profile is ready enough to start implementation.
+
+No additional general research pass is required before Stage 10.1.
+
+However, exact cast-iron tubing LOD0 remains blocked and should not block the rest of Stage 10.
+
+---
+
+## 33. Recommended Stage 10.1 — profile/data integration and coordinate contract
+
+Do this first.
+
+Goals:
+
+1. create production-side Moscow profile dataclasses/schema;
+2. load/represent the Stage-10 initial profile with provenance;
+3. introduce explicit datums:
+   - UGR;
+   - track axis;
+   - tunnel/lining axis;
+4. define and unit-test conversion from research 2D frame to existing Tunnel_PCG world/local frame;
+5. integrate R65 reference profile into production sweep;
+6. implement gauge placement by inner working faces, not profile centres;
+7. keep Stage-9 stable IDs/chunking/topology behaviour unchanged.
+
+Do **not** start by modeling ribs/bolts of the cast-iron lining.
+
+Acceptance:
+
+- source/profile values round-trip deterministically;
+- exact R65 principal dimensions are verified;
+- straight gauge is exactly 1.520 m between working faces;
+- rail top plane is UGR z=0 in the engineering track frame;
+- world-coordinate mapping agrees with existing Stage-9 longitudinal convention;
+- no Stage-9 test regression.
+
+---
+
+## 34. Recommended Stage 10.2 — track/invert/permanent way
+
+Then implement:
+
+- timber sleepers;
+- KD-65 baseplate;
+- pads;
+- track screws;
+- clamp bolts;
+- simplified/parameterized spring clamp;
+- track concrete cross-section;
+- 0.9 x 0.53 m central trough;
+- 3% crossfall;
+- 25 x 50 mm water-release groove;
+- deterministic sleeper pitch and independent phase.
+
+Acceptance should include:
+
+- no rail/concrete z-fighting;
+- sleeper embedment matches profile data;
+- rail-foot support chain is geometrically consistent;
+- drain remains physically separate from clearance envelope;
+- periodic systems are deterministic and not synchronized to lining rings.
+
+---
+
+## 35. Recommended Stage 10.3 — contact rail
+
+Implement:
+
+- RK rail profile;
+- 690 / +160 placement;
+- side logic;
+- bracket/support chain;
+- insulator initial geometry;
+- protective cover with explicit fallback metadata;
+- support pitch independent from sleepers and lining rings.
+
+Add a strict metadata marker for the era-mismatched cover fallback.
+
+---
+
+## 36. Recommended Stage 10.4 — civil shell / walkway
+
+Implement initial Moscow civil geometry:
+
+- 5.5/5.1 concentric shell;
+- center +1.67 m above UGR;
+- ring seams at 1.0 m pitch;
+- raised +0.2 m walkway;
+- 1.660 m inner edge;
+- physical intrados-clipped outer edge.
+
+Keep the detailed cast-iron segment surface coarse/disabled unless source-backed.
+
+---
+
+## 37. Recommended Stage 10.5 — production integration
+
+Combine Moscow civil + permanent way + contact rail on the existing Stage-9 production architecture.
+
+Requirements:
+
+- global double coordinates remain canonical;
+- chunking remains optional;
+- stable parent IDs survive chunking;
+- no duplicate/coplanar production faces;
+- Stage-9 finalization rules still work;
+- Blender backend remains a verifier, not the geometry authority;
+- prepare the scene model for a future UNIGINE exporter without coupling core geometry to Blender.
+
+---
+
+# PART V — THINGS THE NEXT AGENT MUST NOT DO
+
+## 38. Do not regress resolved project decisions
+
+Do not:
+
+- make LiDAR the next milestone;
+- force floating-origin rebasing into the core;
+- make chunking mandatory for precision;
+- put ancillary infrastructure back into one closed solid per ring;
+- restore coincident internal caps;
+- replace stable 63-bit IDs with 32-bit IDs;
+- use Blender custom-property limits to redefine engine-neutral IDs;
+- use the Stage-9 generic rail for the Moscow profile;
+- place rail profile centreline at ±gauge/2;
+- use Cmk as a physical tunnel wall;
+- derive the tunnel vertical position from Cmk when the source gives physical placement;
+- delete the selected Moscow walkway merely because the earlier informal roadmap mentioned no walking pad;
+- call the modern protective-cover fallback historical;
+- rescale the Tunnel Scanner six-segment lining and call it Moscow cast iron;
+- invent exact N/C/K cast-iron geometry.
+
+---
+
+## 39. Known unresolved items that are acceptable to defer
+
+The following do **not** block Stage 10.1–10.5 initial production geometry:
+
+- exact cast-iron N/C/K angles;
+- exact key wedge CAD;
+- exact rib patterns;
+- exact cast-iron bolt-hole coordinates;
+- exact grout plug coordinate;
+- exact falts/rebate profile;
+- exact historical contact-rail protective-cover extrusion;
+- exact porcelain insulator CAD;
+- exact cable rack/luminaire products;
+- local drainage sumps / special chambers;
+- full network survey-grade XYZ.
+
+These must remain tagged as unresolved/fallback rather than guessed.
+
+---
+
+# PART VI — REPOSITORY LANDMARKS
+
+## 40. Production code
+
+Main package:
+
+    src/tunnel_scanner_core/
+
+Key Stage-9 production module:
+
+    src/tunnel_scanner_core/production.py
+
+Blender backend:
+
+    src/tunnel_scanner_core/blender_adapter.py
+
+Scene model / JSON:
+
+    src/tunnel_scanner_core/scene.py
+    src/tunnel_scanner_core/scene_io.py
+
+Curved lining mesher:
+
+    src/tunnel_scanner_core/curved_mesh.py
+
+---
+
+## 41. Important scripts
+
+Stage-9 generation:
+
+    examples/generate_stage9_production_tunnel.py
+
+Stage-9 Blender verifier:
+
+    scripts/blender_verify_stage9.py
+
+Topology audit:
+
+    scripts/audit_stage9_topology.py
+
+Long-tunnel stress:
+
+    scripts/verify_stage9_stress.py
+
+Independent topology:
+
+    scripts/verify_stage9_trimesh.py
+
+---
+
+## 42. Test commands
+
+Install:
+
+    python -m pip install -e '.[test]'
+
+Regression:
+
+    pytest
+
+The last established production baseline is 150 tests plus Stage-8/9 stress and topology checks.
+
+Research reference implementation has its own tests under:
+
+    research/moscow_metro_tunnels/reference_impl/tests/
+
+Do not assume production pytest automatically covers all reference_impl tests unless CI explicitly includes them.
+
+---
+
+## 43. Blender runtime
+
+The user currently has:
+
+    Blender 5.2.2 LTS
+
+Stage-9 Blender verification is known to work after the 63-bit ID adapter fix.
+
+Any new Stage-10 Blender smoke test should preserve that backend behaviour.
+
+---
+
+# PART VII — STATUS TO REPORT IN THE NEXT CHAT
+
+## 44. Current overall status
+
+### Closed
+
+- Stage 1–8 Tunnel Scanner geometry reconstruction baseline;
+- Stage 9 production geometry / long-tunnel assembly;
+- Stage-9 Blender smoke test;
+- Stage-9 63-bit Blender-ID compatibility issue;
+- focused Stage-10 research pass for an initial Moscow cross-section.
+
+### Ready to start
+
+- **Stage 10.1 — Moscow profile/data integration + R65/gauge/UGR coordinate contract.**
+
+### Still intentionally blocked
+
+- exact series-accurate classic 5.5/5.1 cast-iron tubing LOD0.
+
+---
+
+## 45. Suggested first message/task for the next implementation agent
+
+Use this as the starting instruction:
+
+> Read `PROJECT_HANDOFF.md`, then `research/moscow_metro_tunnels/21_stage10_initial_archetype.md`, `data/stage10_initial_profile.json`, and `data/stage10_source_pinpoints.json`. Stage 9 is closed and Blender-validated. Begin only Stage 10.1: production Moscow profile/data model, explicit UGR/track/tunnel datums, coordinate-frame mapping to the existing +Y-longitudinal core, integration of the research R65 profile, and gauge placement by inner working faces. Add tests/stress verification and push completed changes to master. Do not implement fake series-accurate cast-iron ribs/bolts.
+
+---
+
+## 46. Final note
+
+The repository now contains enough source-backed data to start the initial Moscow Metro production profile.
+
+The next conversation should **not** spend its first turn re-researching the whole Moscow Metro. It should first read the focused Stage-10 profile and proceed with Stage 10.1, while keeping the unresolved cast-iron detail boundary explicit.

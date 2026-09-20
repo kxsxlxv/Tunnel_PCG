@@ -41,6 +41,8 @@ from .moscow import (
 )
 from .permanent_way import (
     build_stage10_2_local_event_meshes,
+    build_modern_lvt_local_event_meshes,
+    modern_lvt_chainages,
     sleeper_chainages,
     track_concrete_core_xz,
 )

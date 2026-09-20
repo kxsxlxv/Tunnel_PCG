@@ -30,7 +30,7 @@ def _rail_centers(profile):
 
 def test_stage10_2_profile_closes_sleeper_kd65_and_concrete_data():
     profile = load_stage10_initial_moscow_profile()
-    assert profile.schema_version == "1.7"
+    assert profile.schema_version == "1.8"
     s = profile.sleeper
     k = profile.fastening
     tc = profile.track_concrete

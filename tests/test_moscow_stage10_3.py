@@ -172,6 +172,11 @@ def test_stage10_3_local_support_meshes_are_complete_and_source_tagged():
 
     screws = by_type["production_contact_rail_attachment_screws"]
     assert screws.properties["quantity"] == 3
+    assert math.isclose(screws.properties["diameterM"], 0.024, abs_tol=1e-12)
+    assert math.isclose(screws.properties["shaftLengthM"], 0.150, abs_tol=1e-12)
+    assert math.isclose(screws.properties["headRadiusM"], 0.018, abs_tol=1e-12)
+    assert math.isclose(screws.properties["headHeightM"], 0.008, abs_tol=1e-12)
+    assert screws.properties["embeddedFastenerVolumeOverlap"] is True
     assert screws.properties["legacyAttachmentRule"] == (
         "three_track_screws_into_timber_sleeper"
     )

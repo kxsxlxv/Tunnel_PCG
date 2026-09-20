@@ -64,7 +64,7 @@ def main() -> None:
             ]
             assert math.isclose(
                 max(v[2] - station.offset_z_m for v in section),
-                0.0,
+                -1.67,
                 abs_tol=2e-12,
             )
 
@@ -102,8 +102,14 @@ def main() -> None:
                     rail.custom_properties["railCenterX"]
                     for rail in rails
                 ],
-                "rail_top_local_z_m": (
-                    rails[0].custom_properties["railTopZLocalM"]
+                "rail_top_profile_z_m": (
+                    rails[0].custom_properties["railTopProfileZLocalM"]
+                ),
+                "rail_top_core_z_m": (
+                    rails[0].custom_properties["railTopCoreZLocalM"]
+                ),
+                "profile_z_to_core_z_offset_m": (
+                    profile.coordinate.profile_z_to_core_z_offset_m
                 ),
                 "duplicate_rail_face_groups": (
                     audit.duplicate_group_count

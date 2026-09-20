@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.5",
+  "schema_version": "1.6",
   "profile_id": "stage10_initial_profile_CAST_IRON_5500_R1000_R65_TIMBER_LEGACY",
   "purpose": "first deterministic XZ profile for Blender/LiDAR implementation",
   "readiness": {
@@ -88,6 +88,16 @@
         "underlying manufacturing drawing numbers referenced by TU 35-521-90 are not publicly available as dimensioned tubing drawings in the inspected source set"
       ],
       "public_specification_source": "P10-TU35-521-90"
+    },
+    "initial_geometry": {
+      "mode": "smooth_concentric_ringwise_shell_v1",
+      "ring_pitch_m": 1,
+      "ring_boundary_mode": "separate_ring_objects_without_internal_end_caps",
+      "circumferential_segment_surface_mode": "disabled_exact_NCK_angles_unresolved",
+      "coarse_segment_count_reference": 11,
+      "coarse_segment_count_is_geometry": false,
+      "confidence": "A_for_diameters_and_axis_B_for_concentric_shell_depth",
+      "reason": "Stage 10.4 must replace the Stage-9 shell without inventing series-specific N/C/K central angles, ribs, bolt holes or rebates"
     }
   },
   "running_rail_and_track": {
@@ -405,7 +415,13 @@
       "P10-FROLOV-1.14",
       "P10-SP-WALKWAY"
     ],
-    "service_era_interpretation": "legacy raised banquette/walkway; not a modern retrofit-only element"
+    "service_era_interpretation": "legacy raised banquette/walkway; not a modern retrofit-only element",
+    "initial_geometry": {
+      "mode": "raised_integrated_wedge_to_physical_intrados_v1",
+      "inner_riser_contact_rule": "share x=+1.660 m boundary with Stage-10.2 track concrete; omit hidden lower contact span and retain exposed riser above concrete",
+      "intrados_contact_surface_rule": "omit hidden walkway-to-lining longitudinal faces",
+      "confidence": "B_source_dimensions_and_physical_intrados_closure"
+    }
   },
   "contact_rail": {
     "side": "x_negative_for_initial_profile",

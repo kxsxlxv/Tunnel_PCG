@@ -33,6 +33,12 @@ from .assembly import TunnelAssembly, TunnelAssemblyConfig
 from .config import RingConfig
 from .curved_mesh import SurfaceMeshingConfig
 from .mesh import Face, Vec3
+from .moscow import (
+    MoscowStage10Profile,
+    R65ProductionProfile,
+    r65_inner_working_face_x,
+    r65_rail_center_offsets_for_gauge,
+)
 from .scene import LabelPolicy, SceneMode, SceneObject, ScenePackage
 from .tunnel import ProceduralTunnelBuild, build_procedural_nominal_tunnel
 
@@ -508,6 +514,7 @@ def build_continuous_asset_specs(
     ancillary: AncillarySet,
     label_policy: LabelPolicy,
     rail_profile: RailProfile | None = None,
+    moscow_profile: MoscowStage10Profile | None = None,
 ) -> tuple[ContinuousAssetSpec, ...]:
     if not namespace:
         raise ValueError("namespace must not be empty")
@@ -548,42 +555,155 @@ def build_continuous_asset_specs(
             )
         )
 
-    base_z = -ancillary.inner_radius_m + ancillary.config.pavement_height_m
-    for rail_index, center_x in enumerate(_rail_center_offsets(ancillary.config)):
-        points = _ensure_ccw_xz(
-            profile.points_xz(center_x_m=center_x, base_z_m=base_z)
-        )
-        bottom_edges = _edges_with_both_vertices_at_z(points, base_z)
-        if len(bottom_edges) != 1:
-            raise AssertionError("production rail must have one pavement-contact bottom edge")
-        key = f"{namespace}/infrastructure/rail/{rail_index}"
-        label_id, semantic = _ancillary_semantics(label_policy, "rail")
-        specs.append(
-            ContinuousAssetSpec(
-                persistent_key=key,
-                name=f"PROD_RAIL_{rail_index}",
-                object_type="production_rail",
-                category="rail",
-                cross_section_xz=points,
-                label_id=label_id,
-                semantic_class=semantic,
-                omitted_longitudinal_edges=bottom_edges,
-                properties={
-                    "railIndex": rail_index,
-                    "railCenterX": center_x,
-                    "railSpacingM": ancillary.config.rail_spacing_m,
-                    "railProfile": "stage9_generic_lowpoly_16",
-                    "railProfileVertices": len(points),
-                    "railOverallHeightM": profile.overall_height_m,
-                    "railHeadWidthM": profile.head_width_m,
-                    "railHeadHeightM": profile.head_height_m,
-                    "railWebThicknessM": profile.web_thickness_m,
-                    "railFootWidthM": profile.foot_width_m,
-                    "railFootHeightM": profile.foot_height_m,
-                    "productionContinuous": True,
-                },
+    if moscow_profile is None:
+        base_z = -ancillary.inner_radius_m + ancillary.config.pavement_height_m
+        for rail_index, center_x in enumerate(_rail_center_offsets(ancillary.config)):
+            points = _ensure_ccw_xz(
+                profile.points_xz(center_x_m=center_x, base_z_m=base_z)
             )
+            bottom_edges = _edges_with_both_vertices_at_z(points, base_z)
+            if len(bottom_edges) != 1:
+                raise AssertionError(
+                    "production rail must have one pavement-contact bottom edge"
+                )
+            key = f"{namespace}/infrastructure/rail/{rail_index}"
+            label_id, semantic = _ancillary_semantics(label_policy, "rail")
+            specs.append(
+                ContinuousAssetSpec(
+                    persistent_key=key,
+                    name=f"PROD_RAIL_{rail_index}",
+                    object_type="production_rail",
+                    category="rail",
+                    cross_section_xz=points,
+                    label_id=label_id,
+                    semantic_class=semantic,
+                    omitted_longitudinal_edges=bottom_edges,
+                    properties={
+                        "railIndex": rail_index,
+                        "railCenterX": center_x,
+                        "railSpacingM": ancillary.config.rail_spacing_m,
+                        "railProfile": "stage9_generic_lowpoly_16",
+                        "railProfileVertices": len(points),
+                        "railOverallHeightM": profile.overall_height_m,
+                        "railHeadWidthM": profile.head_width_m,
+                        "railHeadHeightM": profile.head_height_m,
+                        "railWebThicknessM": profile.web_thickness_m,
+                        "railFootWidthM": profile.foot_width_m,
+                        "railFootHeightM": profile.foot_height_m,
+                        "productionContinuous": True,
+                    },
+                )
+            )
+    else:
+        r65 = R65ProductionProfile()
+        gauge = moscow_profile.track.gauge_m
+        gauge_level = moscow_profile.track.gauge_measurement_below_ugr_m
+        centers_profile_x = r65_rail_center_offsets_for_gauge(
+            gauge,
+            profile=r65,
+            measurement_below_top_m=gauge_level,
         )
+        metrics = r65.validation_metrics()
+        working_offset = r65.working_face_offset_m(
+            measurement_below_top_m=gauge_level
+        )
+        top_profile_z = moscow_profile.datums.ugr_z_m
+        base_profile_z = top_profile_z - r65.overall_height_m
+
+        for rail_index, center_profile_x in enumerate(centers_profile_x):
+            profile_points = r65.points_xz(
+                center_x_m=center_profile_x,
+                top_z_m=top_profile_z,
+            )
+            points = _ensure_ccw_xz(
+                tuple(
+                    moscow_profile.coordinate.research_xz_to_core_xz(x, z)
+                    for x, z in profile_points
+                )
+            )
+            center_core_x, _ = (
+                moscow_profile.coordinate.research_xz_to_core_xz(
+                    center_profile_x,
+                    top_profile_z,
+                )
+            )
+            working_face_profile_x = r65_inner_working_face_x(
+                rail_index,
+                center_profile_x,
+                profile=r65,
+                measurement_below_top_m=gauge_level,
+            )
+            working_face_core_x, working_face_core_z = (
+                moscow_profile.coordinate.research_xz_to_core_xz(
+                    working_face_profile_x,
+                    top_profile_z - gauge_level,
+                )
+            )
+            key = f"{namespace}/infrastructure/rail/{rail_index}"
+            label_id, semantic = _ancillary_semantics(label_policy, "rail")
+            specs.append(
+                ContinuousAssetSpec(
+                    persistent_key=key,
+                    name=f"PROD_RAIL_{rail_index}",
+                    object_type="production_rail",
+                    category="rail",
+                    cross_section_xz=points,
+                    label_id=label_id,
+                    semantic_class=semantic,
+                    properties={
+                        "railIndex": rail_index,
+                        "railSide": (
+                            "negative_profile_x_contact_rail_side"
+                            if rail_index == 0
+                            else "positive_profile_x_walkway_side"
+                        ),
+                        "railCenterProfileX": center_profile_x,
+                        "railCenterX": center_core_x,
+                        "railCenterSpacingM": (
+                            centers_profile_x[1] - centers_profile_x[0]
+                        ),
+                        "railSpacingM": (
+                            centers_profile_x[1] - centers_profile_x[0]
+                        ),
+                        "railProfile": "stage10_1_r65_gost_r51685_2022",
+                        "railProfileVertices": len(points),
+                        "railOverallHeightM": r65.overall_height_m,
+                        "railHeadWidthM": r65.nominal_head_width_m,
+                        "railNominalHeadWidthM": r65.nominal_head_width_m,
+                        "railGeneratedHeadWidthM": metrics["head_width_m"],
+                        "railWebThicknessM": r65.web_thickness_m,
+                        "railFootWidthM": r65.base_width_m,
+                        "railTopZLocalM": top_profile_z,
+                        "railBaseZLocalM": base_profile_z,
+                        "ugrZLocalM": moscow_profile.datums.ugr_z_m,
+                        "gaugeM": gauge,
+                        "gaugeMeasurementBelowUGRM": gauge_level,
+                        "gaugeMeasurementZLocalM": (
+                            moscow_profile.datums.ugr_z_m - gauge_level
+                        ),
+                        "railWorkingFaceOffsetM": working_offset,
+                        "railInnerWorkingFaceProfileX": (
+                            working_face_profile_x
+                        ),
+                        "railInnerWorkingFaceX": working_face_core_x,
+                        "railInnerWorkingFaceZ": working_face_core_z,
+                        "gaugePlacementRule": (
+                            "inner_working_faces_at_ugr_minus_13mm"
+                        ),
+                        "r65AreaRelativeError": metrics["area_rel_error"],
+                        "r65CentroidZErrorM": metrics["centroid_z_error_m"],
+                        "moscowProfileID": moscow_profile.profile_id,
+                        "moscowProfileSHA256": (
+                            moscow_profile.provenance.canonical_sha256
+                        ),
+                        "railProfileSource": (
+                            moscow_profile.track.rail_profile_source
+                        ),
+                        "productionContinuous": True,
+                        "domainGeometryStage": "10.1",
+                    },
+                )
+            )
 
     return tuple(specs)
 
@@ -743,6 +863,7 @@ def stitch_ring_scene_object_to_alignment(
 class ProductionConfig:
     namespace: str = "default"
     rail_profile: RailProfile | None = None
+    moscow_profile: MoscowStage10Profile | None = None
     keep_stage8_ring_ancillary: bool = False
     keep_prescribed_outer_joint_solids: bool = False
     stitch_ring_geometry: bool = True
@@ -751,6 +872,10 @@ class ProductionConfig:
     def __post_init__(self) -> None:
         if not self.namespace:
             raise ValueError("production namespace must not be empty")
+        if self.rail_profile is not None and self.moscow_profile is not None:
+            raise ValueError(
+                "specify either rail_profile or moscow_profile, not both"
+            )
 
 
 @dataclass(frozen=True)
@@ -781,6 +906,7 @@ def build_production_scene(
         ancillary=ancillary,
         label_policy=source_scene.label_policy,
         rail_profile=config.rail_profile,
+        moscow_profile=config.moscow_profile,
     )
 
     objects: list[SceneObject] = []
@@ -852,9 +978,13 @@ def build_production_scene(
                 ),
                 "internalAncillaryCaps": 0,
                 "railProfile": (
-                    "stage9_generic_lowpoly_16"
-                    if config.rail_profile is None
-                    else "custom"
+                    "stage10_1_r65_gost_r51685_2022"
+                    if config.moscow_profile is not None
+                    else (
+                        "stage9_generic_lowpoly_16"
+                        if config.rail_profile is None
+                        else "custom"
+                    )
                 ),
                 "identity": (
                     "stable 63-bit BLAKE2b IDs from persistent semantic keys; "
@@ -865,6 +995,40 @@ def build_production_scene(
             "productionAlignmentStations": len(stations),
         }
     )
+    if config.moscow_profile is not None:
+        production_meta = metadata["productionGeometry"]
+        production_meta.update(
+            {
+                "domainStage": "10.1",
+                "moscowProfileID": config.moscow_profile.profile_id,
+                "moscowProfileSHA256": (
+                    config.moscow_profile.provenance.canonical_sha256
+                ),
+                "ugrZLocalM": config.moscow_profile.datums.ugr_z_m,
+                "trackAxisXLocalM": config.moscow_profile.datums.track_axis_x_m,
+                "trackAxisZLocalM": config.moscow_profile.datums.track_axis_z_m,
+                "liningAxisXLocalM": (
+                    config.moscow_profile.datums.lining_axis_x_m
+                ),
+                "liningAxisZLocalM": (
+                    config.moscow_profile.datums.lining_axis_z_m
+                ),
+                "coordinateMapping": (
+                    "profile +X -> core +X; route chainage +X -> core +Y; "
+                    "route left +Y -> core -X; route +Z -> core +Z"
+                ),
+                "gaugePlacement": (
+                    "R65 inner working faces at UGR-0.013m"
+                ),
+                "permanentWayStatus": "deferred_to_stage10_2",
+                "contactRailStatus": "deferred_to_stage10_3",
+                "civilShellStatus": "deferred_to_stage10_4",
+                "nonRailInfrastructureStatus": (
+                    "stage8_baseline_until_stage10_2_to_10_4"
+                ),
+            }
+        )
+
     scene = ScenePackage(
         name=f"tunnel_production_{config.namespace}",
         mode=SceneMode.MULTI_RING_TUNNEL,

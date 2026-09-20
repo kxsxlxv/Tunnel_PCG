@@ -140,6 +140,147 @@ class MoscowTrackProfile:
             raise ValueError("gauge measurement datum requires provenance")
 
 
+
+@dataclass(frozen=True)
+class MoscowTimberSleeperProfile:
+    top_z_m: float
+    bottom_z_m: float
+    length_m: float
+    thickness_m: float
+    upper_face_width_m: float
+    lower_face_width_m: float
+    sawn_side_height_m: float
+    density_per_km: float
+    source: str
+
+    def __post_init__(self) -> None:
+        vals = (
+            self.length_m,
+            self.thickness_m,
+            self.upper_face_width_m,
+            self.lower_face_width_m,
+            self.sawn_side_height_m,
+            self.density_per_km,
+        )
+        if any((not math.isfinite(v) or v <= 0.0) for v in vals):
+            raise ValueError("timber sleeper dimensions/density must be positive")
+        if not math.isclose(
+            self.top_z_m - self.bottom_z_m,
+            self.thickness_m,
+            abs_tol=1e-12,
+        ):
+            raise ValueError("sleeper top/bottom must match sleeper thickness")
+        if self.upper_face_width_m > self.lower_face_width_m:
+            raise ValueError("timber sleeper upper face must not exceed lower face")
+        if self.sawn_side_height_m > self.thickness_m:
+            raise ValueError("sawn side height must fit inside sleeper thickness")
+
+    @property
+    def pitch_m(self) -> float:
+        return 1000.0 / self.density_per_km
+
+
+@dataclass(frozen=True)
+class MoscowKD65Profile:
+    baseplate_transverse_m: float
+    baseplate_longitudinal_m: float
+    baseplate_max_height_m: float
+    baseplate_rail_seat_height_m: float
+    baseplate_hole_spacing_transverse_m: float
+    baseplate_hole_spacing_longitudinal_m: float
+    baseplate_hole_diameter_m: float
+    under_pad_transverse_m: float
+    under_pad_longitudinal_m: float
+    under_pad_thickness_m: float
+    under_pad_hole_diameter_m: float
+    rail_pad_transverse_m: float
+    rail_pad_longitudinal_m: float
+    rail_pad_base_thickness_m: float
+    rail_pad_total_thickness_m: float
+    rail_pad_raised_seat_transverse_m: float
+    track_screw_diameter_m: float
+    track_screw_length_m: float
+    track_screws_per_baseplate: int
+    clamp_bolt_diameter_m: float
+    clamp_bolt_length_m: float
+    clamp_bolts_per_baseplate: int
+    nut_height_m: float
+    nuts_per_baseplate: int
+    spring_clamps_per_baseplate: int
+    family: str
+
+    def __post_init__(self) -> None:
+        vals = (
+            self.baseplate_transverse_m,
+            self.baseplate_longitudinal_m,
+            self.baseplate_max_height_m,
+            self.baseplate_rail_seat_height_m,
+            self.baseplate_hole_spacing_transverse_m,
+            self.baseplate_hole_spacing_longitudinal_m,
+            self.baseplate_hole_diameter_m,
+            self.under_pad_transverse_m,
+            self.under_pad_longitudinal_m,
+            self.under_pad_thickness_m,
+            self.under_pad_hole_diameter_m,
+            self.rail_pad_transverse_m,
+            self.rail_pad_longitudinal_m,
+            self.rail_pad_base_thickness_m,
+            self.rail_pad_total_thickness_m,
+            self.rail_pad_raised_seat_transverse_m,
+            self.track_screw_diameter_m,
+            self.track_screw_length_m,
+            self.clamp_bolt_diameter_m,
+            self.clamp_bolt_length_m,
+            self.nut_height_m,
+        )
+        if any((not math.isfinite(v) or v <= 0.0) for v in vals):
+            raise ValueError("KD-65 dimensions must be finite and positive")
+        if self.baseplate_rail_seat_height_m > self.baseplate_max_height_m:
+            raise ValueError("KD-65 rail seat cannot exceed maximum envelope")
+        if self.rail_pad_base_thickness_m > self.rail_pad_total_thickness_m:
+            raise ValueError("rail pad base thickness cannot exceed total thickness")
+        counts = (
+            self.track_screws_per_baseplate,
+            self.clamp_bolts_per_baseplate,
+            self.nuts_per_baseplate,
+            self.spring_clamps_per_baseplate,
+        )
+        if any(v <= 0 for v in counts):
+            raise ValueError("KD-65 hardware counts must be positive")
+
+
+@dataclass(frozen=True)
+class MoscowTrackConcreteProfile:
+    surface_cross_slope_to_drain: float
+    concrete_top_at_rail_z_m: float
+    minimum_bottom_at_rail_z_m: float
+    central_drain_center_x_m: float
+    central_drain_clear_width_m: float
+    central_drain_bottom_z_m: float
+    water_groove_width_m: float
+    water_groove_depth_m: float
+    water_groove_center_x_m: float
+    concrete_material: str
+    surface_reference_mode: str
+    groove_position_mode: str
+
+    def __post_init__(self) -> None:
+        positive = (
+            self.surface_cross_slope_to_drain,
+            self.central_drain_clear_width_m,
+            self.water_groove_width_m,
+            self.water_groove_depth_m,
+        )
+        if any((not math.isfinite(v) or v <= 0.0) for v in positive):
+            raise ValueError("track-concrete dimensions/slope must be positive")
+        if self.water_groove_width_m >= self.central_drain_clear_width_m:
+            raise ValueError("water-release groove must fit inside central drain")
+        if self.minimum_bottom_at_rail_z_m >= self.concrete_top_at_rail_z_m:
+            raise ValueError("concrete minimum bottom must lie below top datum")
+        if self.central_drain_bottom_z_m >= self.concrete_top_at_rail_z_m:
+            raise ValueError("central drain bottom must lie below concrete top")
+
+
 @dataclass(frozen=True)
 class MoscowProfileProvenance:
     source_path: str | None
@@ -156,6 +297,9 @@ class MoscowStage10Profile:
     coordinate: MoscowCoordinateContract
     datums: MoscowDatums
     track: MoscowTrackProfile
+    sleeper: MoscowTimberSleeperProfile
+    fastening: MoscowKD65Profile
+    track_concrete: MoscowTrackConcreteProfile
     civil_family: str
     intrados_radius_m: float
     extrados_radius_m: float
@@ -186,11 +330,32 @@ class MoscowStage10Profile:
         landmarks = civil["vertical_landmarks"]
         track = raw["running_rail_and_track"]
         gauge_definition = track["gauge_definition"]
+        sleeper_raw = track["timber_sleeper"]
+        sleeper_top_raw = track["sleeper_top_z_m"]
+        sleeper_bottom_raw = track["sleeper_bottom_z_m"]
+        sleeper_density_raw = track["sleeper_density_per_km"]
+        fastening_raw = track["fastening"]
+        baseplate_raw = fastening_raw["baseplate"]
+        under_pad_raw = fastening_raw["under_baseplate_pad"]
+        rail_pad_raw = fastening_raw["rail_pad"]
+        concrete_raw = raw["track_concrete_and_invert"]
+        drain_raw = concrete_raw["central_drain"]
+        groove_raw = concrete_raw["water_release_groove"]
 
         source_ids: list[str] = []
         for candidate in (
             intrados.get("source"),
             track.get("rail_profile_source_id"),
+            sleeper_top_raw.get("source"),
+            sleeper_raw.get("source"),
+            sleeper_density_raw.get("source"),
+            fastening_raw.get("source_assembly"),
+            baseplate_raw.get("historical_album_source"),
+            under_pad_raw.get("source"),
+            rail_pad_raw.get("source"),
+            concrete_raw.get("source"),
+            groove_raw.get("source"),
+            *drain_raw.get("sources", ()),
             *gauge_definition.get("sources", ()),
         ):
             if candidate and candidate not in source_ids:
@@ -238,6 +403,112 @@ class MoscowStage10Profile:
             rail_profile_source=str(track["rail_profile_source"]),
         )
 
+        sleeper_profile = MoscowTimberSleeperProfile(
+            top_z_m=float(sleeper_top_raw["value"]),
+            bottom_z_m=float(sleeper_bottom_raw["value"]),
+            length_m=float(sleeper_raw["length_m"]),
+            thickness_m=float(sleeper_raw["thickness_m"]),
+            upper_face_width_m=float(sleeper_raw["upper_face_width_m"]),
+            lower_face_width_m=float(sleeper_raw["lower_face_width_m"]),
+            sawn_side_height_m=float(sleeper_raw["sawn_side_height_m"]),
+            density_per_km=float(
+                sleeper_density_raw["straight_and_radius_ge_1200"]
+            ),
+            source=str(sleeper_raw["source"]),
+        )
+
+        orientation = baseplate_raw["plan_orientation"]
+        seat = baseplate_raw["initial_rail_seat_height_m"]
+        kd65_profile = MoscowKD65Profile(
+            baseplate_transverse_m=float(baseplate_raw["overall_plan_length_m"]),
+            baseplate_longitudinal_m=float(baseplate_raw["overall_plan_width_m"]),
+            baseplate_max_height_m=float(
+                baseplate_raw["maximum_section_envelope_height_m"]
+            ),
+            baseplate_rail_seat_height_m=float(seat["value"]),
+            baseplate_hole_spacing_transverse_m=float(
+                orientation["hole_center_spacing_transverse_x_m"]
+            ),
+            baseplate_hole_spacing_longitudinal_m=float(
+                orientation["hole_center_spacing_longitudinal_y_m"]
+            ),
+            baseplate_hole_diameter_m=float(
+                baseplate_raw["holes"]["diameter_m"]
+            ),
+            under_pad_transverse_m=float(under_pad_raw["overall_plan_m"][0]),
+            under_pad_longitudinal_m=float(under_pad_raw["overall_plan_m"][1]),
+            under_pad_thickness_m=float(under_pad_raw["thickness_m"]),
+            under_pad_hole_diameter_m=float(
+                under_pad_raw["holes"]["diameter_m"]
+            ),
+            rail_pad_transverse_m=float(rail_pad_raw["overall_plan_m"][0]),
+            rail_pad_longitudinal_m=float(rail_pad_raw["overall_plan_m"][1]),
+            rail_pad_base_thickness_m=float(rail_pad_raw["base_thickness_m"]),
+            rail_pad_total_thickness_m=float(
+                rail_pad_raw["raised_total_thickness_m"]
+            ),
+            rail_pad_raised_seat_transverse_m=float(
+                rail_pad_raw["raised_seat_length_m"]
+            ),
+            track_screw_diameter_m=float(
+                fastening_raw["track_screw"]["diameter_m"]
+            ),
+            track_screw_length_m=float(
+                fastening_raw["track_screw"]["length_m"]
+            ),
+            track_screws_per_baseplate=int(
+                fastening_raw["track_screw"]["quantity_per_baseplate"]
+            ),
+            clamp_bolt_diameter_m=float(
+                fastening_raw["clamp_bolt"]["thread"].removeprefix("M")
+            ) / 1000.0,
+            clamp_bolt_length_m=float(
+                fastening_raw["clamp_bolt"]["length_m"]
+            ),
+            clamp_bolts_per_baseplate=int(
+                fastening_raw["clamp_bolt"]["quantity_per_baseplate"]
+            ),
+            nut_height_m=float(fastening_raw["nut"]["height_m"]),
+            nuts_per_baseplate=int(
+                fastening_raw["nut"]["quantity_per_baseplate"]
+            ),
+            spring_clamps_per_baseplate=int(
+                fastening_raw["spring_clamp"]["quantity_per_baseplate"]
+            ),
+            family=str(fastening_raw["family"]),
+        )
+
+        concrete_reference = concrete_raw["shoulder_geometry"][
+            "initial_surface_reference"
+        ]
+        groove_position = groove_raw["initial_position"]
+        concrete_profile = MoscowTrackConcreteProfile(
+            surface_cross_slope_to_drain=float(
+                concrete_raw["surface_cross_slope_to_drain"]
+            ),
+            concrete_top_at_rail_z_m=float(
+                concrete_raw["nominal_concrete_top_at_sleeper_datum_z_m"][
+                    "value"
+                ]
+            ),
+            minimum_bottom_at_rail_z_m=float(
+                concrete_raw[
+                    "derived_min_concrete_bottom_z_at_rail_on_straight_m"
+                ]["value"]
+            ),
+            central_drain_center_x_m=float(drain_raw["center_x_m"]),
+            central_drain_clear_width_m=float(drain_raw["clear_width_m"]),
+            central_drain_bottom_z_m=-float(
+                drain_raw["depth_from_ugr_m"]["initial_geometry_value"]
+            ),
+            water_groove_width_m=float(groove_raw["width_m"]),
+            water_groove_depth_m=float(groove_raw["depth_m"]),
+            water_groove_center_x_m=float(groove_position["center_x_m"]),
+            concrete_material=str(concrete_raw["material"]),
+            surface_reference_mode=str(concrete_reference["mode"]),
+            groove_position_mode=str(groove_position["mode"]),
+        )
+
         if not math.isclose(
             track_profile.rail_height_m,
             0.180,
@@ -267,6 +538,24 @@ class MoscowStage10Profile:
         ):
             raise ValueError("initial Moscow extrados radius must be 2.750 m")
 
+        support_gap = (
+            track_profile.rail_height_m * 0.0
+            + (-track_profile.rail_height_m)
+            - sleeper_profile.top_z_m
+        )
+        support_stack = (
+            kd65_profile.under_pad_thickness_m
+            + kd65_profile.baseplate_rail_seat_height_m
+            + kd65_profile.rail_pad_total_thickness_m
+        )
+        if not math.isclose(support_gap, support_stack, abs_tol=1e-12):
+            raise ValueError(
+                "Stage-10.2 support stack must close exactly between sleeper top "
+                "and R65 base datum"
+            )
+        if not math.isclose(sleeper_profile.pitch_m, 1000.0 / 1680.0, abs_tol=1e-12):
+            raise ValueError("initial straight sleeper density must remain 1680/km")
+
         digest = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
         return cls(
             schema_version=str(raw["schema_version"]),
@@ -275,6 +564,9 @@ class MoscowStage10Profile:
             coordinate=coordinate,
             datums=datums,
             track=track_profile,
+            sleeper=sleeper_profile,
+            fastening=kd65_profile,
+            track_concrete=concrete_profile,
             civil_family=str(civil["family"]),
             intrados_radius_m=float(intrados["radius_m"]),
             extrados_radius_m=float(extrados["radius_m"]),

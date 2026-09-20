@@ -1398,6 +1398,112 @@ def _build_stage10_2_periodic_scene_objects(
     return tuple(result)
 
 
+def _build_stage10_5_modern_permanent_way_scene_objects(
+    *,
+    profile: MoscowStage10Profile,
+    namespace: str,
+    assembly: TunnelAssembly,
+    stations: Sequence[AlignmentStation],
+    label_policy: LabelPolicy,
+) -> tuple[SceneObject, ...]:
+    r65 = R65ProductionProfile()
+    rail_centers = r65_rail_center_offsets_for_gauge(
+        profile.track.gauge_m,
+        profile=r65,
+        measurement_below_top_m=(
+            profile.track.gauge_measurement_below_ugr_m
+        ),
+    )
+    local_meshes = build_modern_lvt_local_event_meshes(
+        profile,
+        rail_centers_profile_x=rail_centers,
+    )
+    chainages = modern_lvt_chainages(
+        assembly.length_by_chainage_m,
+        profile,
+    )
+    label_id, semantic = _ancillary_semantics(label_policy, "rail")
+    result: list[SceneObject] = []
+    L = assembly.config.ring_width_m
+    pw = profile.modern_permanent_way
+    phase = 0.5 * pw.support_pitch_m
+    folder_by_category = {
+        "lvt_block": "LVTBlocks",
+        "lvt_rubber_boot": "LVTRubberBoots",
+        "apc4_rail_pad": "APC4RailPads",
+        "apc4_fastening": "APC4Fastenings",
+    }
+
+    for event_index, chainage in enumerate(chainages):
+        station = sample_alignment_station(stations, chainage)
+        ring_id = min(
+            assembly.config.n_rings - 1,
+            max(0, int(math.floor(chainage / L))),
+        )
+        for local in local_meshes:
+            key = (
+                f"{namespace}/permanent-way/lvt-event/"
+                f"{event_index:06d}/{local.category}"
+            )
+            iid = stable_instance_id(key)
+            vertices = tuple(
+                (
+                    x + station.offset_x_m,
+                    y + station.world_y_m,
+                    z + station.offset_z_m,
+                )
+                for x, y, z in local.vertices
+            )
+            result.append(
+                SceneObject(
+                    name=(
+                        f"PROD_LVT_{event_index:06d}__"
+                        f"{local.name_suffix}"
+                    ),
+                    vertices=vertices,
+                    faces=local.faces,
+                    object_type=local.object_type,
+                    ring_id=ring_id,
+                    label_id=label_id,
+                    instance_id=iid,
+                    semantic_class=semantic,
+                    reconstruction="stage10_5_moscow_lvt_m_permanent_way",
+                    collection_path=(
+                        "Tunnel",
+                        namespace,
+                        "PermanentWay",
+                        "Modern",
+                        folder_by_category[local.category],
+                    ),
+                    extra_properties={
+                        **dict(local.properties),
+                        "persistentKey": key,
+                        "persistentInstanceID": iid,
+                        "tunnelInstanceID": stable_instance_id(
+                            f"{namespace}/tunnel"
+                        ),
+                        "identityScope": "periodic_modern_permanent_way_asset",
+                        "domainGeometryStage": "10.5",
+                        "servicePreset": profile.default_service_preset,
+                        "permanentWayPreset": pw.preset_id,
+                        "periodicEventIndex": event_index,
+                        "eventChainageM": chainage,
+                        "runningSupportPitchM": pw.support_pitch_m,
+                        "periodicPhaseM": phase,
+                        "periodicPhaseRule": "half_pitch_from_tunnel_start",
+                        "alignmentOffsetX": station.offset_x_m,
+                        "alignmentOffsetZ": station.offset_z_m,
+                        "alignmentWorldY": station.world_y_m,
+                        "moscowProfileID": profile.profile_id,
+                        "moscowProfileSHA256": (
+                            profile.provenance.canonical_sha256
+                        ),
+                    },
+                )
+            )
+    return tuple(result)
+
+
 def _build_stage10_3_contact_scene_objects(
     *,
     profile: MoscowStage10Profile,

@@ -36,13 +36,27 @@ MODERN_TYPES = {
 }
 
 
-def _ids(packages, wanted):
+def _periodic_ids(packages, wanted):
     result = {}
     for package in packages:
         for obj in package.objects:
             key = obj.custom_properties.get("persistentKey")
             if key in wanted:
                 result[key] = obj.instance_id
+    return result
+
+
+def _continuous_parent_ids(packages, wanted):
+    result = {}
+    for package in packages:
+        for obj in package.objects:
+            key = obj.custom_properties.get("sourcePersistentKey")
+            if key not in wanted:
+                continue
+            iid = int(obj.custom_properties["sourceInstanceID"])
+            if key in result:
+                assert result[key] == iid
+            result[key] = iid
     return result
 
 
@@ -120,20 +134,35 @@ def main() -> None:
     )
     assert audit.duplicate_group_count == 0
 
-    source = {
+    continuous_source = {
+        spec.persistent_key: spec.instance_id
+        for spec in build.asset_specs
+    }
+    periodic_source = {
         obj.custom_properties["persistentKey"]: obj.instance_id
         for obj in build.scene.objects
-        if obj.object_type in MODERN_TYPES
-        and "persistentKey" in obj.custom_properties
+        if (
+            obj.object_type in MODERN_TYPES
+            and "eventChainageM" in obj.custom_properties
+            and "persistentKey" in obj.custom_properties
+        )
     }
-    assert source
+    assert continuous_source
+    assert periodic_source
     for chunk_m in (6.7, 9.4):
         packages = build_chunk_scene_packages(
             build,
             chunk_length_m=chunk_m,
             boundary_policy=ChunkBoundaryPolicy.EXACT_LENGTH,
         )
-        assert _ids(packages, source) == source
+        assert _continuous_parent_ids(
+            packages,
+            continuous_source,
+        ) == continuous_source
+        assert _periodic_ids(
+            packages,
+            periodic_source,
+        ) == periodic_source
 
     legacy = build_production_tunnel(
         assembly_config=TunnelAssemblyConfig(
@@ -171,7 +200,19 @@ def main() -> None:
                 "service_cable_count": meta["serviceCableCount"],
                 "service_rack_count": meta["serviceCableRackCount"],
                 "duplicate_modern_face_groups": audit.duplicate_group_count,
-                "stable_ids_across_chunk_sizes": True,
+                "stable_continuous_parent_ids_across_chunk_sizes": True,
+                "stable_periodic_ids_across_chunk_sizes": True,
+                "continuous_sweep_alignment_compaction": meta.get(
+                    "continuousSweepAlignmentCompaction"
+                ),
+                "rail_source_alignment_stations": int(
+                    build.scene.objects_of_type("production_rail")[0]
+                    .custom_properties["sourceAlignmentStationCount"]
+                ),
+                "rail_sweep_alignment_stations": int(
+                    build.scene.objects_of_type("production_rail")[0]
+                    .custom_properties["sweepAlignmentStationCount"]
+                ),
                 "legacy_timber_variant_selectable": True,
             },
             indent=2,

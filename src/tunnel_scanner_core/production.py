@@ -2467,17 +2467,59 @@ def build_production_scene(
                     else "deferred_to_stage10_4"
                 ),
                 "nonRailInfrastructureStatus": (
-                    "moscow_walkway_stage10_4_stage8_services_transitional"
-                    if config.moscow_stage in {"10.4", "10.5"}
+                    "r2k11_cable_racks_implemented_pipes_unresolved"
+                    if (
+                        config.moscow_stage == "10.5"
+                        and config.resolved_moscow_service_preset == "modern"
+                    )
                     else (
-                        "stage8_walkway_and_services_until_stage10_4"
-                        if config.moscow_stage == "10.3"
+                        "moscow_walkway_stage10_4_stage8_services_transitional"
+                        if config.moscow_stage in {"10.4", "10.5"}
                         else (
-                            "stage8_walkway_and_services_until_stage10_3_to_10_4"
-                            if config.moscow_stage == "10.2"
-                            else "stage8_baseline_until_stage10_2_to_10_4"
+                            "stage8_walkway_and_services_until_stage10_4"
+                            if config.moscow_stage == "10.3"
+                            else (
+                                "stage8_walkway_and_services_until_stage10_3_to_10_4"
+                                if config.moscow_stage == "10.2"
+                                else "stage8_baseline_until_stage10_2_to_10_4"
+                            )
                         )
                     )
+                ),
+                "serviceCableCount": sum(
+                    1
+                    for obj in objects
+                    if obj.object_type == "production_service_cable"
+                ),
+                "serviceCableRackCount": len(stage10_5_service_racks),
+                "serviceCableRackFamily": (
+                    config.moscow_profile.cable_rack.family
+                    if stage10_5_service_racks
+                    else None
+                ),
+                "serviceCableRackHornCount": (
+                    config.moscow_profile.cable_rack.horn_count
+                    if stage10_5_service_racks
+                    else 0
+                ),
+                "serviceCableRacksPerCivilRing": (
+                    2 if stage10_5_service_racks else 0
+                ),
+                "serviceCableExactRouteScheduleResolved": (
+                    False if stage10_5_service_racks else None
+                ),
+                "servicePipeStatus": (
+                    "unresolved_not_generated"
+                    if (
+                        config.moscow_stage == "10.5"
+                        and config.resolved_moscow_service_preset == "modern"
+                    )
+                    else "legacy_stage8_preview"
+                ),
+                "legacyStage8TubeCount": sum(
+                    1
+                    for obj in objects
+                    if obj.object_type == "production_tube"
                 ),
                 "sleeperCount": sum(
                     1

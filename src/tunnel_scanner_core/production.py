@@ -2054,6 +2054,7 @@ def build_production_scene(
     if (
         config.moscow_profile is not None
         and config.moscow_stage in {"10.2", "10.3", "10.4", "10.5"}
+        and config.resolved_moscow_service_preset == "legacy"
     ):
         stage10_2_periodic = _build_stage10_2_periodic_scene_objects(
             profile=config.moscow_profile,
@@ -2064,10 +2065,33 @@ def build_production_scene(
         )
         objects.extend(stage10_2_periodic)
 
+    stage10_5_modern_permanent_way: tuple[SceneObject, ...] = ()
+    if (
+        config.moscow_profile is not None
+        and config.moscow_stage == "10.5"
+        and config.resolved_moscow_service_preset == "modern"
+    ):
+        stage10_5_modern_permanent_way = (
+            _build_stage10_5_modern_permanent_way_scene_objects(
+                profile=config.moscow_profile,
+                namespace=config.namespace,
+                assembly=source_build.assembly,
+                stations=stations,
+                label_policy=source_scene.label_policy,
+            )
+        )
+        objects.extend(stage10_5_modern_permanent_way)
+
     stage10_3_contact_periodic: tuple[SceneObject, ...] = ()
     if (
         config.moscow_profile is not None
-        and config.moscow_stage in {"10.3", "10.4"}
+        and (
+            config.moscow_stage in {"10.3", "10.4"}
+            or (
+                config.moscow_stage == "10.5"
+                and config.resolved_moscow_service_preset == "legacy"
+            )
+        )
     ):
         stage10_3_contact_periodic = _build_stage10_3_contact_scene_objects(
             profile=config.moscow_profile,

@@ -80,18 +80,25 @@ def test_stage10_4_walkway_and_track_concrete_partition_without_overlap():
     assert any(math.isclose(z, concrete_top_at_walkway, abs_tol=2e-12) for z in inner_points)
     assert any(math.isclose(z, profile.walkway.top_z_m, abs_tol=2e-12) for z in inner_points)
 
-    outer_top = (profile.walkway.outer_edge_x_m, profile.walkway.top_z_m)
-    assert any(
-        math.isclose(x, outer_top[0], abs_tol=2e-9)
-        and math.isclose(z, outer_top[1], abs_tol=2e-9)
+    outer_candidates = [
+        (x, z)
         for x, z in walkway
+        if math.isclose(z, profile.walkway.top_z_m, abs_tol=2e-12)
+        and x > profile.walkway.inner_edge_x_m
+    ]
+    assert len(outer_candidates) == 1
+    outer_top = outer_candidates[0]
+    assert math.isclose(
+        outer_top[0],
+        profile.walkway.outer_edge_x_m,
+        abs_tol=1e-9,
     )
     circle_error = (
         outer_top[0] ** 2
         + (outer_top[1] - profile.datums.lining_axis_z_m) ** 2
         - profile.intrados_radius_m ** 2
     )
-    assert abs(circle_error) < 2e-9
+    assert abs(circle_error) < 2e-12
 
 
 def test_stage10_4_annular_shell_uses_exact_moscow_radii_without_fake_segmentation():

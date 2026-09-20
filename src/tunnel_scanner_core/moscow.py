@@ -366,6 +366,19 @@ class MoscowModernPermanentWayProfile:
     boot_bottom_width_narrow_m: float
     boot_side_height_m: float
     fastening_family: str
+    rail_pad_thickness_m: float
+    rail_pad_plan_transverse_m: float
+    rail_pad_plan_longitudinal_m: float
+    clamps_per_rail_seat: int
+    monoregulators_per_rail_seat: int
+    underclamp_pieces_per_rail_seat: int
+    insulating_angles_per_rail_seat: int
+    anchors_per_rail_seat: int
+    clamp_preview_transverse_m: float
+    clamp_preview_longitudinal_m: float
+    clamp_preview_height_m: float
+    monoregulator_preview_radius_m: float
+    fastening_mesh_mode: str
 
     def __post_init__(self) -> None:
         vals = (
@@ -382,6 +395,13 @@ class MoscowModernPermanentWayProfile:
             self.boot_bottom_width_wide_m,
             self.boot_bottom_width_narrow_m,
             self.boot_side_height_m,
+            self.rail_pad_thickness_m,
+            self.rail_pad_plan_transverse_m,
+            self.rail_pad_plan_longitudinal_m,
+            self.clamp_preview_transverse_m,
+            self.clamp_preview_longitudinal_m,
+            self.clamp_preview_height_m,
+            self.monoregulator_preview_radius_m,
         )
         if any((not math.isfinite(v) or v <= 0.0) for v in vals):
             raise ValueError("modern permanent-way dimensions must be positive")
@@ -391,6 +411,15 @@ class MoscowModernPermanentWayProfile:
             raise ValueError("LVT boot bottom length cannot exceed opening length")
         if not self.preset_id or not self.fastening_family:
             raise ValueError("modern permanent-way identifiers must not be empty")
+        counts = (
+            self.clamps_per_rail_seat,
+            self.monoregulators_per_rail_seat,
+            self.underclamp_pieces_per_rail_seat,
+            self.insulating_angles_per_rail_seat,
+            self.anchors_per_rail_seat,
+        )
+        if any(v <= 0 for v in counts):
+            raise ValueError("modern APC-4 component counts must be positive")
 
 
 @dataclass(frozen=True)
@@ -1082,6 +1111,10 @@ class MoscowStage10Profile:
 
         block_raw = modern_pw_raw["block"]
         boot_raw = modern_pw_raw["rubber_boot"]
+        modern_fastening_raw = modern_pw_raw["fastening_details"]
+        modern_pad_raw = modern_fastening_raw["under_rail_pad"]
+        modern_fastening_topology_raw = modern_fastening_raw["component_topology"]
+        modern_fastening_mesh_raw = modern_fastening_raw["initial_mesh"]
         cant_text = str(block_raw["rail_seat_cant"])
         if not cant_text.startswith("1:"):
             raise ValueError("modern LVT rail-seat cant must use 1:N notation")
@@ -1104,6 +1137,41 @@ class MoscowStage10Profile:
             boot_bottom_width_narrow_m=float(boot_raw["bottom_width_narrow_m"]),
             boot_side_height_m=float(boot_raw["side_height_m"]),
             fastening_family=str(modern_pw_raw["fastening"]),
+            rail_pad_thickness_m=float(modern_pad_raw["nominal_thickness_m"]),
+            rail_pad_plan_transverse_m=float(
+                modern_fastening_mesh_raw["rail_pad_plan_transverse_m"]
+            ),
+            rail_pad_plan_longitudinal_m=float(
+                modern_fastening_mesh_raw["rail_pad_plan_longitudinal_m"]
+            ),
+            clamps_per_rail_seat=int(
+                modern_fastening_topology_raw["clamps_per_rail_seat"]
+            ),
+            monoregulators_per_rail_seat=int(
+                modern_fastening_topology_raw["monoregulators_per_rail_seat"]
+            ),
+            underclamp_pieces_per_rail_seat=int(
+                modern_fastening_topology_raw["underclamp_pieces_per_rail_seat"]
+            ),
+            insulating_angles_per_rail_seat=int(
+                modern_fastening_topology_raw["insulating_angles_per_rail_seat"]
+            ),
+            anchors_per_rail_seat=int(
+                modern_fastening_topology_raw["anchors_per_rail_seat"]
+            ),
+            clamp_preview_transverse_m=float(
+                modern_fastening_mesh_raw["clamp_preview_transverse_m"]
+            ),
+            clamp_preview_longitudinal_m=float(
+                modern_fastening_mesh_raw["clamp_preview_longitudinal_m"]
+            ),
+            clamp_preview_height_m=float(
+                modern_fastening_mesh_raw["clamp_preview_height_m"]
+            ),
+            monoregulator_preview_radius_m=float(
+                modern_fastening_mesh_raw["monoregulator_preview_radius_m"]
+            ),
+            fastening_mesh_mode=str(modern_fastening_mesh_raw["mode"]),
         )
 
 

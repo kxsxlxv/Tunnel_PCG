@@ -215,9 +215,10 @@ Latest fully green production baseline:
 
 ## User-facing workflow
 
-Stage 10.4 is now the default Stage-10 mode:
+Stage 10.4 is now a compatibility mode; Stage 10.5 modern is the current default:
 
     python examples/generate_stage10_production_tunnel.py \
+        --domain-stage 10.4 \
         --rings 20 \
         --namespace stage10-4-smoke
 
@@ -240,5 +241,4 @@ Still unresolved after Stage 10.4:
 - full route curve/cant variants and special contact-rail events;
 - future UNIGINE/export integration work.
 
-The next bounded project step is Stage 10.5 production integration / final
-Moscow archetype validation.
+Stage 10.5 production integration is now implemented; see STAGE10_5_REPORT.md.

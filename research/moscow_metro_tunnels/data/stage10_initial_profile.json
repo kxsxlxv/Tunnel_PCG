@@ -365,12 +365,12 @@
       "confidence": "B",
       "nominal_surface_rule": "adjacent to sleepers use sleeper-top minus 10 mm as the local datum and apply the 0.03 fall toward the central drain; exact hand-finished breakpoints remain replaceable",
       "initial_surface_reference": {
-        "mode": "rail_axis_datum_fallback",
-        "reference_x": "each R65 symmetry axis from the Stage10.1 working-face gauge solution",
+        "mode": "sleeper_outer_edge_datum_fallback",
+        "reference_x": "absolute timber sleeper end |x| = sleeper length / 2 = 1.325 m",
         "reference_z_m": -0.23,
-        "rule": "set concrete top z=-0.230 m at each running-rail symmetry axis, then apply 0.03 fall toward the central drain; continue the same plane outward until it intersects the physical 5.1 m intrados",
-        "confidence": "C_explicit_procedural_fallback",
-        "reason": "source fixes the adjacent concrete datum and 0.03 fall but does not dimension the exact hand-finished crossfall breakpoint"
+        "rule": "set concrete top z=-0.230 m at the outer end of the 2.650 m timber sleeper (10 mm below the flat sleeper top), then apply 0.03 fall toward the central drain; continue the same plane outward until it intersects the physical 5.1 m intrados",
+        "confidence": "B_derived_surface_anchor",
+        "reason": "Fig.1.14 gives approximately 10 mm sleeper exposure at the drawn sleeper edge and a 0.03 transverse fall; anchoring the fall at the sleeper end preserves that exposure instead of burying the sleeper ends"
       }
     },
     "nominal_concrete_top_at_sleeper_datum_z_m": {

@@ -609,6 +609,14 @@ def build_continuous_asset_specs(
         )
         top_profile_z = moscow_profile.datums.ugr_z_m
         base_profile_z = top_profile_z - r65.overall_height_m
+        _, top_core_z = moscow_profile.coordinate.research_xz_to_core_xz(
+            0.0,
+            top_profile_z,
+        )
+        _, base_core_z = moscow_profile.coordinate.research_xz_to_core_xz(
+            0.0,
+            base_profile_z,
+        )
 
         for rail_index, center_profile_x in enumerate(centers_profile_x):
             profile_points = r65.points_xz(
@@ -673,9 +681,15 @@ def build_continuous_asset_specs(
                         "railGeneratedHeadWidthM": metrics["head_width_m"],
                         "railWebThicknessM": r65.web_thickness_m,
                         "railFootWidthM": r65.base_width_m,
-                        "railTopZLocalM": top_profile_z,
-                        "railBaseZLocalM": base_profile_z,
-                        "ugrZLocalM": moscow_profile.datums.ugr_z_m,
+                        "railTopProfileZLocalM": top_profile_z,
+                        "railBaseProfileZLocalM": base_profile_z,
+                        "railTopCoreZLocalM": top_core_z,
+                        "railBaseCoreZLocalM": base_core_z,
+                        "railTopZLocalM": top_core_z,
+                        "railBaseZLocalM": base_core_z,
+                        "ugrProfileZLocalM": moscow_profile.datums.ugr_z_m,
+                        "ugrCoreZLocalM": top_core_z,
+                        "ugrZLocalM": top_core_z,
                         "gaugeM": gauge,
                         "gaugeMeasurementBelowUGRM": gauge_level,
                         "gaugeMeasurementZLocalM": (
@@ -1004,18 +1018,46 @@ def build_production_scene(
                 "moscowProfileSHA256": (
                     config.moscow_profile.provenance.canonical_sha256
                 ),
-                "ugrZLocalM": config.moscow_profile.datums.ugr_z_m,
+                "ugrProfileZLocalM": config.moscow_profile.datums.ugr_z_m,
+                "ugrCoreZLocalM": (
+                    config.moscow_profile.coordinate.profile_z_to_core_z_offset_m
+                    + config.moscow_profile.datums.ugr_z_m
+                ),
+                "ugrZLocalM": (
+                    config.moscow_profile.coordinate.profile_z_to_core_z_offset_m
+                    + config.moscow_profile.datums.ugr_z_m
+                ),
+                "trackAxisXProfileLocalM": (
+                    config.moscow_profile.datums.track_axis_x_m
+                ),
+                "trackAxisZProfileLocalM": (
+                    config.moscow_profile.datums.track_axis_z_m
+                ),
                 "trackAxisXLocalM": config.moscow_profile.datums.track_axis_x_m,
-                "trackAxisZLocalM": config.moscow_profile.datums.track_axis_z_m,
+                "trackAxisZLocalM": (
+                    config.moscow_profile.coordinate.profile_z_to_core_z_offset_m
+                    + config.moscow_profile.datums.track_axis_z_m
+                ),
+                "liningAxisXProfileLocalM": (
+                    config.moscow_profile.datums.lining_axis_x_m
+                ),
+                "liningAxisZProfileLocalM": (
+                    config.moscow_profile.datums.lining_axis_z_m
+                ),
                 "liningAxisXLocalM": (
                     config.moscow_profile.datums.lining_axis_x_m
                 ),
                 "liningAxisZLocalM": (
-                    config.moscow_profile.datums.lining_axis_z_m
+                    config.moscow_profile.coordinate.profile_z_to_core_z_offset_m
+                    + config.moscow_profile.datums.lining_axis_z_m
+                ),
+                "profileZToCoreZOffsetM": (
+                    config.moscow_profile.coordinate.profile_z_to_core_z_offset_m
                 ),
                 "coordinateMapping": (
-                    "profile +X -> core +X; route chainage +X -> core +Y; "
-                    "route left +Y -> core -X; route +Z -> core +Z"
+                    "profile +X -> core +X; profile Z -> core Z by subtracting "
+                    "the +1.670m profile lining-axis datum; route chainage +X -> "
+                    "core +Y; route left +Y -> core -X; route +Z -> translated core +Z"
                 ),
                 "gaugePlacement": (
                     "R65 inner working faces at UGR-0.013m"

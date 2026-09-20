@@ -13,6 +13,7 @@ from tunnel_scanner_core import (
 )
 from tunnel_scanner_core.blender_adapter import (
     _blender_custom_property_scalar,
+    _blender_custom_property_value,
     build_scene_package_in_blender,
 )
 from tunnel_scanner_core.scene import build_nominal_scene_package
@@ -205,6 +206,63 @@ def test_blender_custom_property_scalar_preserves_large_ids_losslessly():
     assert _blender_custom_property_scalar(2**31) == str(2**31)
     assert _blender_custom_property_scalar(-(2**31) - 1) == str(-(2**31) - 1)
     assert _blender_custom_property_scalar(2**63 - 1) == str(2**63 - 1)
+
+
+def test_blender_custom_property_value_serializes_structured_metadata_as_json():
+    assert _blender_custom_property_value([0.54, 0.62, 0.1]) == (
+        "[0.54,0.62,0.1]"
+    )
+    assert _blender_custom_property_value((0.54, 0.62, 0.1)) == (
+        "[0.54,0.62,0.1]"
+    )
+    assert _blender_custom_property_value(
+        {"z": 0.16, "x": -1.45}
+    ) == '{"x":-1.45,"z":0.16}'
+
+
+def test_stage10_structured_contact_metadata_is_blender_safe_after_json_roundtrip(
+    monkeypatch,
+):
+    from tunnel_scanner_core import (
+        ProductionConfig,
+        TunnelAssemblyConfig,
+        build_production_tunnel,
+        load_stage10_initial_moscow_profile,
+        scene_package_from_dict,
+        scene_package_to_dict,
+    )
+
+    fake = _FakeBpy()
+    monkeypatch.setitem(sys.modules, "bpy", fake)
+    profile = load_stage10_initial_moscow_profile()
+    build = build_production_tunnel(
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=1,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.0,
+        ),
+        include_bolts=False,
+        production_config=ProductionConfig(
+            namespace="blender-stage10-structured-props",
+            moscow_profile=profile,
+            moscow_stage="10.4",
+        ),
+        seed=5812,
+    )
+    roundtripped = scene_package_from_dict(scene_package_to_dict(build.scene))
+
+    build_scene_package_in_blender(
+        roundtripped,
+        apply_bolt_booleans=False,
+        strip_internal_lining_caps=False,
+        strip_coincident_lining_interfaces=False,
+    )
+    bracket = roundtripped.objects_of_type(
+        "production_contact_rail_bracket"
+    )[0]
+    blender_obj = fake.data.objects.get(bracket.name)
+    assert blender_obj is not None
+    assert blender_obj["resourceEnvelopeM"] == "[0.54,0.62,0.1]"
 
 
 def test_stage9_blender_adapter_serializes_63bit_persistent_ids_as_decimal_strings(

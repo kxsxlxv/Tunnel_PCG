@@ -1,9 +1,8 @@
 """Real-Blender verifier for the current Stage-10 production scene.
 
-Stage 10 currently means the bounded Stage 10.1 contract: the existing Stage-9
-production/chunking architecture plus the Moscow data model, local UGR datum,
-R65 running-rail cross-section and gauge placement by inner working faces.
-Permanent way, contact rail and Moscow civil shell are intentionally deferred.
+The verifier is stage-aware for Moscow Stage 10.1 and 10.2. Stage 10.2 adds
+timber sleepers, the initial KD-65 support chain and source-backed track
+concrete/drainage while preserving the Stage-10.1 R65/UGR/gauge contract.
 """
 
 from __future__ import annotations
@@ -69,9 +68,10 @@ def main() -> None:
 
     errors: list[str] = []
     production_meta = package.metadata.get("productionGeometry", {})
-    if production_meta.get("domainStage") != "10.1":
+    domain_stage = str(production_meta.get("domainStage", ""))
+    if domain_stage not in {"10.1", "10.2"}:
         errors.append(
-            f"domainStage: {production_meta.get('domainStage')!r} != '10.1'"
+            f"unsupported/missing Moscow domainStage: {domain_stage!r}"
         )
     if production_meta.get("moscowProfileID") != profile.profile_id:
         errors.append("Moscow profile ID mismatch")
@@ -85,12 +85,16 @@ def main() -> None:
         != "stage10_1_r65_gost_r51685_2022"
     ):
         errors.append("production metadata does not select Stage 10.1 R65")
-    expected_deferred = {
-        "permanentWayStatus": "deferred_to_stage10_2",
+    expected_status = {
+        "permanentWayStatus": (
+            "implemented_stage10_2_initial_geometry"
+            if domain_stage == "10.2"
+            else "deferred_to_stage10_2"
+        ),
         "contactRailStatus": "deferred_to_stage10_3",
         "civilShellStatus": "deferred_to_stage10_4",
     }
-    for key, expected in expected_deferred.items():
+    for key, expected in expected_status.items():
         if production_meta.get(key) != expected:
             errors.append(f"{key}: {production_meta.get(key)!r} != {expected!r}")
 
@@ -102,15 +106,28 @@ def main() -> None:
     if any(obj.object_type.startswith("ancillary_") for obj in package.objects):
         errors.append("ring-local Stage-8 ancillary objects remain in production scene")
 
-    # In Stage 10.1 only the two running rails are replaced by Moscow/R65
-    # geometry. These other objects intentionally remain the Stage-8/9
-    # transitional baseline until Stage 10.2-10.4.
-    expected_counts = {
-        "production_pavement": 1,
-        "production_walkway": 1,
-        "production_rail": 2,
-        "production_tube": 6,
-    }
+    if domain_stage == "10.2":
+        sleeper_count = int(production_meta.get("sleeperCount", 0))
+        expected_counts = {
+            "production_pavement": 0,
+            "production_track_concrete": 1,
+            "production_walkway": 1,
+            "production_rail": 2,
+            "production_tube": 6,
+            "production_sleeper": sleeper_count,
+            "production_under_baseplate_pad": sleeper_count,
+            "production_baseplate": sleeper_count,
+            "production_rail_pad": sleeper_count,
+            "production_track_screw": sleeper_count,
+            "production_clamp_hardware": sleeper_count,
+        }
+    else:
+        expected_counts = {
+            "production_pavement": 1,
+            "production_walkway": 1,
+            "production_rail": 2,
+            "production_tube": 6,
+        }
     actual_counts = {
         key: len([obj for obj in production if obj.object_type == key])
         for key in expected_counts
@@ -170,6 +187,15 @@ def main() -> None:
             "inner_working_faces_at_ugr_minus_13mm"
         ):
             errors.append(f"{rail.name}: wrong gauge placement rule")
+        if domain_stage == "10.2":
+            if not bool(props.get("railFootBottomContactFaceOmitted", False)):
+                errors.append(
+                    f"{rail.name}: Stage 10.2 rail support-contact face retained"
+                )
+            if int(props.get("omittedLongitudinalEdgeCount", 0)) != 1:
+                errors.append(
+                    f"{rail.name}: expected one omitted rail-foot bottom edge"
+                )
         if props.get("moscowProfileID") != profile.profile_id:
             errors.append(f"{rail.name}: Moscow profile ID mismatch")
         if (
@@ -203,6 +229,46 @@ def main() -> None:
                 f"{profile.track.gauge_m!r}"
             )
 
+    if domain_stage == "10.2":
+        concrete = [
+            o for o in production
+            if o.object_type == "production_track_concrete"
+        ]
+        if len(concrete) == 1:
+            cp = concrete[0].custom_properties
+            concrete_checks = {
+                "surfaceCrossSlopeToDrain": 0.03,
+                "centralDrainClearWidthM": 0.900,
+                "centralDrainBottomProfileZM": -0.530,
+                "waterReleaseGrooveWidthM": 0.050,
+                "waterReleaseGrooveDepthM": 0.025,
+            }
+            for key, expected in concrete_checks.items():
+                if key not in cp or not _close(cp[key], expected):
+                    errors.append(
+                        f"{concrete[0].name}: {key}={cp.get(key)!r} != {expected!r}"
+                    )
+        for sleeper in [
+            o for o in production
+            if o.object_type == "production_sleeper"
+        ]:
+            sp = sleeper.custom_properties
+            if not _close(sp.get("sleeperLengthM", -1), 2.650):
+                errors.append(f"{sleeper.name}: wrong sleeper length")
+            if not _close(sp.get("sleeperThicknessM", -1), 0.165):
+                errors.append(f"{sleeper.name}: wrong sleeper thickness")
+            if not _close(sp.get("sleeperTopProfileZM", 1), -0.220):
+                errors.append(f"{sleeper.name}: wrong sleeper top datum")
+        for baseplate in [
+            o for o in production
+            if o.object_type == "production_baseplate"
+        ]:
+            bp = baseplate.custom_properties
+            if not _close(bp.get("baseplatePlanTransverseM", -1), 0.370):
+                errors.append(f"{baseplate.name}: wrong KD-65 transverse size")
+            if not _close(bp.get("baseplatePlanLongitudinalM", -1), 0.165):
+                errors.append(f"{baseplate.name}: wrong KD-65 longitudinal size")
+
     ring_count = int(package.metadata.get("ringCount", 0))
     if ring_count > 1 and result.lining_cap_faces_removed <= 0:
         errors.append("no internal lining cap faces were removed")
@@ -210,7 +276,7 @@ def main() -> None:
         errors.append("no coincident segment-interface faces were removed")
 
     report = {
-        "stage": "10.1",
+        "stage": domain_stage,
         "moscowProfileID": profile.profile_id,
         "moscowProfileSHA256": profile.provenance.canonical_sha256,
         "ringCount": ring_count,
@@ -232,6 +298,9 @@ def main() -> None:
         "liningCapFacesRemoved": result.lining_cap_faces_removed,
         "liningInterfaceFacesRemoved": result.lining_interface_faces_removed,
         "permanentWayStatus": production_meta.get("permanentWayStatus"),
+        "trackConcreteStatus": production_meta.get("trackConcreteStatus"),
+        "sleeperCount": production_meta.get("sleeperCount"),
+        "sleeperPitchM": production_meta.get("sleeperPitchM"),
         "contactRailStatus": production_meta.get("contactRailStatus"),
         "civilShellStatus": production_meta.get("civilShellStatus"),
         "errors": errors,

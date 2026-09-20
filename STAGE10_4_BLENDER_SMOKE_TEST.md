@@ -11,7 +11,7 @@ From the repository root:
       --rings 20 \
       --namespace stage10-4-smoke
 
-Stage 10.4 is the default, so `--domain-stage 10.4` is optional.
+Stage 10.4 is now a compatibility mode; `--domain-stage 10.4` is required because Stage 10.5 modern is the current default.
 
 Expected scene changes relative to Stage 10.3:
 

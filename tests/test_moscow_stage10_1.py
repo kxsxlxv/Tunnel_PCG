@@ -61,12 +61,22 @@ def test_coordinate_mapping_preserves_core_plus_y_longitudinal_contract():
     profile = load_stage10_initial_moscow_profile()
     c = profile.coordinate
 
-    assert c.research_xz_to_core_xz(1.25, -0.4) == (1.25, -0.4)
-    assert c.core_xz_to_research_xz(1.25, -0.4) == (1.25, -0.4)
+    assert math.isclose(c.profile_z_to_core_z_offset_m, -1.67, abs_tol=1e-12)
+    x, z = c.research_xz_to_core_xz(1.25, -0.4)
+    assert math.isclose(x, 1.25, abs_tol=1e-12)
+    assert math.isclose(z, -2.07, abs_tol=1e-12)
+    rx, rz = c.core_xz_to_research_xz(x, z)
+    assert math.isclose(rx, 1.25, abs_tol=1e-12)
+    assert math.isclose(rz, -0.4, abs_tol=1e-12)
 
     core = c.engineering_route_to_core_local(12.0, 2.0, 3.0)
-    assert core == (-2.0, 12.0, 3.0)
-    assert c.core_local_to_engineering_route(*core) == (12.0, 2.0, 3.0)
+    assert math.isclose(core[0], -2.0, abs_tol=1e-12)
+    assert math.isclose(core[1], 12.0, abs_tol=1e-12)
+    assert math.isclose(core[2], 1.33, abs_tol=1e-12)
+    route = c.core_local_to_engineering_route(*core)
+    assert math.isclose(route[0], 12.0, abs_tol=1e-12)
+    assert math.isclose(route[1], 2.0, abs_tol=1e-12)
+    assert math.isclose(route[2], 3.0, abs_tol=1e-12)
 
 
 def test_r65_reference_profile_preserves_gost_principal_dimensions_and_qa():
@@ -157,14 +167,18 @@ def test_moscow_asset_specs_replace_only_running_rails_in_stage10_1():
         assert p["railNominalHeadWidthM"] == 0.07459
         assert p["railWebThicknessM"] == 0.018
         assert p["railFootWidthM"] == 0.150
-        assert p["railTopZLocalM"] == 0.0
-        assert p["railBaseZLocalM"] == -0.180
+        assert p["railTopProfileZLocalM"] == 0.0
+        assert p["railBaseProfileZLocalM"] == -0.180
+        assert math.isclose(p["railTopCoreZLocalM"], -1.67, abs_tol=2e-12)
+        assert math.isclose(p["railBaseCoreZLocalM"], -1.85, abs_tol=2e-12)
+        assert math.isclose(p["railTopZLocalM"], -1.67, abs_tol=2e-12)
+        assert math.isclose(p["railBaseZLocalM"], -1.85, abs_tol=2e-12)
         assert p["gaugeM"] == 1.520
         assert p["gaugeMeasurementBelowUGRM"] == 0.013
         assert not rail.omitted_longitudinal_edges
         zs = [z for _x, z in rail.cross_section_xz]
-        assert math.isclose(max(zs), 0.0, abs_tol=2e-12)
-        assert math.isclose(min(zs), -0.180, abs_tol=2e-12)
+        assert math.isclose(max(zs), -1.67, abs_tol=2e-12)
+        assert math.isclose(min(zs), -1.85, abs_tol=2e-12)
 
     faces = [
         float(r.properties["railInnerWorkingFaceX"])
@@ -201,6 +215,11 @@ def test_stage10_1_full_production_integration_preserves_ids_chunking_and_topolo
     assert meta["moscowProfileID"] == profile.profile_id
     assert meta["civilShellStatus"] == "deferred_to_stage10_4"
     assert meta["permanentWayStatus"] == "deferred_to_stage10_2"
+    assert math.isclose(meta["profileZToCoreZOffsetM"], -1.67, abs_tol=2e-12)
+    assert math.isclose(meta["ugrProfileZLocalM"], 0.0, abs_tol=2e-12)
+    assert math.isclose(meta["ugrCoreZLocalM"], -1.67, abs_tol=2e-12)
+    assert math.isclose(meta["liningAxisZProfileLocalM"], 1.67, abs_tol=2e-12)
+    assert math.isclose(meta["liningAxisZLocalM"], 0.0, abs_tol=2e-12)
 
     for rail in rails:
         assert (
@@ -218,7 +237,7 @@ def test_stage10_1_full_production_integration_preserves_ids_chunking_and_topolo
             ]
             assert math.isclose(
                 max(v[2] - station.offset_z_m for v in section),
-                0.0,
+                -1.67,
                 abs_tol=2e-12,
             )
 

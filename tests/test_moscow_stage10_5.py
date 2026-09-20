@@ -52,7 +52,7 @@ def test_stage10_5_profile_contains_modern_default_and_legacy_alternative():
     pw = profile.modern_permanent_way
     cr = profile.modern_contact_rail
 
-    assert profile.schema_version == "1.7"
+    assert profile.schema_version == "1.8"
     assert profile.default_service_preset == "MODERN_MOSCOW_LVT_SERVICES_2020S"
 
     assert pw.preset_id == "MOSCOW_LVT_M_R65_APC4_2020S"

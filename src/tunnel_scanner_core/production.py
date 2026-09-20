@@ -866,12 +866,16 @@ def build_continuous_asset_specs(
                 semantic_class=semantic,
                 properties={
                     "productionContinuous": True,
-                    "domainGeometryStage": "10.3",
+                    "domainGeometryStage": (
+                        "10.5" if moscow_service_preset == "modern" else "10.3"
+                    ),
                     "contactRailFamily": cr.rail_family,
                     "profileGeometryMode": cr.rail_profile_mode,
                     "profileConfidence": cr.rail_profile_confidence,
                     "profileEraWarning": cr.rail_profile_era_warning,
-                    "eraMismatch": True,
+                    "eraMismatch": (
+                        moscow_service_preset != "modern"
+                    ),
                     "collection": cr.collection,
                     "sideProfileXSign": cr.side_profile_x_sign,
                     "contactRailAxisProfileXM": contact_axis_profile_x,
@@ -2231,10 +2235,37 @@ def build_production_scene(
                 "gaugePlacement": (
                     "R65 inner working faces at UGR-0.013m"
                 ),
+                "servicePreset": (
+                    config.resolved_moscow_service_preset
+                ),
+                "servicePresetID": (
+                    config.moscow_profile.default_service_preset
+                    if config.resolved_moscow_service_preset == "modern"
+                    else "LEGACY_R65_TIMBER_KD65_2001_REFERENCE"
+                ),
                 "permanentWayStatus": (
-                    "implemented_stage10_2_initial_geometry"
-                    if config.moscow_stage in {"10.2", "10.3", "10.4", "10.5"}
-                    else "deferred_to_stage10_2"
+                    "implemented_stage10_5_modern_LVT_M_APC4"
+                    if (
+                        config.moscow_stage == "10.5"
+                        and config.resolved_moscow_service_preset == "modern"
+                    )
+                    else (
+                        "implemented_stage10_2_initial_geometry"
+                        if config.moscow_stage in {"10.2", "10.3", "10.4", "10.5"}
+                        else "deferred_to_stage10_2"
+                    )
+                ),
+                "permanentWayPresetID": (
+                    config.moscow_profile.modern_permanent_way.preset_id
+                    if (
+                        config.moscow_stage == "10.5"
+                        and config.resolved_moscow_service_preset == "modern"
+                    )
+                    else (
+                        "LEGACY_R65_TIMBER_KD65_2001_REFERENCE"
+                        if config.moscow_stage in {"10.2", "10.3", "10.4", "10.5"}
+                        else None
+                    )
                 ),
                 "trackConcreteStatus": (
                     "implemented_stage10_2_source_backed_with_explicit_fallbacks"
@@ -2242,9 +2273,28 @@ def build_production_scene(
                     else "deferred_to_stage10_2"
                 ),
                 "contactRailStatus": (
-                    "implemented_stage10_3_initial_geometry_with_explicit_fallbacks"
-                    if config.moscow_stage in {"10.3", "10.4"}
-                    else "deferred_to_stage10_3"
+                    "implemented_stage10_5_modern_segmented_cover_and_dedicated_support"
+                    if (
+                        config.moscow_stage == "10.5"
+                        and config.resolved_moscow_service_preset == "modern"
+                    )
+                    else (
+                        "implemented_stage10_3_initial_geometry_with_explicit_fallbacks"
+                        if config.moscow_stage in {"10.3", "10.4", "10.5"}
+                        else "deferred_to_stage10_3"
+                    )
+                ),
+                "contactRailPresetID": (
+                    config.moscow_profile.modern_contact_rail.preset_id
+                    if (
+                        config.moscow_stage == "10.5"
+                        and config.resolved_moscow_service_preset == "modern"
+                    )
+                    else (
+                        "LEGACY_FROLOV_VNIR_CONTACT_2001_REFERENCE"
+                        if config.moscow_stage in {"10.3", "10.4", "10.5"}
+                        else None
+                    )
                 ),
                 "civilShellStatus": (
                     "implemented_stage10_4_smooth_concentric_shell"
@@ -2269,58 +2319,97 @@ def build_production_scene(
                         )
                     )
                 ),
-                "sleeperCount": (
-                    sum(
-                        1
-                        for obj in stage10_2_periodic
-                        if obj.object_type == "production_sleeper"
-                    )
-                    if config.moscow_stage in {"10.2", "10.3", "10.4", "10.5"}
-                    else 0
+                "sleeperCount": sum(
+                    1
+                    for obj in stage10_2_periodic
+                    if obj.object_type == "production_sleeper"
                 ),
                 "sleeperPitchM": (
                     config.moscow_profile.sleeper.pitch_m
-                    if config.moscow_stage in {"10.2", "10.3", "10.4", "10.5"}
+                    if stage10_2_periodic
                     else None
                 ),
                 "sleeperPhaseRule": (
                     "half_pitch_from_tunnel_start"
-                    if config.moscow_stage in {"10.2", "10.3", "10.4", "10.5"}
+                    if stage10_2_periodic
                     else None
+                ),
+                "modernLVTSupportCount": sum(
+                    1
+                    for obj in stage10_5_modern_permanent_way
+                    if obj.object_type == "production_lvt_block"
+                ),
+                "modernLVTSupportPitchM": (
+                    config.moscow_profile.modern_permanent_way.support_pitch_m
+                    if stage10_5_modern_permanent_way
+                    else None
+                ),
+                "modernLVTBlocksPerEvent": (
+                    2 if stage10_5_modern_permanent_way else 0
+                ),
+                "modernLVTBridgesCentralDrain": (
+                    False if stage10_5_modern_permanent_way else None
                 ),
                 "contactRailSupportCount": (
                     sum(
                         1
-                        for obj in stage10_3_contact_periodic
+                        for obj in (
+                            stage10_5_modern_contact
+                            if stage10_5_modern_contact
+                            else stage10_3_contact_periodic
+                        )
                         if obj.object_type == "production_contact_rail_bracket"
                     )
-                    if config.moscow_stage in {"10.3", "10.4"}
-                    else 0
+                ),
+                "contactRailCoverSpanCount": sum(
+                    1
+                    for obj in stage10_5_modern_contact
+                    if obj.object_type == "production_contact_rail_cover_span"
+                ),
+                "contactRailSupportHoodCount": sum(
+                    1
+                    for obj in stage10_5_modern_contact
+                    if obj.object_type == "production_contact_rail_support_hood"
                 ),
                 "contactRailTargetPitchM": (
-                    config.moscow_profile.contact_rail.support_target_pitch_m
-                    if config.moscow_stage in {"10.3", "10.4"}
-                    else None
+                    config.moscow_profile.modern_contact_rail.support_target_pitch_m
+                    if stage10_5_modern_contact
+                    else (
+                        config.moscow_profile.contact_rail.support_target_pitch_m
+                        if stage10_3_contact_periodic
+                        else None
+                    )
                 ),
                 "contactRailSupportSchedule": (
-                    "independent_5m_targets_snapped_to_nearest_timber_sleeper"
-                    if config.moscow_stage in {"10.3", "10.4"}
-                    else None
+                    "5m_targets_snapped_to_midpoints_between_running_supports"
+                    if stage10_5_modern_contact
+                    else (
+                        "independent_5m_targets_snapped_to_nearest_timber_sleeper"
+                        if stage10_3_contact_periodic
+                        else None
+                    )
+                ),
+                "contactRailSupportSeparateFromRunningSupport": (
+                    True if stage10_5_modern_contact else False
                 ),
                 "contactRailAxisProfileXM": (
                     contact_rail_axis_profile_x(config.moscow_profile)
-                    if config.moscow_stage in {"10.3", "10.4"}
+                    if config.moscow_stage in {"10.3", "10.4", "10.5"}
                     else None
                 ),
                 "contactRailWorkingSurfaceProfileZM": (
                     config.moscow_profile.contact_rail.working_surface_z_m
-                    if config.moscow_stage in {"10.3", "10.4"}
+                    if config.moscow_stage in {"10.3", "10.4", "10.5"}
                     else None
                 ),
                 "contactRailCoverEraMismatch": (
-                    config.moscow_profile.contact_rail.cover_era_mismatch
-                    if config.moscow_stage in {"10.3", "10.4"}
-                    else None
+                    False
+                    if stage10_5_modern_contact
+                    else (
+                        config.moscow_profile.contact_rail.cover_era_mismatch
+                        if stage10_3_contact_periodic
+                        else None
+                    )
                 ),
                 "stage9CivilGeometryRemoved": (
                     config.moscow_stage in {"10.4", "10.5"}

@@ -1,0 +1,248 @@
+{
+  "schema_version": "1.0",
+  "research_date": "2026-09-20",
+  "sources": [
+    {
+      "id": "P10-FROLOV-1.14",
+      "title": "Фролов Ю.С., Голицынский Д.М., Ледяев А.П. Метрополитены. 2001",
+      "basis": "user_supplied_scan_and_public_mirror",
+      "url": "https://ru.djvu.online/file/hXOquNRuMqgHC",
+      "locator": {
+        "pdf_page": 29,
+        "printed_page": 27,
+        "figure": "1.14"
+      },
+      "supports": [
+        "5.1 m circular cast-iron running-tunnel intrados",
+        "R65 with track concrete",
+        "tunnel theoretical center 1.670 m above UGR",
+        "gauge 1.520 m",
+        "central drainage opening width 0.900 m in section",
+        "walkway/service path opposite contact rail",
+        "walkway top +0.200 m above UGR",
+        "walkway inner-edge transverse offset 1.660 m from track/tunnel axis",
+        "contact rail placement 0.690 m horizontal and 0.160 m vertical",
+        "track-concrete surface slope callout 0.03",
+        "water-release groove 25 x 50 mm"
+      ],
+      "confidence": "A_for_drawn_dimensions_B_for_interpretation_of_unlabelled_breakpoints"
+    },
+    {
+      "id": "P10-FROLOV-TRACK-TEXT",
+      "title": "Фролов et al. Метрополитены. Track construction text",
+      "url": "https://ru.djvu.online/file/hXOquNRuMqgHC",
+      "locator": {
+        "pdf_pages": [
+          30,
+          31
+        ],
+        "printed_pages": [
+          28,
+          29
+        ],
+        "section": "1.4; text following Figs. 1.14-1.15"
+      },
+      "supports": [
+        "track concrete B12.5",
+        "minimum track-concrete thickness under timber sleeper at rail positions 0.16 m straight and 0.10 m curves",
+        "1680 sleepers/km straight and R>=1200; 1840/km tighter curves",
+        "central drainage channel width 0.9 m and depth 0.5-0.6 m from UGR",
+        "drain longitudinal grade equals track grade"
+      ],
+      "confidence": "A"
+    },
+    {
+      "id": "P10-FROLOV-FASTENING",
+      "title": "Фролов et al. Метрополитены. Rail fastenings",
+      "url": "https://ru.djvu.online/file/hXOquNRuMqgHC",
+      "locator": {
+        "pdf_page": 32,
+        "printed_page": 30,
+        "figures": [
+          "1.16",
+          "1.17"
+        ]
+      },
+      "supports": [
+        "R50 Metro fastening component topology",
+        "R65 KD-65 fastening component topology",
+        "track screw 24x150 mm flat head",
+        "R65 clamp bolt M22x75",
+        "R65 nut M22x22",
+        "R65 spring clamp KDP-2 / KD-65 baseplate assembly"
+      ],
+      "confidence": "A"
+    },
+    {
+      "id": "P10-FROLOV-CONTACT",
+      "title": "Фролов et al. Метрополитены. Contact-rail suspension",
+      "url": "https://ru.djvu.online/file/hXOquNRuMqgHC",
+      "locator": {
+        "pdf_page": 35,
+        "printed_page": 33,
+        "figure": "1.20"
+      },
+      "supports": [
+        "contact rail horizontal placement 690 +/- 8 mm",
+        "contact working surface height 160 +/- 6 mm above UGR",
+        "minimum 35 mm shown clearance at running-rail/bracket zone",
+        "overall rail+protective assembly vertical envelope callout 223 mm",
+        "component topology: contact rail, bracket, timber sleeper, screws, steel strip, current collector, fastening unit, bolt, protective bracket, spacer box, rubber cord, bracket, polyethylene pad, insulators, pad"
+      ],
+      "confidence": "A_for_callouts_B_for_component_shape_without_individual_dimensions"
+    },
+    {
+      "id": "P10-FROLOV-TABLE1.2",
+      "title": "Фролов et al. Метрополитены. Upper-track structure table",
+      "url": "https://ru.djvu.online/file/hXOquNRuMqgHC",
+      "locator": {
+        "printed_pages": [
+          34,
+          35
+        ],
+        "table": "1.2"
+      },
+      "supports": [
+        "running tunnel rails R50/R65",
+        "timber sleepers",
+        "1680/1840 sleepers per km",
+        "track concrete minimum 0.16 m straight / 0.10 m curve under timber sleeper at rail positions"
+      ],
+      "confidence": "A"
+    },
+    {
+      "id": "P10-FROLOV-RING",
+      "title": "Фролов et al. Метрополитены. Cast-iron running-tunnel lining",
+      "url": "https://ru.djvu.online/file/hXOquNRuMqgHC",
+      "locator": {
+        "pdf_pages": [
+          119,
+          120,
+          121,
+          122
+        ],
+        "printed_pages": [
+          118,
+          119,
+          120,
+          121
+        ],
+        "figure": "4.14",
+        "table": "Characteristics of cast-iron running-tunnel linings"
+      },
+      "supports": [
+        "5.5/5.1 m family",
+        "1.0 m ring width",
+        "11 tubings for one documented 5.5/5.1 variant",
+        "ring mass 5.48 t for table variant",
+        "maximum tubing length 1.67 m",
+        "flange thickness 25 mm",
+        "flange height 200 mm",
+        "minimum topology normal + two adjacent + one key",
+        "M27x120 typical bolts",
+        "bolt holes 3-4 mm larger than bolt",
+        "two rows of working bolts in longitudinal joints",
+        "grout-injection opening exists in back plate",
+        "caulking rebate/falts exists"
+      ],
+      "confidence": "B_series_variant_not_unambiguously_identified"
+    },
+    {
+      "id": "P10-GOST22830",
+      "title": "ГОСТ 22830-77 Шпалы деревянные для метрополитена",
+      "url": "https://base.garant.ru/6179204/",
+      "locator": {
+        "clause": "1.2",
+        "drawing": "cross-section drawing",
+        "table": "1"
+      },
+      "supports": [
+        "sleeper thickness 165 +/-5 mm",
+        "upper face width 165 mm",
+        "lower face width 250 -5/+20 mm",
+        "sawn side height 135 mm",
+        "length 2650 +/-20 mm"
+      ],
+      "confidence": "A"
+    },
+    {
+      "id": "P10-GOST16277-KD65",
+      "title": "ГОСТ 16277-2016 Подкладки раздельного скрепления железнодорожного пути",
+      "url": "https://files.stroyinf.ru/Data/619/61917.pdf",
+      "locator": {
+        "clause": "4.3",
+        "figure": "3",
+        "table": "1"
+      },
+      "supports": [
+        "KD-65 exact dimensioned construction drawing",
+        "overall plan dimensions 370 x 165 mm",
+        "4 holes diameter 26 +1.5/-0.5 mm",
+        "reference maximum section height 55.6 mm",
+        "rail-seat/local profile callouts including 20.5, 12, 32, 23.6, 48, 16, 29.5, 53.5, 79.5, 109.5, 151, 310 mm and local radii/slopes"
+      ],
+      "confidence": "A_for_standard_geometry"
+    },
+    {
+      "id": "P10-DMZ-CONTACT",
+      "title": "DMZ transport-products catalog 2021 — metro contact rail",
+      "url": "https://dmz-petrovka.dp.ua/docs/catalog_2021_short_ru.pdf",
+      "locator": {
+        "page": 7,
+        "figure": "Рельс контактный метрополитена"
+      },
+      "supports": [
+        "contact rail top width 80 +/-2 mm",
+        "base width 90 +/-1 mm",
+        "overall height 118 +/-1 mm",
+        "web width 20 +/-1 mm",
+        "secondary vertical callouts 23, 40, 46 mm",
+        "type RK; TU U 27.1-19305558-003:2009"
+      ],
+      "confidence": "B_current_manufacturer_geometry_not_proven_identical_to_all_historical_Moscow_stock"
+    },
+    {
+      "id": "P10-TSN-CONTACT-BRACKET",
+      "title": "ТСН-2001.3-29 / Moscow metro tunnel track construction resource",
+      "url": "https://base.garant.ru/387184/3e22e51c74db8e0b182fad67b502e640/",
+      "locator": {
+        "section": "3. Устройство пути в тоннеле",
+        "item": "contact-rail bracket material resource"
+      },
+      "supports": [
+        "tunnel contact-rail bracket envelope 540 x 620 x 100 mm"
+      ],
+      "confidence": "B"
+    },
+    {
+      "id": "P10-VNIR-COVER",
+      "title": "ВНиР В3-5, выпуск 5",
+      "url": "https://meganorm.ru/mega_doc/norm/vnir_vedomstvennye-normy-i-rascenki/0/vnir_vedomstvennye_normy_i_rastsenki_na_stroitelnye_84.html",
+      "locator": {
+        "section": "§ В3-5-47"
+      },
+      "supports": [
+        "protective-box gap 20 mm between boxes",
+        "box-to-insulator gap 25 mm",
+        "side-board to contact-rail head gap 20 mm",
+        "lower edge of side board 23 mm from contact working surface",
+        "fastening supports 300 mm from box ends"
+      ],
+      "confidence": "A_historical_installation_rule"
+    },
+    {
+      "id": "P10-SP-WALKWAY",
+      "title": "Legacy metro design rule corresponding to SNiP II-40-80 / later reproduced requirement",
+      "url": "https://www.sinref.ru/000_uchebniki/0000_04600_raznie_13_14_2026-06/999_04-31-Kazah-standart-metro_04600_raznie_13/008.htm",
+      "locator": {
+        "clause": "7.22 / legacy 3.21 equivalent"
+      },
+      "supports": [
+        "in 5.1/5.2 m running tunnels walkway on side opposite contact rail",
+        "walkway height 0.2 m above UGR",
+        "legacy interruptions every 300-350 m permitted for rail stock/adjacent structures"
+      ],
+      "confidence": "B_normative_text_mirror"
+    }
+  ]
+}

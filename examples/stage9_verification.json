@@ -1,0 +1,36 @@
+{
+  "stage": 9,
+  "stage8FiveRingAncillaryDuplicateCapGroups": 40,
+  "productionInfrastructureDuplicateFaceGroups": 0,
+  "hundredMetre": {
+    "rings": 75,
+    "generatedLengthM": 101.25,
+    "sceneObjects": 460,
+    "generationSecondsCI": 0.7506931000000066,
+    "liningCapFacesRemovedByFinalizer": 19508,
+    "segmentInterfaceFacesRemovedByFinalizer": 944,
+    "exactDuplicateFaceGroupsAfterFinalizer": 0
+  },
+  "oneKilometre": {
+    "rings": 741,
+    "generatedLengthM": 1000.3500000000001,
+    "sceneObjects": 4456,
+    "generationSecondsCI": 26.738559797999983,
+    "alignmentStations": 1483,
+    "railVerticesPerRail": 23728,
+    "railFacesPerRail": 22232,
+    "ringAligned50mChunkCount": 21,
+    "ringAligned50mChunkPackagesBuilt": 21,
+    "chunkRingCoverageUnique": true,
+    "chunkInfrastructureBoundaryContinuity": "PASS"
+  },
+  "fiveKilometreAlignment": {
+    "rings": 3704,
+    "generatedLengthM": 5000.400000000001,
+    "alignmentStations": 7409,
+    "lastWorldYM": 4999.725
+  },
+  "stableParentAssetIDsAcrossChunkLengths": "PASS",
+  "globalDoubleCoordinatesNoMandatoryRebase": "PASS",
+  "result": "PASS"
+}

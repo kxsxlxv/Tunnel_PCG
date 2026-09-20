@@ -99,6 +99,13 @@ def main() -> None:
     assert math.isclose(float(cv["historicalSideGapM"]), 0.020, abs_tol=2e-12)
     assert math.isclose(float(cv["outerBaseWidthM"]), 0.134, abs_tol=2e-12)
     assert math.isclose(float(cv["outerTopWidthM"]), 0.112, abs_tol=2e-12)
+    assert math.isclose(float(cv["heightM"]), 0.200, abs_tol=2e-12)
+    assert math.isclose(
+        profile.contact_rail.cover_lower_edge_above_contact_surface_m
+        + profile.contact_rail.cover_height_m,
+        0.223,
+        abs_tol=2e-12,
+    )
 
     expected = contact_support_chainages(
         build.assembly.length_by_chainage_m,

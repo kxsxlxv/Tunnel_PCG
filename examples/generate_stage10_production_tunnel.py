@@ -325,6 +325,14 @@ def _validate_stage10_build(
             raise AssertionError("modern preset must remove Stage-8 tube previews")
         if len(build.scene.objects_of_type("production_service_cable")) != 22:
             raise AssertionError("modern preset requires 22 continuous service cables")
+        if len(build.scene.objects_of_type("production_water_main")) != 1:
+            raise AssertionError("modern preset requires one tunnel water main")
+        if meta.get("servicePipeStatus") != (
+            "implemented_normative_DN80_with_explicit_placement_fallback"
+        ):
+            raise AssertionError("modern DN80 water-main status mismatch")
+        if int(meta.get("serviceWaterMainMinNominalDNmm", -1)) != 80:
+            raise AssertionError("modern tunnel water main must remain at least DN80")
         civil_count = int(meta.get("moscowCivilRingCount", 0))
         if len(build.scene.objects_of_type("production_cable_rack_r2k11")) != 2 * civil_count:
             raise AssertionError("modern preset requires one R2K11 rack per side per civil ring")
@@ -580,6 +588,15 @@ def main() -> None:
         "serviceCableRackCount": production_meta.get("serviceCableRackCount"),
         "serviceCableRackFamily": production_meta.get("serviceCableRackFamily"),
         "servicePipeStatus": production_meta.get("servicePipeStatus"),
+        "serviceWaterMainCount": production_meta.get(
+            "serviceWaterMainCount"
+        ),
+        "serviceWaterMainMinNominalDNmm": production_meta.get(
+            "serviceWaterMainMinNominalDNmm"
+        ),
+        "productionWaterMains": len(
+            build.scene.objects_of_type("production_water_main")
+        ),
         "alignmentStations": len(build.alignment_stations),
         "sceneJson": None if args.chunks_only else output.name,
         "fullSceneSerialized": not args.chunks_only,

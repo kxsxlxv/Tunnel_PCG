@@ -986,6 +986,9 @@ def scene_object_from_continuous_asset(
         "tube": "Tubes",
         "walkway": "Walkway",
         "pavement": "Pavement",
+        "track_concrete": "TrackConcrete",
+        "contact_rail": "ContactRail/Rail",
+        "contact_rail_cover": "ContactRail/Cover",
     }.get(spec.category, spec.category.capitalize())
     return SceneObject(
         name=name_override or spec.name,

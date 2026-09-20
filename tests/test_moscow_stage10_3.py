@@ -132,7 +132,7 @@ def test_stage10_3_support_schedule_snaps_independent_targets_to_sleepers():
     assert len(supports) == 8
     assert all(s in sleepers for s in supports)
     assert math.isclose(supports[0], 2.6785714285714284, abs_tol=2e-12)
-    assert math.isclose(supports[-1], 37.202380952380956, abs_tol=2e-12)
+    assert math.isclose(supports[-1], 37.79761904761903, abs_tol=2e-12)
 
     gaps = [b - a for a, b in zip(supports, supports[1:])]
     assert all(

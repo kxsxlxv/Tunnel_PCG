@@ -831,7 +831,7 @@
         "shell_clearance_inward_m": 0.04,
         "placement_mode": "weak_current_side_historical_0.6_0.8m_height_midpoint_fallback",
         "material_family": "corrosion_resistant_steel",
-        "normative_source": "S022",
+        "normative_source": "P10-SP-WATER-MAIN",
         "normative_clauses": [
           "5.9.1.6(b)",
           "5.9.1.7",

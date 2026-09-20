@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.4",
+  "schema_version": "1.5",
   "profile_id": "stage10_initial_profile_CAST_IRON_5500_R1000_R65_TIMBER_LEGACY",
   "purpose": "first deterministic XZ profile for Blender/LiDAR implementation",
   "readiness": {
@@ -431,7 +431,16 @@
       ],
       "source": "P10-DMZ-CONTACT",
       "confidence": "B",
-      "era_warning": "manufacturer 2021 profile is used as dimensional fallback for legacy Moscow silhouette; exact historical Moscow rolling section not proven identical"
+      "era_warning": "manufacturer 2021 profile is used as dimensional fallback for legacy Moscow silhouette; exact historical Moscow rolling section not proven identical",
+      "initial_mesh_profile": {
+        "mode": "dmz_principal_dimensions_linearized_v1",
+        "confidence": "B_principal_dimensions_C_transition_shape",
+        "rule": "use exact 90 mm base, 80 mm top, 20 mm web and 118 mm overall height; preserve the 46/40/23 mm vertical callout bands while linearizing undimensioned transition radii",
+        "working_surface": "bottom_contact_surface",
+        "derived_residual_m": 0.009,
+        "source": "P10-DMZ-CONTACT",
+        "warning": "transition radii/curvature are not dimensioned in the catalog figure and are intentionally linearized"
+      }
     },
     "protective_assembly": {
       "historical_overall_vertical_envelope_m": 0.223,
@@ -456,7 +465,19 @@
           "fastening_support_offset_from_box_end_m": 0.3,
           "source": "P10-VNIR-COVER"
         },
-        "fallback_note": "Only the historical clearances and support offsets are asserted for the legacy wooden box. The modern polymer profile is a silhouette fallback, not a historical extrusion."
+        "fallback_note": "Only the historical clearances and support offsets are asserted for the legacy wooden box. The modern polymer profile is a silhouette fallback, not a historical extrusion.",
+        "effective_initial_geometry": {
+          "mode": "modern_silhouette_width_adjusted_to_historical_clearance",
+          "outer_top_width_m": 0.112,
+          "outer_base_width_m": 0.134,
+          "height_m": 0.111,
+          "side_wall_m": 0.002,
+          "top_wall_m": 0.003,
+          "lower_edge_z_above_contact_surface_m": 0.023,
+          "derivation": "modern 92/114 mm silhouette widened by 20 mm total so the 134 mm base with 2 mm side walls gives 130 mm internal clearance, preserving at least 20 mm lateral clearance around the 90 mm maximum RK width",
+          "confidence": "C_explicit_era_mismatch_geometry",
+          "era_mismatch": true
+        }
       },
       "historical_cover_family": "legacy wooden-board protective box per 1986 VNiR installation terminology"
     },
@@ -485,6 +506,33 @@
         "adjustment_rule": "legacy bracket position is adjusted at the sleeper; exact slot/hole coordinates are not required for initial profile",
         "source": "P10-CONTACT-SUSPENSION-1997",
         "confidence": "B"
+      },
+      "initial_geometry": {
+        "mode": "frolov_topology_curved_channel_envelope_fallback",
+        "longitudinal_thickness_m": 0.1,
+        "channel_band_thickness_m": 0.035,
+        "sleeper_end_attachment_inset_m": 0.1,
+        "upper_outboard_clearance_from_rail_m": 0.045,
+        "confidence": "C_topology_plus_B_resource_envelope",
+        "reason": "Frolov fixes curved-channel topology and sleeper attachment; TSN fixes 540x620x100 mm resource envelope, but exact bend radii and hole coordinates are unresolved",
+        "sources": [
+          "P10-FROLOV-CONTACT",
+          "P10-TSN-CONTACT-BRACKET"
+        ]
+      },
+      "schedule": {
+        "target_pitch_m": 5,
+        "target_phase_m": 2.5,
+        "snap_to_nearest_timber_sleeper": true,
+        "rule": "generate an independent 5.0 m target chain, then snap each support to the nearest deterministic timber sleeper so the legacy three-screw sleeper attachment remains physical",
+        "expected_straight_interval_family_m": [
+          4.761904761904762,
+          5.357142857142857
+        ],
+        "normative_min_m": 4.5,
+        "normative_max_m": 5.4,
+        "confidence": "B_derived_installation_schedule",
+        "source": "P10-FROLOV-CONTACT-SPACING"
       }
     },
     "insulator": {
@@ -495,7 +543,15 @@
       "mode": "fallback_from_metro_material_schedule",
       "confidence": "C",
       "exact_porcelain_profile": "not_required_for_initial_profile",
-      "source": "P10-METRO-MATERIAL-2024"
+      "source": "P10-METRO-MATERIAL-2024",
+      "initial_geometry": {
+        "mode": "horizontal_cylindrical_envelope_fallback",
+        "axial_length_m": 0.15,
+        "diameter_m": 0.112,
+        "orientation": "transverse_horizontal_between_bracket_and_contact_rail_fastening",
+        "confidence": "C_envelope_only",
+        "source": "P10-METRO-MATERIAL-2024"
+      }
     }
   },
   "service_era_preset": {

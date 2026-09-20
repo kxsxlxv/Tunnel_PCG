@@ -736,15 +736,10 @@ def build_continuous_asset_specs(
             )
             key = f"{namespace}/infrastructure/rail/{rail_index}"
             label_id, semantic = _ancillary_semantics(label_policy, "rail")
-            rail_bottom_edges = (
-                _edges_with_both_vertices_at_z(points, base_core_z)
-                if moscow_stage == "10.2"
-                else ()
-            )
-            if moscow_stage == "10.2" and not rail_bottom_edges:
-                raise AssertionError(
-                    "Stage-10.2 R65 must expose support-contact bottom edges"
-                )
+            # Stage 10.2 has discrete rail pads. Keep the continuous R65
+            # underside visible between sleepers; the hidden coplanar contact
+            # span is removed from each pad instead.
+            rail_bottom_edges: tuple[int, ...] = ()
             specs.append(
                 ContinuousAssetSpec(
                     persistent_key=key,
@@ -814,8 +809,11 @@ def build_continuous_asset_specs(
                         ),
                         "productionContinuous": True,
                         "domainGeometryStage": moscow_stage,
-                        "railFootBottomContactFaceOmitted": bool(
-                            rail_bottom_edges
+                        "railFootBottomContactFaceOmitted": False,
+                        "supportContactSurfacePolicy": (
+                            "discrete_rail_pad_top_contact_span_omitted"
+                            if moscow_stage == "10.2"
+                            else "stage10_1_closed_rail_profile"
                         ),
                     },
                 )

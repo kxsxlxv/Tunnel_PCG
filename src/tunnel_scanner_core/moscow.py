@@ -401,6 +401,45 @@ class MoscowCableRackProfile:
 
 
 @dataclass(frozen=True)
+class MoscowWaterMainProfile:
+    min_nominal_dn_mm: int
+    quantity_single_track_tunnel: int
+    side_profile_x_sign: int
+    preview_outer_diameter_m: float
+    center_profile_z_m: float
+    shell_clearance_inward_m: float
+    placement_mode: str
+    outer_diameter_mode: str
+    material_family: str
+    normative_source: str
+    confidence: str
+
+    def __post_init__(self) -> None:
+        if self.min_nominal_dn_mm < 80:
+            raise ValueError("modern tunnel water main must remain at least DN80")
+        if self.quantity_single_track_tunnel != 1:
+            raise ValueError("single-track modern preset requires one water main")
+        if self.side_profile_x_sign not in (-1, 1):
+            raise ValueError("water-main side sign must be +/-1")
+        if (
+            not math.isfinite(self.preview_outer_diameter_m)
+            or self.preview_outer_diameter_m <= 0.0
+        ):
+            raise ValueError("water-main preview diameter must be positive")
+        if (
+            not math.isfinite(self.shell_clearance_inward_m)
+            or self.shell_clearance_inward_m <= 0.0
+        ):
+            raise ValueError("water-main shell clearance must be positive")
+        if not math.isfinite(self.center_profile_z_m):
+            raise ValueError("water-main center z must be finite")
+        if self.center_profile_z_m <= 0.0:
+            raise ValueError("water main must remain above UGR")
+        if not self.normative_source:
+            raise ValueError("water main requires normative provenance")
+
+
+@dataclass(frozen=True)
 class MoscowModernPermanentWayProfile:
     preset_id: str
     support_pitch_m: float
@@ -692,6 +731,7 @@ class MoscowStage10Profile:
     modern_contact_rail: MoscowModernContactRailProfile
     modern_permanent_way: MoscowModernPermanentWayProfile
     cable_rack: MoscowCableRackProfile
+    water_main: MoscowWaterMainProfile
     default_service_preset: str
     walkway: MoscowWalkwayProfile
     civil_geometry_mode: str
@@ -753,6 +793,7 @@ class MoscowStage10Profile:
         cable_rack_place_raw = cable_rack_raw["placement"]
         cable_horn_mesh_raw = cable_rack_raw["initial_horn_mesh"]
         cable_preview_raw = service_infra_raw["cable_preview"]
+        water_main_raw = service_infra_raw["pipes"]["water_main"]
         modern_cover_raw = modern_contact_raw["cover"]
         modern_cover_place_raw = modern_cover_raw["placement"]
         modern_support_raw = modern_contact_raw["support"]
@@ -813,6 +854,7 @@ class MoscowStage10Profile:
             modern_pad_source_raw.get("source"),
             modern_component_source_raw.get("source"),
             *cable_rack_raw.get("sources", ()),
+            water_main_raw.get("normative_source"),
             *contact_support_geom_raw.get("sources", ()),
             *drain_raw.get("sources", ()),
             *gauge_definition.get("sources", ()),
@@ -1297,6 +1339,39 @@ class MoscowStage10Profile:
         )
 
 
+        water_side = str(water_main_raw["side"])
+        if water_side == "positive_profile_x_weak_current_side_opposite_contact_rail":
+            water_side_sign = 1
+        elif water_side == "negative_profile_x_weak_current_side_opposite_contact_rail":
+            water_side_sign = -1
+        else:
+            raise ValueError(
+                f"unsupported modern water-main side {water_side!r}"
+            )
+
+        water_main_profile = MoscowWaterMainProfile(
+            min_nominal_dn_mm=int(water_main_raw["min_nominal_dn_mm"]),
+            quantity_single_track_tunnel=int(
+                water_main_raw["quantity_single_track_tunnel"]
+            ),
+            side_profile_x_sign=water_side_sign,
+            preview_outer_diameter_m=float(
+                water_main_raw["preview_outer_diameter_m"]
+            ),
+            center_profile_z_m=float(water_main_raw["center_profile_z_m"]),
+            shell_clearance_inward_m=float(
+                water_main_raw["shell_clearance_inward_m"]
+            ),
+            placement_mode=str(water_main_raw["placement_mode"]),
+            outer_diameter_mode=str(
+                water_main_raw["preview_outer_diameter_mode"]
+            ),
+            material_family=str(water_main_raw["material_family"]),
+            normative_source=str(water_main_raw["normative_source"]),
+            confidence=str(water_main_raw["confidence"]),
+        )
+
+
         if not math.isclose(
             track_profile.rail_height_m,
             0.180,
@@ -1417,6 +1492,7 @@ class MoscowStage10Profile:
             modern_contact_rail=modern_contact_profile,
             modern_permanent_way=modern_pw_profile,
             cable_rack=cable_rack_profile,
+            water_main=water_main_profile,
             default_service_preset=str(service_presets_raw["default"]),
             walkway=walkway_profile,
             civil_geometry_mode=str(civil_geom_raw["mode"]),

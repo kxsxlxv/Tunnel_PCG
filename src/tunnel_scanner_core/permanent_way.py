@@ -561,6 +561,7 @@ def build_stage10_2_local_event_meshes(
                 "padPlanLongitudinalM": k.under_pad_longitudinal_m,
                 "padThicknessM": k.under_pad_thickness_m,
                 "holeDiameterM": k.under_pad_hole_diameter_m,
+                "holeGeometryMode": "metadata_only_no_boolean_cut_v1",
                 "contactBottomFacesOmitted": True,
             },
         ),
@@ -578,6 +579,7 @@ def build_stage10_2_local_event_meshes(
                 "holeSpacingTransverseM": k.baseplate_hole_spacing_transverse_m,
                 "holeSpacingLongitudinalM": k.baseplate_hole_spacing_longitudinal_m,
                 "holeDiameterM": k.baseplate_hole_diameter_m,
+                "holeGeometryMode": "metadata_only_no_boolean_cut_v1",
                 "railSeatHeightMode": "derived_stack_fit_fallback",
                 "baseplateMeshMode": k.baseplate_mesh_mode,
                 "contactBottomFacesOmitted": True,
@@ -598,6 +600,7 @@ def build_stage10_2_local_event_meshes(
                 "railFootContactFaceOmitted": True,
                 "railFootContactWidthM": 2.0 * rail_foot_half,
                 "padOverhangSurfacesPreserved": True,
+                "perforationGeometryMode": "metadata_only_no_boolean_cut_v1",
             },
         ),
         (
@@ -613,6 +616,7 @@ def build_stage10_2_local_event_meshes(
                 "headGeometry": k.track_screw_head_mode,
                 "headRadiusM": k.track_screw_head_radius_m,
                 "headHeightM": k.track_screw_head_height_m,
+                "embeddedFastenerVolumeOverlap": True,
             },
         ),
         (

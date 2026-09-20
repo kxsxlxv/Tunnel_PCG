@@ -198,9 +198,9 @@ Run:
 
     pytest
 
-Current automated baseline before final Stage-9 documentation commits:
+Current automated baseline:
 
-    147 tests passed
+    148 tests passed
 
 CI also runs:
 

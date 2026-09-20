@@ -192,9 +192,9 @@ def main() -> None:
                 errors.append(
                     f"{rail.name}: Stage 10.2 rail support-contact face retained"
                 )
-            if int(props.get("omittedLongitudinalEdgeCount", 0)) != 1:
+            if int(props.get("omittedLongitudinalEdgeCount", 0)) != 2:
                 errors.append(
-                    f"{rail.name}: expected one omitted rail-foot bottom edge"
+                    f"{rail.name}: expected two split R65 foot-bottom edges"
                 )
         if props.get("moscowProfileID") != profile.profile_id:
             errors.append(f"{rail.name}: Moscow profile ID mismatch")

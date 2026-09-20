@@ -47,8 +47,8 @@ The deterministic profile remains:
     research/moscow_metro_tunnels/data/stage10_initial_profile.json
 
 The Stage-10.2 contract was closed in schema 1.4. The shared machine profile has
-since advanced to schema 1.5 for Stage-10.3 contact-rail data; the Stage-10.2
-permanent-way values remain unchanged.
+since advanced to schema 1.6 for Stage-10.3 contact-rail and Stage-10.4
+civil/walkway data; the Stage-10.2 permanent-way values remain unchanged.
 
 Source-backed/derived data includes:
 
@@ -337,18 +337,18 @@ Stage 10.1 remains available explicitly:
         --namespace stage10-1-smoke
 
 The Stage-10 Blender verifier reads `domainStage` from scene metadata and
-validates Stage 10.1, 10.2 or 10.3.
+validates Stage 10.1 through 10.4.
 
 ## Deferred by design
 
 Still not implemented in Stage 10.2:
 
 - contact rail / bracket / insulator / protective assembly — implemented in Stage 10.3;
-- actual Moscow 5.5/5.1 civil shell and +0.200 m walkway — Stage 10.4;
+- actual Moscow 5.5/5.1 civil shell and +0.200 m walkway — implemented in Stage 10.4;
 - series-accurate N/C/K cast-iron ribs, bolts, grout plug and rebates;
 - exact historical KDP-2 solid geometry;
 - exact local hand-finished concrete fillets/corner radii;
 - curve/cant variant of the deterministic straight fixture.
 
-The next bounded implementation stage after Stage 10.3 is Stage 10.4 civil
-shell / walkway. See STAGE10_3_REPORT.md.
+Stage 10.3 contact rail and Stage 10.4 civil shell/walkway are now implemented.
+See STAGE10_3_REPORT.md and STAGE10_4_REPORT.md.

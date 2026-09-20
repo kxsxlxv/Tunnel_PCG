@@ -1490,6 +1490,205 @@ def _build_stage10_3_contact_scene_objects(
     return tuple(result)
 
 
+def _build_stage10_5_modern_contact_scene_objects(
+    *,
+    profile: MoscowStage10Profile,
+    namespace: str,
+    assembly: TunnelAssembly,
+    stations: Sequence[AlignmentStation],
+    label_policy: LabelPolicy,
+    running_support_pitch_m: float,
+    running_support_phase_m: float,
+) -> tuple[SceneObject, ...]:
+    local_meshes = build_modern_contact_support_meshes(profile)
+    chainages = modern_contact_support_chainages(
+        assembly.length_by_chainage_m,
+        profile,
+        running_support_pitch_m=running_support_pitch_m,
+        running_support_phase_m=running_support_phase_m,
+    )
+    label_id, semantic = _ancillary_semantics(label_policy, "rail")
+    result: list[SceneObject] = []
+    L = assembly.config.ring_width_m
+    modern = profile.modern_contact_rail
+    folder_by_category = {
+        "contact_rail_support_block": "SupportBlocks",
+        "contact_rail_bracket": "Brackets",
+        "contact_rail_insulator": "Insulators",
+        "contact_rail_fastening_unit": "FasteningUnits",
+        "contact_rail_attachment_dowels": "SupportDowels",
+        "contact_rail_support_hood": "SupportHoods",
+    }
+
+    for event_index, chainage in enumerate(chainages):
+        station = sample_alignment_station(stations, chainage)
+        ring_id = min(
+            assembly.config.n_rings - 1,
+            max(0, int(math.floor(chainage / L))),
+        )
+        target_chainage = (
+            0.5 * modern.support_target_pitch_m
+            + event_index * modern.support_target_pitch_m
+        )
+        nearest_running_index = round(
+            (chainage - running_support_phase_m) / running_support_pitch_m
+        )
+        nearest_running = (
+            running_support_phase_m
+            + nearest_running_index * running_support_pitch_m
+        )
+        clearance = abs(chainage - nearest_running)
+        for local in local_meshes:
+            key = (
+                f"{namespace}/contact-rail/modern-support-event/"
+                f"{event_index:06d}/{local.category}"
+            )
+            iid = stable_instance_id(key)
+            vertices = tuple(
+                (
+                    x + station.offset_x_m,
+                    y + station.world_y_m,
+                    z + station.offset_z_m,
+                )
+                for x, y, z in local.vertices
+            )
+            result.append(
+                SceneObject(
+                    name=(
+                        f"PROD_CR_MODERN_{event_index:06d}__"
+                        f"{local.name_suffix}"
+                    ),
+                    vertices=vertices,
+                    faces=local.faces,
+                    object_type=local.object_type,
+                    ring_id=ring_id,
+                    label_id=label_id,
+                    instance_id=iid,
+                    semantic_class=semantic,
+                    reconstruction="stage10_5_modern_contact_rail_support",
+                    collection_path=(
+                        "Tunnel",
+                        namespace,
+                        "ContactRail",
+                        "Modern",
+                        folder_by_category[local.category],
+                    ),
+                    extra_properties={
+                        **dict(local.properties),
+                        "persistentKey": key,
+                        "persistentInstanceID": iid,
+                        "tunnelInstanceID": stable_instance_id(
+                            f"{namespace}/tunnel"
+                        ),
+                        "identityScope": "periodic_modern_contact_rail_asset",
+                        "domainGeometryStage": "10.5",
+                        "servicePreset": modern.preset_id,
+                        "periodicEventIndex": event_index,
+                        "eventChainageM": chainage,
+                        "targetChainageM": target_chainage,
+                        "targetPitchM": modern.support_target_pitch_m,
+                        "snapRule": "nearest_midpoint_between_running_supports",
+                        "nearestRunningSupportChainageM": nearest_running,
+                        "runningSupportClearanceM": clearance,
+                        "runningSupportExclusionHalfLengthM": (
+                            modern.running_support_exclusion_half_length_m
+                        ),
+                        "separateFromRunningRailSupport": True,
+                        "alignmentOffsetX": station.offset_x_m,
+                        "alignmentOffsetZ": station.offset_z_m,
+                        "alignmentWorldY": station.world_y_m,
+                        "moscowProfileID": profile.profile_id,
+                        "moscowProfileSHA256": (
+                            profile.provenance.canonical_sha256
+                        ),
+                    },
+                )
+            )
+
+    cover_section = _ensure_ccw_xz(
+        modern_protective_cover_core_xz(profile)
+    )
+    spans = modern_cover_span_ranges(
+        assembly.length_by_chainage_m,
+        profile,
+        support_chainages=chainages,
+    )
+    for span_index, (start_chainage, end_chainage) in enumerate(spans):
+        clipped = clipped_alignment_stations(
+            stations,
+            start_chainage_m=start_chainage,
+            end_chainage_m=end_chainage,
+        )
+        mesh = build_sweep_mesh(
+            cover_section,
+            clipped,
+            cap_start=True,
+            cap_end=True,
+        )
+        midpoint = 0.5 * (start_chainage + end_chainage)
+        ring_id = min(
+            assembly.config.n_rings - 1,
+            max(0, int(math.floor(midpoint / L))),
+        )
+        key = (
+            f"{namespace}/contact-rail/modern-cover-span/"
+            f"{span_index:06d}"
+        )
+        iid = stable_instance_id(key)
+        result.append(
+            SceneObject(
+                name=f"PROD_CR_MODERN_COVER_SPAN_{span_index:06d}",
+                vertices=mesh.vertices,
+                faces=mesh.faces,
+                object_type="production_contact_rail_cover_span",
+                ring_id=ring_id,
+                label_id=label_id,
+                instance_id=iid,
+                semantic_class=semantic,
+                reconstruction="stage10_5_modern_contact_rail_cover_span",
+                collection_path=(
+                    "Tunnel",
+                    namespace,
+                    "ContactRail",
+                    "Modern",
+                    "CoverSpans",
+                ),
+                extra_properties={
+                    "persistentKey": key,
+                    "persistentInstanceID": iid,
+                    "tunnelInstanceID": stable_instance_id(
+                        f"{namespace}/tunnel"
+                    ),
+                    "identityScope": "modern_contact_cover_span",
+                    "domainGeometryStage": "10.5",
+                    "servicePreset": modern.preset_id,
+                    "eventChainageM": midpoint,
+                    "coverSpanIndex": span_index,
+                    "coverSpanStartChainageM": start_chainage,
+                    "coverSpanEndChainageM": end_chainage,
+                    "geometryMode": "rounded_wrap_profile_from_exact_envelope",
+                    "outerTopWidthM": modern.cover_top_width_m,
+                    "outerBaseWidthM": modern.cover_base_width_m,
+                    "heightM": modern.cover_height_m,
+                    "sideWallM": modern.cover_side_wall_m,
+                    "topWallM": modern.cover_top_wall_m,
+                    "lowerEdgeAboveContactSurfaceM": (
+                        modern.cover_lower_edge_above_contact_surface_m
+                    ),
+                    "supportZonesInterrupted": True,
+                    "supportHoodSeparate": True,
+                    "nominalSpanOverlapM": modern.cover_span_overlap_m,
+                    "factoryCornerRadiiResolved": False,
+                    "moscowProfileID": profile.profile_id,
+                    "moscowProfileSHA256": (
+                        profile.provenance.canonical_sha256
+                    ),
+                },
+            )
+        )
+    return tuple(result)
+
+
 def _build_stage10_4_civil_shell_objects(
     *,
     profile: MoscowStage10Profile,

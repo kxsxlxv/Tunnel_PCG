@@ -61,6 +61,7 @@ from .services import (
     build_r2k11_local_rack_mesh,
     cable_rack_chainages,
     modern_cable_sections_core,
+    modern_water_main_section_core,
 )
 from .civil import (
     build_annular_shell_sweep,
@@ -749,6 +750,31 @@ def build_continuous_asset_specs(
                     },
                 )
             )
+
+        water_section, water_props = modern_water_main_section_core(
+            moscow_profile
+        )
+        specs.append(
+            ContinuousAssetSpec(
+                persistent_key=f"{namespace}/services/water-main/0",
+                name="PROD_TUNNEL_WATER_MAIN_DN80",
+                object_type="production_water_main",
+                category="water_main",
+                cross_section_xz=_ensure_ccw_xz(water_section),
+                label_id=cable_label,
+                semantic_class=cable_semantic,
+                properties={
+                    **dict(water_props),
+                    "productionContinuous": True,
+                    "domainGeometryStage": "10.5",
+                    "servicePreset": moscow_profile.default_service_preset,
+                    "moscowProfileID": moscow_profile.profile_id,
+                    "moscowProfileSHA256": (
+                        moscow_profile.provenance.canonical_sha256
+                    ),
+                },
+            )
+        )
 
     if moscow_profile is not None and moscow_stage in {"10.2", "10.3", "10.4", "10.5"}:
         r65_for_concrete = R65ProductionProfile()
@@ -2587,12 +2613,25 @@ def build_production_scene(
                     False if stage10_5_service_racks else None
                 ),
                 "servicePipeStatus": (
-                    "unresolved_not_generated"
+                    "implemented_normative_DN80_with_explicit_placement_fallback"
                     if (
                         config.moscow_stage == "10.5"
                         and config.resolved_moscow_service_preset == "modern"
                     )
                     else "legacy_stage8_preview"
+                ),
+                "serviceWaterMainCount": sum(
+                    1
+                    for obj in objects
+                    if obj.object_type == "production_water_main"
+                ),
+                "serviceWaterMainMinNominalDNmm": (
+                    config.moscow_profile.water_main.min_nominal_dn_mm
+                    if (
+                        config.moscow_stage == "10.5"
+                        and config.resolved_moscow_service_preset == "modern"
+                    )
+                    else None
                 ),
                 "legacyStage8TubeCount": sum(
                     1

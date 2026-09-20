@@ -108,6 +108,7 @@ def track_concrete_profile_xz(
     *,
     rail_centers_profile_x: Sequence[float],
     intrados_samples: int = 40,
+    walkway_inner_edge_x_m: float | None = None,
 ) -> tuple[tuple[float, float], ...]:
     """Return the Stage-10.2 track-concrete polygon in profile XZ coordinates.
 
@@ -130,6 +131,22 @@ def track_concrete_profile_xz(
     groove_half = 0.5 * tc.water_groove_width_m
     xout = _outer_surface_intersection_x(profile)
     zout = _top_z_at_x(profile, xout)
+    if walkway_inner_edge_x_m is not None:
+        walkway_inner_edge_x_m = float(walkway_inner_edge_x_m)
+        if not (
+            drain_half < walkway_inner_edge_x_m < xout
+        ):
+            raise ValueError(
+                "walkway inner edge must lie between drain and concrete/intrados "
+                "shoulder intersection"
+            )
+        positive_top_x = walkway_inner_edge_x_m
+        positive_top_z = _top_z_at_x(profile, positive_top_x)
+        positive_bottom_z = _lower_intrados_z(profile, positive_top_x)
+    else:
+        positive_top_x = xout
+        positive_top_z = zout
+        positive_bottom_z = zout
     zdrain_top = _top_z_at_x(profile, drain_half)
     zbottom = tc.central_drain_bottom_z_m
     zgroove = zbottom - tc.water_groove_depth_m
@@ -149,15 +166,20 @@ def track_concrete_profile_xz(
         (gx1, zbottom),
         (drain_half, zbottom),
         (drain_half, zdrain_top),
-        (xout, zout),
+        (positive_top_x, positive_top_z),
     ]
+    if walkway_inner_edge_x_m is not None:
+        top_and_drain.append((positive_top_x, positive_bottom_z))
 
     c = profile.datums.lining_axis_z_m
     r = profile.intrados_radius_m
-    alpha_right = math.atan2(xout, zout - c)
+    alpha_right = math.atan2(positive_top_x, positive_bottom_z - c)
     if alpha_right < 0.0:
         alpha_right += 2.0 * math.pi
-    alpha_left = 2.0 * math.pi - alpha_right
+    alpha_left_ref = math.atan2(xout, zout - c)
+    if alpha_left_ref < 0.0:
+        alpha_left_ref += 2.0 * math.pi
+    alpha_left = 2.0 * math.pi - alpha_left_ref
     if alpha_left <= alpha_right:
         alpha_left += 2.0 * math.pi
     arc = []
@@ -174,6 +196,7 @@ def track_concrete_core_xz(
     *,
     rail_centers_profile_x: Sequence[float],
     intrados_samples: int = 40,
+    walkway_inner_edge_x_m: float | None = None,
 ) -> tuple[tuple[float, float], ...]:
     return tuple(
         profile.coordinate.research_xz_to_core_xz(x, z)
@@ -181,6 +204,7 @@ def track_concrete_core_xz(
             profile,
             rail_centers_profile_x=rail_centers_profile_x,
             intrados_samples=intrados_samples,
+            walkway_inner_edge_x_m=walkway_inner_edge_x_m,
         )
     )
 

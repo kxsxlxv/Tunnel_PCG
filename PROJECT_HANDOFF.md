@@ -1127,7 +1127,7 @@ Regression:
 
     pytest
 
-The current established production baseline is 165 tests plus Stage-8/9 stress/topology checks and dedicated Stage-10.1/10.2 production gates.
+The current established production baseline includes Stage-8/9 stress/topology checks plus dedicated Stage-10.1–10.4 production gates. The exact pytest count should be taken from the latest green CI run.
 
 Research reference implementation has its own tests under:
 
@@ -1161,11 +1161,12 @@ Any new Stage-10 Blender smoke test should preserve that backend behaviour.
 - focused Stage-10 research pass for the initial Moscow archetype;
 - **Stage 10.1 — Moscow profile/data integration + R65/gauge/UGR contract**;
 - **Stage 10.2 — timber/KD-65 permanent way + track concrete/drainage**;
-- **Stage 10.3 — legacy RK contact rail / sleeper-mounted support chain**.
+- **Stage 10.3 — legacy RK contact rail / sleeper-mounted support chain**;
+- **Stage 10.4 — smooth Moscow 5.5/5.1 civil shell + raised walkway**.
 
 ### Ready to start
 
-- **Stage 10.4 — Moscow 5.5/5.1 civil shell + raised walkway.**
+- **Stage 10.5 — production integration / final initial-archetype validation.**
 
 ### Still intentionally blocked
 
@@ -1177,23 +1178,23 @@ Any new Stage-10 Blender smoke test should preserve that backend behaviour.
 
 Use this as the starting instruction:
 
-> Read `PROJECT_HANDOFF.md`, `STAGE10_3_REPORT.md`, `research/moscow_metro_tunnels/21_stage10_initial_archetype.md`, `data/stage10_initial_profile.json`, and `data/stage10_source_pinpoints.json`. Stages 10.1–10.3 are closed and CI-validated. Begin only Stage 10.4: replace the temporary Stage-9 civil shell with the researched Moscow classic 5.5/5.1 concentric shell, using lining axis +1.670 m above UGR, 2.550 m intrados radius, 2.750 m extrados radius and 1.0 m ring pitch; implement the source-backed raised walkway at +0.200 m with inner edge x=+1.660 m and physical-intrados-clipped outer edge. Preserve all Stage-10.1–10.3 track/contact-rail datums, stable IDs and chunking. Do not invent series-accurate N/C/K ribs/bolts where manufacturing drawings remain unresolved.
+> Read `PROJECT_HANDOFF.md`, `STAGE10_4_REPORT.md`, `STAGE10_3_REPORT.md`, `research/moscow_metro_tunnels/21_stage10_initial_archetype.md`, `data/stage10_initial_profile.json`, and `data/stage10_source_pinpoints.json`. Stages 10.1–10.4 are implemented. Begin only Stage 10.5 production integration/final initial-archetype validation: verify the combined Moscow civil shell, track concrete, R65/timber/KD-65 permanent way, contact rail and walkway as one production asset across long scenes, ring-aligned and exact-length chunks, Blender runtime, stable parent IDs and duplicate/coplanar topology gates; prepare the scene contract for a future UNIGINE exporter without coupling core geometry to Blender. Keep exact N/C/K cast-iron ribs/bolts blocked unless new manufacturing drawings resolve them.
 
 ---
 
 ## 46. Final note
 
-The repository now contains the first Moscow running-tunnel archetype through
-R65 track, timber/KD-65 permanent way, drainage and legacy contact rail.
+The first Moscow running-tunnel archetype now contains the researched physical
+5.5/5.1 shell, R65 track, timber/KD-65 permanent way, drainage, legacy contact
+rail and raised walkway.
 
-A visible several-decimetre gap (about 0.4 m in the current preview) between
-`PROD_TRACK_CONCRETE` and the visible tubings is expected until Stage 10.4:
-the concrete already uses the researched 5.1 m Moscow intrados, while the
-visible shell is still Stage-9 geometry. Do not move the track geometry to hide
-that transitional mismatch.
+The several-decimetre gap that was intentionally visible through Stage
+10.2/10.3 is closed in Stage 10.4 because track concrete and the visible shell
+now share the same 2.550 m physical intrados. A similar gap in a regenerated
+Stage-10.4 scene is now a regression.
 
-The next conversation should start from Stage 10.4 civil shell/walkway and keep
-the unresolved detailed cast-iron N/C/K boundary explicit.
+The next bounded task is Stage 10.5 integration/validation. Keep the unresolved
+series-accurate cast-iron N/C/K detail boundary explicit.
 
 
 ---
@@ -1351,8 +1352,8 @@ it is not silently claimed as a separately dimensioned Moscow factory value.
 
 ### Explicit visual fallbacks
 
-Stage 10.2 closed on profile schema 1.4; the shared profile is now schema 1.5
-after Stage 10.3 contact-rail additions. Production code does not hide unresolved
+Stage 10.2 closed on profile schema 1.4; the shared profile is now schema 1.6
+after Stage 10.3 contact-rail and Stage 10.4 civil/walkway additions. Production code does not hide unresolved
 fastening dimensions as magic constants.
 
 C-confidence visual fallbacks are recorded for:
@@ -1610,3 +1611,139 @@ Implement:
 Keep series-accurate N/C/K ribs, bolt-hole coordinates, grout-plug coordinates
 and rebate geometry unresolved unless defensible manufacturing drawings are
 found.
+
+
+---
+
+## Stage 10.4 implementation update (2026-09-20)
+
+Stage 10.4 replaces the transitional Stage-9 civil geometry in Moscow mode.
+
+### Civil shell
+
+Implemented production geometry:
+
+```text
+family                    CAST_IRON_5500_R1000
+intrados radius           2.550 m
+extrados radius           2.750 m
+structural depth          0.200 m
+lining axis profile z    +1.670 m
+lining axis core z        0.000 m
+civil ring pitch          1.000 m
+```
+
+The geometry mode is a smooth concentric ringwise shell. It deliberately does
+not fabricate unresolved N/C/K central angles, ribs, bolt-hole coordinates,
+grout-plug coordinates or rebates.
+
+The historical 11-piece family rhythm is retained as reference metadata only:
+
+```text
+coarseSegmentCountReference = 11
+coarseSegmentCountIsGeometry = false
+seriesAccurateTubingLOD0 = false
+```
+
+Stage-9 `lining_segment`, bolt-head/cutter and prescribed-joint geometry is
+removed in Stage 10.4. Legacy Stage-9 bolt tooling is not built in this mode.
+
+### Raised walkway
+
+The old generic `production_walkway` is replaced by:
+
+```text
+production_moscow_walkway
+
+top profile z             +0.200 m
+inner edge profile x      +1.660 m
+documented outer x         2.083650643 m
+exact mesh outer x         2.083650642502... m
+top clear width            ~0.423650643 m
+side                        +X / opposite contact rail
+```
+
+The mesh uses the exact physical intrados intersection even though the
+machine-profile source datum is stored rounded to 9 decimal places.
+
+At x=+1.660 m the track-concrete top is profile z=-0.21995 m. The concrete is
+partitioned there; the walkway provides the exposed riser up to +0.200 m and
+then closes to the physical intrados.
+
+Hidden concrete/walkway/lining contact faces are omitted.
+
+### Resolution of the former civil gap
+
+The approximately 0.4 m gap visible through Stage 10.2 and 10.3 was an
+intentional bounded-stage mismatch: track concrete already used the Moscow
+5.1 m intrados while the visible shell was still Stage-9 geometry.
+
+Stage 10.4 closes that mismatch. Metadata now reports:
+
+```text
+transitionalCivilGapStatus = closed_by_stage10_4_moscow_shell
+```
+
+Do not move track datums. If a comparable gap appears in a freshly regenerated
+Stage-10.4 scene, treat it as a bug.
+
+### New production module
+
+```text
+src/tunnel_scanner_core/civil.py
+```
+
+Key APIs:
+
+- `civil_ring_ranges`
+- `walkway_profile_xz`
+- `walkway_core_xz`
+- `build_annular_shell_sweep`
+
+### Verification
+
+Regression file:
+
+```text
+tests/test_moscow_stage10_4.py
+```
+
+Stress gate:
+
+```text
+scripts/verify_stage10_4.py
+```
+
+CI also runs a Stage-10.4 CLI smoke. The Stage-10 Blender verifier is
+stage-aware through 10.4.
+
+### Operator workflow
+
+Stage 10.4 is the default:
+
+```text
+python examples/generate_stage10_production_tunnel.py \
+  --rings 20 \
+  --namespace stage10-4-smoke
+
+blender --background --python scripts/blender_verify_stage10.py -- \
+  examples/stage10_production_scene.json \
+  --report examples/blender_stage10_runtime_report.json \
+  --save-blend examples/stage10_production_scene.blend
+```
+
+Stage 10.3 compatibility now requires `--domain-stage 10.3`.
+
+Detailed notes:
+
+```text
+STAGE10_4_REPORT.md
+STAGE10_4_BLENDER_SMOKE_TEST.md
+```
+
+### Next implementation boundary
+
+**Stage 10.5 only — final production integration / initial-archetype validation.**
+
+Do not open exact series-accurate tubing detail unless a defensible
+manufacturing drawing resolves the remaining N/C/K geometry.

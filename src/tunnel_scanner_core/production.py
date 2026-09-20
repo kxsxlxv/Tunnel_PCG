@@ -692,9 +692,11 @@ def build_continuous_asset_specs(
                         "ugrZLocalM": top_core_z,
                         "gaugeM": gauge,
                         "gaugeMeasurementBelowUGRM": gauge_level,
-                        "gaugeMeasurementZLocalM": (
+                        "gaugeMeasurementProfileZLocalM": (
                             moscow_profile.datums.ugr_z_m - gauge_level
                         ),
+                        "gaugeMeasurementCoreZLocalM": working_face_core_z,
+                        "gaugeMeasurementZLocalM": working_face_core_z,
                         "railWorkingFaceOffsetM": working_offset,
                         "railInnerWorkingFaceProfileX": (
                             working_face_profile_x

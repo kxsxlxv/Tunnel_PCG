@@ -33,16 +33,26 @@ jobs:
           scripts/verify_stage9_trimesh.py
           scripts/audit_stage9_topology.py
           scripts/verify_stage10_1.py
+          scripts/verify_stage10_2.py
       - name: Unit and regression tests
         run: pytest
-      - name: Stage 10.1 CLI scene generation smoke
+      - name: Stage 10.1 CLI compatibility smoke
         run: >-
           python examples/generate_stage10_production_tunnel.py
+          --domain-stage 10.1
           --rings 4
           --namespace stage10-1-ci
           --no-bolts
           --axis-noise-sigma 0
-          --output /tmp/stage10_production_scene.json
+          --output /tmp/stage10_1_production_scene.json
+      - name: Stage 10.2 CLI permanent-way smoke
+        run: >-
+          python examples/generate_stage10_production_tunnel.py
+          --rings 4
+          --namespace stage10-2-ci
+          --no-bolts
+          --axis-noise-sigma 0
+          --output /tmp/stage10_2_production_scene.json
       - name: Stage 8 stress verification
         run: python scripts/verify_stage8_stress.py
       - name: Stage 8 independent trimesh verification
@@ -55,3 +65,5 @@ jobs:
         run: python scripts/verify_stage9_trimesh.py
       - name: Stage 10.1 Moscow production verification
         run: python scripts/verify_stage10_1.py
+      - name: Stage 10.2 permanent-way verification
+        run: python scripts/verify_stage10_2.py

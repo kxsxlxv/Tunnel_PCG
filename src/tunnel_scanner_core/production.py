@@ -57,6 +57,11 @@ from .contact_rail import (
     protective_cover_core_xz,
     rk_contact_rail_core_xz,
 )
+from .services import (
+    build_r2k11_local_rack_mesh,
+    cable_rack_chainages,
+    modern_cable_sections_core,
+)
 from .civil import (
     build_annular_shell_sweep,
     civil_ring_ranges,

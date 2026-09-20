@@ -350,6 +350,57 @@ class MoscowWalkwayProfile:
 
 
 @dataclass(frozen=True)
+class MoscowCableRackProfile:
+    family: str
+    overall_arc_length_m: float
+    upright_width_longitudinal_m: float
+    upright_thickness_m: float
+    horn_count: int
+    horn_thickness_m: float
+    horn_radius_m: float
+    max_cable_diameter_m: float
+    horn_pitch_m: float
+    repeat_pitch_m: float
+    phase_m: float
+    center_profile_z_m: float
+    shell_clearance_inward_m: float
+    horn_longitudinal_width_m: float
+    first_cable_center_inward_m: float
+    second_cable_center_inward_m: float
+    representative_cable_diameter_m: float
+    cable_circle_vertices: int
+
+    def __post_init__(self) -> None:
+        positive = (
+            self.overall_arc_length_m,
+            self.upright_width_longitudinal_m,
+            self.upright_thickness_m,
+            self.horn_thickness_m,
+            self.horn_radius_m,
+            self.max_cable_diameter_m,
+            self.horn_pitch_m,
+            self.repeat_pitch_m,
+            self.shell_clearance_inward_m,
+            self.horn_longitudinal_width_m,
+            self.first_cable_center_inward_m,
+            self.second_cable_center_inward_m,
+            self.representative_cable_diameter_m,
+        )
+        if any((not math.isfinite(v) or v <= 0.0) for v in positive):
+            raise ValueError("cable-rack dimensions must be finite and positive")
+        if self.horn_count <= 0 or self.cable_circle_vertices < 6:
+            raise ValueError("cable-rack horn/circle counts are invalid")
+        if not (0.0 <= self.phase_m < self.repeat_pitch_m):
+            raise ValueError("cable-rack phase must lie within repeat pitch")
+        if self.representative_cable_diameter_m > self.max_cable_diameter_m:
+            raise ValueError("representative cable exceeds rack capacity")
+        if self.second_cable_center_inward_m <= self.first_cable_center_inward_m:
+            raise ValueError("second cable place must lie farther inward")
+        if not self.family:
+            raise ValueError("cable-rack family must not be empty")
+
+
+@dataclass(frozen=True)
 class MoscowModernPermanentWayProfile:
     preset_id: str
     support_pitch_m: float
@@ -640,6 +691,7 @@ class MoscowStage10Profile:
     contact_rail: MoscowContactRailProfile
     modern_contact_rail: MoscowModernContactRailProfile
     modern_permanent_way: MoscowModernPermanentWayProfile
+    cable_rack: MoscowCableRackProfile
     default_service_preset: str
     walkway: MoscowWalkwayProfile
     civil_geometry_mode: str
@@ -696,6 +748,11 @@ class MoscowStage10Profile:
         modern_contact_raw = contact_raw["modern_service_preset"]
         modern_pw_raw = raw["modern_permanent_way"]
         service_presets_raw = raw["service_era_presets"]
+        service_infra_raw = raw["modern_service_infrastructure"]
+        cable_rack_raw = service_infra_raw["cable_rack"]
+        cable_rack_place_raw = cable_rack_raw["placement"]
+        cable_horn_mesh_raw = cable_rack_raw["initial_horn_mesh"]
+        cable_preview_raw = service_infra_raw["cable_preview"]
         contact_place_raw = contact_raw["placement"]
         contact_profile_raw = contact_raw["rail_profile"]
         contact_mesh_raw = contact_profile_raw["initial_mesh_profile"]
@@ -1180,6 +1237,41 @@ class MoscowStage10Profile:
             fastening_mesh_mode=str(modern_fastening_mesh_raw["mode"]),
         )
 
+        cable_rack_profile = MoscowCableRackProfile(
+            family=str(cable_rack_raw["family"]),
+            overall_arc_length_m=float(cable_rack_raw["overall_arc_length_m"]),
+            upright_width_longitudinal_m=float(
+                cable_rack_raw["upright_width_longitudinal_m"]
+            ),
+            upright_thickness_m=float(cable_rack_raw["upright_thickness_m"]),
+            horn_count=int(cable_rack_raw["horn_count"]),
+            horn_thickness_m=float(cable_rack_raw["horn_thickness_m"]),
+            horn_radius_m=float(cable_rack_raw["horn_radius_m"]),
+            max_cable_diameter_m=float(cable_rack_raw["max_cable_diameter_m"]),
+            horn_pitch_m=float(cable_rack_raw["horn_pitch_m"]["value"]),
+            repeat_pitch_m=float(cable_rack_place_raw["repeat_pitch_m"]),
+            phase_m=float(cable_rack_place_raw["phase_m"]),
+            center_profile_z_m=float(
+                cable_rack_place_raw["center_profile_z_m"]
+            ),
+            shell_clearance_inward_m=float(
+                cable_rack_place_raw["shell_clearance_inward_m"]
+            ),
+            horn_longitudinal_width_m=float(
+                cable_horn_mesh_raw["longitudinal_width_m"]
+            ),
+            first_cable_center_inward_m=float(
+                cable_horn_mesh_raw["first_cable_center_inward_m"]
+            ),
+            second_cable_center_inward_m=float(
+                cable_horn_mesh_raw["second_cable_center_inward_m"]
+            ),
+            representative_cable_diameter_m=float(
+                cable_preview_raw["representative_diameter_m"]
+            ),
+            cable_circle_vertices=int(cable_preview_raw["circle_vertices"]),
+        )
+
 
         if not math.isclose(
             track_profile.rail_height_m,
@@ -1300,6 +1392,7 @@ class MoscowStage10Profile:
             contact_rail=contact_profile,
             modern_contact_rail=modern_contact_profile,
             modern_permanent_way=modern_pw_profile,
+            cable_rack=cable_rack_profile,
             default_service_preset=str(service_presets_raw["default"]),
             walkway=walkway_profile,
             civil_geometry_mode=str(civil_geom_raw["mode"]),

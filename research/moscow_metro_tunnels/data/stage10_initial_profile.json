@@ -689,7 +689,14 @@
       "base_width_narrow_m": 0.178,
       "rail_seat_recess_m": 0.008,
       "source": "P10-LVT-M-ARS-2026",
-      "confidence": "A/B_current_supply_technical_data"
+      "confidence": "A/B_current_supply_technical_data",
+      "initial_mesh": {
+        "mode": "source_dimensions_trapezoid_preview_v1",
+        "base_wide_end": "outboard_from_track_axis",
+        "base_narrow_end": "inboard_toward_track_axis",
+        "orientation_confidence": "C_plan_orientation",
+        "note": "Base length/widths/top width/height are source-backed. Public data does not explicitly state which 197/178 mm base-width end points toward track axis, so the initial orientation is a replaceable visualization fallback."
+      }
     },
     "rubber_boot": {
       "inner_length_m": 0.65,
@@ -698,7 +705,13 @@
       "bottom_width_narrow_m": 0.178,
       "side_height_m": 0.153,
       "source": "P10-RU186427-LVT",
-      "confidence": "A_patent_claim_dimensions"
+      "confidence": "A_patent_claim_dimensions",
+      "initial_mesh": {
+        "mode": "source_inner_envelope_plus_visible_wall_fallback_v1",
+        "preview_wall_thickness_m": 0.005,
+        "confidence": "A_inner_dimensions_C_wall_thickness",
+        "note": "Patent fixes the inner/bottom dimensions and side height; 5 mm visible wall thickness is a preview-only fallback until an outer-section drawing is pinned."
+      }
     },
     "installation": {
       "system": "ballastless low-vibration track; individual reinforced-concrete blocks on elastic pads in rubber boots, monolithically embedded in track concrete",

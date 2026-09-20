@@ -485,14 +485,20 @@ def main() -> None:
         ]
         for span in cover_spans:
             sp = span.custom_properties
-            if sp.get("coverProfileMode") != "modern_rounded_polymer_wrap_v1":
+            if sp.get("geometryMode") != (
+                "rounded_wrap_profile_from_exact_envelope"
+            ):
                 errors.append(f"{span.name}: wrong modern cover profile mode")
-            if not _close(sp.get("coverHeightM", -1), 0.111):
+            if not _close(sp.get("heightM", -1), 0.111):
                 errors.append(f"{span.name}: wrong modern cover height")
-            if not _close(sp.get("coverTopWidthM", -1), 0.092):
+            if not _close(sp.get("outerTopWidthM", -1), 0.092):
                 errors.append(f"{span.name}: wrong modern cover top width")
-            if not _close(sp.get("coverBaseWidthM", -1), 0.114):
+            if not _close(sp.get("outerBaseWidthM", -1), 0.114):
                 errors.append(f"{span.name}: wrong modern cover base width")
+            if sp.get("supportZonesInterrupted") is not True:
+                errors.append(f"{span.name}: cover is not interrupted at support zones")
+            if sp.get("supportHoodSeparate") is not True:
+                errors.append(f"{span.name}: local support hood contract missing")
 
     if domain_stage in {"10.4", "10.5"}:
         if any(o.object_type == "lining_segment" for o in package.objects):
@@ -595,6 +601,9 @@ def main() -> None:
     report = {
         "stage": domain_stage,
         "servicePreset": service_preset,
+        "continuousSweepAlignmentCompaction": production_meta.get(
+            "continuousSweepAlignmentCompaction"
+        ),
         "moscowProfileID": profile.profile_id,
         "moscowProfileSHA256": profile.provenance.canonical_sha256,
         "ringCount": ring_count,

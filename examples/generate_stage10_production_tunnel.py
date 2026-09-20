@@ -30,8 +30,8 @@ from tunnel_scanner_core.scene_io import write_scene_package_json
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Generate the Moscow Stage 10 production scene. Stage 10.2 is "
-            "the default; Stage 10.1 remains available as a compatibility mode."
+            "Generate the Moscow Stage 10 production scene. Stage 10.3 is "
+            "the default; Stage 10.1/10.2 remain compatibility modes."
         )
     )
     size = parser.add_mutually_exclusive_group()
@@ -41,9 +41,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--namespace", default="stage10")
     parser.add_argument(
         "--domain-stage",
-        choices=["10.1", "10.2"],
-        default="10.2",
-        help="Moscow production domain stage; default: 10.2",
+        choices=["10.1", "10.2", "10.3"],
+        default="10.3",
+        help="Moscow production domain stage; default: 10.3",
     )
     parser.add_argument("--no-bolts", action="store_true")
     parser.add_argument(
@@ -136,7 +136,7 @@ def _validate_stage10_build(build, profile, domain_stage: str) -> tuple[float, l
             abs_tol=2e-12,
         ):
             raise AssertionError(f"{rail.name}: unexpected gauge measurement plane")
-    if domain_stage == "10.2":
+    if domain_stage in {"10.2", "10.3"}:
         if meta.get("permanentWayStatus") != (
             "implemented_stage10_2_initial_geometry"
         ):
@@ -184,6 +184,48 @@ def _validate_stage10_build(build, profile, domain_stage: str) -> tuple[float, l
             ):
                 raise AssertionError(
                     f"{pad.name}: rail-foot contact span was not omitted"
+                )
+    if domain_stage == "10.3":
+        if meta.get("contactRailStatus") != (
+            "implemented_stage10_3_initial_geometry_with_explicit_fallbacks"
+        ):
+            raise AssertionError("Stage 10.3 contact rail is not implemented")
+        contact = build.scene.objects_of_type("production_contact_rail")
+        cover = build.scene.objects_of_type("production_contact_rail_cover")
+        if len(contact) != 1:
+            raise AssertionError("Stage 10.3 requires one contact rail")
+        if len(cover) != 1:
+            raise AssertionError("Stage 10.3 requires one protective cover")
+        cp = contact[0].custom_properties
+        if not math.isclose(
+            float(cp["contactRailAxisProfileXM"]),
+            -1.450,
+            abs_tol=2e-12,
+        ):
+            raise AssertionError("Stage 10.3 contact-rail X datum mismatch")
+        if not math.isclose(
+            float(cp["workingSurfaceProfileZM"]),
+            0.160,
+            abs_tol=2e-12,
+        ):
+            raise AssertionError("Stage 10.3 contact working surface mismatch")
+        cover_props = cover[0].custom_properties
+        if cover_props.get("eraMismatch") is not True:
+            raise AssertionError("Stage 10.3 cover must retain eraMismatch=true")
+        if cover_props.get("modernFallbackIsNotHistoricalClaim") is not True:
+            raise AssertionError("Stage 10.3 cover fallback provenance missing")
+        support_count = int(meta.get("contactRailSupportCount", 0))
+        if support_count <= 0:
+            raise AssertionError("Stage 10.3 generated no contact-rail supports")
+        for obj_type in (
+            "production_contact_rail_bracket",
+            "production_contact_rail_insulator",
+            "production_contact_rail_attachment_screws",
+            "production_contact_rail_fastening_unit",
+        ):
+            if len(build.scene.objects_of_type(obj_type)) != support_count:
+                raise AssertionError(
+                    f"{obj_type}: count does not match contact support count"
                 )
     return gauge, working_faces
 
@@ -270,9 +312,18 @@ def main() -> None:
         "productionKD65Baseplates": len(
             build.scene.objects_of_type("production_baseplate")
         ),
+        "productionContactRails": len(
+            build.scene.objects_of_type("production_contact_rail")
+        ),
+        "productionContactRailCovers": len(
+            build.scene.objects_of_type("production_contact_rail_cover")
+        ),
+        "productionContactRailBrackets": len(
+            build.scene.objects_of_type("production_contact_rail_bracket")
+        ),
         "sleeperPitchM": (
             profile.sleeper.pitch_m
-            if args.domain_stage == "10.2"
+            if args.domain_stage in {"10.2", "10.3"}
             else None
         ),
         "railProfile": production_meta["railProfile"],
@@ -287,6 +338,17 @@ def main() -> None:
         "moscowProfileSHA256": profile.provenance.canonical_sha256,
         "permanentWayStatus": production_meta["permanentWayStatus"],
         "contactRailStatus": production_meta["contactRailStatus"],
+        "contactRailAxisProfileXM": production_meta.get(
+            "contactRailAxisProfileXM"
+        ),
+        "contactRailWorkingSurfaceProfileZM": production_meta.get(
+            "contactRailWorkingSurfaceProfileZM"
+        ),
+        "contactRailSupportCount": production_meta.get("contactRailSupportCount"),
+        "contactRailTargetPitchM": production_meta.get("contactRailTargetPitchM"),
+        "contactRailCoverEraMismatch": production_meta.get(
+            "contactRailCoverEraMismatch"
+        ),
         "civilShellStatus": production_meta["civilShellStatus"],
         "nonRailInfrastructureStatus": production_meta["nonRailInfrastructureStatus"],
         "alignmentStations": len(build.alignment_stations),

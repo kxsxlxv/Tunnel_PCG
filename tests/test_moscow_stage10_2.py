@@ -213,7 +213,7 @@ def test_stage10_2_production_replaces_stage9_pavement_and_adds_periodic_support
 
     for rail in build.scene.objects_of_type("production_rail"):
         assert rail.custom_properties["railFootBottomContactFaceOmitted"] is True
-        assert rail.custom_properties["omittedLongitudinalEdgeCount"] == 1
+        assert rail.custom_properties["omittedLongitudinalEdgeCount"] == 2
 
     first_sleeper = build.scene.objects_of_type("production_sleeper")[0]
     assert math.isclose(

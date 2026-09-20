@@ -237,7 +237,7 @@ def test_stage10_structured_contact_metadata_is_blender_safe_after_json_roundtri
     profile = load_stage10_initial_moscow_profile()
     build = build_production_tunnel(
         assembly_config=TunnelAssemblyConfig(
-            n_rings=1,
+            n_rings=4,
             ring_width_m=1.35,
             axis_noise_sigma_m=0.0,
         ),

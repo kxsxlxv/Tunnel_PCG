@@ -175,6 +175,23 @@ claims:
 Their preview dimensions are stored in the machine profile with C-confidence
 metadata. Production code no longer hides those dimensions as magic constants.
 
+### Fastening mesh LOD boundary
+
+Stage 10.2 does not yet Boolean-cut every small fastening hole/perforation into
+the engine-neutral preview meshes.
+
+The source dimensions remain present in the machine profile and object metadata,
+but the initial geometry explicitly marks:
+
+    KD-65 baseplate holes      metadata_only_no_boolean_cut_v1
+    under-baseplate pad holes  metadata_only_no_boolean_cut_v1
+    rail-pad perforations      metadata_only_no_boolean_cut_v1
+
+Track-screw shafts are modeled as embedded fastener volumes through the support
+stack. This avoids pretending that the initial mesh contains factory-accurate
+hole chamfers/countersinks while retaining the correct assembly location and
+visible hardware.
+
 ## Track concrete and drainage
 
 The continuous concrete section is generated in the engineering profile frame

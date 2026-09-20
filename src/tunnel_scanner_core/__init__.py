@@ -119,6 +119,7 @@ from .moscow import (
     MoscowModernContactRailProfile,
     MoscowModernPermanentWayProfile,
     MoscowCableRackProfile,
+    MoscowWaterMainProfile,
     R65Primitive,
     R65ProductionProfile,
     load_stage10_initial_moscow_profile,
@@ -140,6 +141,7 @@ from .services import (
     build_r2k11_local_rack_mesh,
     cable_rack_chainages,
     modern_cable_sections_core,
+    modern_water_main_section_core,
 )
 from .civil import (
     CivilShellMesh,
@@ -316,6 +318,7 @@ __all__ = [
     "MoscowModernContactRailProfile",
     "MoscowModernPermanentWayProfile",
     "MoscowCableRackProfile",
+    "MoscowWaterMainProfile",
     "R65Primitive",
     "R65ProductionProfile",
     "load_stage10_initial_moscow_profile",
@@ -333,6 +336,7 @@ __all__ = [
     "build_r2k11_local_rack_mesh",
     "cable_rack_chainages",
     "modern_cable_sections_core",
+    "modern_water_main_section_core",
     "CivilShellMesh",
     "build_annular_shell_sweep",
     "civil_ring_ranges",

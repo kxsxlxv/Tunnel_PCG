@@ -315,6 +315,124 @@ class MoscowTrackConcreteProfile:
 
 
 @dataclass(frozen=True)
+class MoscowContactRailProfile:
+    side_profile_x_sign: int
+    collection: str
+    horizontal_from_inner_working_face_m: float
+    horizontal_tolerance_m: float
+    working_surface_z_m: float
+    vertical_tolerance_m: float
+    rail_family: str
+    rail_overall_height_m: float
+    rail_top_width_m: float
+    rail_base_width_m: float
+    rail_web_width_m: float
+    rail_vertical_callouts_m: tuple[float, ...]
+    rail_profile_source: str
+    rail_profile_mode: str
+    rail_profile_confidence: str
+    rail_profile_era_warning: str
+    cover_historical_vertical_envelope_m: float
+    cover_outer_top_width_m: float
+    cover_outer_base_width_m: float
+    cover_height_m: float
+    cover_side_wall_m: float
+    cover_top_wall_m: float
+    cover_lower_edge_above_contact_surface_m: float
+    cover_mode: str
+    cover_era_mismatch: bool
+    cover_historical_side_gap_m: float
+    cover_box_gap_m: float
+    cover_box_to_insulator_gap_m: float
+    cover_support_offset_from_box_end_m: float
+    support_resource_envelope_m: tuple[float, float, float]
+    support_target_pitch_m: float
+    support_target_phase_m: float
+    support_normative_min_m: float
+    support_normative_max_m: float
+    support_snap_to_sleeper: bool
+    support_geometry_mode: str
+    support_longitudinal_thickness_m: float
+    support_channel_band_thickness_m: float
+    support_sleeper_end_attachment_inset_m: float
+    support_upper_outboard_clearance_from_rail_m: float
+    insulator_axial_length_m: float
+    insulator_diameter_m: float
+    insulator_mode: str
+
+    def __post_init__(self) -> None:
+        if self.side_profile_x_sign not in (-1, 1):
+            raise ValueError("contact-rail profile-X side sign must be +/-1")
+        if self.collection != "bottom":
+            raise ValueError("initial Moscow contact rail requires bottom collection")
+        positive = (
+            self.horizontal_from_inner_working_face_m,
+            self.horizontal_tolerance_m,
+            self.working_surface_z_m,
+            self.vertical_tolerance_m,
+            self.rail_overall_height_m,
+            self.rail_top_width_m,
+            self.rail_base_width_m,
+            self.rail_web_width_m,
+            self.cover_historical_vertical_envelope_m,
+            self.cover_outer_top_width_m,
+            self.cover_outer_base_width_m,
+            self.cover_height_m,
+            self.cover_side_wall_m,
+            self.cover_top_wall_m,
+            self.cover_lower_edge_above_contact_surface_m,
+            self.cover_historical_side_gap_m,
+            self.cover_box_gap_m,
+            self.cover_box_to_insulator_gap_m,
+            self.cover_support_offset_from_box_end_m,
+            self.support_target_pitch_m,
+            self.support_target_phase_m,
+            self.support_normative_min_m,
+            self.support_normative_max_m,
+            self.support_longitudinal_thickness_m,
+            self.support_channel_band_thickness_m,
+            self.support_sleeper_end_attachment_inset_m,
+            self.support_upper_outboard_clearance_from_rail_m,
+            self.insulator_axial_length_m,
+            self.insulator_diameter_m,
+            *self.rail_vertical_callouts_m,
+            *self.support_resource_envelope_m,
+        )
+        if any((not math.isfinite(v) or v <= 0.0) for v in positive):
+            raise ValueError("contact-rail dimensions must be finite and positive")
+        if self.rail_web_width_m >= min(
+            self.rail_top_width_m,
+            self.rail_base_width_m,
+        ):
+            raise ValueError("contact-rail web must be narrower than head/base")
+        if self.cover_side_wall_m * 2.0 >= self.cover_outer_base_width_m:
+            raise ValueError("contact-rail cover side walls consume base width")
+        if self.cover_top_wall_m >= self.cover_height_m:
+            raise ValueError("contact-rail cover top wall must fit inside height")
+        if self.support_normative_min_m >= self.support_normative_max_m:
+            raise ValueError("contact-rail support pitch range is invalid")
+        if not (
+            self.support_normative_min_m
+            <= self.support_target_pitch_m
+            <= self.support_normative_max_m
+        ):
+            raise ValueError("contact-rail target pitch must lie in normative range")
+        if not (0.0 <= self.support_target_phase_m < self.support_target_pitch_m):
+            raise ValueError("contact-rail support phase must lie in one pitch")
+        clear_base = (
+            self.cover_outer_base_width_m - 2.0 * self.cover_side_wall_m
+        )
+        required_clear = (
+            self.rail_base_width_m + 2.0 * self.cover_historical_side_gap_m
+        )
+        if clear_base + 1e-12 < required_clear:
+            raise ValueError(
+                "contact-rail cover fallback violates historical side clearance"
+            )
+
+
+
+@dataclass(frozen=True)
 class MoscowProfileProvenance:
     source_path: str | None
     source_pinpoints_file: str
@@ -333,6 +451,7 @@ class MoscowStage10Profile:
     sleeper: MoscowTimberSleeperProfile
     fastening: MoscowKD65Profile
     track_concrete: MoscowTrackConcreteProfile
+    contact_rail: MoscowContactRailProfile
     civil_family: str
     intrados_radius_m: float
     extrados_radius_m: float
@@ -378,6 +497,21 @@ class MoscowStage10Profile:
         concrete_raw = raw["track_concrete_and_invert"]
         drain_raw = concrete_raw["central_drain"]
         groove_raw = concrete_raw["water_release_groove"]
+        contact_raw = raw["contact_rail"]
+        contact_place_raw = contact_raw["placement"]
+        contact_profile_raw = contact_raw["rail_profile"]
+        contact_mesh_raw = contact_profile_raw["initial_mesh_profile"]
+        contact_protect_raw = contact_raw["protective_assembly"]
+        contact_cover_raw = contact_protect_raw["cover_profile"]
+        contact_cover_effective_raw = contact_cover_raw[
+            "effective_initial_geometry"
+        ]
+        contact_cover_hist_raw = contact_cover_raw["historical_constraints"]
+        contact_support_raw = contact_raw["support"]
+        contact_support_geom_raw = contact_support_raw["initial_geometry"]
+        contact_support_schedule_raw = contact_support_raw["schedule"]
+        contact_insulator_raw = contact_raw["insulator"]
+        contact_insulator_geom_raw = contact_insulator_raw["initial_geometry"]
 
         source_ids: list[str] = []
         for candidate in (
@@ -392,6 +526,14 @@ class MoscowStage10Profile:
             rail_pad_raw.get("source"),
             concrete_raw.get("source"),
             groove_raw.get("source"),
+            contact_place_raw.get("source"),
+            contact_profile_raw.get("source"),
+            contact_cover_raw.get("initial_geometry_source"),
+            contact_cover_hist_raw.get("source"),
+            contact_support_raw.get("source"),
+            contact_support_schedule_raw.get("source"),
+            contact_insulator_raw.get("source"),
+            *contact_support_geom_raw.get("sources", ()),
             *drain_raw.get("sources", ()),
             *gauge_definition.get("sources", ()),
         ):
@@ -581,6 +723,126 @@ class MoscowStage10Profile:
             groove_position_mode=str(groove_position["mode"]),
         )
 
+        side_name = str(contact_raw["side"])
+        if side_name == "x_negative_for_initial_profile":
+            contact_side_sign = -1
+        elif side_name == "x_positive_for_initial_profile":
+            contact_side_sign = 1
+        else:
+            raise ValueError(f"unsupported initial contact-rail side {side_name!r}")
+
+        contact_profile = MoscowContactRailProfile(
+            side_profile_x_sign=contact_side_sign,
+            collection=str(contact_raw["collection"]),
+            horizontal_from_inner_working_face_m=float(
+                contact_place_raw["horizontal_from_running_rail_reference_m"]
+            ),
+            horizontal_tolerance_m=float(
+                contact_place_raw["horizontal_tolerance_m"]
+            ),
+            working_surface_z_m=float(
+                contact_place_raw["working_surface_z_m"]
+            ),
+            vertical_tolerance_m=float(
+                contact_place_raw["vertical_tolerance_m"]
+            ),
+            rail_family=str(contact_profile_raw["family"]),
+            rail_overall_height_m=float(
+                contact_profile_raw["overall_height_m"]
+            ),
+            rail_top_width_m=float(contact_profile_raw["top_width_m"]),
+            rail_base_width_m=float(contact_profile_raw["base_width_m"]),
+            rail_web_width_m=float(contact_profile_raw["web_width_m"]),
+            rail_vertical_callouts_m=tuple(
+                float(v)
+                for v in contact_profile_raw["secondary_vertical_callouts_m"]
+            ),
+            rail_profile_source=str(contact_profile_raw["source"]),
+            rail_profile_mode=str(contact_mesh_raw["mode"]),
+            rail_profile_confidence=str(contact_mesh_raw["confidence"]),
+            rail_profile_era_warning=str(contact_profile_raw["era_warning"]),
+            cover_historical_vertical_envelope_m=float(
+                contact_protect_raw["historical_overall_vertical_envelope_m"]
+            ),
+            cover_outer_top_width_m=float(
+                contact_cover_effective_raw["outer_top_width_m"]
+            ),
+            cover_outer_base_width_m=float(
+                contact_cover_effective_raw["outer_base_width_m"]
+            ),
+            cover_height_m=float(contact_cover_effective_raw["height_m"]),
+            cover_side_wall_m=float(
+                contact_cover_effective_raw["side_wall_m"]
+            ),
+            cover_top_wall_m=float(
+                contact_cover_effective_raw["top_wall_m"]
+            ),
+            cover_lower_edge_above_contact_surface_m=float(
+                contact_cover_effective_raw[
+                    "lower_edge_z_above_contact_surface_m"
+                ]
+            ),
+            cover_mode=str(contact_cover_effective_raw["mode"]),
+            cover_era_mismatch=bool(
+                contact_cover_effective_raw["era_mismatch"]
+            ),
+            cover_historical_side_gap_m=float(
+                contact_cover_hist_raw["side_to_rail_head_gap_m"]
+            ),
+            cover_box_gap_m=float(
+                contact_cover_hist_raw["gap_between_boxes_m"]
+            ),
+            cover_box_to_insulator_gap_m=float(
+                contact_cover_hist_raw["gap_box_to_insulator_m"]
+            ),
+            cover_support_offset_from_box_end_m=float(
+                contact_cover_hist_raw[
+                    "fastening_support_offset_from_box_end_m"
+                ]
+            ),
+            support_resource_envelope_m=tuple(
+                float(v) for v in contact_support_raw["bracket_envelope_m"]
+            ),
+            support_target_pitch_m=float(
+                contact_support_schedule_raw["target_pitch_m"]
+            ),
+            support_target_phase_m=float(
+                contact_support_schedule_raw["target_phase_m"]
+            ),
+            support_normative_min_m=float(
+                contact_support_schedule_raw["normative_min_m"]
+            ),
+            support_normative_max_m=float(
+                contact_support_schedule_raw["normative_max_m"]
+            ),
+            support_snap_to_sleeper=bool(
+                contact_support_schedule_raw["snap_to_nearest_timber_sleeper"]
+            ),
+            support_geometry_mode=str(contact_support_geom_raw["mode"]),
+            support_longitudinal_thickness_m=float(
+                contact_support_geom_raw["longitudinal_thickness_m"]
+            ),
+            support_channel_band_thickness_m=float(
+                contact_support_geom_raw["channel_band_thickness_m"]
+            ),
+            support_sleeper_end_attachment_inset_m=float(
+                contact_support_geom_raw["sleeper_end_attachment_inset_m"]
+            ),
+            support_upper_outboard_clearance_from_rail_m=float(
+                contact_support_geom_raw[
+                    "upper_outboard_clearance_from_rail_m"
+                ]
+            ),
+            insulator_axial_length_m=float(
+                contact_insulator_geom_raw["axial_length_m"]
+            ),
+            insulator_diameter_m=float(
+                contact_insulator_geom_raw["diameter_m"]
+            ),
+            insulator_mode=str(contact_insulator_geom_raw["mode"]),
+        )
+
+
         if not math.isclose(
             track_profile.rail_height_m,
             0.180,
@@ -645,6 +907,22 @@ class MoscowStage10Profile:
             raise ValueError(
                 "Stage-10.2 sleeper-end exposure must remain 0.010 m"
             )
+        if not math.isclose(
+            contact_profile.horizontal_from_inner_working_face_m,
+            0.690,
+            abs_tol=1e-12,
+        ):
+            raise ValueError("initial contact-rail horizontal datum must be 0.690 m")
+        if not math.isclose(
+            contact_profile.working_surface_z_m,
+            0.160,
+            abs_tol=1e-12,
+        ):
+            raise ValueError("initial contact-rail working surface must be +0.160 m")
+        if not contact_profile.cover_era_mismatch:
+            raise ValueError(
+                "initial legacy contact-rail cover fallback must retain era mismatch"
+            )
 
         digest = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
         return cls(
@@ -657,6 +935,7 @@ class MoscowStage10Profile:
             sleeper=sleeper_profile,
             fastening=kd65_profile,
             track_concrete=concrete_profile,
+            contact_rail=contact_profile,
             civil_family=str(civil["family"]),
             intrados_radius_m=float(intrados["radius_m"]),
             extrados_radius_m=float(extrados["radius_m"]),

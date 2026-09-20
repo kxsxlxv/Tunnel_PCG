@@ -1,6 +1,7 @@
 import math
 
 from tunnel_scanner_core import (
+    ChunkBoundaryPolicy,
     LabelPolicy,
     ProductionConfig,
     TunnelAssemblyConfig,
@@ -285,7 +286,7 @@ def test_stage10_3_periodic_support_ids_survive_exact_length_chunking():
         packages = build_chunk_scene_packages(
             build,
             chunk_length_m=chunk_m,
-            boundary_policy="exact_length",
+            boundary_policy=ChunkBoundaryPolicy.EXACT_LENGTH,
         )
         found = {}
         occurrences = []

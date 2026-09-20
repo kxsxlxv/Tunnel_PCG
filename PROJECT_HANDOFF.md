@@ -1127,7 +1127,7 @@ Regression:
 
     pytest
 
-The last established production baseline is 150 tests plus Stage-8/9 stress and topology checks.
+The current established production baseline is 165 tests plus Stage-8/9 stress/topology checks and dedicated Stage-10.1/10.2 production gates.
 
 Research reference implementation has its own tests under:
 
@@ -1157,13 +1157,14 @@ Any new Stage-10 Blender smoke test should preserve that backend behaviour.
 
 - Stage 1–8 Tunnel Scanner geometry reconstruction baseline;
 - Stage 9 production geometry / long-tunnel assembly;
-- Stage-9 Blender smoke test;
-- Stage-9 63-bit Blender-ID compatibility issue;
-- focused Stage-10 research pass for an initial Moscow cross-section.
+- Stage-9 Blender smoke test and 63-bit Blender-ID compatibility fix;
+- focused Stage-10 research pass for the initial Moscow archetype;
+- **Stage 10.1 — Moscow profile/data integration + R65/gauge/UGR contract**;
+- **Stage 10.2 — timber/KD-65 permanent way + track concrete/drainage**.
 
 ### Ready to start
 
-- **Stage 10.1 — Moscow profile/data integration + R65/gauge/UGR coordinate contract.**
+- **Stage 10.3 — legacy contact rail / support chain.**
 
 ### Still intentionally blocked
 
@@ -1175,15 +1176,18 @@ Any new Stage-10 Blender smoke test should preserve that backend behaviour.
 
 Use this as the starting instruction:
 
-> Read `PROJECT_HANDOFF.md`, then `research/moscow_metro_tunnels/21_stage10_initial_archetype.md`, `data/stage10_initial_profile.json`, and `data/stage10_source_pinpoints.json`. Stage 9 is closed and Blender-validated. Begin only Stage 10.1: production Moscow profile/data model, explicit UGR/track/tunnel datums, coordinate-frame mapping to the existing +Y-longitudinal core, integration of the research R65 profile, and gauge placement by inner working faces. Add tests/stress verification and push completed changes to master. Do not implement fake series-accurate cast-iron ribs/bolts.
+> Read `PROJECT_HANDOFF.md`, `STAGE10_2_REPORT.md`, `research/moscow_metro_tunnels/21_stage10_initial_archetype.md`, `data/stage10_initial_profile.json`, and `data/stage10_source_pinpoints.json`. Stages 10.1 and 10.2 are closed and CI-validated. Begin only Stage 10.3: implement the legacy Moscow contact rail using the researched RK profile, 690±8 mm horizontal placement, +160±6 mm working-surface datum, bracket/support/insulator chain, deterministic support pitch independent from sleepers/rings, and explicit fallback metadata for unresolved historical protective-cover/insulator details. Preserve the Stage-10.1/10.2 frame, R65, gauge, permanent-way, chunking and stable-ID contracts. Do not implement fake series-accurate cast-iron ribs/bolts.
 
 ---
 
 ## 46. Final note
 
-The repository now contains enough source-backed data to start the initial Moscow Metro production profile.
+The repository now contains an implemented first Moscow running-tunnel track
+archetype through permanent way and drainage. The next conversation should
+start from Stage 10.3 contact rail, not re-open Stage 10.1/10.2 unless a
+regression or source correction requires it.
 
-The next conversation should **not** spend its first turn re-researching the whole Moscow Metro. It should first read the focused Stage-10 profile and proceed with Stage 10.1, while keeping the unresolved cast-iron detail boundary explicit.
+Keep the unresolved cast-iron-detail boundary explicit.
 
 
 ---
@@ -1248,7 +1252,7 @@ The user-facing generate -> JSON -> Blender workflow is now restored for the
 Stage 10.1 mode:
 
 \`\`\`text
-python examples/generate_stage10_production_tunnel.py --rings 20 --namespace stage10-smoke
+python examples/generate_stage10_production_tunnel.py --domain-stage 10.1 --rings 20 --namespace stage10-1-smoke
 
 blender --background --python scripts/blender_verify_stage10.py -- \
   examples/stage10_production_scene.json \
@@ -1269,7 +1273,7 @@ smoke in addition to the existing 75-ring Stage-10.1 production verifier.
 
 Do not reopen Stage 10.1 geometry unless a regression or source correction requires it.
 
-The next implementation task is **Stage 10.2 only**:
+Historical note: at Stage-10.1 closure, the next implementation task was **Stage 10.2 only**. Stage 10.2 is now closed; the current next boundary is Stage 10.3.
 
 - permanent-way support chain for the selected legacy R65/timber/KD-65 preset;
 - sleeper/KD-65/support geometry;

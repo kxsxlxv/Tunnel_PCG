@@ -1858,6 +1858,99 @@ def _build_stage10_5_modern_contact_scene_objects(
     return tuple(result)
 
 
+def _build_stage10_5_service_rack_scene_objects(
+    *,
+    profile: MoscowStage10Profile,
+    namespace: str,
+    assembly: TunnelAssembly,
+    stations: Sequence[AlignmentStation],
+    label_policy: LabelPolicy,
+) -> tuple[SceneObject, ...]:
+    local_by_side = {
+        side: build_r2k11_local_rack_mesh(profile, side_sign=side)
+        for side in (-1, 1)
+    }
+    chainages = cable_rack_chainages(
+        assembly.length_by_chainage_m,
+        profile,
+    )
+    label_id, semantic = _ancillary_semantics(label_policy, "tube")
+    result: list[SceneObject] = []
+    source_ring_width = assembly.config.ring_width_m
+    rack = profile.cable_rack
+
+    for event_index, chainage in enumerate(chainages):
+        station = sample_alignment_station(stations, chainage)
+        source_ring_id = min(
+            assembly.config.n_rings - 1,
+            max(0, int(math.floor(chainage / source_ring_width))),
+        )
+        civil_ring_index = int(math.floor(chainage / profile.ring_pitch_m))
+        for side_sign, local in local_by_side.items():
+            side_name = "negative_x" if side_sign < 0 else "positive_x"
+            key = (
+                f"{namespace}/services/cable-rack/"
+                f"{event_index:06d}/{side_name}"
+            )
+            iid = stable_instance_id(key)
+            vertices = tuple(
+                (
+                    x + station.offset_x_m,
+                    y + station.world_y_m,
+                    z + station.offset_z_m,
+                )
+                for x, y, z in local.vertices
+            )
+            result.append(
+                SceneObject(
+                    name=(
+                        f"PROD_SERVICE_R2K11_{event_index:06d}_"
+                        f"{'NEG' if side_sign < 0 else 'POS'}"
+                    ),
+                    vertices=vertices,
+                    faces=local.faces,
+                    object_type=local.object_type,
+                    ring_id=source_ring_id,
+                    label_id=label_id,
+                    instance_id=iid,
+                    semantic_class=semantic,
+                    reconstruction="stage10_5_r2k11_wall_cable_rack",
+                    collection_path=(
+                        "Tunnel",
+                        namespace,
+                        "Services",
+                        "CableRacks",
+                        side_name,
+                    ),
+                    extra_properties={
+                        **dict(local.properties),
+                        "persistentKey": key,
+                        "persistentInstanceID": iid,
+                        "tunnelInstanceID": stable_instance_id(
+                            f"{namespace}/tunnel"
+                        ),
+                        "identityScope": "periodic_modern_service_asset",
+                        "domainGeometryStage": "10.5",
+                        "servicePreset": profile.default_service_preset,
+                        "periodicEventIndex": event_index,
+                        "eventChainageM": chainage,
+                        "civilRingIndex": civil_ring_index,
+                        "rackRepeatPitchM": rack.repeat_pitch_m,
+                        "rackPhaseM": rack.phase_m,
+                        "oneRackPerSidePerCivilRing": True,
+                        "alignmentOffsetX": station.offset_x_m,
+                        "alignmentOffsetZ": station.offset_z_m,
+                        "alignmentWorldY": station.world_y_m,
+                        "moscowProfileID": profile.profile_id,
+                        "moscowProfileSHA256": (
+                            profile.provenance.canonical_sha256
+                        ),
+                    },
+                )
+            )
+    return tuple(result)
+
+
 def _build_stage10_4_civil_shell_objects(
     *,
     profile: MoscowStage10Profile,
@@ -2175,6 +2268,21 @@ def build_production_scene(
             running_support_phase_m=0.5 * modern_pw.support_pitch_m,
         )
         objects.extend(stage10_5_modern_contact)
+
+    stage10_5_service_racks: tuple[SceneObject, ...] = ()
+    if (
+        config.moscow_profile is not None
+        and config.moscow_stage == "10.5"
+        and config.resolved_moscow_service_preset == "modern"
+    ):
+        stage10_5_service_racks = _build_stage10_5_service_rack_scene_objects(
+            profile=config.moscow_profile,
+            namespace=config.namespace,
+            assembly=source_build.assembly,
+            stations=stations,
+            label_policy=source_scene.label_policy,
+        )
+        objects.extend(stage10_5_service_racks)
 
     stage10_4_civil_rings: tuple[SceneObject, ...] = ()
     if (

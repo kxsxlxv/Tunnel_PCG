@@ -12,6 +12,15 @@ Stage 10.1 introduces the first production-side Moscow Metro domain layer withou
 
 It does not implement sleepers, KD-65, track concrete/drainage, contact rail, Moscow civil shell geometry, or detailed cast-iron tubing. Those remain Stage 10.2–10.4 work.
 
+
+Consequently, **the only production geometry replaced by Stage 10.1 is the pair
+of running rails**. Lining geometry, pavement, walkway, service tubes and the
+rest of the Stage-9 scene remain transitional Stage-8/9 geometry until later
+bounded stages. Stage 10.1 still changes more than rail shape internally: it
+introduces the Moscow data model, profile provenance, datum contract,
+coordinate-frame translation, R65 profile solver and working-face gauge
+placement.
+
 ## Production profile model
 
 New module:
@@ -56,6 +65,29 @@ For this first fixture, route-left is assigned to the negative profile-X/contact
 - route +Z -> core +Z.
 
 Both forward and inverse mappings have regression tests. No core axis was silently changed.
+
+The profile and production core do **not** share the same vertical origin. The
+Stage-10 profile uses UGR as z=0, while the existing production core is anchored
+at the lining/tunnel axis. For the selected first Moscow profile the lining axis
+is +1.670 m above UGR, so the vertical mapping is:
+
+    core_z = profile_z - 1.670 m
+
+Therefore:
+
+    profile UGR z              0.000 m
+    core UGR z                -1.670 m
+    profile R65 base z        -0.180 m
+    core R65 base z           -1.850 m
+    profile gauge plane z     -0.013 m
+    core gauge plane z        -1.683 m
+    profile lining axis z     +1.670 m
+    core lining axis z         0.000 m
+
+This translation is required even before the Moscow civil shell itself is
+implemented. Omitting it places the R65 rails at the centre of the old Stage-9
+ring. A regression caught and corrected that integration error after the first
+Stage-10.1 operator smoke test.
 
 ## R65 production profile
 

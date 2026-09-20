@@ -157,6 +157,14 @@ def test_stage10_2_local_sleeper_and_kd65_stack_closes_to_r65_base():
     railpad = by_type["production_rail_pad"]
     assert math.isclose(min(v[2] for v in railpad.vertices), -1.864, abs_tol=2e-12)
     assert math.isclose(max(v[2] for v in railpad.vertices), -1.850, abs_tol=2e-12)
+    assert railpad.properties["baseplateContactFaceOmitted"] is True
+    assert railpad.properties["railFootContactFaceOmitted"] is True
+    assert railpad.properties["padOverhangSurfacesPreserved"] is True
+    assert math.isclose(
+        railpad.properties["railFootContactWidthM"],
+        0.150,
+        abs_tol=2e-12,
+    )
 
 
 def test_stage10_2_sleeper_events_are_deterministic_and_not_ring_synchronized():
@@ -222,8 +230,14 @@ def test_stage10_2_production_replaces_stage9_pavement_and_adds_periodic_support
         assert len(build.scene.objects_of_type(object_type)) == len(expected_events)
 
     for rail in build.scene.objects_of_type("production_rail"):
-        assert rail.custom_properties["railFootBottomContactFaceOmitted"] is True
-        assert rail.custom_properties["omittedLongitudinalEdgeCount"] == 2
+        assert rail.custom_properties["railFootBottomContactFaceOmitted"] is False
+        assert rail.custom_properties["omittedLongitudinalEdgeCount"] == 0
+        assert (
+            rail.custom_properties["supportContactSurfacePolicy"]
+            == "discrete_rail_pad_top_contact_span_omitted"
+        )
+    for pad in build.scene.objects_of_type("production_rail_pad"):
+        assert pad.custom_properties["railFootContactFaceOmitted"] is True
 
     first_sleeper = build.scene.objects_of_type("production_sleeper")[0]
     assert math.isclose(

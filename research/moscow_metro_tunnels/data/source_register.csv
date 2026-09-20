@@ -56,3 +56,11 @@ S054,Dostoevskaya Line 5 2024 cultural-heritage expertise listing plan longitudi
 S055,Dostoevskaya Line 5 existing tunnel zero-grade and depth statement,https://news.metro.ru/mmnews2026.html,Moscow Metro news archive quoting builder,2026,B,existing Line-5 station-provision zone has zero grade and depth greater than 38m
 S056,Moscow Metro Track Map September 2026,https://news.metro.ru/scemas.html,TrackMap Official via Moscow Metro reference archive,2026,C,topology QA for tracks crossovers service connections and line-5 station order; schematic not geodetic
 S057,OpenStreetMap API relation full endpoint documentation,https://wiki.openstreetmap.org/wiki/API_v0.6,OpenStreetMap,current,C,small direct acquisition path for relation ways and nodes without full Moscow PBF
+S058,Frolov Golitsynskiy Ledyaev Metropoliteny 2001,https://ru.djvu.online/file/hXOquNRuMqgHC,engineering textbook,2001,B,Stage10 Fig1.14 track concrete walkway Fig1.17 KD65 Fig1.20 contact rail Fig4.14 cast-iron ring
+S059,GOST 22830-77 wooden sleepers for metro,https://base.garant.ru/6179204/,USSR national standard,historical,A,Stage10 sleeper exact dimensions clause1.2 table1
+S060,GOST 16277-2016 KD65 baseplate,https://files.stroyinf.ru/Data/619/61917.pdf,interstate standard,current,A,Stage10 KD65 dimensioned drawing Fig3 table1
+S061,DMZ 2021 transport catalog metro contact rail,https://dmz-petrovka.dp.ua/docs/catalog_2021_short_ru.pdf,manufacturer catalog,2021,B,Stage10 contact rail RK dimensioned cross-section page7
+S062,Moscow TSN 2001 tunnel track resource contact bracket,https://base.garant.ru/387184/3e22e51c74db8e0b182fad67b502e640/,Moscow construction norms,2006,B,Stage10 tunnel contact-rail bracket 540x620x100
+S063,VNIR V3-5 protective contact-rail boxes,https://meganorm.ru/mega_doc/norm/vnir_vedomstvennye-normy-i-rascenki/0/vnir_vedomstvennye_normy_i_rastsenki_na_stroitelnye_84.html,Mintransstroy USSR,1986,A/B,Stage10 historical protective-box installation clearances section V3-5-47
+S064,Modern metro protective cover dimensions fallback,https://armo-intek.ru/product/korob/,manufacturer,current,C,Stage10 fallback cover cross-section dimensions
+S065,2024 metro resource contact bracket and insulator dimensions,https://kccs.ru/docs2024/20240809.pdf,construction resource publication,2024,B,Stage10 bracket 540x620x100 insulator 150x112 safety bracket 87x56

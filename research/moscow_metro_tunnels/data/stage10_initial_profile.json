@@ -126,7 +126,8 @@
           0.007
         ],
         "confidence": "C",
-        "reason": "common R65/KD65 pad envelope from railway assembly references; exact Moscow-era pad drawing not confirmed"
+        "reason": "common R65/KD65 pad envelope from railway assembly references; exact Moscow-era pad drawing not confirmed",
+        "source": "P10-ALBUM-KD65 drawings 95/99; envelope dimension fallback from published R65 pad catalogs"
       },
       "under_baseplate_pad": {
         "geometry_mode": "fallback",
@@ -136,7 +137,8 @@
           0.008
         ],
         "confidence": "C",
-        "reason": "common KD65 under-baseplate pad envelope; exact Moscow-era polymer/rubber formulation and contour not confirmed"
+        "reason": "common KD65 under-baseplate pad envelope; exact Moscow-era polymer/rubber formulation and contour not confirmed",
+        "source": "P10-ALBUM-KD65 drawings 95/97; envelope dimension fallback from published KD65/D65 pad catalogs"
       },
       "track_screw": {
         "diameter_m": 0.024,
@@ -274,7 +276,7 @@
           "side_wall_m": 0.002,
           "top_wall_m": 0.003
         },
-        "initial_geometry_source": "modern commercially published metro protective-box profile",
+        "initial_geometry_source": "P10-MODERN-COVER-FALLBACK",
         "confidence": "C",
         "era_mismatch": true,
         "historical_constraints": {
@@ -313,7 +315,8 @@
       ],
       "mode": "fallback_from_metro_material_schedule",
       "confidence": "C",
-      "exact_porcelain_profile": "not_required_for_initial_profile"
+      "exact_porcelain_profile": "not_required_for_initial_profile",
+      "source": "P10-METRO-MATERIAL-2024"
     }
   },
   "service_era_preset": {

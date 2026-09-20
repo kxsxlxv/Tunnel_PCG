@@ -30,6 +30,7 @@ def _rail_centers(profile):
 
 def test_stage10_2_profile_closes_sleeper_kd65_and_concrete_data():
     profile = load_stage10_initial_moscow_profile()
+    assert profile.schema_version == "1.3"
     s = profile.sleeper
     k = profile.fastening
     tc = profile.track_concrete
@@ -154,16 +155,32 @@ def test_stage10_2_local_sleeper_and_kd65_stack_closes_to_r65_base():
     assert math.isclose(min(v[2] for v in under.vertices), -1.890, abs_tol=2e-12)
     assert math.isclose(max(v[2] for v in under.vertices), -1.884, abs_tol=2e-12)
 
+    assert under.properties["holeGeometryMode"] == "metadata_only_no_boolean_cut_v1"
+
+    baseplate = by_type["production_baseplate"]
+    assert baseplate.properties["holeGeometryMode"] == (
+        "metadata_only_no_boolean_cut_v1"
+    )
+
     railpad = by_type["production_rail_pad"]
     assert math.isclose(min(v[2] for v in railpad.vertices), -1.864, abs_tol=2e-12)
     assert math.isclose(max(v[2] for v in railpad.vertices), -1.850, abs_tol=2e-12)
     assert railpad.properties["baseplateContactFaceOmitted"] is True
     assert railpad.properties["railFootContactFaceOmitted"] is True
     assert railpad.properties["padOverhangSurfacesPreserved"] is True
+    assert railpad.properties["perforationGeometryMode"] == (
+        "metadata_only_no_boolean_cut_v1"
+    )
     assert math.isclose(
         railpad.properties["railFootContactWidthM"],
         0.150,
         abs_tol=2e-12,
+    )
+
+    screws = by_type["production_track_screw"]
+    assert screws.properties["embeddedFastenerVolumeOverlap"] is True
+    assert screws.properties["headGeometry"] == (
+        "simplified_visible_flat_head_fallback"
     )
 
 

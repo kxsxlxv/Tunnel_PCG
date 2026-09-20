@@ -350,6 +350,117 @@ class MoscowWalkwayProfile:
 
 
 @dataclass(frozen=True)
+class MoscowModernPermanentWayProfile:
+    preset_id: str
+    support_pitch_m: float
+    block_top_width_m: float
+    block_height_m: float
+    block_base_length_transverse_m: float
+    block_base_width_wide_m: float
+    block_base_width_narrow_m: float
+    rail_seat_recess_m: float
+    rail_seat_cant_ratio: float
+    boot_inner_length_m: float
+    boot_bottom_inner_length_m: float
+    boot_bottom_width_wide_m: float
+    boot_bottom_width_narrow_m: float
+    boot_side_height_m: float
+    fastening_family: str
+
+    def __post_init__(self) -> None:
+        vals = (
+            self.support_pitch_m,
+            self.block_top_width_m,
+            self.block_height_m,
+            self.block_base_length_transverse_m,
+            self.block_base_width_wide_m,
+            self.block_base_width_narrow_m,
+            self.rail_seat_recess_m,
+            self.rail_seat_cant_ratio,
+            self.boot_inner_length_m,
+            self.boot_bottom_inner_length_m,
+            self.boot_bottom_width_wide_m,
+            self.boot_bottom_width_narrow_m,
+            self.boot_side_height_m,
+        )
+        if any((not math.isfinite(v) or v <= 0.0) for v in vals):
+            raise ValueError("modern permanent-way dimensions must be positive")
+        if self.block_base_width_narrow_m >= self.block_base_width_wide_m:
+            raise ValueError("LVT-M narrow base width must be less than wide width")
+        if self.boot_bottom_inner_length_m > self.boot_inner_length_m:
+            raise ValueError("LVT boot bottom length cannot exceed opening length")
+        if not self.preset_id or not self.fastening_family:
+            raise ValueError("modern permanent-way identifiers must not be empty")
+
+
+@dataclass(frozen=True)
+class MoscowModernContactRailProfile:
+    preset_id: str
+    cover_top_width_m: float
+    cover_base_width_m: float
+    cover_height_m: float
+    cover_side_wall_m: float
+    cover_top_wall_m: float
+    cover_lower_edge_above_contact_surface_m: float
+    cover_span_overlap_m: float
+    support_block_height_m: float
+    support_dowel_length_m: float
+    support_target_pitch_m: float
+    support_normative_min_m: float
+    support_normative_max_m: float
+    running_support_exclusion_half_length_m: float
+    bracket_longitudinal_thickness_m: float
+    bracket_channel_band_thickness_m: float
+    bracket_top_plate_width_m: float
+    bracket_top_plate_thickness_m: float
+    insulator_height_m: float
+    insulator_diameter_m: float
+    support_hood_length_m: float
+    support_hood_extra_width_m: float
+    support_hood_extra_height_m: float
+
+    def __post_init__(self) -> None:
+        vals = (
+            self.cover_top_width_m,
+            self.cover_base_width_m,
+            self.cover_height_m,
+            self.cover_side_wall_m,
+            self.cover_top_wall_m,
+            self.cover_lower_edge_above_contact_surface_m,
+            self.cover_span_overlap_m,
+            self.support_block_height_m,
+            self.support_dowel_length_m,
+            self.support_target_pitch_m,
+            self.support_normative_min_m,
+            self.support_normative_max_m,
+            self.running_support_exclusion_half_length_m,
+            self.bracket_longitudinal_thickness_m,
+            self.bracket_channel_band_thickness_m,
+            self.bracket_top_plate_width_m,
+            self.bracket_top_plate_thickness_m,
+            self.insulator_height_m,
+            self.insulator_diameter_m,
+            self.support_hood_length_m,
+            self.support_hood_extra_width_m,
+            self.support_hood_extra_height_m,
+        )
+        if any((not math.isfinite(v) or v <= 0.0) for v in vals):
+            raise ValueError("modern contact-rail dimensions must be positive")
+        if self.cover_top_wall_m >= self.cover_height_m:
+            raise ValueError("modern contact cover top wall is invalid")
+        if 2.0 * self.cover_side_wall_m >= self.cover_base_width_m:
+            raise ValueError("modern contact cover side walls are invalid")
+        if not (
+            self.support_normative_min_m
+            <= self.support_target_pitch_m
+            <= self.support_normative_max_m
+        ):
+            raise ValueError("modern contact support target pitch outside normative range")
+        if not self.preset_id:
+            raise ValueError("modern contact-rail preset id must not be empty")
+
+
+@dataclass(frozen=True)
 class MoscowContactRailProfile:
     side_profile_x_sign: int
     collection: str
@@ -496,6 +607,9 @@ class MoscowStage10Profile:
     fastening: MoscowKD65Profile
     track_concrete: MoscowTrackConcreteProfile
     contact_rail: MoscowContactRailProfile
+    modern_contact_rail: MoscowModernContactRailProfile
+    modern_permanent_way: MoscowModernPermanentWayProfile
+    default_service_preset: str
     walkway: MoscowWalkwayProfile
     civil_geometry_mode: str
     civil_segment_surface_mode: str
@@ -548,6 +662,9 @@ class MoscowStage10Profile:
         walkway_raw = raw["walkway"]
         walkway_geom_raw = walkway_raw["initial_geometry"]
         contact_raw = raw["contact_rail"]
+        modern_contact_raw = contact_raw["modern_service_preset"]
+        modern_pw_raw = raw["modern_permanent_way"]
+        service_presets_raw = raw["service_era_presets"]
         contact_place_raw = contact_raw["placement"]
         contact_profile_raw = contact_raw["rail_profile"]
         contact_mesh_raw = contact_profile_raw["initial_mesh_profile"]
@@ -914,6 +1031,81 @@ class MoscowStage10Profile:
             insulator_mode=str(contact_insulator_geom_raw["mode"]),
         )
 
+        modern_cover_raw = modern_contact_raw["cover"]
+        modern_cover_place_raw = modern_cover_raw["placement"]
+        modern_support_raw = modern_contact_raw["support"]
+        modern_support_schedule_raw = modern_support_raw["schedule"]
+        modern_bracket_raw = modern_support_raw["bracket"]
+        modern_insulator_raw = modern_support_raw["insulator"]
+        modern_hood_raw = modern_support_raw["support_hood"]
+        modern_contact_profile = MoscowModernContactRailProfile(
+            preset_id=str(modern_contact_raw["id"]),
+            cover_top_width_m=float(modern_cover_raw["top_width_m"]),
+            cover_base_width_m=float(modern_cover_raw["base_width_m"]),
+            cover_height_m=float(modern_cover_raw["height_m"]),
+            cover_side_wall_m=float(modern_cover_raw["side_wall_m"]),
+            cover_top_wall_m=float(modern_cover_raw["top_wall_m"]),
+            cover_lower_edge_above_contact_surface_m=float(
+                modern_cover_place_raw["lower_edge_above_contact_surface_m"]
+            ),
+            cover_span_overlap_m=float(
+                modern_cover_raw["span_installation"]["overlap_between_polymer_spans_m"]
+            ),
+            support_block_height_m=float(modern_support_raw["block_height_m"]),
+            support_dowel_length_m=float(modern_support_raw["polymer_dowel_length_m"]),
+            support_target_pitch_m=float(modern_support_schedule_raw["target_pitch_m"]),
+            support_normative_min_m=float(modern_support_schedule_raw["normative_min_m"]),
+            support_normative_max_m=float(modern_support_schedule_raw["normative_max_m"]),
+            running_support_exclusion_half_length_m=float(
+                modern_support_schedule_raw["running_support_exclusion_half_length_m"]
+            ),
+            bracket_longitudinal_thickness_m=float(
+                modern_bracket_raw["longitudinal_thickness_m"]
+            ),
+            bracket_channel_band_thickness_m=float(
+                modern_bracket_raw["channel_band_thickness_m"]
+            ),
+            bracket_top_plate_width_m=float(modern_bracket_raw["top_plate_width_m"]),
+            bracket_top_plate_thickness_m=float(
+                modern_bracket_raw["top_plate_thickness_m"]
+            ),
+            insulator_height_m=float(modern_insulator_raw["axial_height_m"]),
+            insulator_diameter_m=float(modern_insulator_raw["diameter_m"]),
+            support_hood_length_m=float(modern_hood_raw["longitudinal_length_m"]),
+            support_hood_extra_width_m=float(
+                modern_hood_raw["width_extra_over_main_cover_m"]
+            ),
+            support_hood_extra_height_m=float(
+                modern_hood_raw["height_extra_over_main_cover_m"]
+            ),
+        )
+
+        block_raw = modern_pw_raw["block"]
+        boot_raw = modern_pw_raw["rubber_boot"]
+        cant_text = str(block_raw["rail_seat_cant"])
+        if not cant_text.startswith("1:"):
+            raise ValueError("modern LVT rail-seat cant must use 1:N notation")
+        cant_ratio = 1.0 / float(cant_text.split(":", 1)[1])
+        modern_pw_profile = MoscowModernPermanentWayProfile(
+            preset_id=str(modern_pw_raw["id"]),
+            support_pitch_m=float(modern_pw_raw["support_pitch_m"]),
+            block_top_width_m=float(block_raw["top_width_at_rail_seat_m"]),
+            block_height_m=float(block_raw["height_at_rail_seat_m"]),
+            block_base_length_transverse_m=float(
+                block_raw["base_length_transverse_m"]
+            ),
+            block_base_width_wide_m=float(block_raw["base_width_wide_m"]),
+            block_base_width_narrow_m=float(block_raw["base_width_narrow_m"]),
+            rail_seat_recess_m=float(block_raw["rail_seat_recess_m"]),
+            rail_seat_cant_ratio=cant_ratio,
+            boot_inner_length_m=float(boot_raw["inner_length_m"]),
+            boot_bottom_inner_length_m=float(boot_raw["bottom_inner_length_m"]),
+            boot_bottom_width_wide_m=float(boot_raw["bottom_width_wide_m"]),
+            boot_bottom_width_narrow_m=float(boot_raw["bottom_width_narrow_m"]),
+            boot_side_height_m=float(boot_raw["side_height_m"]),
+            fastening_family=str(modern_pw_raw["fastening"]),
+        )
+
 
         if not math.isclose(
             track_profile.rail_height_m,
@@ -1032,6 +1224,9 @@ class MoscowStage10Profile:
             fastening=kd65_profile,
             track_concrete=concrete_profile,
             contact_rail=contact_profile,
+            modern_contact_rail=modern_contact_profile,
+            modern_permanent_way=modern_pw_profile,
+            default_service_preset=str(service_presets_raw["default"]),
             walkway=walkway_profile,
             civil_geometry_mode=str(civil_geom_raw["mode"]),
             civil_segment_surface_mode=str(

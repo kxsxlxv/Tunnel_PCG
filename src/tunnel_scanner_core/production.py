@@ -741,9 +741,9 @@ def build_continuous_asset_specs(
                 if moscow_stage == "10.2"
                 else ()
             )
-            if moscow_stage == "10.2" and len(rail_bottom_edges) != 1:
+            if moscow_stage == "10.2" and not rail_bottom_edges:
                 raise AssertionError(
-                    "Stage-10.2 R65 must expose one support-contact bottom edge"
+                    "Stage-10.2 R65 must expose support-contact bottom edges"
                 )
             specs.append(
                 ContinuousAssetSpec(

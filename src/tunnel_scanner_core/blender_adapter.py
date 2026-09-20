@@ -13,6 +13,7 @@ syntax, including the exact `labelID` and `ringID` names used by Tunnel Scanner.
 """
 
 from dataclasses import dataclass
+import json
 import math
 from typing import Any
 
@@ -116,13 +117,46 @@ def _blender_custom_property_scalar(value: Any) -> str | int | float | bool:
     raise TypeError(f"unsupported Blender scalar type: {type(value)!r}")
 
 
+def _blender_custom_property_value(value: Any) -> str | int | float | bool:
+    """Convert engine-neutral metadata to a Blender-safe ID property value.
+
+    Blender ID properties do not provide a stable cross-version representation
+    for arbitrary Python/JSON containers. Stage-10 production metadata contains
+    structured values such as the contact-rail resourceEnvelopeM vector.
+    Preserve those containers losslessly as compact canonical JSON strings.
+
+    Scalar behavior remains unchanged, including decimal-string encoding for
+    positive 63-bit persistent IDs.
+    """
+    try:
+        return _blender_custom_property_scalar(value)
+    except TypeError:
+        pass
+
+    if isinstance(value, (list, tuple, dict)):
+        try:
+            return json.dumps(
+                value,
+                sort_keys=isinstance(value, dict),
+                separators=(",", ":"),
+                ensure_ascii=False,
+                allow_nan=False,
+            )
+        except (TypeError, ValueError) as exc:
+            raise TypeError(
+                f"unsupported Blender structured property value: {type(value)!r}"
+            ) from exc
+
+    raise TypeError(f"unsupported Blender property type: {type(value)!r}")
+
+
 def _set_custom_properties(blender_object, properties: dict[str, Any]) -> None:
     for key, value in properties.items():
         try:
-            blender_object[key] = _blender_custom_property_scalar(value)
+            blender_object[key] = _blender_custom_property_value(value)
         except TypeError as exc:
             raise TypeError(
-                f"custom property {key!r} has unsupported Blender scalar type: "
+                f"custom property {key!r} has unsupported Blender property type: "
                 f"{type(value)!r}"
             ) from exc
 

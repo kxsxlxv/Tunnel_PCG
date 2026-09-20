@@ -109,8 +109,18 @@ def _validate_stage10_1_build(build, profile) -> tuple[float, list[float]]:
         props = rail.custom_properties
         if props.get("railProfile") != "stage10_1_r65_gost_r51685_2022":
             raise AssertionError(f"{rail.name}: unexpected rail profile")
-        if not math.isclose(float(props["railTopZLocalM"]), 0.0, abs_tol=2e-12):
-            raise AssertionError(f"{rail.name}: rail top is not at local UGR")
+        if not math.isclose(
+            float(props["railTopProfileZLocalM"]),
+            0.0,
+            abs_tol=2e-12,
+        ):
+            raise AssertionError(f"{rail.name}: rail top is not at profile UGR")
+        if not math.isclose(
+            float(props["railTopCoreZLocalM"]),
+            profile.coordinate.profile_z_to_core_z_offset_m,
+            abs_tol=2e-12,
+        ):
+            raise AssertionError(f"{rail.name}: profile UGR was not translated to core Z")
         if not math.isclose(
             float(props["gaugeMeasurementBelowUGRM"]),
             0.013,
@@ -193,7 +203,9 @@ def main() -> None:
         "workingFaceGaugeM": working_face_gauge,
         "innerWorkingFacesX": working_faces,
         "gaugeMeasurementBelowUGRM": profile.track.gauge_measurement_below_ugr_m,
-        "ugrZLocalM": profile.datums.ugr_z_m,
+        "ugrProfileZLocalM": profile.datums.ugr_z_m,
+        "ugrCoreZLocalM": production_meta["ugrCoreZLocalM"],
+        "profileZToCoreZOffsetM": production_meta["profileZToCoreZOffsetM"],
         "moscowProfileID": profile.profile_id,
         "moscowProfileSHA256": profile.provenance.canonical_sha256,
         "permanentWayStatus": production_meta["permanentWayStatus"],

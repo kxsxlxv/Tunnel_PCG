@@ -114,6 +114,36 @@ ProductionConfig now accepts an optional moscow_profile.
 
 Production metadata explicitly marks Moscow Stage 10.1 and marks permanent way, contact rail and civil shell as deferred rather than presenting the mixed transitional scene as a completed Moscow tunnel.
 
+## User-facing generation and Blender workflow
+
+Stage 10.1 now has the same two-step operator workflow as Stage 9.
+
+Generate:
+
+    python examples/generate_stage10_production_tunnel.py \
+        --rings 20 \
+        --namespace stage10-smoke
+
+This writes `examples/stage10_production_scene.json` by default plus a summary
+JSON. The generator enables `ProductionConfig.moscow_profile` and performs
+pre-serialization assertions for the Stage 10.1 metadata/profile/gauge
+contract. The Stage-9 generator remains unchanged and continues to exercise the
+generic 16-vertex rail compatibility mode.
+
+Verify in Blender:
+
+    blender --background --python scripts/blender_verify_stage10.py -- \
+        examples/stage10_production_scene.json \
+        --report examples/blender_stage10_runtime_report.json \
+        --save-blend examples/stage10_production_scene.blend
+
+The Stage-10 verifier reuses the existing Blender adapter and production
+finalizer but validates R65, UGR and working-face gauge instead of requiring the
+Stage-9 16-vertex generic rail. It also checks that deferred permanent-way,
+contact-rail and civil-shell metadata remains explicit.
+
+See `STAGE10_1_BLENDER_SMOKE_TEST.md`.
+
 ## Verification
 
 Unit/regression coverage checks:

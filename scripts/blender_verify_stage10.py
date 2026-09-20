@@ -242,6 +242,8 @@ def main() -> None:
             cp = concrete[0].custom_properties
             concrete_checks = {
                 "surfaceCrossSlopeToDrain": 0.03,
+                "concreteSurfaceReferenceAbsXM": 1.325,
+                "concreteSurfaceReferenceProfileZM": -0.230,
                 "centralDrainClearWidthM": 0.900,
                 "centralDrainBottomProfileZM": -0.530,
                 "waterReleaseGrooveWidthM": 0.050,

@@ -1127,7 +1127,7 @@ Regression:
 
     pytest
 
-The current established production baseline includes Stage-8/9 stress/topology checks plus dedicated Stage-10.1–10.4 production gates. The exact pytest count should be taken from the latest green CI run.
+The current established production baseline is **179 tests passed** plus Stage-8/9 stress/topology checks and dedicated Stage-10.1–10.4 production gates.
 
 Research reference implementation has its own tests under:
 
@@ -1716,6 +1716,24 @@ scripts/verify_stage10_4.py
 
 CI also runs a Stage-10.4 CLI smoke. The Stage-10 Blender verifier is
 stage-aware through 10.4.
+
+Latest fully green Stage-10.4 baseline:
+
+```text
+179 tests passed
+Stage 10.1 CLI compatibility smoke          PASS
+Stage 10.2 CLI permanent-way smoke          PASS
+Stage 10.3 CLI contact-rail smoke           PASS
+Stage 10.4 CLI civil-shell smoke            PASS
+Stage 8/9 stress/topology gates             PASS
+Stage 10.1/10.2/10.3/10.4 verifiers        PASS
+
+30 source rings / 40.5 m Stage 10.4 stress:
+  Moscow civil rings                         41
+  duplicate production face groups           0
+  stable civil parent IDs across chunks      true
+  transitional civil gap closed              true
+```
 
 ### Operator workflow
 

@@ -753,6 +753,18 @@ class MoscowStage10Profile:
         cable_rack_place_raw = cable_rack_raw["placement"]
         cable_horn_mesh_raw = cable_rack_raw["initial_horn_mesh"]
         cable_preview_raw = service_infra_raw["cable_preview"]
+        modern_cover_raw = modern_contact_raw["cover"]
+        modern_cover_place_raw = modern_cover_raw["placement"]
+        modern_support_raw = modern_contact_raw["support"]
+        modern_support_schedule_raw = modern_support_raw["schedule"]
+        modern_bracket_raw = modern_support_raw["bracket"]
+        modern_insulator_raw = modern_support_raw["insulator"]
+        modern_pw_block_raw = modern_pw_raw["block"]
+        modern_pw_boot_raw = modern_pw_raw["rubber_boot"]
+        modern_pw_install_raw = modern_pw_raw["installation"]
+        modern_fastening_source_raw = modern_pw_raw["fastening_details"]
+        modern_pad_source_raw = modern_fastening_source_raw["under_rail_pad"]
+        modern_component_source_raw = modern_fastening_source_raw["component_topology"]
         contact_place_raw = contact_raw["placement"]
         contact_profile_raw = contact_raw["rail_profile"]
         contact_mesh_raw = contact_profile_raw["initial_mesh_profile"]
@@ -789,6 +801,18 @@ class MoscowStage10Profile:
             contact_support_raw.get("source"),
             contact_support_schedule_raw.get("source"),
             contact_insulator_raw.get("source"),
+            modern_cover_raw.get("source"),
+            modern_cover_place_raw.get("source"),
+            modern_support_raw.get("source"),
+            modern_bracket_raw.get("source"),
+            modern_insulator_raw.get("source"),
+            modern_pw_raw.get("source_pitch"),
+            modern_pw_block_raw.get("source"),
+            modern_pw_boot_raw.get("source"),
+            modern_pw_install_raw.get("source"),
+            modern_pad_source_raw.get("source"),
+            modern_component_source_raw.get("source"),
+            *cable_rack_raw.get("sources", ()),
             *contact_support_geom_raw.get("sources", ()),
             *drain_raw.get("sources", ()),
             *gauge_definition.get("sources", ()),

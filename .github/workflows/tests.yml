@@ -30,6 +30,7 @@ jobs:
           scripts/verify_stage9_stress.py
           scripts/verify_stage9_trimesh.py
           scripts/audit_stage9_topology.py
+          scripts/verify_stage10_1.py
       - name: Unit and regression tests
         run: pytest
       - name: Stage 8 stress verification
@@ -42,3 +43,5 @@ jobs:
         run: python scripts/verify_stage9_stress.py
       - name: Stage 9 independent production mesh verification
         run: python scripts/verify_stage9_trimesh.py
+      - name: Stage 10.1 Moscow production verification
+        run: python scripts/verify_stage10_1.py

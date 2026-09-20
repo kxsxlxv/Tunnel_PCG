@@ -664,3 +664,321 @@ def build_stage10_2_local_event_meshes(
         )
 
     return tuple(result)
+
+
+def modern_lvt_chainages(
+    total_length_m: float,
+    profile: MoscowStage10Profile,
+) -> tuple[float, ...]:
+    """Deterministic LVT-M running-support chain for the modern preset."""
+    pitch = profile.modern_permanent_way.support_pitch_m
+    return sleeper_chainages(
+        total_length_m,
+        pitch_m=pitch,
+        phase_m=0.5 * pitch,
+    )
+
+
+def _lvt_block_mesh(
+    *,
+    center_x_m: float,
+    track_side_sign: int,
+    transverse_length_m: float,
+    base_width_wide_m: float,
+    base_width_narrow_m: float,
+    top_width_m: float,
+    z0_m: float,
+    z1_m: float,
+) -> tuple[tuple[Vec3, ...], tuple[Face, ...]]:
+    """Trapezoidal LVT-M preview using the published principal dimensions."""
+    if track_side_sign not in (-1, 1):
+        raise ValueError("track_side_sign must be +/-1")
+    hx = 0.5 * transverse_length_m
+    x0, x1 = center_x_m - hx, center_x_m + hx
+
+    # Initial plan-orientation fallback: wider base end faces away from track
+    # axis, narrower end toward the central drain/track axis.
+    if track_side_sign < 0:
+        y0_half = 0.5 * base_width_wide_m
+        y1_half = 0.5 * base_width_narrow_m
+    else:
+        y0_half = 0.5 * base_width_narrow_m
+        y1_half = 0.5 * base_width_wide_m
+    top_half = 0.5 * top_width_m
+
+    v = (
+        (x0, -y0_half, z0_m),
+        (x1, -y1_half, z0_m),
+        (x1, +y1_half, z0_m),
+        (x0, +y0_half, z0_m),
+        (x0, -top_half, z1_m),
+        (x1, -top_half, z1_m),
+        (x1, +top_half, z1_m),
+        (x0, +top_half, z1_m),
+    )
+    f: tuple[Face, ...] = (
+        (0, 3, 2, 1),
+        (4, 5, 6, 7),
+        (0, 1, 5, 4),
+        (1, 2, 6, 5),
+        (2, 3, 7, 6),
+        (3, 0, 4, 7),
+    )
+    return v, f
+
+
+def build_modern_lvt_local_event_meshes(
+    profile: MoscowStage10Profile,
+    *,
+    rail_centers_profile_x: Sequence[float],
+) -> tuple[LocalPermanentWayMesh, ...]:
+    """Build one modern LVT-M event: two independent half-sleeper supports.
+
+    No geometry bridges the central drainage trough. Small APC-4 hardware is a
+    source-topology preview; the LVT block, boot inner envelope, 14 mm rail pad
+    and R65 vertical stack are source-backed.
+    """
+    if len(rail_centers_profile_x) != 2:
+        raise ValueError("modern LVT event requires two running-rail centers")
+    pw = profile.modern_permanent_way
+    r65 = R65ProductionProfile()
+
+    rail_base_profile_z = profile.datums.ugr_z_m - profile.track.rail_height_m
+    pad_top_profile_z = rail_base_profile_z
+    pad_bottom_profile_z = (
+        pad_top_profile_z - pw.rail_pad_thickness_m
+    )
+    block_top_profile_z = pad_bottom_profile_z
+    block_bottom_profile_z = (
+        block_top_profile_z - pw.block_height_m
+    )
+    boot_bottom_profile_z = (
+        block_bottom_profile_z - pw.boot_preview_wall_thickness_m
+    )
+    boot_top_profile_z = (
+        boot_bottom_profile_z + pw.boot_side_height_m
+    )
+
+    rail_base_core_z = _profile_z_to_core(profile, rail_base_profile_z)
+    pad_bottom_core_z = _profile_z_to_core(profile, pad_bottom_profile_z)
+    block_top_core_z = pad_bottom_core_z
+    block_bottom_core_z = _profile_z_to_core(profile, block_bottom_profile_z)
+    boot_bottom_core_z = _profile_z_to_core(profile, boot_bottom_profile_z)
+    boot_top_core_z = _profile_z_to_core(profile, boot_top_profile_z)
+
+    if not math.isclose(
+        rail_base_core_z - pad_bottom_core_z,
+        pw.rail_pad_thickness_m,
+        abs_tol=2e-12,
+    ):
+        raise AssertionError("modern 14 mm APC-4 rail-pad stack does not close")
+
+    blocks = []
+    boots = []
+    pads = []
+    fastenings = []
+    rail_foot_half = 0.5 * r65.base_width_m
+    wall = pw.boot_preview_wall_thickness_m
+
+    for center_profile_x in rail_centers_profile_x:
+        sign = -1 if center_profile_x < 0.0 else 1
+        center_x = profile.coordinate.research_xz_to_core_xz(
+            float(center_profile_x),
+            0.0,
+        )[0]
+
+        blocks.append(
+            _lvt_block_mesh(
+                center_x_m=center_x,
+                track_side_sign=sign,
+                transverse_length_m=pw.block_base_length_transverse_m,
+                base_width_wide_m=pw.block_base_width_wide_m,
+                base_width_narrow_m=pw.block_base_width_narrow_m,
+                top_width_m=pw.block_top_width_m,
+                z0_m=block_bottom_core_z,
+                z1_m=block_top_core_z,
+            )
+        )
+
+        # Visible rubber-boot side/end walls. The patent fixes the inner
+        # envelope; outer wall thickness remains an explicit preview fallback.
+        hx = 0.5 * pw.boot_inner_length_m
+        max_half_y = 0.5 * max(
+            pw.boot_bottom_width_wide_m,
+            pw.boot_bottom_width_narrow_m,
+        )
+        boots.extend(
+            (
+                _box_mesh(
+                    center_x_m=center_x,
+                    center_y_m=+(max_half_y + 0.5 * wall),
+                    size_x_m=pw.boot_inner_length_m + 2.0 * wall,
+                    size_y_m=wall,
+                    z0_m=boot_bottom_core_z,
+                    z1_m=boot_top_core_z,
+                ),
+                _box_mesh(
+                    center_x_m=center_x,
+                    center_y_m=-(max_half_y + 0.5 * wall),
+                    size_x_m=pw.boot_inner_length_m + 2.0 * wall,
+                    size_y_m=wall,
+                    z0_m=boot_bottom_core_z,
+                    z1_m=boot_top_core_z,
+                ),
+                _box_mesh(
+                    center_x_m=center_x - hx - 0.5 * wall,
+                    center_y_m=0.0,
+                    size_x_m=wall,
+                    size_y_m=2.0 * max_half_y,
+                    z0_m=boot_bottom_core_z,
+                    z1_m=boot_top_core_z,
+                ),
+                _box_mesh(
+                    center_x_m=center_x + hx + 0.5 * wall,
+                    center_y_m=0.0,
+                    size_x_m=wall,
+                    size_y_m=2.0 * max_half_y,
+                    z0_m=boot_bottom_core_z,
+                    z1_m=boot_top_core_z,
+                ),
+            )
+        )
+
+        pads.append(
+            _box_mesh(
+                center_x_m=center_x,
+                center_y_m=0.0,
+                size_x_m=pw.rail_pad_plan_transverse_m,
+                size_y_m=pw.rail_pad_plan_longitudinal_m,
+                z0_m=pad_bottom_core_z,
+                z1_m=rail_base_core_z,
+                omit_bottom=True,
+            )
+        )
+
+        clamp_offset = (
+            rail_foot_half + 0.5 * pw.clamp_preview_transverse_m
+        )
+        clamp_z0 = rail_base_core_z + 0.004
+        clamp_z1 = clamp_z0 + pw.clamp_preview_height_m
+        for sx in (-clamp_offset, +clamp_offset):
+            fastenings.append(
+                _box_mesh(
+                    center_x_m=center_x + sx,
+                    center_y_m=0.0,
+                    size_x_m=pw.clamp_preview_transverse_m,
+                    size_y_m=pw.clamp_preview_longitudinal_m,
+                    z0_m=clamp_z0,
+                    z1_m=clamp_z1,
+                )
+            )
+
+        regulator_offset = (
+            rail_foot_half + pw.clamp_preview_transverse_m
+        )
+        for sx in (-regulator_offset, +regulator_offset):
+            fastenings.append(
+                _cylinder_z_mesh(
+                    center_x_m=center_x + sx,
+                    center_y_m=0.0,
+                    radius_m=pw.monoregulator_preview_radius_m,
+                    z0_m=block_top_core_z,
+                    z1_m=clamp_z1,
+                    segments=10,
+                )
+            )
+
+    # Verify that the two source-backed 640 mm blocks remain clear of the
+    # 900 mm central drainage trough.
+    drain_half = 0.5 * profile.track_concrete.central_drain_clear_width_m
+    inner_edges = sorted(
+        abs(float(center)) - 0.5 * pw.block_base_length_transverse_m
+        for center in rail_centers_profile_x
+    )
+    if inner_edges[0] <= drain_half:
+        raise ValueError(
+            "modern LVT half-sleeper block intrudes into central drain"
+        )
+
+    result: list[LocalPermanentWayMesh] = []
+    for suffix, object_type, category, meshes, properties in (
+        (
+            "LVT_M_BLOCKS",
+            "production_lvt_block",
+            "lvt_block",
+            blocks,
+            {
+                "permanentWayPreset": pw.preset_id,
+                "blockTransverseLengthM": pw.block_base_length_transverse_m,
+                "blockTopWidthM": pw.block_top_width_m,
+                "blockBaseWideWidthM": pw.block_base_width_wide_m,
+                "blockBaseNarrowWidthM": pw.block_base_width_narrow_m,
+                "blockHeightM": pw.block_height_m,
+                "railSeatCantRatio": pw.rail_seat_cant_ratio,
+                "railSeatCantGeometryApplied": False,
+                "railSeatRecessM": pw.rail_seat_recess_m,
+                "planOrientationMode": "wide_outboard_narrow_inboard_fallback",
+                "bridgesCentralDrain": False,
+            },
+        ),
+        (
+            "LVT_M_RUBBER_BOOTS",
+            "production_lvt_rubber_boot",
+            "lvt_rubber_boot",
+            boots,
+            {
+                "permanentWayPreset": pw.preset_id,
+                "bootInnerLengthM": pw.boot_inner_length_m,
+                "bootBottomInnerLengthM": pw.boot_bottom_inner_length_m,
+                "bootBottomWideWidthM": pw.boot_bottom_width_wide_m,
+                "bootBottomNarrowWidthM": pw.boot_bottom_width_narrow_m,
+                "bootSideHeightM": pw.boot_side_height_m,
+                "previewWallThicknessM": pw.boot_preview_wall_thickness_m,
+                "outerWallThicknessResolved": False,
+            },
+        ),
+        (
+            "APC4_RAIL_PADS",
+            "production_apc4_rail_pad",
+            "apc4_rail_pad",
+            pads,
+            {
+                "fasteningFamily": pw.fastening_family,
+                "padThicknessM": pw.rail_pad_thickness_m,
+                "padPlanTransverseM": pw.rail_pad_plan_transverse_m,
+                "padPlanLongitudinalM": pw.rail_pad_plan_longitudinal_m,
+                "railBaseProfileZM": rail_base_profile_z,
+                "blockRailSeatProfileZM": block_top_profile_z,
+                "bottomContactFaceOmitted": True,
+            },
+        ),
+        (
+            "APC4_FASTENING",
+            "production_apc4_fastening",
+            "apc4_fastening",
+            fastenings,
+            {
+                "fasteningFamily": pw.fastening_family,
+                "geometryMode": pw.fastening_mesh_mode,
+                "clampsPerRailSeat": pw.clamps_per_rail_seat,
+                "monoregulatorsPerRailSeat": pw.monoregulators_per_rail_seat,
+                "underclampPiecesPerRailSeat": pw.underclamp_pieces_per_rail_seat,
+                "insulatingAnglesPerRailSeat": pw.insulating_angles_per_rail_seat,
+                "anchorsPerRailSeat": pw.anchors_per_rail_seat,
+                "exactSmallHardwareSolidsResolved": False,
+            },
+        ),
+    ):
+        vertices, faces = _combine_meshes(meshes)
+        result.append(
+            LocalPermanentWayMesh(
+                name_suffix=suffix,
+                object_type=object_type,
+                category=category,
+                vertices=vertices,
+                faces=faces,
+                properties=properties,
+            )
+        )
+
+    return tuple(result)

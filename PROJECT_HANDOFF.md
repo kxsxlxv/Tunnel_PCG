@@ -1184,3 +1184,60 @@ Use this as the starting instruction:
 The repository now contains enough source-backed data to start the initial Moscow Metro production profile.
 
 The next conversation should **not** spend its first turn re-researching the whole Moscow Metro. It should first read the focused Stage-10 profile and proceed with Stage 10.1, while keeping the unresolved cast-iron detail boundary explicit.
+
+
+---
+
+## Stage 10.1 implementation update (2026-09-20)
+
+Stage 10.1 has been implemented on master. The bounded scope is:
+
+- production-side Moscow profile/data model in \`src/tunnel_scanner_core/moscow.py\`;
+- deterministic loading/round-trip/provenance SHA for \`data/stage10_initial_profile.json\`;
+- explicit UGR, track-axis and lining-axis datums;
+- explicit mapping between the research route frame and the existing +Y-longitudinal production core;
+- production R65 tangent-chain profile ported from the isolated research reference implementation;
+- 1.520 m straight-track gauge placed by the two inner rail-head working faces at UGR - 13 mm, not by rail symmetry axes;
+- Stage-9 persistent IDs, continuous sweep, chunking and topology architecture retained;
+- dedicated unit/regression coverage and \`scripts/verify_stage10_1.py\`;
+- CI extended with the Stage-10.1 production verifier.
+
+Key deterministic R65 placement values for the first profile:
+
+\`\`\`text
+UGR local z                         0.000000000 m
+gauge measurement z               -0.013000000 m
+R65 working-face offset            0.03612386585834637 m
+negative-X rail symmetry axis     -0.7961238658583464 m
+positive-X rail symmetry axis     +0.7961238658583464 m
+inner working faces               -0.760 / +0.760 m
+working-face gauge                 1.520000000 m
+\`\`\`
+
+Coordinate integration contract for the deterministic first profile:
+
+\`\`\`text
+profile +X (walkway side) -> core +X
+route +X (chainage)       -> core +Y
+route +Y (left)           -> profile -X -> core -X
+route +Z                  -> core +Z
+\`\`\`
+
+Important: UGR z=0 is a **local engineering/track-frame datum**. Existing Stage-9 alignment offsets are subsequently applied by the sweep, so world Z is \`UGR + station.offset_z_m\`; do not assert world Z=0 along a perturbed production alignment.
+
+Stage 10.1 intentionally does **not** implement sleepers/KD-65/invert/drainage, contact rail, Moscow civil shell placement, or detailed cast-iron ribs/bolts. Those remain the next bounded stages, beginning with Stage 10.2.
+
+Detailed implementation/verification notes are in \`STAGE10_1_REPORT.md\`.
+
+### Next implementation boundary
+
+Do not reopen Stage 10.1 geometry unless a regression or source correction requires it.
+
+The next implementation task is **Stage 10.2 only**:
+
+- permanent-way support chain for the selected legacy R65/timber/KD-65 preset;
+- sleeper/KD-65/support geometry;
+- track concrete, central drain and crossfall using the already researched Stage-10 profile data;
+- preserve the Stage-10.1 UGR/gauge/profile/frame contracts unchanged unless new primary evidence requires a documented revision.
+
+Detailed cast-iron tubing remains blocked pending a defensible exact series/tubing drawing and must not be guessed.

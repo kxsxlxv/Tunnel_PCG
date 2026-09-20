@@ -370,7 +370,8 @@
         "reference_z_m": -0.23,
         "rule": "set concrete top z=-0.230 m at the outer end of the 2.650 m timber sleeper (10 mm below the flat sleeper top), then apply 0.03 fall toward the central drain; continue the same plane outward until it intersects the physical 5.1 m intrados",
         "confidence": "B_derived_surface_anchor",
-        "reason": "Fig.1.14 gives approximately 10 mm sleeper exposure at the drawn sleeper edge and a 0.03 transverse fall; anchoring the fall at the sleeper end preserves that exposure instead of burying the sleeper ends"
+        "reason": "Fig.1.14 gives approximately 10 mm sleeper exposure at the drawn sleeper edge and a 0.03 transverse fall; anchoring the fall at the sleeper end preserves that exposure instead of burying the sleeper ends",
+        "reference_abs_x_m": 1.325
       }
     },
     "nominal_concrete_top_at_sleeper_datum_z_m": {

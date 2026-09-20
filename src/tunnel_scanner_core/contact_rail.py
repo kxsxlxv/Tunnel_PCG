@@ -141,6 +141,180 @@ def protective_cover_core_xz(
     )
 
 
+def modern_protective_cover_profile_xz(
+    profile: MoscowStage10Profile,
+    *,
+    width_extra_m: float = 0.0,
+    height_extra_m: float = 0.0,
+) -> tuple[tuple[float, float], ...]:
+    """Rounded modern cover from exact envelope dimensions.
+
+    The current manufacturer fixes top/base width, total height and wall
+    thicknesses, but does not publish corner radii on the public product page.
+    The outer/inner side curves therefore use a deterministic smoothstep
+    interpolation. This is deliberately tagged as envelope-accurate rather
+    than factory-CAD-accurate.
+    """
+    cr = profile.contact_rail
+    modern = profile.modern_contact_rail
+    x0 = contact_rail_axis_profile_x(profile)
+    z0 = (
+        cr.working_surface_z_m
+        + modern.cover_lower_edge_above_contact_surface_m
+    )
+    h = modern.cover_height_m + float(height_extra_m)
+    z1 = z0 + h
+
+    outer_base = 0.5 * (modern.cover_base_width_m + float(width_extra_m))
+    outer_top = 0.5 * (modern.cover_top_width_m + float(width_extra_m))
+    side = modern.cover_side_wall_m
+    top_wall = modern.cover_top_wall_m
+    inner_base = outer_base - side
+    inner_top = outer_top - side
+    if min(inner_base, inner_top) <= 0.0:
+        raise ValueError("modern contact cover wall thickness is invalid")
+    if z1 - top_wall <= z0:
+        raise ValueError("modern contact cover top wall consumes cover height")
+
+    def side_curve(
+        base_half: float,
+        top_half: float,
+        low_z: float,
+        high_z: float,
+        sign: float,
+    ) -> list[tuple[float, float]]:
+        pts: list[tuple[float, float]] = []
+        for i in range(7):
+            t = i / 6.0
+            smooth = t * t * (3.0 - 2.0 * t)
+            half = base_half + (top_half - base_half) * smooth
+            # Slight crown easing near the top avoids the old boxy silhouette.
+            z = low_z + (high_z - low_z) * t
+            pts.append((x0 + sign * half, z))
+        return pts
+
+    outer_left = side_curve(outer_base, outer_top, z0, z1, -1.0)
+    outer_right = list(reversed(side_curve(outer_base, outer_top, z0, z1, +1.0)))
+    inner_z1 = z1 - top_wall
+    inner_right = side_curve(inner_base, inner_top, z0, inner_z1, +1.0)
+    inner_left = list(reversed(side_curve(inner_base, inner_top, z0, inner_z1, -1.0)))
+
+    return tuple((*outer_left, *outer_right, *inner_right, *inner_left))
+
+
+def modern_protective_cover_core_xz(
+    profile: MoscowStage10Profile,
+    *,
+    width_extra_m: float = 0.0,
+    height_extra_m: float = 0.0,
+) -> tuple[tuple[float, float], ...]:
+    return tuple(
+        profile.coordinate.research_xz_to_core_xz(x, z)
+        for x, z in modern_protective_cover_profile_xz(
+            profile,
+            width_extra_m=width_extra_m,
+            height_extra_m=height_extra_m,
+        )
+    )
+
+
+def modern_contact_support_chainages(
+    total_length_m: float,
+    profile: MoscowStage10Profile,
+    *,
+    running_support_pitch_m: float,
+    running_support_phase_m: float,
+) -> tuple[float, ...]:
+    """Place modern contact supports in gaps between running-rail supports.
+
+    RU214055U1 explicitly separates the contact-rail bracket block from the
+    under-rail support block. The deterministic schedule therefore snaps each
+    5 m target to the nearest midpoint between adjacent running-rail supports,
+    rather than to the support itself.
+    """
+    if not math.isfinite(total_length_m) or total_length_m <= 0.0:
+        raise ValueError("total_length_m must be finite and positive")
+    if not math.isfinite(running_support_pitch_m) or running_support_pitch_m <= 0.0:
+        raise ValueError("running_support_pitch_m must be positive")
+    modern = profile.modern_contact_rail
+
+    midpoint_phase = (
+        float(running_support_phase_m) + 0.5 * running_support_pitch_m
+    ) % running_support_pitch_m
+    midpoints = sleeper_chainages(
+        total_length_m,
+        pitch_m=running_support_pitch_m,
+        phase_m=midpoint_phase,
+    )
+    if not midpoints:
+        return ()
+
+    targets: list[float] = []
+    t = 0.5 * modern.support_target_pitch_m
+    while t < total_length_m - 1e-12:
+        targets.append(t)
+        t += modern.support_target_pitch_m
+
+    result: list[float] = []
+    used: set[float] = set()
+    for target in targets:
+        candidate = min(midpoints, key=lambda s: (abs(s - target), s))
+        if candidate in used:
+            raise ValueError("modern contact support targets collapsed to one gap")
+        used.add(candidate)
+        result.append(candidate)
+
+    for chainage in result:
+        nearest_index = round(
+            (chainage - running_support_phase_m) / running_support_pitch_m
+        )
+        nearest_support = (
+            running_support_phase_m
+            + nearest_index * running_support_pitch_m
+        )
+        clearance = abs(chainage - nearest_support)
+        if (
+            clearance
+            < modern.running_support_exclusion_half_length_m - 1e-12
+        ):
+            raise ValueError("modern contact support conflicts with running support")
+
+    for a, b in zip(result, result[1:]):
+        spacing = b - a
+        if (
+            spacing < modern.support_normative_min_m - 1e-12
+            or spacing > modern.support_normative_max_m + 1e-12
+        ):
+            raise ValueError(
+                f"modern contact-support spacing {spacing:.9f} m outside "
+                "normative range"
+            )
+    return tuple(result)
+
+
+def modern_cover_span_ranges(
+    total_length_m: float,
+    profile: MoscowStage10Profile,
+    *,
+    support_chainages: Sequence[float],
+) -> tuple[tuple[float, float], ...]:
+    """Return main-cover spans separated around each support hood."""
+    modern = profile.modern_contact_rail
+    gap = profile.contact_rail.cover_box_to_insulator_gap_m
+    half_exclusion = 0.5 * modern.support_hood_length_m + gap
+    cursor = 0.0
+    spans: list[tuple[float, float]] = []
+    for chainage in support_chainages:
+        start = max(0.0, chainage - half_exclusion)
+        end = min(total_length_m, chainage + half_exclusion)
+        if start > cursor + 1e-9:
+            spans.append((cursor, start))
+        cursor = max(cursor, end)
+    if cursor < total_length_m - 1e-9:
+        spans.append((cursor, total_length_m))
+    return tuple(spans)
+
+
 def contact_support_chainages(
     total_length_m: float,
     profile: MoscowStage10Profile,
@@ -292,6 +466,31 @@ def _cylinder_x_mesh(
     return tuple(vertices), tuple(faces)
 
 
+def _box_mesh(
+    *,
+    center_x_m: float,
+    center_y_m: float,
+    size_x_m: float,
+    size_y_m: float,
+    z0_m: float,
+    z1_m: float,
+) -> tuple[tuple[Vec3, ...], tuple[Face, ...]]:
+    hx = 0.5 * size_x_m
+    hy = 0.5 * size_y_m
+    x0, x1 = center_x_m - hx, center_x_m + hx
+    y0, y1 = center_y_m - hy, center_y_m + hy
+    v = (
+        (x0, y0, z0_m), (x1, y0, z0_m), (x1, y1, z0_m), (x0, y1, z0_m),
+        (x0, y0, z1_m), (x1, y0, z1_m), (x1, y1, z1_m), (x0, y1, z1_m),
+    )
+    f = (
+        (0, 3, 2, 1), (4, 5, 6, 7),
+        (0, 1, 5, 4), (1, 2, 6, 5),
+        (2, 3, 7, 6), (3, 0, 4, 7),
+    )
+    return v, f
+
+
 def _bezier_point(
     p0: tuple[float, float],
     p1: tuple[float, float],
@@ -348,6 +547,259 @@ def _profile_xz_to_core(
     return tuple(
         profile.coordinate.research_xz_to_core_xz(x, z)
         for x, z in points
+    )
+
+
+def build_modern_contact_support_meshes(
+    profile: MoscowStage10Profile,
+) -> tuple[LocalContactRailMesh, ...]:
+    """Build the modern dedicated-block contact-rail support assembly."""
+    cr = profile.contact_rail
+    modern = profile.modern_contact_rail
+    sign = cr.side_profile_x_sign
+    axis_x = contact_rail_axis_profile_x(profile)
+    axis_u = abs(axis_x)
+
+    rail_top_profile_z = (
+        cr.working_surface_z_m + cr.rail_overall_height_m
+    )
+    plate_under_profile_z = (
+        rail_top_profile_z + modern.insulator_height_m
+    )
+    plate_top_profile_z = (
+        plate_under_profile_z + modern.bracket_top_plate_thickness_m
+    )
+
+    # Dedicated support block sits in track concrete, between running supports.
+    block_center_u = max(1.08, axis_u - 0.26)
+    concrete_top_profile_z = (
+        profile.track_concrete.surface_reference_z_m
+        + profile.track_concrete.surface_cross_slope_to_drain
+        * (
+            block_center_u
+            - profile.track_concrete.surface_reference_abs_x_m
+        )
+    )
+    block_top_core = profile.coordinate.research_xz_to_core_xz(
+        0.0, concrete_top_profile_z
+    )[1]
+    block_bottom_core = block_top_core - modern.support_block_height_m
+    block_center_x = sign * block_center_u
+
+    # Plan dimensions are not published in RU214055U1; keep a compact,
+    # explicitly tagged preview footprint under the 100 mm bracket thickness.
+    block_mesh = _box_mesh(
+        center_x_m=block_center_x,
+        center_y_m=0.0,
+        size_x_m=0.24,
+        size_y_m=0.18,
+        z0_m=block_bottom_core,
+        z1_m=block_top_core,
+    )
+
+    base_u = block_center_u
+    base_z = concrete_top_profile_z + 0.015
+    end_u = axis_u
+    end_z = plate_under_profile_z
+    p0 = (base_u, base_z)
+    p1 = (base_u + 0.20, base_z + 0.06)
+    p2 = (axis_u + 0.20, end_z + 0.04)
+    p3 = (end_u, end_z)
+    centerline = tuple(
+        _bezier_point(p0, p1, p2, p3, i / 18.0)
+        for i in range(19)
+    )
+    band_u_z = _ribbon_polygon(
+        centerline,
+        thickness_m=modern.bracket_channel_band_thickness_m,
+    )
+    bracket_profile = tuple((sign * u, z) for u, z in band_u_z)
+    bracket_core = _profile_xz_to_core(profile, bracket_profile)
+    bracket_mesh = _extrude_y_from_xz(
+        bracket_core,
+        half_y_m=0.5 * modern.bracket_longitudinal_thickness_m,
+    )
+
+    plate_center_core = profile.coordinate.research_xz_to_core_xz(
+        axis_x,
+        0.5 * (plate_under_profile_z + plate_top_profile_z),
+    )
+    top_plate_mesh = _box_mesh(
+        center_x_m=plate_center_core[0],
+        center_y_m=0.0,
+        size_x_m=modern.bracket_top_plate_width_m,
+        size_y_m=modern.bracket_longitudinal_thickness_m,
+        z0_m=profile.coordinate.research_xz_to_core_xz(
+            0.0, plate_under_profile_z
+        )[1],
+        z1_m=profile.coordinate.research_xz_to_core_xz(
+            0.0, plate_top_profile_z
+        )[1],
+    )
+    bracket_combined = _combine_meshes((bracket_mesh, top_plate_mesh))
+
+    # The modern/photographic topology has the insulator above the contact rail,
+    # hanging the rail from the over-rail bracket plate.
+    insulator_z0 = profile.coordinate.research_xz_to_core_xz(
+        0.0, rail_top_profile_z
+    )[1]
+    insulator_z1 = profile.coordinate.research_xz_to_core_xz(
+        0.0, plate_under_profile_z
+    )[1]
+    insulator_mesh = _cylinder_z_mesh(
+        center_x_m=profile.coordinate.research_xz_to_core_xz(axis_x, 0.0)[0],
+        center_y_m=0.0,
+        radius_m=0.5 * modern.insulator_diameter_m,
+        z0_m=insulator_z0,
+        z1_m=insulator_z1,
+        sides=16,
+    )
+
+    # Rail-retaining saddle around the upper head, still explicitly topology
+    # only until a current factory assembly drawing resolves the clamp.
+    rail_half = 0.5 * cr.rail_top_width_m
+    saddle_center_x = profile.coordinate.research_xz_to_core_xz(axis_x, 0.0)[0]
+    rail_top_core = insulator_z0
+    saddle_parts = (
+        _box_mesh(
+            center_x_m=saddle_center_x - rail_half - 0.010,
+            center_y_m=0.0,
+            size_x_m=0.012,
+            size_y_m=0.085,
+            z0_m=rail_top_core - 0.030,
+            z1_m=rail_top_core + 0.014,
+        ),
+        _box_mesh(
+            center_x_m=saddle_center_x + rail_half + 0.010,
+            center_y_m=0.0,
+            size_x_m=0.012,
+            size_y_m=0.085,
+            z0_m=rail_top_core - 0.030,
+            z1_m=rail_top_core + 0.014,
+        ),
+        _box_mesh(
+            center_x_m=saddle_center_x,
+            center_y_m=0.0,
+            size_x_m=cr.rail_top_width_m + 0.032,
+            size_y_m=0.085,
+            z0_m=rail_top_core + 0.006,
+            z1_m=rail_top_core + 0.018,
+        ),
+    )
+    saddle_mesh = _combine_meshes(saddle_parts)
+
+    # Two 140 mm polymer-dowel/track-screw axes in the dedicated support block.
+    dowels = []
+    for dy in (-0.045, +0.045):
+        dowels.append(
+            _cylinder_z_mesh(
+                center_x_m=block_center_x,
+                center_y_m=dy,
+                radius_m=0.012,
+                z0_m=block_top_core - modern.support_dowel_length_m,
+                z1_m=block_top_core + 0.010,
+                sides=10,
+            )
+        )
+    dowel_mesh = _combine_meshes(dowels)
+
+    hood_profile = modern_protective_cover_core_xz(
+        profile,
+        width_extra_m=modern.support_hood_extra_width_m,
+        height_extra_m=modern.support_hood_extra_height_m,
+    )
+    hood_mesh = _extrude_y_from_xz(
+        hood_profile,
+        half_y_m=0.5 * modern.support_hood_length_m,
+    )
+
+    return (
+        LocalContactRailMesh(
+            name_suffix="MODERN_CONTACT_SUPPORT_BLOCK",
+            object_type="production_contact_rail_support_block",
+            category="contact_rail_support_block",
+            vertices=block_mesh[0],
+            faces=block_mesh[1],
+            properties={
+                "geometryMode": "RU214055_dedicated_block_preview",
+                "heightM": modern.support_block_height_m,
+                "polymerDowelLengthM": modern.support_dowel_length_m,
+                "separateFromRunningRailSupport": True,
+                "planGeometryResolved": False,
+                "source": "P10-RU214055-CONTACT-SUPPORT",
+            },
+        ),
+        LocalContactRailMesh(
+            name_suffix="MODERN_CONTACT_RAIL_BRACKET",
+            object_type="production_contact_rail_bracket",
+            category="contact_rail_bracket",
+            vertices=bracket_combined[0],
+            faces=bracket_combined[1],
+            properties={
+                "geometryMode": "curved_channel_overrail_top_plate_v2",
+                "resourceEnvelopeM": cr.support_resource_envelope_m,
+                "longitudinalThicknessM": modern.bracket_longitudinal_thickness_m,
+                "channelBandThicknessM": modern.bracket_channel_band_thickness_m,
+                "topPlateWidthM": modern.bracket_top_plate_width_m,
+                "topPlateThicknessM": modern.bracket_top_plate_thickness_m,
+                "legacySleeperAttachment": False,
+                "dedicatedConcreteSupportBlock": True,
+            },
+        ),
+        LocalContactRailMesh(
+            name_suffix="MODERN_CONTACT_RAIL_INSULATOR",
+            object_type="production_contact_rail_insulator",
+            category="contact_rail_insulator",
+            vertices=insulator_mesh[0],
+            faces=insulator_mesh[1],
+            properties={
+                "geometryMode": "vertical_cylindrical_envelope_v2",
+                "heightM": modern.insulator_height_m,
+                "diameterM": modern.insulator_diameter_m,
+                "orientation": "vertical_above_contact_rail",
+                "exactPorcelainProfileResolved": False,
+            },
+        ),
+        LocalContactRailMesh(
+            name_suffix="MODERN_CONTACT_RAIL_FASTENING",
+            object_type="production_contact_rail_fastening_unit",
+            category="contact_rail_fastening_unit",
+            vertices=saddle_mesh[0],
+            faces=saddle_mesh[1],
+            properties={
+                "geometryMode": "upper_head_saddle_v2",
+                "confidence": "C_topology_only",
+                "exactBoltClipGeometryResolved": False,
+            },
+        ),
+        LocalContactRailMesh(
+            name_suffix="MODERN_CONTACT_SUPPORT_DOWELS",
+            object_type="production_contact_rail_attachment_dowels",
+            category="contact_rail_attachment_dowels",
+            vertices=dowel_mesh[0],
+            faces=dowel_mesh[1],
+            properties={
+                "quantity": 2,
+                "dowelLengthM": modern.support_dowel_length_m,
+                "source": "P10-RU214055-CONTACT-SUPPORT",
+                "countConfidence": "C_figure_interpretation",
+            },
+        ),
+        LocalContactRailMesh(
+            name_suffix="MODERN_CONTACT_SUPPORT_HOOD",
+            object_type="production_contact_rail_support_hood",
+            category="contact_rail_support_hood",
+            vertices=hood_mesh[0],
+            faces=hood_mesh[1],
+            properties={
+                "geometryMode": "rounded_local_fastening_hood_v1",
+                "longitudinalLengthM": modern.support_hood_length_m,
+                "widthExtraM": modern.support_hood_extra_width_m,
+                "heightExtraM": modern.support_hood_extra_height_m,
+                "confidence": "C_photo_topology_only",
+                "mainCoverInterruptedHere": True,
+            },
+        ),
     )
 
 

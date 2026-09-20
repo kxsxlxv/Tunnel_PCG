@@ -49,7 +49,15 @@ def test_stage10_2_profile_closes_sleeper_kd65_and_concrete_data():
     assert math.isclose(k.under_pad_thickness_m, 0.006, abs_tol=1e-12)
     assert math.isclose(k.rail_pad_total_thickness_m, 0.014, abs_tol=1e-12)
     assert math.isclose(k.track_screw_length_m, 0.150, abs_tol=1e-12)
+    assert math.isclose(k.track_screw_head_radius_m, 0.018, abs_tol=1e-12)
+    assert math.isclose(k.track_screw_head_height_m, 0.008, abs_tol=1e-12)
+    assert k.track_screw_head_mode == "simplified_visible_flat_head_fallback"
     assert math.isclose(k.clamp_bolt_length_m, 0.075, abs_tol=1e-12)
+    assert math.isclose(k.clamp_bolt_axis_offset_m, 0.100, abs_tol=1e-12)
+    assert math.isclose(k.spring_clamp_center_offset_m, 0.082, abs_tol=1e-12)
+    assert math.isclose(k.spring_clamp_box_transverse_m, 0.055, abs_tol=1e-12)
+    assert k.clamp_geometry_mode == "simplified_parameterized_initial_geometry"
+    assert k.baseplate_mesh_mode == "source_callout_simplified_section"
 
     support_gap = (-profile.track.rail_height_m) - s.top_z_m
     support_stack = (

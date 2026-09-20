@@ -175,6 +175,21 @@ def test_moscow_asset_specs_replace_only_running_rails_in_stage10_1():
         assert math.isclose(p["railBaseZLocalM"], -1.85, abs_tol=2e-12)
         assert p["gaugeM"] == 1.520
         assert p["gaugeMeasurementBelowUGRM"] == 0.013
+        assert math.isclose(
+            p["gaugeMeasurementProfileZLocalM"],
+            -0.013,
+            abs_tol=2e-12,
+        )
+        assert math.isclose(
+            p["gaugeMeasurementCoreZLocalM"],
+            -1.683,
+            abs_tol=2e-12,
+        )
+        assert math.isclose(
+            p["gaugeMeasurementZLocalM"],
+            -1.683,
+            abs_tol=2e-12,
+        )
         assert not rail.omitted_longitudinal_edges
         zs = [z for _x, z in rail.cross_section_xz]
         assert math.isclose(max(zs), -1.67, abs_tol=2e-12)

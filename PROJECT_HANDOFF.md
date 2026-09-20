@@ -1223,7 +1223,19 @@ route +Y (left)           -> profile -X -> core -X
 route +Z                  -> core +Z
 \`\`\`
 
-Important: UGR z=0 is a **local engineering/track-frame datum**. Existing Stage-9 alignment offsets are subsequently applied by the sweep, so world Z is \`UGR + station.offset_z_m\`; do not assert world Z=0 along a perturbed production alignment.
+Important: UGR z=0 is a **profile/engineering-track datum**, not the production-core Z origin. The production core is anchored at the lining axis. For the selected first profile, the lining axis is +1.670 m above UGR, so:
+
+\`\`\`text
+core_z = profile_z - 1.670 m
+profile UGR z = 0.000 m   -> core UGR z = -1.670 m
+R65 base      -0.180 m   -> core R65 base = -1.850 m
+gauge plane   -0.013 m   -> core gauge plane = -1.683 m
+lining axis   +1.670 m   -> core lining axis = 0.000 m
+\`\`\`
+
+Existing Stage-9 alignment offsets are then applied by the sweep, so world Z is \`core_local_z + station.offset_z_m\`.
+
+A first Stage-10.1 operator smoke exposed a bug where profile Z was mapped without this translation, putting the rails through the centre of the Stage-9 ring. That bug has been corrected and regression-tested.
 
 Stage 10.1 intentionally does **not** implement sleepers/KD-65/invert/drainage, contact rail, Moscow civil shell placement, or detailed cast-iron ribs/bolts. Those remain the next bounded stages, beginning with Stage 10.2.
 

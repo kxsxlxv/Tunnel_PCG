@@ -134,6 +134,12 @@ from .permanent_way import (
     track_concrete_core_xz,
     track_concrete_profile_xz,
 )
+from .services import (
+    LocalServiceMesh,
+    build_r2k11_local_rack_mesh,
+    cable_rack_chainages,
+    modern_cable_sections_core,
+)
 from .civil import (
     CivilShellMesh,
     build_annular_shell_sweep,
@@ -320,6 +326,10 @@ __all__ = [
     "sleeper_chainages",
     "track_concrete_core_xz",
     "track_concrete_profile_xz",
+    "LocalServiceMesh",
+    "build_r2k11_local_rack_mesh",
+    "cable_rack_chainages",
+    "modern_cable_sections_core",
     "CivilShellMesh",
     "build_annular_shell_sweep",
     "civil_ring_ranges",

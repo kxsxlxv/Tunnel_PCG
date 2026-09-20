@@ -231,9 +231,10 @@ The Stage-10 Blender verifier is stage-aware through 10.3.
 
 ## User-facing workflow
 
-Stage 10.3 is the current default:
+Stage 10.3 is now an explicit compatibility mode because Stage 10.4 is the current default:
 
     python examples/generate_stage10_production_tunnel.py \
+        --domain-stage 10.3 \
         --rings 20 \
         --namespace stage10-3-smoke
 
@@ -255,9 +256,9 @@ Stage 10.1 remains available with `--domain-stage 10.1`.
 
 ## Deferred by design
 
-Still deferred:
+Historical Stage-10.3 deferrals:
 
-- actual Moscow 5.5/5.1 civil shell and raised +0.200 m walkway — Stage 10.4;
+- actual Moscow 5.5/5.1 civil shell and raised +0.200 m walkway — implemented in Stage 10.4;
 - exact historical protective-board extrusion and board segmentation;
 - exact porcelain insulator CAD;
 - exact legacy bracket bend radii/hole/clip coordinates;
@@ -266,4 +267,4 @@ Still deferred:
   deterministic fixture;
 - series-accurate N/C/K cast-iron tubing ribs/bolts/rebates.
 
-The next bounded implementation stage is Stage 10.4 civil shell / walkway.
+Stage 10.4 civil shell / walkway is now implemented; see STAGE10_4_REPORT.md.

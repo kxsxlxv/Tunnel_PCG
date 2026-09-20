@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "profile_id": "stage10_initial_profile_CAST_IRON_5500_R1000_R65_TIMBER_LEGACY",
   "purpose": "first deterministic XZ profile for Blender/LiDAR implementation",
   "readiness": {
@@ -54,7 +54,9 @@
       "key_segments": 1,
       "source": "P10-FROLOV-RING",
       "confidence": "B",
-      "warning": "11-segment table variant is not uniquely tied to every Moscow 5.5/5.1 series; Lentrublit/DZMO and later unified families differ."
+      "warning": "The 11-segment 5.5/5.1 arrangement is consistent with the documented DZMO family; the exact factory drawing set/segment CAD has not been located, so this remains a topology reference rather than series-accurate geometry.",
+      "series_candidate": "DZMO_5500_5100_11_SEGMENT_REFERENCE",
+      "series_candidate_source": "P10-DZMO-LENTRUBLIT"
     },
     "ring_detail_LOD0": {
       "status": "not_ready",
@@ -66,8 +68,10 @@
         "exact bolt-hole coordinates",
         "exact grout-plug coordinate",
         "exact flange/rebate/falts cross-section",
-        "unambiguous factory/series designation for the 11-segment Figure 4.14 variant"
-      ]
+        "unambiguous factory/series designation for the 11-segment Figure 4.14 variant",
+        "underlying manufacturing drawing numbers referenced by TU 35-521-90 are not publicly available as dimensioned tubing drawings in the inspected source set"
+      ],
+      "public_specification_source": "P10-TU35-521-90"
     }
   },
   "running_rail_and_track": {
@@ -115,37 +119,85 @@
           }
         },
         "exact_local_profile_source": "P10-GOST16277-KD65 Figure 3",
-        "initial_mesh_mode": "dimensioned_GOST_Fig3_when_agent_reconstructs; envelope_box_fallback_allowed",
-        "fallback_confidence": "B"
+        "initial_mesh_mode": "dimensioned_historical_album_drawing_96; GOST_16277_2016_Fig3_as_geometry_confirmation",
+        "fallback_confidence": "not_required_for_initial_profile",
+        "historical_album_source": "P10-ALBUM-KD65 drawing 96",
+        "hole_center_spacing_m": {
+          "longitudinal": 0.31,
+          "transverse": 0.1
+        },
+        "cad_profile_callouts_m": [
+          0.012,
+          0.016,
+          0.0205,
+          0.0236,
+          0.0295,
+          0.032,
+          0.048,
+          0.0535,
+          0.0556,
+          0.0795,
+          0.1095,
+          0.151,
+          0.31,
+          0.37
+        ],
+        "profile_slopes": [
+          "1:10",
+          "1:16",
+          "1:20"
+        ],
+        "profile_radii_m": [
+          0.005,
+          0.008,
+          0.01,
+          0.03
+        ]
       },
       "rail_pad": {
-        "geometry_mode": "fallback",
-        "value_envelope_m": [
-          0.165,
-          0.148,
-          0.007
+        "geometry_mode": "dimensioned_historical_album",
+        "overall_plan_m": [
+          0.19,
+          0.148
         ],
-        "confidence": "C",
-        "reason": "common R65/KD65 pad envelope from railway assembly references; exact Moscow-era pad drawing not confirmed",
-        "source": "P10-ALBUM-KD65 drawings 95/99; envelope dimension fallback from published R65 pad catalogs"
+        "base_thickness_m": 0.007,
+        "raised_total_thickness_m": 0.014,
+        "raised_seat_length_m": 0.17,
+        "perforations": {
+          "count": 21,
+          "diameter_m": 0.02
+        },
+        "source": "P10-ALBUM-KD65 drawing 99",
+        "confidence": "B_non_metro_railway_drawing_same_KD65_family",
+        "reason": "Use the 1995 KD65 drawing instead of the previous generic R65 pad envelope; Moscow-specific rubber formulation remains unconfirmed."
       },
       "under_baseplate_pad": {
-        "geometry_mode": "fallback",
-        "value_envelope_m": [
-          0.36,
-          0.17,
-          0.008
+        "geometry_mode": "dimensioned_historical_album",
+        "overall_plan_m": [
+          0.37,
+          0.165
         ],
-        "confidence": "C",
-        "reason": "common KD65 under-baseplate pad envelope; exact Moscow-era polymer/rubber formulation and contour not confirmed",
-        "source": "P10-ALBUM-KD65 drawings 95/97; envelope dimension fallback from published KD65/D65 pad catalogs"
+        "thickness_m": 0.006,
+        "holes": {
+          "count": 4,
+          "diameter_m": 0.028
+        },
+        "hole_center_spacing_m": {
+          "longitudinal": 0.31,
+          "transverse": 0.1
+        },
+        "corner_radius_max_m": 0.01,
+        "source": "P10-ALBUM-KD65 drawing 97",
+        "confidence": "B_non_metro_railway_drawing_same_KD65_family",
+        "reason": "Replaces the previous D65-family 360x170x8 fallback with the actual KD65 drawing."
       },
       "track_screw": {
         "diameter_m": 0.024,
         "length_m": 0.15,
         "head": "flat",
         "quantity_per_baseplate": 4,
-        "source": "P10-FROLOV-FASTENING"
+        "source": "P10-FROLOV-FASTENING",
+        "comparison_note": "The general-railway KD65 album drawing 98 uses 24x170; the Moscow metro Fig.1.17 explicitly labels 24x150, therefore 24x150 is retained for this service preset."
       },
       "clamp_bolt": {
         "thread": "M22",
@@ -157,7 +209,9 @@
         "thread": "M22",
         "height_m": 0.022,
         "quantity_per_baseplate": 2,
-        "source": "P10-FROLOV-FASTENING"
+        "source": "P10-FROLOV-FASTENING",
+        "quantity_basis": "deterministic metro-figure interpretation; the 1995 general-railway KD65 Table 22 lists four M22x22 nuts, so quantity is service-variant dependent",
+        "general_railway_album_quantity": 4
       },
       "spring_clamp": {
         "designation": "KDP-2 / KD-family spring clamp",
@@ -166,11 +220,25 @@
         "source": "P10-FROLOV-FASTENING"
       },
       "visible_sleeper_after_concreting": {
-        "mode": "fallback",
-        "rule": "expose upper sleeper face and fastening footprint; track-concrete surface terminates 0.010 m below sleeper top outside fastening footprint",
-        "confidence": "C",
-        "basis": "metro track-concrete descriptions state sleepers are embedded and concrete surface is ~10 mm below sleeper top; exact edge fillets/recesses are not dimensioned in Fig.1.14"
+        "mode": "source_dimensioned",
+        "visible_height_above_adjacent_track_concrete_m": 0.01,
+        "rule": "track-concrete surface terminates 0.010 m below sleeper top outside the fastening footprint",
+        "source": "P10-FROLOV-1.14",
+        "confidence": "B",
+        "exact_edge_fillets_and_local_hand_finished_recesses": "not_required_for_initial_profile"
+      },
+      "double_turn_washer_25": {
+        "quantity_in_general_railway_KD65_album": 4,
+        "initial_metro_geometry": "not_required_for_initial_profile",
+        "source": "P10-ALBUM-KD65 Table 22",
+        "confidence": "B"
       }
+    },
+    "sleeper_bottom_z_m": {
+      "mode": "derived_from_source_dimensions",
+      "value": -0.385,
+      "derivation": "sleeper_top_z_m (-0.220) - GOST sleeper thickness 0.165",
+      "confidence": "B"
     }
   },
   "track_concrete_and_invert": {
@@ -187,16 +255,18 @@
       "center_x_m": 0,
       "clear_width_m": 0.9,
       "depth_from_ugr_m": {
-        "source_range": [
+        "source_family_range": [
           0.5,
           0.6
         ],
-        "initial_geometry_value": 0.55
+        "dimensioned_Fig1_14_value": 0.53,
+        "initial_geometry_value": 0.53,
+        "value_mode": "dimensioned_running_tunnel_drawing"
       },
-      "initial_shape": "rectangular_open_trough",
-      "shape_status": "fallback",
-      "confidence": "B_dimensions_C_exact_corner_shape",
-      "reason": "width/depth are source values; exact corner radii/side batter are not numerically stated",
+      "initial_shape": "open_rectangular_trough_as_drawn_in_Fig1.14",
+      "shape_status": "source_drawn_schematic_exact_corner_radii_not_dimensioned",
+      "confidence": "A_width_and_depth_B_shape",
+      "reason": "Fig.1.14 dimensions the running-tunnel central drain at 900 mm clear width and 530 mm depth from UGR; adjacent text gives the general 0.5-0.6 m depth range. Exact corner radii/side finishing are not numerically stated.",
       "longitudinal_grade_rule": "same as track grade",
       "sources": [
         "P10-FROLOV-1.14",
@@ -213,7 +283,18 @@
       "mode": "procedural_from_source_constraints",
       "rule": "outside sleepers, track-concrete top follows 0.03 transverse fall toward central drain; sides fill down to circular intrados; do not use Cmk as a physical surface",
       "exact_breakpoint_coordinates": "not_required_for_initial_profile",
+      "confidence": "B",
+      "nominal_surface_rule": "adjacent to sleepers use sleeper-top minus 10 mm as the local datum and apply the 0.03 fall toward the central drain; exact hand-finished breakpoints remain replaceable"
+    },
+    "nominal_concrete_top_at_sleeper_datum_z_m": {
+      "value": -0.23,
+      "derivation": "sleeper top -0.220 m minus Fig.1.14 0.010 m exposure",
       "confidence": "B"
+    },
+    "derived_min_concrete_bottom_z_at_rail_on_straight_m": {
+      "value": -0.545,
+      "derivation": "sleeper bottom -0.385 m minus minimum 0.160 m track concrete under sleeper at rail position",
+      "confidence": "A_derived_from_source_values"
     }
   },
   "walkway": {
@@ -286,8 +367,10 @@
           "lower_edge_to_contact_surface_m": 0.023,
           "fastening_support_offset_from_box_end_m": 0.3,
           "source": "P10-VNIR-COVER"
-        }
-      }
+        },
+        "fallback_note": "Only the historical clearances and support offsets are asserted for the legacy wooden box. The modern polymer profile is a silhouette fallback, not a historical extrusion."
+      },
+      "historical_cover_family": "legacy wooden-board protective box per 1986 VNiR installation terminology"
     },
     "support": {
       "bracket_envelope_m": [
@@ -305,7 +388,8 @@
         ],
         "initial_value": 5,
         "value_mode": "deterministic_fallback_within_normative_range",
-        "confidence": "B"
+        "confidence": "B",
+        "source": "P10-FROLOV-CONTACT-SPACING"
       }
     },
     "insulator": {
@@ -326,11 +410,13 @@
     "running_rail": "R65",
     "permanent_way": "timber sleepers embedded in track concrete",
     "fastening": "KD-65",
-    "contact_rail": "bottom-collection steel RK-like rail with legacy suspension and protective cover",
+    "contact_rail": "bottom-collection steel contact rail; post-1975/1981 modernized legacy suspension topology represented by Frolov Fig.1.20; legacy wooden protective box constraints, with modern box silhouette fallback only",
     "walkway": "raised +0.200 m banquette opposite contact rail",
     "cable_infrastructure": "legacy open wall-mounted cable racks; geometry generated by separate equipment preset",
     "lighting": "legacy tunnel luminaires; exact luminaire body not required for initial cross-section",
-    "modernization_rule": "civil lining and service preset are independently replaceable; modern LVT/LED/cables may be applied later without changing civil shell"
+    "modernization_rule": "civil lining and service preset are independently replaceable; modern LVT/LED/cables may be applied later without changing civil shell",
+    "reference_year": 2001,
+    "service_era_selection_basis": "service configuration is fixed independently of civil lining/opening year; it is a documentary 2001-reference preset, not a statement about every surviving 5.5/5.1 tunnel today"
   },
   "first_version_exclusions": [
     "series-accurate cast-iron segment/rib/bolt mesh",

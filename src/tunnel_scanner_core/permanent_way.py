@@ -74,8 +74,9 @@ def _outer_surface_intersection_x(
     profile: MoscowStage10Profile,
 ) -> float:
     # Solve top_plane(x) == lower_intrados(x) on the positive-X shoulder.
-    drain_half = 0.5 * profile.track_concrete.central_drain_clear_width_m
-    lo = max(drain_half, rail_axis_abs_x_m)
+    tc = profile.track_concrete
+    drain_half = 0.5 * tc.central_drain_clear_width_m
+    lo = max(drain_half, tc.surface_reference_abs_x_m)
     hi = profile.intrados_radius_m - 1e-9
 
     def f(x: float) -> float:

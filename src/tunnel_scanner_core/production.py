@@ -597,7 +597,12 @@ def build_continuous_asset_specs(
         )
     if moscow_stage != "10.1" and moscow_profile is None:
         raise ValueError("Moscow Stage 10.2-10.5 requires moscow_profile")
-    if moscow_service_preset not in {"legacy", "modern"}:
+    if moscow_profile is None:
+        if moscow_service_preset not in {"none", "legacy"}:
+            raise ValueError(
+                "non-Moscow production may only use the internal 'none' service preset"
+            )
+    elif moscow_service_preset not in {"legacy", "modern"}:
         raise ValueError("moscow_service_preset must be 'legacy' or 'modern'")
     profile = rail_profile or RailProfile.generic_from_ancillary(ancillary.config)
     specs: list[ContinuousAssetSpec] = []

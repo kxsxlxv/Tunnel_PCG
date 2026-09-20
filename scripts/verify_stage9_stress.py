@@ -118,6 +118,42 @@ def main() -> None:
             abs_tol=1e-10,
         )
 
+    # Build the actual one-kilometre chunk packages, not only the descriptors.
+    km_chunk_packages = build_chunk_scene_packages(
+        km,
+        chunk_length_m=50.0,
+        boundary_policy=ChunkBoundaryPolicy.RING_ALIGNED,
+    )
+    assert len(km_chunk_packages) == len(chunks_50)
+    km_chunk_ring_ids = [
+        ring_id
+        for package in km_chunk_packages
+        for ring_id in package.metadata["productionChunk"]["ringIDs"]
+    ]
+    assert sorted(km_chunk_ring_ids) == list(range(km.assembly.config.n_rings))
+    assert len(km_chunk_ring_ids) == len(set(km_chunk_ring_ids))
+    for left, right in zip(km_chunk_packages, km_chunk_packages[1:]):
+        left_assets = {
+            obj.custom_properties["sourcePersistentKey"]: obj
+            for obj in left.objects
+            if obj.object_type.startswith("production_")
+        }
+        right_assets = {
+            obj.custom_properties["sourcePersistentKey"]: obj
+            for obj in right.objects
+            if obj.object_type.startswith("production_")
+        }
+        assert left_assets.keys() == right_assets.keys()
+        for key in left_assets:
+            n = int(left_assets[key].custom_properties["productionCrossSectionVertices"])
+            assert all(
+                math.dist(a, b) < 2e-12
+                for a, b in zip(
+                    left_assets[key].vertices[-n:],
+                    right_assets[key].vertices[:n],
+                )
+            )
+
     sample_chunks = build_chunk_scene_packages(
         hundred,
         chunk_length_m=25.0,
@@ -199,6 +235,9 @@ def main() -> None:
             "railVerticesPerRail": rail_vertices,
             "railFacesPerRail": rail_faces,
             "ringAligned50mChunkCount": len(chunks_50),
+            "ringAligned50mChunkPackagesBuilt": len(km_chunk_packages),
+            "chunkRingCoverageUnique": True,
+            "chunkInfrastructureBoundaryContinuity": "PASS",
         },
         "fiveKilometreAlignment": {
             "rings": n_5km,

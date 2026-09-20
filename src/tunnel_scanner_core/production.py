@@ -610,8 +610,11 @@ def build_continuous_asset_specs(
                     "surfaceCrossSlopeToDrain": (
                         moscow_profile.track_concrete.surface_cross_slope_to_drain
                     ),
-                    "concreteTopAtRailProfileZM": (
-                        moscow_profile.track_concrete.concrete_top_at_rail_z_m
+                    "concreteSurfaceReferenceAbsXM": (
+                        moscow_profile.track_concrete.surface_reference_abs_x_m
+                    ),
+                    "concreteSurfaceReferenceProfileZM": (
+                        moscow_profile.track_concrete.surface_reference_z_m
                     ),
                     "centralDrainClearWidthM": (
                         moscow_profile.track_concrete.central_drain_clear_width_m

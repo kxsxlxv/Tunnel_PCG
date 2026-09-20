@@ -89,16 +89,42 @@ def _ensure_collection_path(bpy, root, path: tuple[str, ...]):
     return current
 
 
+_BLENDER_IDPROP_INT_MIN = -(2**31)
+_BLENDER_IDPROP_INT_MAX = 2**31 - 1
+
+
+def _blender_custom_property_scalar(value: Any) -> str | int | float | bool:
+    """Convert an engine-neutral scalar to a Blender-safe ID property value.
+
+    Blender 5.2.x can route Python integer assignment through a C int for scalar
+    custom properties. Stage-9 persistent IDs are positive 63-bit values, so
+    assigning them directly can raise OverflowError. Preserve the exact integer
+    losslessly as a decimal string when it exceeds the signed 32-bit range.
+    Small integers remain native Blender integer properties.
+
+    The engine-neutral ScenePackage/JSON representation is unchanged and keeps
+    the original Python integer.
+    """
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, int):
+        if _BLENDER_IDPROP_INT_MIN <= value <= _BLENDER_IDPROP_INT_MAX:
+            return value
+        return str(value)
+    if isinstance(value, (str, float)):
+        return value
+    raise TypeError(f"unsupported Blender scalar type: {type(value)!r}")
+
+
 def _set_custom_properties(blender_object, properties: dict[str, Any]) -> None:
     for key, value in properties.items():
-        # Current Stage-5 metadata consists only of Blender ID-property-friendly
-        # scalar/string values. Reject nested data early instead of relying on
-        # version-specific implicit conversion.
-        if not isinstance(value, (str, int, float, bool)):
+        try:
+            blender_object[key] = _blender_custom_property_scalar(value)
+        except TypeError as exc:
             raise TypeError(
-                f"custom property {key!r} has unsupported Blender scalar type: {type(value)!r}"
-            )
-        blender_object[key] = value
+                f"custom property {key!r} has unsupported Blender scalar type: "
+                f"{type(value)!r}"
+            ) from exc
 
 
 def create_blender_object(scene_object: SceneObject, collection, *, validate_mesh: bool = True):

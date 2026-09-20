@@ -1965,6 +1965,24 @@ def build_production_scene(
         )
         objects.extend(stage10_3_contact_periodic)
 
+    stage10_5_modern_contact: tuple[SceneObject, ...] = ()
+    if (
+        config.moscow_profile is not None
+        and config.moscow_stage == "10.5"
+        and config.resolved_moscow_service_preset == "modern"
+    ):
+        modern_pw = config.moscow_profile.modern_permanent_way
+        stage10_5_modern_contact = _build_stage10_5_modern_contact_scene_objects(
+            profile=config.moscow_profile,
+            namespace=config.namespace,
+            assembly=source_build.assembly,
+            stations=stations,
+            label_policy=source_scene.label_policy,
+            running_support_pitch_m=modern_pw.support_pitch_m,
+            running_support_phase_m=0.5 * modern_pw.support_pitch_m,
+        )
+        objects.extend(stage10_5_modern_contact)
+
     stage10_4_civil_rings: tuple[SceneObject, ...] = ()
     if (
         config.moscow_profile is not None

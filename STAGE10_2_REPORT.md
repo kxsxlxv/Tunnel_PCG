@@ -113,8 +113,14 @@ the same stack is:
     R65 head / UGR                    -1.670 m
 
 The R65 foot-bottom consists of two collinear analytic profile edges split at
-the rail symmetry axis. In Stage 10.2 both hidden support-contact longitudinal
-faces are omitted to avoid coplanar contact geometry against the rail pad.
+the rail symmetry axis. Because the KD-65 supports are discrete, Stage 10.2
+keeps the continuous R65 underside intact and visible between sleepers.
+
+Coplanar contact is removed locally from each rail pad instead: the pad
+cross-section is split at the 150 mm R65 foot width and only the hidden central
+rail-contact span is omitted. The visible pad overhang remains meshed. The pad
+bottom is likewise split so only the true KD-65 rail-seat contact span is
+omitted.
 
 ## Sleeper geometry and periodicity
 
@@ -140,7 +146,10 @@ Every sleeper event has stable semantic parent keys under:
     <namespace>/permanent-way/sleeper-event/<event-index>/<category>
 
 The periodic parent IDs are deterministic and remain invariant when export
-chunk size changes.
+chunk size changes. Periodic assets are assigned to chunks by their own
+`eventChainageM`, not by lining-ring ID; regression coverage includes
+`exact_length` chunks so sleeper events cannot disappear at metric chunk
+boundaries.
 
 ## KD-65 geometry
 
@@ -259,7 +268,7 @@ Regression coverage now verifies:
 - sleeper pitch and deterministic phase;
 - Stage-10.2 removal of Stage-9 pavement;
 - Stage-10.2 periodic asset counts;
-- R65 hidden foot-contact surfaces;
+- localized rail-pad contact-surface omission while preserving the R65 underside;
 - zero exact duplicate faces in permanent-way geometry.
 
 Dedicated stress gate:

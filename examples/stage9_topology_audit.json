@@ -1,0 +1,33 @@
+{
+  "stage": 9,
+  "stage8": {
+    "allDuplicateGroups": 94,
+    "allDuplicateOccurrences": 188,
+    "pairBreakdown": {
+      "lining_segment | lining_segment": 30,
+      "prescribed_circumferential_joint | prescribed_circumferential_joint": 24,
+      "ancillary_pavement | ancillary_pavement": 4,
+      "ancillary_walkway | ancillary_walkway": 4,
+      "ancillary_rail | ancillary_rail": 8,
+      "ancillary_tube | ancillary_tube": 24
+    }
+  },
+  "stage9Source": {
+    "allDuplicateGroups": 30,
+    "allDuplicateOccurrences": 60,
+    "pairBreakdown": {
+      "lining_segment | lining_segment": 30
+    },
+    "productionInfrastructureDuplicateGroups": 0,
+    "prescribedOuterJointSolidsPresent": false
+  },
+  "stage9Finalized": {
+    "allDuplicateGroups": 0,
+    "allDuplicateOccurrences": 0,
+    "pairBreakdown": {},
+    "liningCapFacesRemoved": 1246,
+    "segmentBoundaryFacesRemoved": 60,
+    "segmentBoundaryCleanupTessellationIndependent": true
+  },
+  "result": "PASS"
+}

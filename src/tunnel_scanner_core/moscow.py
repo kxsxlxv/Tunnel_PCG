@@ -429,6 +429,15 @@ class MoscowContactRailProfile:
             raise ValueError(
                 "contact-rail cover fallback violates historical side clearance"
             )
+        if not math.isclose(
+            self.cover_lower_edge_above_contact_surface_m + self.cover_height_m,
+            self.cover_historical_vertical_envelope_m,
+            abs_tol=1e-12,
+        ):
+            raise ValueError(
+                "contact-rail cover fallback must preserve historical "
+                "working-surface-to-cover-top envelope"
+            )
 
 
 

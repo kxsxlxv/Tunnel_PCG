@@ -2,7 +2,7 @@
 
 > **Continuation / new-chat handoff:** read [`PROJECT_HANDOFF.md`](PROJECT_HANDOFF.md) first. It contains the full project state, resolved architecture decisions, Stage-9 production contract, Blender caveats, and the exact Stage-10 starting point.
 
-Current milestone: **Stage 10.3 — Moscow legacy contact rail on the Stage-10.2 permanent way**.
+Current milestone: **Stage 10.4 — Moscow 5.5/5.1 civil shell and raised walkway**.
 
 The project began as a geometry-side reconstruction of Yang et al. (2026), *Tunnel scanner: Geometry-informed synthetic point cloud generation and transfer learning for tunnel segmentation*. Stages 1–8 preserve that reference baseline. Stage 9 turns it into an independent production-oriented procedural asset generator intended for later real-time-engine use, including UNIGINE.
 
@@ -29,6 +29,8 @@ LiDAR synthesis is intentionally not the current priority.
                central drain, crossfall and water-release groove
     Stage 10.3 RK contact rail, legacy sleeper-mounted support chain,
                insulator envelope and explicitly tagged protective-cover fallback
+    Stage 10.4 smooth 5.5/5.1 Moscow civil shell, 1.0 m ring rhythm,
+               raised +0.200 m walkway and closed concrete/lining interface
 
 Detailed reconstruction/production assumptions are documented in STAGE*_REPORT.md.
 
@@ -185,49 +187,48 @@ This writes chunk JSON files plus a manifest containing global ring IDs, world o
         --rings 20 \
         --namespace stage9-smoke
 
-## Generate the current Stage 10.3 Moscow scene
+## Generate the current Stage 10.4 Moscow scene
 
     python examples/generate_stage10_production_tunnel.py \
+        --rings 20 \
+        --namespace stage10-4-smoke
+
+Stage 10.4 is the default. It retains the complete Stage-10.1..10.3 track and
+contact-rail stack, replaces the temporary Stage-9 lining with the researched
+smooth 5.5/5.1 m Moscow shell, and replaces the generic walkway with the
+source-backed +0.200 m raised walkway.
+
+Civil datums:
+
+    intrados radius                2.550 m
+    extrados radius                2.750 m
+    structural depth              0.200 m
+    lining axis profile z        +1.670 m
+    Moscow civil ring pitch       1.000 m
+    walkway top profile z        +0.200 m
+    walkway inner edge x         +1.660 m
+    walkway outer edge x          2.083650643 m documented
+                                  2.083650642502... m exact mesh
+
+The several-decimetre gap that was intentionally visible in Stage 10.2/10.3 is
+now closed. Both track concrete and the visible shell use the same physical
+5.1 m intrados. A comparable gap in a freshly generated Stage-10.4 scene is a
+regression.
+
+Exact N/C/K tubing ribs, bolts, key wedge and rebate geometry are still disabled
+rather than guessed. The 11-piece family rhythm remains reference metadata only.
+
+To reproduce Stage 10.3 explicitly:
+
+    python examples/generate_stage10_production_tunnel.py \
+        --domain-stage 10.3 \
         --rings 20 \
         --namespace stage10-3-smoke
 
-Stage 10.3 is the default. It retains the Stage-10.1 R65/gauge/UGR contract and
-the Stage-10.2 timber/KD-65/track-concrete geometry, then adds the legacy
-bottom-collection RK contact rail and its support chain.
+Stage 10.2 and Stage 10.1 remain available through the corresponding
+`--domain-stage` selector.
 
-Nominal contact-rail placement for the first preset is:
-
-    axis x                      -1.450 m profile
-    working surface z           +0.160 m profile
-    working surface z           -1.510 m production core
-
-The protective cover is an explicit era-mismatched preview fallback. Historical
-clearances/envelope are retained in metadata; the modern silhouette is not
-presented as historical CAD.
-
-To reproduce Stage 10.2 explicitly:
-
-    python examples/generate_stage10_production_tunnel.py \
-        --domain-stage 10.2 \
-        --rings 20 \
-        --namespace stage10-2-smoke
-
-To reproduce Stage 10.1:
-
-    python examples/generate_stage10_production_tunnel.py \
-        --domain-stage 10.1 \
-        --rings 20 \
-        --namespace stage10-1-smoke
-
-### Transitional lining gap
-
-`PROD_TRACK_CONCRETE` already closes to the researched Moscow 5.1 m physical
-intrados. The visible tubing/lining is still Stage-9 geometry until Stage 10.4.
-A several-decimetre gap (about 0.4 m in the current preview) between track
-concrete and visible tubings is therefore expected. Do not move the track
-datums or extend the concrete to the temporary Stage-9 shell.
-
-See STAGE10_3_REPORT.md.
+See STAGE10_4_REPORT.md.
 
 ## Blender 5.2 ID-property note
 
@@ -251,7 +252,7 @@ The Stage-9 verifier applies bolt Booleans, removes temporary cutters, strips hi
 
 See STAGE9_BLENDER_SMOKE_TEST.md.
 
-For Stage 10.1, 10.2 or 10.3 use the stage-aware verifier:
+For Stage 10.1 through 10.4 use the stage-aware verifier:
 
     blender --background --python scripts/blender_verify_stage10.py -- \
         examples/stage10_production_scene.json \
@@ -259,11 +260,12 @@ For Stage 10.1, 10.2 or 10.3 use the stage-aware verifier:
         --save-blend examples/stage10_production_scene.blend
 
 It validates the R65/UGR/gauge contract for all Stage-10 modes. Stage 10.2 adds
-track-concrete and KD-65 checks. Stage 10.3 additionally validates the
-contact-rail placement, protective-cover fallback markers and periodic support
-chain.
+track-concrete and KD-65 checks. Stage 10.3 adds the contact-rail placement,
+protective-cover fallback markers and periodic support chain. Stage 10.4 also
+checks replacement of the Stage-9 shell, 2.55/2.75 m civil radii, 1.0 m Moscow
+ring rhythm, the raised walkway and the closed concrete/lining interface.
 
-See STAGE10_3_BLENDER_SMOKE_TEST.md.
+See STAGE10_4_BLENDER_SMOKE_TEST.md.
 
 ## Tests and CI
 
@@ -289,7 +291,8 @@ CI also runs:
     scripts/verify_stage10_1.py
     scripts/verify_stage10_2.py
     scripts/verify_stage10_3.py
-    examples/generate_stage10_production_tunnel.py  (10.1 + 10.2 + 10.3 CLI smoke)
+    scripts/verify_stage10_4.py
+    examples/generate_stage10_production_tunnel.py  (10.1 + 10.2 + 10.3 + 10.4 CLI smoke)
 
 Latest Stage-9 production verification:
 
@@ -310,14 +313,20 @@ Stage 10.2 is closed: timber sleepers at 1680/km, KD-65 support chain,
 continuous track concrete, 0.900 x 0.530 m central drainage trough, 3% crossfall
 and 50 x 25 mm water-release groove.
 
-Stage 10.3 is implemented: bottom-collection RK contact rail at the researched
+Stage 10.3 is closed: bottom-collection RK contact rail at the researched
 690 mm / +160 mm placement, an independent sleeper-snapped support chain,
 initial bracket/insulator geometry and a strict era-mismatched protective-cover
 fallback.
 
-The next bounded implementation stage is **Stage 10.4 — Moscow 5.5/5.1 civil
-shell and raised walkway**. This stage will also remove the current transitional
-gap between the Stage-10.2 track concrete and the still-visible Stage-9 shell.
+Stage 10.4 is implemented: the temporary Stage-9 civil shell/walkway are
+replaced by the smooth concentric Moscow 5.5/5.1 m shell, independent 1.0 m
+civil-ring rhythm and source-backed +0.200 m raised walkway. This closes the
+transitional several-decimetre gap between Stage-10.2 track concrete and the
+previous Stage-9 shell.
+
+The next bounded stage is **Stage 10.5 — production integration / final initial
+Moscow archetype validation**, including combined topology/chunking/runtime
+verification and preparation for the future UNIGINE exporter.
 
 Exact series-specific cast-iron N/C/K ribs/bolts remain intentionally unresolved
 rather than fabricated.

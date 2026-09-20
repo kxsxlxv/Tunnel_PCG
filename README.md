@@ -2,7 +2,7 @@
 
 > **Continuation / new-chat handoff:** read [`PROJECT_HANDOFF.md`](PROJECT_HANDOFF.md) first. It contains the full project state, resolved architecture decisions, Stage-9 production contract, Blender caveats, and the exact Stage-10 starting point.
 
-Current milestone: **Stage 10.1 — Moscow profile/data contract + production R65/gauge/UGR integration**.
+Current milestone: **Stage 10.2 — Moscow timber/KD-65 permanent way, track concrete and drainage**.
 
 The project began as a geometry-side reconstruction of Yang et al. (2026), *Tunnel scanner: Geometry-informed synthetic point cloud generation and transfer learning for tunnel segmentation*. Stages 1–8 preserve that reference baseline. Stage 9 turns it into an independent production-oriented procedural asset generator intended for later real-time-engine use, including UNIGINE.
 
@@ -25,6 +25,8 @@ LiDAR synthesis is intentionally not the current priority.
                low-poly rail profile
     Stage 10.1 Moscow profile/data model, explicit UGR/frame mapping,
                production R65 and working-face gauge placement
+    Stage 10.2 timber sleepers, KD-65 support chain, track concrete,
+               central drain, crossfall and water-release groove
 
 Detailed reconstruction/production assumptions are documented in STAGE*_REPORT.md.
 
@@ -181,13 +183,24 @@ This writes chunk JSON files plus a manifest containing global ring IDs, world o
         --rings 20 \
         --namespace stage9-smoke
 
-## Generate a Stage 10.1 Moscow/R65 scene
+## Generate the current Stage 10.2 Moscow scene
 
     python examples/generate_stage10_production_tunnel.py \
         --rings 20 \
-        --namespace stage10-smoke
+        --namespace stage10-2-smoke
 
-The current Stage 10 generator intentionally replaces only the two running rails with the Stage 10.1 Moscow/R65 contract. Permanent way, contact rail, and Moscow civil shell geometry remain deferred to Stage 10.2–10.4 and are explicitly marked as such in scene metadata.
+Stage 10.2 is the default. It keeps the Stage-10.1 R65/gauge/UGR contract and
+adds timber sleepers, KD-65 support geometry and the Moscow track-concrete /
+drainage section. The old Stage-8/9 pavement is removed.
+
+To reproduce the Stage-10.1 rails-only compatibility scene:
+
+    python examples/generate_stage10_production_tunnel.py \
+        --domain-stage 10.1 \
+        --rings 20 \
+        --namespace stage10-1-smoke
+
+See STAGE10_2_REPORT.md.
 
 ## Blender 5.2 ID-property note
 
@@ -211,16 +224,16 @@ The Stage-9 verifier applies bolt Booleans, removes temporary cutters, strips hi
 
 See STAGE9_BLENDER_SMOKE_TEST.md.
 
-For the Stage 10.1 scene use the Stage-10-aware verifier:
+For Stage 10.1 or Stage 10.2 use the stage-aware verifier:
 
     blender --background --python scripts/blender_verify_stage10.py -- \
         examples/stage10_production_scene.json \
         --report examples/blender_stage10_runtime_report.json \
         --save-blend examples/stage10_production_scene.blend
 
-It validates R65 dimensions/profile metadata, the local UGR datum, the 13 mm gauge measurement plane, exact 1.520 m working-face gauge, persistent IDs, and the existing Blender Boolean/topology finalization path.
+It validates the R65/UGR/gauge contract for both stages. For Stage 10.2 it additionally validates track-concrete/drainage metadata, sleeper/KD-65 asset counts and dimensions, support-contact policy, persistent IDs, and the existing Blender Boolean/topology finalization path.
 
-See STAGE10_1_BLENDER_SMOKE_TEST.md.
+See STAGE10_2_BLENDER_SMOKE_TEST.md. Stage-10.1 compatibility instructions remain in STAGE10_1_BLENDER_SMOKE_TEST.md.
 
 ## Tests and CI
 
@@ -234,7 +247,7 @@ Run:
 
 Current automated baseline:
 
-    158 tests passed
+    164 tests passed
 
 CI also runs:
 
@@ -244,7 +257,8 @@ CI also runs:
     scripts/verify_stage9_stress.py
     scripts/verify_stage9_trimesh.py
     scripts/verify_stage10_1.py
-    examples/generate_stage10_production_tunnel.py  (CLI smoke)
+    scripts/verify_stage10_2.py
+    examples/generate_stage10_production_tunnel.py  (10.1 + 10.2 CLI smoke)
 
 Latest Stage-9 production verification:
 
@@ -255,6 +269,18 @@ Latest Stage-9 production verification:
 
 ## Stage 10
 
-Stage 10 is a domain-profile change rather than another Tunnel Scanner reconstruction step. Stage 10.1 is implemented and keeps the Stage-9 production architecture while adding the source-backed Moscow data contract and R65/gauge/UGR placement.
+Stage 10 is a domain-profile change rather than another Tunnel Scanner
+reconstruction step.
 
-The next bounded implementation stage is Stage 10.2: timber sleepers, KD-65 support chain, track concrete, central drain and crossfall. Contact rail and Moscow civil shell remain Stage 10.3 and 10.4 respectively. Exact cast-iron N/C/K ribs/bolts remain intentionally unresolved rather than guessed.
+Stage 10.1 is closed: source-backed Moscow profile data, explicit UGR/frame
+mapping, R65 and working-face gauge placement.
+
+Stage 10.2 is implemented: timber sleepers at 1680/km, KD-65 support chain,
+continuous track concrete, 0.900 x 0.530 m central drainage trough, 3% crossfall
+and 50 x 25 mm water-release groove. Missing visual fastening details are
+explicit machine-profile fallbacks rather than hidden guesses.
+
+The next bounded implementation stage is **Stage 10.3 — contact rail**.
+The actual Moscow 5.5/5.1 civil shell and raised walkway remain Stage 10.4.
+Exact series-specific cast-iron N/C/K ribs/bolts remain intentionally unresolved
+rather than fabricated.

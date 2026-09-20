@@ -409,18 +409,29 @@ def build_stage10_3_local_support_meshes(
         0.0,
         profile.sleeper.top_z_m,
     )[1]
-    screw_meshes = tuple(
-        _cylinder_z_mesh(
+    screw_meshes = []
+    for dy in (-0.032, 0.0, 0.032):
+        shaft = _cylinder_z_mesh(
             center_x_m=screw_x,
             center_y_m=dy,
-            radius_m=0.012,
-            z0_m=sleeper_top_core - 0.150,
-            z1_m=sleeper_top_core + 0.008,
+            radius_m=0.5 * profile.fastening.track_screw_diameter_m,
+            z0_m=sleeper_top_core - profile.fastening.track_screw_length_m,
+            z1_m=sleeper_top_core,
             sides=12,
         )
-        for dy in (-0.032, 0.0, 0.032)
-    )
-    screws = _combine_meshes(screw_meshes)
+        head = _cylinder_z_mesh(
+            center_x_m=screw_x,
+            center_y_m=dy,
+            radius_m=profile.fastening.track_screw_head_radius_m,
+            z0_m=sleeper_top_core,
+            z1_m=(
+                sleeper_top_core
+                + profile.fastening.track_screw_head_height_m
+            ),
+            sides=12,
+        )
+        screw_meshes.extend((shaft, head))
+    screws = _combine_meshes(tuple(screw_meshes))
 
     clip_center_x = sign * (rail_outer_u - 0.010)
     clip_z0 = z_support_core - 0.030
@@ -473,8 +484,12 @@ def build_stage10_3_local_support_meshes(
             faces=screws[1],
             properties={
                 "quantity": 3,
-                "diameterM": 0.024,
-                "lengthM": 0.150,
+                "diameterM": profile.fastening.track_screw_diameter_m,
+                "shaftLengthM": profile.fastening.track_screw_length_m,
+                "headRadiusM": profile.fastening.track_screw_head_radius_m,
+                "headHeightM": profile.fastening.track_screw_head_height_m,
+                "headGeometry": profile.fastening.track_screw_head_mode,
+                "embeddedFastenerVolumeOverlap": True,
                 "legacyAttachmentRule": "three_track_screws_into_timber_sleeper",
             },
         ),

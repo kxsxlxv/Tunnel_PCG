@@ -22,6 +22,12 @@ Expected verifier result:
     "errors": []
     "result": "PASS"
 
+## Large persistent IDs
+
+With Blender 5.2.x, Stage-9 63-bit identity properties may appear in the Custom Properties UI as decimal strings rather than numeric fields. This is intentional and lossless. The runtime verifier converts them with `int(...)`.
+
+If Blender reports `Python int too large to convert to C int`, update to the Stage-9K adapter or newer before continuing.
+
 ## What to inspect visually
 
 ### Rails

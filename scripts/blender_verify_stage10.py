@@ -1,9 +1,10 @@
 """Real-Blender verifier for the current Stage-10 production scene.
 
-The verifier is stage-aware for Moscow Stage 10.1 through 10.4. Stage 10.4
-replaces the temporary Stage-9 civil shell/walkway with the researched Moscow
-5.5/5.1 smooth concentric shell and raised walkway while preserving the
-Stage-10.1..10.3 track/contact-rail contracts.
+The verifier is stage-aware for Moscow Stage 10.1 through 10.5. Stage 10.5
+keeps the Stage-10.4 civil shell/walkway and makes the modern Moscow service
+preset the default: LVT-M/APC-4 permanent way, segmented low protective cover,
+dedicated contact-rail supports, and R2K11 wall cable racks. The Stage-10.5
+legacy preset remains selectable for timber/KD-65 compatibility.
 """
 
 from __future__ import annotations
@@ -70,7 +71,7 @@ def main() -> None:
     errors: list[str] = []
     production_meta = package.metadata.get("productionGeometry", {})
     domain_stage = str(production_meta.get("domainStage", ""))
-    if domain_stage not in {"10.1", "10.2", "10.3", "10.4"}:
+    if domain_stage not in {"10.1", "10.2", "10.3", "10.4", "10.5"}:
         errors.append(
             f"unsupported/missing Moscow domainStage: {domain_stage!r}"
         )
@@ -86,20 +87,31 @@ def main() -> None:
         != "stage10_1_r65_gost_r51685_2022"
     ):
         errors.append("production metadata does not select Stage 10.1 R65")
+    service_preset = str(production_meta.get("servicePreset", "legacy"))
+    modern_10_5 = domain_stage == "10.5" and service_preset == "modern"
+    legacy_10_5 = domain_stage == "10.5" and service_preset == "legacy"
     expected_status = {
         "permanentWayStatus": (
-            "implemented_stage10_2_initial_geometry"
-            if domain_stage in {"10.2", "10.3", "10.4"}
-            else "deferred_to_stage10_2"
+            "implemented_stage10_5_modern_LVT_M_APC4"
+            if modern_10_5
+            else (
+                "implemented_stage10_2_initial_geometry"
+                if domain_stage in {"10.2", "10.3", "10.4"} or legacy_10_5
+                else "deferred_to_stage10_2"
+            )
         ),
         "contactRailStatus": (
-            "implemented_stage10_3_initial_geometry_with_explicit_fallbacks"
-            if domain_stage in {"10.3", "10.4"}
-            else "deferred_to_stage10_3"
+            "implemented_stage10_5_modern_segmented_cover_and_dedicated_support"
+            if modern_10_5
+            else (
+                "implemented_stage10_3_initial_geometry_with_explicit_fallbacks"
+                if domain_stage in {"10.3", "10.4"} or legacy_10_5
+                else "deferred_to_stage10_3"
+            )
         ),
         "civilShellStatus": (
             "implemented_stage10_4_smooth_concentric_shell"
-            if domain_stage == "10.4"
+            if domain_stage in {"10.4", "10.5"}
             else "deferred_to_stage10_4"
         ),
     }
@@ -115,13 +127,47 @@ def main() -> None:
     if any(obj.object_type.startswith("ancillary_") for obj in package.objects):
         errors.append("ring-local Stage-8 ancillary objects remain in production scene")
 
-    if domain_stage in {"10.2", "10.3", "10.4"}:
+    if modern_10_5:
+        lvt_count = int(production_meta.get("modernLVTSupportCount", 0))
+        support_count = int(production_meta.get("contactRailSupportCount", 0))
+        civil_count = int(production_meta.get("moscowCivilRingCount", 0))
+        expected_counts = {
+            "production_pavement": 0,
+            "production_track_concrete": 1,
+            "production_walkway": 0,
+            "production_moscow_walkway": 1,
+            "production_rail": 2,
+            "production_tube": 0,
+            "production_sleeper": 0,
+            "production_baseplate": 0,
+            "production_lvt_block": lvt_count,
+            "production_lvt_rubber_boot": lvt_count,
+            "production_apc4_rail_pad": lvt_count,
+            "production_apc4_fastening": lvt_count,
+            "production_contact_rail": 1,
+            "production_contact_rail_cover": 0,
+            "production_contact_rail_cover_span": int(
+                production_meta.get("contactRailCoverSpanCount", 0)
+            ),
+            "production_contact_rail_support_block": support_count,
+            "production_contact_rail_bracket": support_count,
+            "production_contact_rail_insulator": support_count,
+            "production_contact_rail_fastening_unit": support_count,
+            "production_contact_rail_attachment_dowels": support_count,
+            "production_contact_rail_support_hood": support_count,
+            "production_service_cable": 22,
+            "production_cable_rack_r2k11": int(
+                production_meta.get("serviceCableRackCount", 0)
+            ),
+            "production_moscow_civil_shell_ring": civil_count,
+        }
+    elif domain_stage in {"10.2", "10.3", "10.4"} or legacy_10_5:
         sleeper_count = int(production_meta.get("sleeperCount", 0))
         expected_counts = {
             "production_pavement": 0,
             "production_track_concrete": 1,
-            "production_walkway": 0 if domain_stage == "10.4" else 1,
-            "production_moscow_walkway": 1 if domain_stage == "10.4" else 0,
+            "production_walkway": 0 if domain_stage in {"10.4", "10.5"} else 1,
+            "production_moscow_walkway": 1 if domain_stage in {"10.4", "10.5"} else 0,
             "production_rail": 2,
             "production_tube": 6,
             "production_sleeper": sleeper_count,
@@ -131,7 +177,7 @@ def main() -> None:
             "production_track_screw": sleeper_count,
             "production_clamp_hardware": sleeper_count,
         }
-        if domain_stage in {"10.3", "10.4"}:
+        if domain_stage in {"10.3", "10.4"} or legacy_10_5:
             support_count = int(
                 production_meta.get("contactRailSupportCount", 0)
             )
@@ -145,7 +191,7 @@ def main() -> None:
                     "production_contact_rail_fastening_unit": support_count,
                 }
             )
-        if domain_stage == "10.4":
+        if domain_stage in {"10.4", "10.5"}:
             expected_counts["production_moscow_civil_shell_ring"] = int(
                 production_meta.get("moscowCivilRingCount", 0)
             )
@@ -215,7 +261,7 @@ def main() -> None:
             "inner_working_faces_at_ugr_minus_13mm"
         ):
             errors.append(f"{rail.name}: wrong gauge placement rule")
-        if domain_stage in {"10.2", "10.3", "10.4"}:
+        if domain_stage in {"10.2", "10.3", "10.4", "10.5"}:
             if bool(props.get("railFootBottomContactFaceOmitted", True)):
                 errors.append(
                     f"{rail.name}: continuous R65 underside was incorrectly omitted"
@@ -261,7 +307,7 @@ def main() -> None:
                 f"{profile.track.gauge_m!r}"
             )
 
-    if domain_stage in {"10.2", "10.3", "10.4"}:
+    if domain_stage in {"10.2", "10.3", "10.4", "10.5"}:
         concrete = [
             o for o in production
             if o.object_type == "production_track_concrete"
@@ -303,7 +349,9 @@ def main() -> None:
             if not _close(bp.get("baseplatePlanLongitudinalM", -1), 0.165):
                 errors.append(f"{baseplate.name}: wrong KD-65 longitudinal size")
 
-    if domain_stage in {"10.2", "10.3", "10.4"}:
+    if (
+        domain_stage in {"10.2", "10.3", "10.4"} or legacy_10_5
+    ):
         for pad in [
             o for o in production
             if o.object_type == "production_rail_pad"
@@ -313,7 +361,7 @@ def main() -> None:
             ):
                 errors.append(f"{pad.name}: rail-foot contact span retained")
 
-    if domain_stage in {"10.3", "10.4"}:
+    if domain_stage in {"10.3", "10.4"} or legacy_10_5:
         contact = [
             o for o in production
             if o.object_type == "production_contact_rail"
@@ -391,28 +439,83 @@ def main() -> None:
                     f"{insulator.name}: porcelain fallback marker missing"
                 )
 
-    if domain_stage == "10.4":
+    if modern_10_5:
+        if production_meta.get("contactRailSupportSeparateFromRunningSupport") is not True:
+            errors.append("Stage 10.5 contact supports overlap running-support contract")
+        if production_meta.get("contactRailCoverEraMismatch") is not False:
+            errors.append("Stage 10.5 modern cover incorrectly carries eraMismatch")
+        if production_meta.get("serviceCableRackFamily") != "R2K11":
+            errors.append("Stage 10.5 cable-rack family is not R2K11")
+        if int(production_meta.get("serviceCableRackHornCount", -1)) != 11:
+            errors.append("Stage 10.5 R2K11 horn count is not 11")
+        if production_meta.get("servicePipeStatus") != "unresolved_not_generated":
+            errors.append("Stage 10.5 unresolved service pipes should not be generated")
+
+        for block in [
+            o for o in production if o.object_type == "production_lvt_block"
+        ]:
+            bp = block.custom_properties
+            if bp.get("bridgesCentralDrain") is not False:
+                errors.append(f"{block.name}: LVT block bridges central drain")
+        for pad in [
+            o for o in production if o.object_type == "production_apc4_rail_pad"
+        ]:
+            pp = pad.custom_properties
+            if not _close(pp.get("padThicknessM", -1), 0.014):
+                errors.append(f"{pad.name}: wrong APC-4 rail-pad thickness")
+        for bracket in [
+            o for o in production
+            if o.object_type == "production_contact_rail_bracket"
+        ]:
+            bp = bracket.custom_properties
+            if bp.get("legacySleeperAttachment") is not False:
+                errors.append(f"{bracket.name}: modern bracket still marked sleeper-mounted")
+            if bp.get("dedicatedConcreteSupportBlock") is not True:
+                errors.append(f"{bracket.name}: modern bracket lacks dedicated support block")
+        for hood in [
+            o for o in production
+            if o.object_type == "production_contact_rail_support_hood"
+        ]:
+            hp = hood.custom_properties
+            if hp.get("mainCoverInterruptedHere") is not True:
+                errors.append(f"{hood.name}: support hood does not mark cover interruption")
+        cover_spans = [
+            o for o in production
+            if o.object_type == "production_contact_rail_cover_span"
+        ]
+        for span in cover_spans:
+            sp = span.custom_properties
+            if sp.get("coverProfileMode") != "modern_rounded_polymer_wrap_v1":
+                errors.append(f"{span.name}: wrong modern cover profile mode")
+            if not _close(sp.get("coverHeightM", -1), 0.111):
+                errors.append(f"{span.name}: wrong modern cover height")
+            if not _close(sp.get("coverTopWidthM", -1), 0.092):
+                errors.append(f"{span.name}: wrong modern cover top width")
+            if not _close(sp.get("coverBaseWidthM", -1), 0.114):
+                errors.append(f"{span.name}: wrong modern cover base width")
+
+    if domain_stage in {"10.4", "10.5"}:
         if any(o.object_type == "lining_segment" for o in package.objects):
-            errors.append("Stage 10.4 retained Stage-9 lining_segment objects")
+            errors.append("Stage 10.4+ retained Stage-9 lining_segment objects")
         if any(o.object_type == "bolt_head" for o in package.objects):
-            errors.append("Stage 10.4 retained Stage-9 lining bolt heads")
+            errors.append("Stage 10.4+ retained Stage-9 lining bolt heads")
         if any(o.object_type == "bolt_pocket_cutter" for o in package.objects):
-            errors.append("Stage 10.4 retained Stage-9 lining bolt cutters")
+            errors.append("Stage 10.4+ retained Stage-9 lining bolt cutters")
         if production_meta.get("walkwayStatus") != (
             "implemented_stage10_4_source_backed_geometry"
         ):
-            errors.append("Stage 10.4 walkway status mismatch")
+            errors.append("Stage 10.4+ walkway status mismatch")
         if production_meta.get("transitionalCivilGapStatus") != (
             "closed_by_stage10_4_moscow_shell"
         ):
-            errors.append("Stage 10.4 civil-gap status is not closed")
+            errors.append("Stage 10.4+ civil-gap status is not closed")
 
         civil = [
             o for o in production
             if o.object_type == "production_moscow_civil_shell_ring"
         ]
         if not civil:
-            errors.append("Stage 10.4 generated no Moscow civil rings")
+            errors.append("Stage 10.4+ generated no Moscow civil rings")
         for ring in civil:
             rp = ring.custom_properties
             civil_checks = {
@@ -478,7 +581,7 @@ def main() -> None:
                 )
 
     ring_count = int(package.metadata.get("ringCount", 0))
-    if domain_stage == "10.4":
+    if domain_stage in {"10.4", "10.5"}:
         if result.lining_cap_faces_removed != 0:
             errors.append("Stage 10.4 unexpectedly stripped legacy lining caps")
         if result.lining_interface_faces_removed != 0:
@@ -491,6 +594,7 @@ def main() -> None:
 
     report = {
         "stage": domain_stage,
+        "servicePreset": service_preset,
         "moscowProfileID": profile.profile_id,
         "moscowProfileSHA256": profile.provenance.canonical_sha256,
         "ringCount": ring_count,
@@ -512,12 +616,25 @@ def main() -> None:
         "liningCapFacesRemoved": result.lining_cap_faces_removed,
         "liningInterfaceFacesRemoved": result.lining_interface_faces_removed,
         "permanentWayStatus": production_meta.get("permanentWayStatus"),
+        "permanentWayPresetID": production_meta.get("permanentWayPresetID"),
+        "modernLVTSupportCount": production_meta.get("modernLVTSupportCount"),
+        "modernLVTSupportPitchM": production_meta.get("modernLVTSupportPitchM"),
         "trackConcreteStatus": production_meta.get("trackConcreteStatus"),
         "sleeperCount": production_meta.get("sleeperCount"),
         "sleeperPitchM": production_meta.get("sleeperPitchM"),
         "contactRailStatus": production_meta.get("contactRailStatus"),
+        "contactRailPresetID": production_meta.get("contactRailPresetID"),
         "contactRailSupportCount": production_meta.get(
             "contactRailSupportCount"
+        ),
+        "contactRailCoverSpanCount": production_meta.get(
+            "contactRailCoverSpanCount"
+        ),
+        "contactRailSupportHoodCount": production_meta.get(
+            "contactRailSupportHoodCount"
+        ),
+        "contactRailSupportSeparateFromRunningSupport": production_meta.get(
+            "contactRailSupportSeparateFromRunningSupport"
         ),
         "contactRailAxisProfileXM": production_meta.get(
             "contactRailAxisProfileXM"
@@ -529,6 +646,10 @@ def main() -> None:
             "contactRailCoverEraMismatch"
         ),
         "civilShellStatus": production_meta.get("civilShellStatus"),
+        "serviceCableCount": production_meta.get("serviceCableCount"),
+        "serviceCableRackCount": production_meta.get("serviceCableRackCount"),
+        "serviceCableRackFamily": production_meta.get("serviceCableRackFamily"),
+        "servicePipeStatus": production_meta.get("servicePipeStatus"),
         "walkwayStatus": production_meta.get("walkwayStatus"),
         "moscowCivilRingCount": production_meta.get("moscowCivilRingCount"),
         "moscowCivilRingPitchM": production_meta.get("moscowCivilRingPitchM"),

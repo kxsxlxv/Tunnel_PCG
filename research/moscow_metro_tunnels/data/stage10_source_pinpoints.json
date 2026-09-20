@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.1",
+  "schema_version": "1.2",
   "research_date": "2026-09-20",
   "sources": [
     {
@@ -389,6 +389,53 @@
         "adjustment of the legacy bracket position is made at the sleeper attachment"
       ],
       "confidence": "B_secondary_patent_description_of_1984_metro_instruction"
+    },
+    {
+      "id": "P10-GOST51685-2022",
+      "title": "ГОСТ Р 51685-2022 «Рельсы железнодорожные. Общие технические условия»",
+      "basis": "normative_primary",
+      "url": "https://protect.gost.ru/gost/details/8086c377-c8fe-49f0-9569-7e5c334554c3",
+      "locator": {
+        "section": "principal dimensions and Appendix Г profile construction",
+        "figure": "Г.2 R65 profile"
+      },
+      "supports": [
+        "R65 height 180.00 mm",
+        "R65 nominal head width 74.59 mm",
+        "R65 base width 150.00 mm",
+        "R65 web thickness 18.00 mm",
+        "R65 tangent-chain profile construction constants/radii"
+      ],
+      "confidence": "A"
+    },
+    {
+      "id": "P10-METRO-GAUGE-13MM",
+      "title": "Горбенков А.М., Денисов А.Т. «Техническая эксплуатация Петербургского метрополитена». 1998",
+      "basis": "technical_secondary_metro_operating_reference",
+      "url": "https://ru.djvu.online/file/gcachkEssomfj",
+      "locator": {
+        "printed_page": 59,
+        "section": "rail track / gauge measurement definition"
+      },
+      "supports": [
+        "track gauge is measured between inner working faces of rail heads",
+        "measurement point is 13 mm below the rail-head running surface"
+      ],
+      "confidence": "C"
+    },
+    {
+      "id": "P10-RZD-GAUGE-13MM",
+      "title": "Инструкция по текущему содержанию железнодорожного пути",
+      "basis": "current_railway_operating_definition_used_as_cross-check",
+      "url": "https://base.garant.ru/73889071/",
+      "locator": {
+        "section": "5.6"
+      },
+      "supports": [
+        "track gauge is the minimum distance between side working faces of rail heads",
+        "measurement point is 13 mm below the rail-head running surface"
+      ],
+      "confidence": "B_non_metro_cross_check"
     }
   ]
 }

@@ -401,7 +401,33 @@ Latest result:
     failures: 0
     PASS
 
-## 17. Blender path
+## 17. Blender scalar integer compatibility
+
+Stage-9 stable identities use positive 63-bit integers in the engine-neutral core and JSON schema.
+
+Blender 5.2.x can route scalar custom-property integer assignment through a signed C int. Direct assignment of a large Stage-9 ID can therefore raise:
+
+    OverflowError: Python int too large to convert to C int
+
+This is handled only in the Blender adapter. Values inside the signed 32-bit range remain native Blender integers; larger integer values are written losslessly as decimal strings under the same property keys.
+
+Examples include:
+
+    instanceID
+    persistentInstanceID
+    tunnelInstanceID
+    infrastructureID
+    sourceInstanceID
+
+Consumers inside Blender should parse identity fields with `int(value)`. No engine-neutral IDs are truncated or renumbered.
+
+Regression coverage includes the value:
+
+    2^63 - 1
+
+and a production ScenePackage imported through the Blender adapter.
+
+## 18. Blender path
 
 The Stage-9 Blender verifier imports the production ScenePackage and:
 
@@ -429,7 +455,7 @@ For a long Blender scene:
         --chunks-only \
         --localize-chunks-for-blender
 
-## 18. Production limitations intentionally deferred to Stage 10
+## 19. Production limitations intentionally deferred to Stage 10
 
 Stage 9 does not introduce Moscow Metro engineering standards.
 
@@ -446,7 +472,7 @@ In particular it does not yet define:
 
 Those are domain-profile changes and belong to Stage 10.
 
-## 19. Stage-9 completion criteria
+## 20. Stage-9 completion criteria
 
 Stage 9 is complete when:
 

@@ -59,9 +59,16 @@ The report also records:
 
 ## Important interpretation
 
-UGR z=0 is a local engineering datum. With a perturbed Stage-9 alignment the
-world-space rail top follows station.offset_z_m; the verifier therefore does not
-assert that world Z is globally zero.
+UGR z=0 is the **profile** engineering datum. It is translated into the existing production core, whose local Z origin is the lining axis:
+
+    profile UGR z = 0.000 m  -> core UGR z = -1.670 m
+    profile R65 base -0.180  -> core R65 base = -1.850 m
+
+With a perturbed Stage-9 alignment the world-space rail top is therefore:
+
+    world rail top z = -1.670 m + station.offset_z_m
+
+The verifier explicitly checks this profile/core distinction. It must not assert that either core-local or world-space rail top is z=0.
 
 The current scene still contains Stage-8/9 transitional pavement, walkway and
 service tubes. Their metadata is deliberately marked transitional until Stage

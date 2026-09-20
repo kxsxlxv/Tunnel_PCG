@@ -1127,7 +1127,7 @@ Regression:
 
     pytest
 
-The current established production baseline is **179 tests passed** plus Stage-8/9 stress/topology checks and dedicated Stage-10.1–10.4 production gates.
+The current established production baseline is **192 tests passed** plus Stage-8/9 stress/topology checks and dedicated Stage-10.1–10.5 production gates.
 
 Research reference implementation has its own tests under:
 
@@ -1765,3 +1765,276 @@ STAGE10_4_BLENDER_SMOKE_TEST.md
 
 Do not open exact series-accurate tubing detail unless a defensible
 manufacturing drawing resolves the remaining N/C/K geometry.
+
+
+---
+
+## Stage 10.5 modern-service implementation update (2026-09-21)
+
+Stage 10.5 is now the current default Moscow production mode.
+
+### Preset selection
+
+Default:
+
+```text
+MODERN_MOSCOW_LVT_SERVICES_2020S
+```
+
+Preserved selectable legacy alternative:
+
+```text
+LEGACY_R65_TIMBER_KD65_2001_REFERENCE
+```
+
+The legacy timber/KD-65 implementation was **not removed**.
+
+Production selection:
+
+```text
+python examples/generate_stage10_production_tunnel.py \
+  --rings 20 \
+  --namespace stage10-5-modern
+
+python examples/generate_stage10_production_tunnel.py \
+  --domain-stage 10.5 \
+  --service-preset legacy \
+  --rings 20 \
+  --namespace stage10-5-legacy
+```
+
+### Modern permanent way
+
+Current default:
+
+```text
+family                       LVT-M
+running rail                 R65
+fastening                    APC-4
+support pitch                0.600 m
+block transverse length      0.640 m
+block top width              0.180 m
+block height                 0.165 m
+block base widths            0.197 / 0.178 m
+rail seat cant               1:20
+rail pad thickness           0.014 m
+```
+
+Each running rail has an independent half-sleeper block. No block bridges the
+0.900 m central drainage trough.
+
+Exact APC-4 small hardware solids remain fallback previews and are explicitly
+tagged as such.
+
+### Modern contact rail
+
+The running contact rail retains the established engineering datum:
+
+```text
+axis profile x               -1.450 m
+working surface profile z    +0.160 m
+reference offset              0.690 m
+RK height                     0.118 m
+```
+
+The modern protective cover is no longer the Stage-10.3 tall rectangular
+continuous fallback.
+
+Modern cover envelope:
+
+```text
+top width                     0.092 m
+base width                    0.114 m
+height                        0.111 m
+side wall                     0.002 m
+top wall                      0.003 m
+```
+
+Geometry mode:
+
+```text
+rounded_wrap_profile_from_exact_envelope
+```
+
+The main cover is segmented. It is interrupted around support zones and each
+support zone has a separate local protective hood.
+
+Modern contact support events use dedicated concrete support blocks rather than
+sharing or intersecting running-rail LVT supports.
+
+The target support chain remains 5.0 m inside the researched 4.5-5.4 m interval
+family, but the event phase is snapped to midpoints between running-support
+events rather than to timber sleepers.
+
+### R2K11 cable infrastructure
+
+The modern preset removes the old six Stage-8 generic tube/service previews.
+
+Implemented R2K11 principal dimensions:
+
+```text
+horn count                    11
+overall arc length            1.440 m
+upright longitudinal width    0.048 m
+upright thickness             0.003 m
+horn thickness                0.004 m
+horn radius                   0.0325 m
+derived horn pitch            0.125 m
+max cable diameter            0.065 m
+```
+
+Placement:
+
+```text
+one rack per side per 1.0 m Moscow civil ring
+```
+
+The v1 preview uses one representative cable on each of the 11 rack levels per
+side, so the scene has 22 continuous representative service cables.
+
+The rack has two cable places per level, but exact project cable occupancy and
+route schedules remain unresolved.
+
+### Current water main
+
+Stage 10.5 now includes the current tunnel water-main rule:
+
+```text
+minimum nominal size          DN80
+quantity                      1 per single-track tunnel
+position rule                 above UGR
+normal side                   weak-current side
+```
+
+Preview-only placement values:
+
+```text
+visual OD proxy               0.089 m
+profile center z              +0.700 m
+shell clearance inward        0.040 m
+```
+
+The exact project pipe schedule, wall thickness and mounting coordinates remain
+unresolved and are tagged as fallbacks.
+
+### Polygon-count optimization
+
+Stage 10.5 enables exact collinear alignment compaction for continuous sweeps:
+
+```text
+continuousSweepAlignmentCompaction = exact_zero_error_collinear
+```
+
+It removes only mathematically redundant Stage-9 ring-boundary midpoint
+stations. It does not approximate the alignment.
+
+The R65 profile remains 118 vertices.
+
+Four-ring CI smoke:
+
+```text
+rail source stations          9
+rail sweep stations           4
+```
+
+This directly targets the user's 2.7 km observation where each R65 rail was
+approaching one million polygons. The longitudinal rail sweep section count is
+substantially reduced without changing the rail surface.
+
+### Civil geometry remains unchanged
+
+The Stage-10.4 civil contract is preserved:
+
+```text
+intrados radius               2.550 m
+internal diameter             5.100 m
+extrados radius               2.750 m
+ring pitch                    1.000 m
+```
+
+The approximately 5.1 m Blender internal diameter is therefore intentional for
+the selected classic 5.5/5.1 family.
+
+### Verification
+
+Current exact CI baseline:
+
+```text
+192 tests passed
+Stage 10.1 CLI compatibility smoke          PASS
+Stage 10.2 CLI compatibility smoke          PASS
+Stage 10.3 CLI compatibility smoke          PASS
+Stage 10.4 CLI compatibility smoke          PASS
+Stage 10.5 modern CLI smoke                 PASS
+Stage 10.5 legacy CLI smoke                 PASS
+Stage 8/9 stress/topology gates             PASS
+Stage 10.1-10.5 verifiers                   PASS
+```
+
+40.5 m Stage-10.5 integration stress:
+
+```text
+modern LVT support events                   67
+contact supports                             8
+contact cover spans                          9
+service cables                              22
+R2K11 rack objects                          82
+water mains                                  1
+duplicate modern face groups                 0
+stable parent IDs across chunk sizes         true
+legacy timber variant selectable             true
+```
+
+Regression:
+
+```text
+tests/test_moscow_stage10_5.py
+```
+
+Stress/integration gate:
+
+```text
+scripts/verify_stage10_5.py
+```
+
+Operator docs:
+
+```text
+STAGE10_5_REPORT.md
+STAGE10_5_BLENDER_SMOKE_TEST.md
+```
+
+### Current source-boundary list
+
+Still intentionally unresolved rather than fabricated:
+
+- exact cast-iron N/C/K tubing ribs, bolts, rebates and grout plugs;
+- exact LVT rubber-boot outer section;
+- exact APC-4 small hardware CAD;
+- exact current contact-cover corner radii;
+- exact support-bracket bend radii and support-hood product CAD;
+- exact project-specific R2K11 elevation;
+- exact project cable occupancy and cable diameters;
+- exact current water-main pipe schedule and mounting brackets;
+- route-specific curve/cant/special-track variants;
+- final UNIGINE exporter/instancing implementation.
+
+### Next action
+
+Do not add another geometry stage before a real Blender 5.2.2 visual/runtime
+review of the Stage-10.5 modern preset.
+
+Use:
+
+```text
+python examples/generate_stage10_production_tunnel.py \
+  --rings 2000 \
+  --namespace stage10-5-modern
+
+blender --background --python scripts/blender_verify_stage10.py -- \
+  examples/stage10_production_scene.json \
+  --report examples/blender_stage10_runtime_report.json \
+  --save-blend examples/stage10_production_scene.blend
+```
+
+For faster visual iteration use 20-100 rings first.

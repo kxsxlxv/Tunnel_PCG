@@ -207,11 +207,20 @@ def test_stage10_1_full_production_integration_preserves_ids_chunking_and_topolo
             rail.custom_properties["railProfile"]
             == "stage10_1_r65_gost_r51685_2022"
         )
-        assert math.isclose(
-            max(v[2] for v in rail.vertices),
-            0.0,
-            abs_tol=2e-12,
+        n = rail.custom_properties["productionCrossSectionVertices"]
+        assert (
+            rail.custom_properties["productionStationCount"]
+            == len(build.alignment_stations)
         )
+        for station_index, station in enumerate(build.alignment_stations):
+            section = rail.vertices[
+                station_index * n:(station_index + 1) * n
+            ]
+            assert math.isclose(
+                max(v[2] - station.offset_z_m for v in section),
+                0.0,
+                abs_tol=2e-12,
+            )
 
     audit = audit_exact_coincident_faces(
         build.scene,

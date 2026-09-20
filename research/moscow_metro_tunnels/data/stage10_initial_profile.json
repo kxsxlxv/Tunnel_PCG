@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.6",
+  "schema_version": "1.7",
   "profile_id": "stage10_initial_profile_CAST_IRON_5500_R1000_R65_TIMBER_LEGACY",
   "purpose": "first deterministic XZ profile for Blender/LiDAR implementation",
   "readiness": {
@@ -569,6 +569,82 @@
         "confidence": "C_envelope_only",
         "source": "P10-METRO-MATERIAL-2024"
       }
+    },
+    "modern_service_preset": {
+      "id": "MODERN_MOSCOW_BOTTOM_CONTACT_RAIL_2020S",
+      "cover": {
+        "family": "modern polymer protective cover",
+        "top_width_m": 0.092,
+        "base_width_m": 0.114,
+        "height_m": 0.111,
+        "side_wall_m": 0.002,
+        "top_wall_m": 0.003,
+        "source": "P10-MODERN-COVER-ARMO",
+        "confidence": "B_current_manufacturer_dimensions",
+        "placement": {
+          "lower_edge_above_contact_surface_m": 0.023,
+          "mode": "retain_dimensioned_legacy_operational_clearance_until_current_installation_drawing_is_found",
+          "source": "P10-VNIR-COVER",
+          "confidence": "B_clearance_C_cross_era_application"
+        },
+        "mesh": {
+          "mode": "rounded_wrap_profile_from_exact_envelope",
+          "curvature": "smooth symmetric side/crown interpolation; exact manufacturer corner radii unresolved",
+          "confidence": "B_envelope_C_curvature"
+        },
+        "span_installation": {
+          "overlap_between_polymer_spans_m": 0.05,
+          "support_zone_mode": "main cover interrupted around bracket/insulator; dedicated support hood covers fastening zone",
+          "source": "P10-METRO-CONTACT-INSTALL",
+          "confidence": "B"
+        }
+      },
+      "support": {
+        "mounting": "dedicated_reinforced_concrete_support_block_in_track_bed",
+        "must_not_share_running_rail_support_block": true,
+        "block_height_m": 0.04,
+        "polymer_dowel_length_m": 0.14,
+        "source": "P10-RU214055-CONTACT-SUPPORT",
+        "confidence": "B",
+        "note": "RU214055U1 explicitly separates the contact-rail bracket block from the under-rail block; example block height 40 mm and polymer dowel length 140 mm.",
+        "schedule": {
+          "target_pitch_m": 5,
+          "normative_min_m": 4.5,
+          "normative_max_m": 5.4,
+          "phase_rule": "snap each target to nearest midpoint between adjacent running-rail support events",
+          "running_support_exclusion_half_length_m": 0.12,
+          "confidence": "B_normative_C_phase_strategy"
+        },
+        "bracket": {
+          "mode": "curved_channel_overrail_top_plate_v2",
+          "resource_envelope_m": [
+            0.54,
+            0.62,
+            0.1
+          ],
+          "longitudinal_thickness_m": 0.1,
+          "channel_band_thickness_m": 0.035,
+          "top_plate_width_m": 0.18,
+          "top_plate_thickness_m": 0.012,
+          "source": "P10-FROLOV-CONTACT;P10-TSN-CONTACT-BRACKET",
+          "confidence": "B_topology_and_envelope_C_bend_radii"
+        },
+        "insulator": {
+          "orientation": "vertical_between_top_plate_and_contact_rail",
+          "axial_height_m": 0.15,
+          "diameter_m": 0.112,
+          "source": "P10-METRO-MATERIAL-2024",
+          "confidence": "C_envelope_only"
+        },
+        "support_hood": {
+          "mode": "rounded_local_fastening_hood_v1",
+          "longitudinal_length_m": 0.24,
+          "width_extra_over_main_cover_m": 0.05,
+          "height_extra_over_main_cover_m": 0.035,
+          "confidence": "C_photo_topology_only",
+          "note": "Exact current support-hood product drawing unresolved; this local hood is explicitly a photo-constrained visualization fallback."
+        }
+      }
     }
   },
   "service_era_preset": {
@@ -594,5 +670,58 @@
     "local drainage sumps/cross-drains/special chambers",
     "curve cant version of this base XZ fixture"
   ],
-  "source_pinpoints_file": "data/stage10_source_pinpoints.json"
+  "source_pinpoints_file": "data/stage10_source_pinpoints.json",
+  "modern_permanent_way": {
+    "id": "MOSCOW_LVT_M_R65_APC4_2020S",
+    "default_for_current_generation": true,
+    "legacy_alternative": "LEGACY_R65_TIMBER_KD65_2001_REFERENCE",
+    "family": "LVT-M half-sleeper blocks in rubber boots with elastic pads",
+    "rail": "R65",
+    "fastening": "APC-4",
+    "support_pitch_m": 0.6,
+    "source_pitch": "P10-RU186427-LVT Moscow Metro design calculation states 600 mm block spacing",
+    "block": {
+      "top_width_at_rail_seat_m": 0.18,
+      "height_at_rail_seat_m": 0.165,
+      "rail_seat_cant": "1:20",
+      "base_length_transverse_m": 0.64,
+      "base_width_wide_m": 0.197,
+      "base_width_narrow_m": 0.178,
+      "rail_seat_recess_m": 0.008,
+      "source": "P10-LVT-M-ARS-2026",
+      "confidence": "A/B_current_supply_technical_data"
+    },
+    "rubber_boot": {
+      "inner_length_m": 0.65,
+      "bottom_inner_length_m": 0.64,
+      "bottom_width_wide_m": 0.197,
+      "bottom_width_narrow_m": 0.178,
+      "side_height_m": 0.153,
+      "source": "P10-RU186427-LVT",
+      "confidence": "A_patent_claim_dimensions"
+    },
+    "installation": {
+      "system": "ballastless low-vibration track; individual reinforced-concrete blocks on elastic pads in rubber boots, monolithically embedded in track concrete",
+      "source": "P10-MOSMETRO-LVT-2022;P10-RU186427-LVT",
+      "confidence": "A/B"
+    }
+  },
+  "service_era_presets": {
+    "default": "MODERN_MOSCOW_LVT_SERVICES_2020S",
+    "presets": {
+      "MODERN_MOSCOW_LVT_SERVICES_2020S": {
+        "permanent_way": "MOSCOW_LVT_M_R65_APC4_2020S",
+        "contact_rail": "MODERN_MOSCOW_BOTTOM_CONTACT_RAIL_2020S",
+        "cable_infrastructure": "R2V11/R2K11-style wall cable racks; exact layout implemented by service preset",
+        "reference_era": "2020s",
+        "note": "default current-generation service preset; civil 5.5/5.1 shell may represent an older tunnel modernized in service"
+      },
+      "LEGACY_R65_TIMBER_KD65_2001_REFERENCE": {
+        "permanent_way": "timber/KD-65",
+        "contact_rail": "legacy Frolov/VNiR support+cover contract",
+        "cable_infrastructure": "legacy open wall-mounted cable racks",
+        "reference_era": "2001"
+      }
+    }
+  }
 }

@@ -633,3 +633,25 @@ def test_chunk_piece_ids_are_technical_but_parent_infrastructure_ids_are_stable(
             assert obj.custom_properties["sourceInfrastructureID"] == parent_ids[key]
             assert obj.custom_properties["sourceInstanceID"] == parent_ids[key]
             assert obj.instance_id != parent_ids[key]
+
+
+def test_chunk_package_hierarchy_prefixes_every_object_without_changing_ids():
+    prod = _production(8, namespace="chunk-hierarchy")
+    packages = build_chunk_scene_packages(
+        prod,
+        chunk_length_m=5.0,
+        boundary_policy=ChunkBoundaryPolicy.RING_ALIGNED,
+    )
+    source_ids = {
+        obj.name: obj.instance_id
+        for obj in prod.scene.objects
+        if not obj.object_type.startswith("production_")
+    }
+    for package in packages:
+        chunk_id = package.metadata["productionChunk"]["chunkID"]
+        prefix = ("Chunks", f"Chunk_{chunk_id:05d}")
+        for obj in package.objects:
+            assert obj.collection_path[:2] == prefix
+            if not obj.object_type.startswith("production_"):
+                assert obj.instance_id == source_ids[obj.name]
+                assert obj.custom_properties["chunkID"] == chunk_id

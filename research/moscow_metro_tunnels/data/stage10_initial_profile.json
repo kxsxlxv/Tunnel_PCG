@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.1",
+  "schema_version": "1.2",
   "profile_id": "stage10_initial_profile_CAST_IRON_5500_R1000_R65_TIMBER_LEGACY",
   "purpose": "first deterministic XZ profile for Blender/LiDAR implementation",
   "readiness": {
@@ -14,7 +14,23 @@
     "origin": "track centerline at UGR",
     "x_positive": "walkway side / opposite contact rail",
     "z_positive": "up",
-    "ugr_z_m": 0
+    "ugr_z_m": 0,
+    "core_mapping": {
+      "profile_x_to_core_x_sign": 1,
+      "engineering_route_left_to_profile_x_sign": -1,
+      "engineering_route_frame": {
+        "chainage_axis": "+X",
+        "left_axis": "+Y",
+        "up_axis": "+Z"
+      },
+      "production_core_frame": {
+        "longitudinal_axis": "+Y",
+        "cross_section_axes": "XZ"
+      },
+      "mapping_rule": "profile +X -> core +X; route +X chainage -> core +Y; route +Y left -> profile -X -> core -X; route +Z -> core +Z",
+      "status": "stage10_1_integration_contract",
+      "note": "The route-frame handedness and the selected profile-side convention are explicit integration choices; the production core axes are not changed."
+    }
   },
   "civil_lining": {
     "family": "CAST_IRON_5500_R1000",
@@ -239,6 +255,17 @@
       "value": -0.385,
       "derivation": "sleeper_top_z_m (-0.220) - GOST sleeper thickness 0.165",
       "confidence": "B"
+    },
+    "rail_profile_source_id": "P10-GOST51685-2022",
+    "gauge_definition": {
+      "measurement": "distance between inner working faces of running-rail heads",
+      "measurement_level_below_ugr_m": 0.013,
+      "sources": [
+        "P10-METRO-GAUGE-13MM",
+        "P10-RZD-GAUGE-13MM"
+      ],
+      "confidence": "C_metro_textbook_plus_B_current_railway_definition",
+      "implementation_note": "Rail profile symmetry axes must be offset by the analytic R65 working-face half-width at this z level; do not place profile axes at +/- gauge/2."
     }
   },
   "track_concrete_and_invert": {

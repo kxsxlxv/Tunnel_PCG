@@ -12,7 +12,7 @@ import math
 from typing import Any, Mapping, Sequence
 
 from .mesh import Face, Vec3
-from .moscow import MoscowStage10Profile
+from .moscow import MoscowStage10Profile, R65ProductionProfile
 
 
 @dataclass(frozen=True)
@@ -421,13 +421,23 @@ def build_stage10_2_local_event_meshes(
 
     rp_half = 0.5 * k.rail_pad_transverse_m
     rp_raised_half = 0.5 * k.rail_pad_raised_seat_transverse_m
+    rail_foot_half = 0.5 * R65ProductionProfile().base_width_m
+    if rail_foot_half >= rp_raised_half:
+        raise AssertionError("R65 foot must fit inside raised rail-pad seat")
     rp_base_top = railpad_z0 + k.rail_pad_base_thickness_m
+    # Split both bottom and raised top so only the true hidden contact spans
+    # are omitted. The pad overhang and the R65 underside between sleepers
+    # remain visible.
     rp_profile = (
         (-rp_half, railpad_z0),
+        (-seat_half, railpad_z0),
+        (+seat_half, railpad_z0),
         (+rp_half, railpad_z0),
         (+rp_half, rp_base_top),
         (+rp_raised_half, rp_base_top),
         (+rp_raised_half, railpad_z1),
+        (+rail_foot_half, railpad_z1),
+        (-rail_foot_half, railpad_z1),
         (-rp_raised_half, railpad_z1),
         (-rp_raised_half, rp_base_top),
         (-rp_half, rp_base_top),
@@ -463,7 +473,9 @@ def build_stage10_2_local_event_meshes(
             _extrude_y_from_xz(
                 rp_shifted,
                 half_y_m=0.5 * k.rail_pad_longitudinal_m,
-                omit_longitudinal_edge_indices=(0,),
+                # Edge 1: baseplate-seat contact.
+                # Edge 7: R65 foot contact.
+                omit_longitudinal_edge_indices=(1, 7),
             )
         )
 
@@ -582,7 +594,10 @@ def build_stage10_2_local_event_meshes(
                 "railPadBaseThicknessM": k.rail_pad_base_thickness_m,
                 "railPadTotalThicknessM": k.rail_pad_total_thickness_m,
                 "railPadRaisedSeatTransverseM": k.rail_pad_raised_seat_transverse_m,
-                "contactBottomFacesOmitted": True,
+                "baseplateContactFaceOmitted": True,
+                "railFootContactFaceOmitted": True,
+                "railFootContactWidthM": 2.0 * rail_foot_half,
+                "padOverhangSurfacesPreserved": True,
             },
         ),
         (

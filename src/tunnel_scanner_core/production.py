@@ -931,7 +931,7 @@ def build_continuous_asset_specs(
                         "railFootBottomContactFaceOmitted": False,
                         "supportContactSurfacePolicy": (
                             "discrete_rail_pad_top_contact_span_omitted"
-                            if moscow_stage == "10.2"
+                            if moscow_stage in {"10.2", "10.3"}
                             else "stage10_1_closed_rail_profile"
                         ),
                     },

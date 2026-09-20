@@ -32,7 +32,7 @@ def test_stage10_3_profile_closes_contact_rail_contract():
     profile = load_stage10_initial_moscow_profile()
     cr = profile.contact_rail
 
-    assert profile.schema_version == "1.6"
+    assert profile.schema_version == "1.7"
     assert cr.side_profile_x_sign == -1
     assert cr.collection == "bottom"
     assert math.isclose(

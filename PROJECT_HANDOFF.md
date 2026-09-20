@@ -1408,7 +1408,7 @@ scripts/verify_stage10_2.py
 The established Stage-10.2 CI baseline before documentation-only commits is:
 
 ```text
-164 tests passed
+165 tests passed
 Stage 10.1 CLI compatibility smoke             PASS
 Stage 10.2 CLI permanent-way smoke             PASS
 Stage 8/9 legacy stress/topology gates         PASS
@@ -1419,6 +1419,8 @@ Stage 10.2 permanent-way verifier              PASS
   sleeper count                                68
   sleeper pitch                                0.5952380952380952 m
   duplicate permanent-way face groups         0
+  continuous R65 bottom edges omitted          0
+  rail-pad hidden contact span omitted         true
   stable periodic parent IDs across chunks    true
 ```
 

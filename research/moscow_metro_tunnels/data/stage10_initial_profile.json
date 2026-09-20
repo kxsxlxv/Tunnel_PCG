@@ -221,12 +221,12 @@
     "inner_edge_x_m": 1.66,
     "outer_edge": {
       "mode": "intersection_with_physical_intrados_circle_at_walkway_top",
-      "x_m": 2.083651602,
+      "x_m": 2.083650643,
       "basis": "sqrt(2.55^2-(0.200-1.670)^2)",
       "confidence": "B"
     },
     "top_clear_width_m": {
-      "value": 0.423651602,
+      "value": 0.423650643,
       "derivation": "physical intrados intersection minus Fig.1.14 inner-edge offset; not derived from clearance envelope",
       "confidence": "B"
     },

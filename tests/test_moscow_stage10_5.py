@@ -18,6 +18,7 @@ from tunnel_scanner_core import (
     modern_contact_support_chainages,
     modern_lvt_chainages,
     modern_protective_cover_profile_xz,
+    modern_cable_sections_core,
     r65_rail_center_offsets_for_gauge,
 )
 
@@ -94,7 +95,7 @@ def test_stage10_5_profile_contains_modern_default_and_legacy_alternative():
 def test_stage10_5_r2k11_racks_repeat_on_both_walls_and_stay_inside_shell():
     profile = load_stage10_initial_moscow_profile()
     chainages = cable_rack_chainages(5.4, profile)
-    assert chainages == (0.5, 1.5, 2.5, 3.5, 4.5)
+    assert chainages == (0.5, 1.5, 2.5, 3.5, 4.5, 5.2)
 
     for side in (-1, 1):
         rack = build_r2k11_local_rack_mesh(profile, side_sign=side)
@@ -307,12 +308,13 @@ def test_stage10_5_modern_is_default_and_legacy_remains_selectable():
     assert mm["servicePipeStatus"] == "unresolved_not_generated"
     assert mm["legacyStage8TubeCount"] == 0
 
-    for cable in modern.scene.objects_of_type("production_service_cable"):
-        # Straight zero-noise fixture: all cable-section vertices remain inside
-        # the physical Moscow 2.55 m intrados.
+    # Validate containment in the core-local cross-section. World X/Z include
+    # the common alignment offset of both shell and cable, so measuring radius
+    # from the global origin would be incorrect.
+    for _name, section, _props in modern_cable_sections_core(profile):
         assert max(
             math.hypot(x, z)
-            for x, _y, z in cable.vertices
+            for x, z in section
         ) < profile.intrados_radius_m
 
     lm = legacy.scene.metadata["productionGeometry"]

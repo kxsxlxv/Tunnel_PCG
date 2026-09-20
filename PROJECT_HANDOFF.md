@@ -1308,7 +1308,7 @@ Production Moscow mode now includes:
 - drain bottom at profile z=-0.530 m;
 - 3% transverse fall toward the drain;
 - 50x25 mm water-release groove;
-- support-contact topology cleanup at the R65 foot;
+- localized support-contact topology cleanup on each rail pad while preserving the continuous R65 underside;
 - stable periodic parent IDs across different chunk lengths.
 
 The old Stage-8/9 `production_pavement` is removed in Stage 10.2 and replaced
@@ -1345,7 +1345,7 @@ it is not silently claimed as a separately dimensioned Moscow factory value.
 
 ### Explicit visual fallbacks
 
-The machine profile schema is now 1.3. Production code does not hide unresolved
+The machine profile schema is now 1.4. Production code does not hide unresolved
 fastening dimensions as magic constants.
 
 C-confidence visual fallbacks are recorded for:
@@ -1353,8 +1353,13 @@ C-confidence visual fallbacks are recorded for:
 - flat track-screw head preview geometry;
 - exact local clamp-bolt axis/slot placement;
 - exact KDP-2 spring-clamp silhouette/position;
-- 3% concrete-surface breakpoint rule;
 - lateral position of the 50x25 mm groove (centered in the drain for v1).
+
+The 3% concrete surface is no longer a free C-confidence breakpoint fallback:
+its deterministic v1 anchor is now the physical sleeper end
+`|x|=1.325 m, z=-0.230 m`, preserving the source-derived 10 mm sleeper
+exposure there. The remaining uncertainty is the exact hand-finished local
+breakpoint/fillet geometry.
 
 These remain replaceable when better project/factory drawings are found.
 

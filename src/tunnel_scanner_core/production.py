@@ -46,8 +46,12 @@ from .permanent_way import (
 )
 from .contact_rail import (
     build_stage10_3_local_support_meshes,
+    build_modern_contact_support_meshes,
     contact_rail_axis_profile_x,
     contact_support_chainages,
+    modern_contact_support_chainages,
+    modern_cover_span_ranges,
+    modern_protective_cover_core_xz,
     protective_cover_core_xz,
     rk_contact_rail_core_xz,
 )
@@ -583,15 +587,18 @@ def build_continuous_asset_specs(
     rail_profile: RailProfile | None = None,
     moscow_profile: MoscowStage10Profile | None = None,
     moscow_stage: str = "10.1",
+    moscow_service_preset: str = "legacy",
 ) -> tuple[ContinuousAssetSpec, ...]:
     if not namespace:
         raise ValueError("namespace must not be empty")
-    if moscow_stage not in {"10.1", "10.2", "10.3", "10.4"}:
+    if moscow_stage not in {"10.1", "10.2", "10.3", "10.4", "10.5"}:
         raise ValueError(
-            "moscow_stage must be '10.1', '10.2', '10.3' or '10.4'"
+            "moscow_stage must be '10.1', '10.2', '10.3', '10.4' or '10.5'"
         )
     if moscow_stage != "10.1" and moscow_profile is None:
-        raise ValueError("Moscow Stage 10.2/10.3/10.4 requires moscow_profile")
+        raise ValueError("Moscow Stage 10.2-10.5 requires moscow_profile")
+    if moscow_service_preset not in {"legacy", "modern"}:
+        raise ValueError("moscow_service_preset must be 'legacy' or 'modern'")
     profile = rail_profile or RailProfile.generic_from_ancillary(ancillary.config)
     specs: list[ContinuousAssetSpec] = []
 
@@ -600,13 +607,13 @@ def build_continuous_asset_specs(
             continue
         if (
             moscow_profile is not None
-            and moscow_stage in {"10.2", "10.3", "10.4"}
+            and moscow_stage in {"10.2", "10.3", "10.4", "10.5"}
             and mesh.category == "pavement"
         ):
             continue
         if (
             moscow_profile is not None
-            and moscow_stage == "10.4"
+            and moscow_stage in {"10.4", "10.5"}
             and mesh.category == "walkway"
         ):
             continue
@@ -641,7 +648,7 @@ def build_continuous_asset_specs(
             )
         )
 
-    if moscow_profile is not None and moscow_stage in {"10.2", "10.3", "10.4"}:
+    if moscow_profile is not None and moscow_stage in {"10.2", "10.3", "10.4", "10.5"}:
         r65_for_concrete = R65ProductionProfile()
         centers_for_concrete = r65_rail_center_offsets_for_gauge(
             moscow_profile.track.gauge_m,
@@ -656,7 +663,7 @@ def build_continuous_asset_specs(
                 rail_centers_profile_x=centers_for_concrete,
                 walkway_inner_edge_x_m=(
                     moscow_profile.walkway.inner_edge_x_m
-                    if moscow_stage == "10.4"
+                    if moscow_stage in {"10.4", "10.5"}
                     else None
                 ),
             )
@@ -666,7 +673,7 @@ def build_continuous_asset_specs(
             "pavement",
         )
         concrete_omitted_edges: tuple[int, ...] = ()
-        if moscow_stage == "10.4":
+        if moscow_stage in {"10.4", "10.5"}:
             walkway_x_core = (
                 moscow_profile.coordinate.profile_x_to_core_x_sign
                 * moscow_profile.walkway.inner_edge_x_m
@@ -741,11 +748,11 @@ def build_continuous_asset_specs(
                     ),
                     "physicalBottomSurface": (
                         "moscow_5100_intrados"
-                        if moscow_stage == "10.4"
+                        if moscow_stage in {"10.4", "10.5"}
                         else "future_moscow_5100_intrados_not_clearance_envelope"
                     ),
-                    "walkwayShoulderPartitioned": moscow_stage == "10.4",
-                    "liningContactFacesOmitted": moscow_stage == "10.4",
+                    "walkwayShoulderPartitioned": moscow_stage in {"10.4", "10.5"},
+                    "liningContactFacesOmitted": moscow_stage in {"10.4", "10.5"},
                     "moscowProfileID": moscow_profile.profile_id,
                     "moscowProfileSHA256": (
                         moscow_profile.provenance.canonical_sha256
@@ -754,7 +761,7 @@ def build_continuous_asset_specs(
             )
         )
 
-    if moscow_profile is not None and moscow_stage == "10.4":
+    if moscow_profile is not None and moscow_stage in {"10.4", "10.5"}:
         walkway_section = _ensure_ccw_xz(walkway_core_xz(moscow_profile))
         walkway_label, walkway_semantic = _ancillary_semantics(
             label_policy,
@@ -832,7 +839,7 @@ def build_continuous_asset_specs(
             )
         )
 
-    if moscow_profile is not None and moscow_stage in {"10.3", "10.4"}:
+    if moscow_profile is not None and moscow_stage in {"10.3", "10.4", "10.5"}:
         cr = moscow_profile.contact_rail
         contact_axis_profile_x = contact_rail_axis_profile_x(moscow_profile)
         contact_section = _ensure_ccw_xz(
@@ -891,55 +898,57 @@ def build_continuous_asset_specs(
             )
         )
 
-        cover_section = _ensure_ccw_xz(
-            protective_cover_core_xz(moscow_profile)
-        )
-        specs.append(
-            ContinuousAssetSpec(
-                persistent_key=(
-                    f"{namespace}/infrastructure/contact-rail-cover/0"
-                ),
-                name="PROD_CONTACT_RAIL_COVER",
-                object_type="production_contact_rail_cover",
-                category="contact_rail_cover",
-                cross_section_xz=cover_section,
-                label_id=label_id,
-                semantic_class=semantic,
-                properties={
-                    "productionContinuous": True,
-                    "domainGeometryStage": "10.3",
-                    "historicalCoverFamily": (
-                        "legacy_wooden_board_protective_box"
-                    ),
-                    "geometryMode": cr.cover_mode,
-                    "eraMismatch": cr.cover_era_mismatch,
-                    "historicalSideGapM": cr.cover_historical_side_gap_m,
-                    "historicalBoxGapM": cr.cover_box_gap_m,
-                    "historicalBoxToInsulatorGapM": (
-                        cr.cover_box_to_insulator_gap_m
-                    ),
-                    "historicalSupportOffsetFromBoxEndM": (
-                        cr.cover_support_offset_from_box_end_m
-                    ),
-                    "outerTopWidthM": cr.cover_outer_top_width_m,
-                    "outerBaseWidthM": cr.cover_outer_base_width_m,
-                    "heightM": cr.cover_height_m,
-                    "sideWallM": cr.cover_side_wall_m,
-                    "topWallM": cr.cover_top_wall_m,
-                    "lowerEdgeAboveContactSurfaceM": (
-                        cr.cover_lower_edge_above_contact_surface_m
-                    ),
-                    "segmentationMode": (
-                        "continuous_preview_historical_box_length_unresolved"
-                    ),
-                    "modernFallbackIsNotHistoricalClaim": True,
-                    "moscowProfileID": moscow_profile.profile_id,
-                    "moscowProfileSHA256": (
-                        moscow_profile.provenance.canonical_sha256
-                    ),
-                },
+        if moscow_service_preset == "legacy":
+            cover_section = _ensure_ccw_xz(
+                protective_cover_core_xz(moscow_profile)
             )
-        )
+            specs.append(
+                ContinuousAssetSpec(
+                    persistent_key=(
+                        f"{namespace}/infrastructure/contact-rail-cover/0"
+                    ),
+                    name="PROD_CONTACT_RAIL_COVER",
+                    object_type="production_contact_rail_cover",
+                    category="contact_rail_cover",
+                    cross_section_xz=cover_section,
+                    label_id=label_id,
+                    semantic_class=semantic,
+                    properties={
+                        "productionContinuous": True,
+                        "domainGeometryStage": "10.3",
+                        "historicalCoverFamily": (
+                            "legacy_wooden_board_protective_box"
+                        ),
+                        "geometryMode": cr.cover_mode,
+                        "eraMismatch": cr.cover_era_mismatch,
+                        "historicalSideGapM": cr.cover_historical_side_gap_m,
+                        "historicalBoxGapM": cr.cover_box_gap_m,
+                        "historicalBoxToInsulatorGapM": (
+                            cr.cover_box_to_insulator_gap_m
+                        ),
+                        "historicalSupportOffsetFromBoxEndM": (
+                            cr.cover_support_offset_from_box_end_m
+                        ),
+                        "outerTopWidthM": cr.cover_outer_top_width_m,
+                        "outerBaseWidthM": cr.cover_outer_base_width_m,
+                        "heightM": cr.cover_height_m,
+                        "sideWallM": cr.cover_side_wall_m,
+                        "topWallM": cr.cover_top_wall_m,
+                        "lowerEdgeAboveContactSurfaceM": (
+                            cr.cover_lower_edge_above_contact_surface_m
+                        ),
+                        "segmentationMode": (
+                            "continuous_preview_historical_box_length_unresolved"
+                        ),
+                        "modernFallbackIsNotHistoricalClaim": True,
+                        "moscowProfileID": moscow_profile.profile_id,
+                        "moscowProfileSHA256": (
+                            moscow_profile.provenance.canonical_sha256
+                        ),
+                    },
+                )
+            )
+    
 
     if moscow_profile is None:
         base_z = -ancillary.inner_radius_m + ancillary.config.pavement_height_m
@@ -1111,7 +1120,7 @@ def build_continuous_asset_specs(
                         "railFootBottomContactFaceOmitted": False,
                         "supportContactSurfacePolicy": (
                             "discrete_rail_pad_top_contact_span_omitted"
-                            if moscow_stage in {"10.2", "10.3", "10.4"}
+                            if moscow_stage in {"10.2", "10.3", "10.4", "10.5"}
                             else "stage10_1_closed_rail_profile"
                         ),
                     },
@@ -1601,6 +1610,7 @@ class ProductionConfig:
     rail_profile: RailProfile | None = None
     moscow_profile: MoscowStage10Profile | None = None
     moscow_stage: str = "10.1"
+    moscow_service_preset: str = "auto"
     keep_stage8_ring_ancillary: bool = False
     keep_prescribed_outer_joint_solids: bool = False
     stitch_ring_geometry: bool = True
@@ -1613,12 +1623,31 @@ class ProductionConfig:
             raise ValueError(
                 "specify either rail_profile or moscow_profile, not both"
             )
-        if self.moscow_stage not in {"10.1", "10.2", "10.3", "10.4"}:
+        if self.moscow_stage not in {"10.1", "10.2", "10.3", "10.4", "10.5"}:
             raise ValueError(
-                "moscow_stage must be '10.1', '10.2', '10.3' or '10.4'"
+                "moscow_stage must be '10.1', '10.2', '10.3', '10.4' or '10.5'"
             )
         if self.moscow_stage != "10.1" and self.moscow_profile is None:
-            raise ValueError("Moscow Stage 10.2/10.3/10.4 requires moscow_profile")
+            raise ValueError("Moscow Stage 10.2-10.5 requires moscow_profile")
+        if self.moscow_service_preset not in {"auto", "legacy", "modern"}:
+            raise ValueError(
+                "moscow_service_preset must be 'auto', 'legacy' or 'modern'"
+            )
+        if (
+            self.moscow_stage != "10.5"
+            and self.moscow_service_preset == "modern"
+        ):
+            raise ValueError(
+                "modern Moscow service preset is currently bounded to Stage 10.5"
+            )
+
+    @property
+    def resolved_moscow_service_preset(self) -> str:
+        if self.moscow_profile is None:
+            return "none"
+        if self.moscow_service_preset == "auto":
+            return "modern" if self.moscow_stage == "10.5" else "legacy"
+        return self.moscow_service_preset
 
 
 @dataclass(frozen=True)
@@ -1651,13 +1680,14 @@ def build_production_scene(
         rail_profile=config.rail_profile,
         moscow_profile=config.moscow_profile,
         moscow_stage=config.moscow_stage,
+        moscow_service_preset=config.resolved_moscow_service_preset,
     )
 
     objects: list[SceneObject] = []
     for obj in source_scene.objects:
         if (
             config.moscow_profile is not None
-            and config.moscow_stage == "10.4"
+            and config.moscow_stage in {"10.4", "10.5"}
             and obj.object_type
             in {
                 "lining_segment",
@@ -1711,7 +1741,7 @@ def build_production_scene(
     stage10_2_periodic: tuple[SceneObject, ...] = ()
     if (
         config.moscow_profile is not None
-        and config.moscow_stage in {"10.2", "10.3", "10.4"}
+        and config.moscow_stage in {"10.2", "10.3", "10.4", "10.5"}
     ):
         stage10_2_periodic = _build_stage10_2_periodic_scene_objects(
             profile=config.moscow_profile,
@@ -1739,7 +1769,7 @@ def build_production_scene(
     stage10_4_civil_rings: tuple[SceneObject, ...] = ()
     if (
         config.moscow_profile is not None
-        and config.moscow_stage == "10.4"
+        and config.moscow_stage in {"10.4", "10.5"}
     ):
         stage10_4_civil_rings = _build_stage10_4_civil_shell_objects(
             profile=config.moscow_profile,
@@ -1849,12 +1879,12 @@ def build_production_scene(
                 ),
                 "permanentWayStatus": (
                     "implemented_stage10_2_initial_geometry"
-                    if config.moscow_stage in {"10.2", "10.3", "10.4"}
+                    if config.moscow_stage in {"10.2", "10.3", "10.4", "10.5"}
                     else "deferred_to_stage10_2"
                 ),
                 "trackConcreteStatus": (
                     "implemented_stage10_2_source_backed_with_explicit_fallbacks"
-                    if config.moscow_stage in {"10.2", "10.3", "10.4"}
+                    if config.moscow_stage in {"10.2", "10.3", "10.4", "10.5"}
                     else "deferred_to_stage10_2"
                 ),
                 "contactRailStatus": (
@@ -1864,17 +1894,17 @@ def build_production_scene(
                 ),
                 "civilShellStatus": (
                     "implemented_stage10_4_smooth_concentric_shell"
-                    if config.moscow_stage == "10.4"
+                    if config.moscow_stage in {"10.4", "10.5"}
                     else "deferred_to_stage10_4"
                 ),
                 "walkwayStatus": (
                     "implemented_stage10_4_source_backed_geometry"
-                    if config.moscow_stage == "10.4"
+                    if config.moscow_stage in {"10.4", "10.5"}
                     else "deferred_to_stage10_4"
                 ),
                 "nonRailInfrastructureStatus": (
                     "moscow_walkway_stage10_4_stage8_services_transitional"
-                    if config.moscow_stage == "10.4"
+                    if config.moscow_stage in {"10.4", "10.5"}
                     else (
                         "stage8_walkway_and_services_until_stage10_4"
                         if config.moscow_stage == "10.3"
@@ -1891,17 +1921,17 @@ def build_production_scene(
                         for obj in stage10_2_periodic
                         if obj.object_type == "production_sleeper"
                     )
-                    if config.moscow_stage in {"10.2", "10.3", "10.4"}
+                    if config.moscow_stage in {"10.2", "10.3", "10.4", "10.5"}
                     else 0
                 ),
                 "sleeperPitchM": (
                     config.moscow_profile.sleeper.pitch_m
-                    if config.moscow_stage in {"10.2", "10.3", "10.4"}
+                    if config.moscow_stage in {"10.2", "10.3", "10.4", "10.5"}
                     else None
                 ),
                 "sleeperPhaseRule": (
                     "half_pitch_from_tunnel_start"
-                    if config.moscow_stage in {"10.2", "10.3", "10.4"}
+                    if config.moscow_stage in {"10.2", "10.3", "10.4", "10.5"}
                     else None
                 ),
                 "contactRailSupportCount": (
@@ -1939,56 +1969,56 @@ def build_production_scene(
                     else None
                 ),
                 "stage9CivilGeometryRemoved": (
-                    config.moscow_stage == "10.4"
+                    config.moscow_stage in {"10.4", "10.5"}
                 ),
                 "moscowCivilRingCount": (
                     len(stage10_4_civil_rings)
-                    if config.moscow_stage == "10.4"
+                    if config.moscow_stage in {"10.4", "10.5"}
                     else 0
                 ),
                 "moscowCivilRingPitchM": (
                     config.moscow_profile.ring_pitch_m
-                    if config.moscow_stage == "10.4"
+                    if config.moscow_stage in {"10.4", "10.5"}
                     else None
                 ),
                 "moscowCivilIntradosRadiusM": (
                     config.moscow_profile.intrados_radius_m
-                    if config.moscow_stage == "10.4"
+                    if config.moscow_stage in {"10.4", "10.5"}
                     else None
                 ),
                 "moscowCivilExtradosRadiusM": (
                     config.moscow_profile.extrados_radius_m
-                    if config.moscow_stage == "10.4"
+                    if config.moscow_stage in {"10.4", "10.5"}
                     else None
                 ),
                 "moscowCivilGeometryMode": (
                     config.moscow_profile.civil_geometry_mode
-                    if config.moscow_stage == "10.4"
+                    if config.moscow_stage in {"10.4", "10.5"}
                     else None
                 ),
                 "moscowCivilSegmentSurfaceMode": (
                     config.moscow_profile.civil_segment_surface_mode
-                    if config.moscow_stage == "10.4"
+                    if config.moscow_stage in {"10.4", "10.5"}
                     else None
                 ),
                 "moscowWalkwayTopProfileZM": (
                     config.moscow_profile.walkway.top_z_m
-                    if config.moscow_stage == "10.4"
+                    if config.moscow_stage in {"10.4", "10.5"}
                     else None
                 ),
                 "moscowWalkwayInnerEdgeProfileXM": (
                     config.moscow_profile.walkway.inner_edge_x_m
-                    if config.moscow_stage == "10.4"
+                    if config.moscow_stage in {"10.4", "10.5"}
                     else None
                 ),
                 "moscowWalkwayOuterEdgeProfileXM": (
                     config.moscow_profile.walkway.outer_edge_x_m
-                    if config.moscow_stage == "10.4"
+                    if config.moscow_stage in {"10.4", "10.5"}
                     else None
                 ),
                 "transitionalCivilGapStatus": (
                     "closed_by_stage10_4_moscow_shell"
-                    if config.moscow_stage == "10.4"
+                    if config.moscow_stage in {"10.4", "10.5"}
                     else "open_until_stage10_4"
                 ),
             }
@@ -2041,7 +2071,7 @@ def build_production_tunnel(
     effective_include_bolts = include_bolts and not (
         production_config is not None
         and production_config.moscow_profile is not None
-        and production_config.moscow_stage == "10.4"
+        and production_config.moscow_stage in {"10.4", "10.5"}
     )
     source = build_procedural_nominal_tunnel(
         ring_config=ring_config,

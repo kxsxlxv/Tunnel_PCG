@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.3",
+  "schema_version": "1.4",
   "profile_id": "stage10_initial_profile_CAST_IRON_5500_R1000_R65_TIMBER_LEGACY",
   "purpose": "first deterministic XZ profile for Blender/LiDAR implementation",
   "readiness": {

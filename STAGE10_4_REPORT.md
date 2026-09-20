@@ -196,6 +196,23 @@ It verifies:
 - zero exact duplicate production faces;
 - stable Moscow civil-ring parent IDs across different exact-length chunk sizes.
 
+Latest fully green production baseline:
+
+    179 tests passed
+    Stage 10.1 CLI compatibility smoke          PASS
+    Stage 10.2 CLI permanent-way smoke          PASS
+    Stage 10.3 CLI contact-rail smoke           PASS
+    Stage 10.4 CLI civil-shell smoke            PASS
+    Stage 8/9 stress/topology gates             PASS
+    Stage 10.1/10.2/10.3/10.4 verifiers        PASS
+
+30 source rings / 40.5 m Stage-10.4 stress:
+
+    Moscow civil rings                          41
+    duplicate production face groups            0
+    stable civil parent IDs across chunks       true
+    transitional civil gap closed               true
+
 ## User-facing workflow
 
 Stage 10.4 is now the default Stage-10 mode:

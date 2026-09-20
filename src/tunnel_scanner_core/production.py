@@ -729,7 +729,7 @@ def stitch_ring_scene_object_to_alignment(
             if obj.reconstruction
             else "stage9_stitched_ring_alignment"
         ),
-        collection_path=(*collection_prefix, *obj.collection_path),
+        collection_path=obj.collection_path,
         extra_properties=props,
     )
 
@@ -1041,7 +1041,7 @@ def _translate_scene_object(
         segment_name=obj.segment_name,
         segment_kind=obj.segment_kind,
         reconstruction=obj.reconstruction,
-        collection_path=obj.collection_path,
+        collection_path=(*collection_prefix, *obj.collection_path),
         extra_properties=props,
     )
 

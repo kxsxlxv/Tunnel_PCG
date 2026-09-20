@@ -23,8 +23,10 @@ jobs:
           python -m py_compile
           examples/generate_stage8_tunnel.py
           examples/generate_stage9_production_tunnel.py
+          examples/generate_stage10_production_tunnel.py
           scripts/blender_verify_stage8.py
           scripts/blender_verify_stage9.py
+          scripts/blender_verify_stage10.py
           scripts/verify_stage8_stress.py
           scripts/verify_stage8_trimesh.py
           scripts/verify_stage9_stress.py
@@ -33,6 +35,14 @@ jobs:
           scripts/verify_stage10_1.py
       - name: Unit and regression tests
         run: pytest
+      - name: Stage 10.1 CLI scene generation smoke
+        run: >-
+          python examples/generate_stage10_production_tunnel.py
+          --rings 4
+          --namespace stage10-1-ci
+          --no-bolts
+          --axis-noise-sigma 0
+          --output /tmp/stage10_production_scene.json
       - name: Stage 8 stress verification
         run: python scripts/verify_stage8_stress.py
       - name: Stage 8 independent trimesh verification

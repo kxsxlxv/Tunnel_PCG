@@ -1277,3 +1277,190 @@ The next implementation task is **Stage 10.2 only**:
 - preserve the Stage-10.1 UGR/gauge/profile/frame contracts unchanged unless new primary evidence requires a documented revision.
 
 Detailed cast-iron tubing remains blocked pending a defensible exact series/tubing drawing and must not be guessed.
+
+
+---
+
+## Stage 10.2 implementation update (2026-09-20)
+
+Stage 10.2 is implemented on `master`.
+
+### Bounded scope completed
+
+Production Moscow mode now includes:
+
+- timber sleeper geometry from the selected GOST 22830-77 metro sleeper;
+- straight-track sleeper density 1680/km;
+- deterministic pitch `0.5952380952380952 m`;
+- half-pitch periodic phase independent from lining-ring rhythm;
+- under-baseplate KD-65 pads;
+- KD-65 baseplates;
+- R65 rail-foot pads;
+- metro 24x150 track screws;
+- M22x75 clamp hardware;
+- explicitly simplified/parameterized spring-clamp geometry;
+- continuous Moscow track-concrete geometry;
+- 0.900 m clear central drain;
+- drain bottom at profile z=-0.530 m;
+- 3% transverse fall toward the drain;
+- 50x25 mm water-release groove;
+- support-contact topology cleanup at the R65 foot;
+- stable periodic parent IDs across different chunk lengths.
+
+The old Stage-8/9 `production_pavement` is removed in Stage 10.2 and replaced
+by `production_track_concrete`.
+
+### Permanent-way datums
+
+The Stage-10.1 frame contract remains unchanged:
+
+```text
+core_z = profile_z - 1.670 m
+
+UGR / R65 head                 profile  0.000 -> core -1.670
+R65 base                       profile -0.180 -> core -1.850
+sleeper top                    profile -0.220 -> core -1.890
+sleeper bottom                 profile -0.385 -> core -2.055
+central drain bottom           profile -0.530 -> core -2.200
+water-release groove bottom    profile -0.555 -> core -2.225
+Moscow intrados invert         profile -0.880 -> core -2.550
+```
+
+The 40 mm gap between sleeper top and R65 base is closed by:
+
+```text
+under-baseplate pad        6 mm
+KD-65 rail-seat part      20 mm   explicit C-confidence stack-fit fallback
+R65 rail pad              14 mm
+                          -----
+total                     40 mm
+```
+
+The 20 mm rail-seat contribution is explicitly marked as a derived fallback;
+it is not silently claimed as a separately dimensioned Moscow factory value.
+
+### Explicit visual fallbacks
+
+The machine profile schema is now 1.3. Production code does not hide unresolved
+fastening dimensions as magic constants.
+
+C-confidence visual fallbacks are recorded for:
+
+- flat track-screw head preview geometry;
+- exact local clamp-bolt axis/slot placement;
+- exact KDP-2 spring-clamp silhouette/position;
+- 3% concrete-surface breakpoint rule;
+- lateral position of the 50x25 mm groove (centered in the drain for v1).
+
+These remain replaceable when better project/factory drawings are found.
+
+### New production module
+
+```text
+src/tunnel_scanner_core/permanent_way.py
+```
+
+Important APIs:
+
+- `sleeper_chainages`
+- `track_concrete_profile_xz`
+- `track_concrete_core_xz`
+- `build_stage10_2_local_event_meshes`
+
+### Operator workflow
+
+Stage 10.2 is now the default Stage-10 generator mode:
+
+```text
+python examples/generate_stage10_production_tunnel.py \
+  --rings 20 \
+  --namespace stage10-2-smoke
+
+blender --background --python scripts/blender_verify_stage10.py -- \
+  examples/stage10_production_scene.json \
+  --report examples/blender_stage10_runtime_report.json \
+  --save-blend examples/stage10_production_scene.blend
+```
+
+To reproduce Stage 10.1 explicitly:
+
+```text
+python examples/generate_stage10_production_tunnel.py \
+  --domain-stage 10.1 \
+  --rings 20 \
+  --namespace stage10-1-smoke
+```
+
+### Verification
+
+New regression file:
+
+```text
+tests/test_moscow_stage10_2.py
+```
+
+New stress gate:
+
+```text
+scripts/verify_stage10_2.py
+```
+
+The established Stage-10.2 CI baseline before documentation-only commits is:
+
+```text
+164 tests passed
+Stage 10.1 CLI compatibility smoke             PASS
+Stage 10.2 CLI permanent-way smoke             PASS
+Stage 8/9 legacy stress/topology gates         PASS
+Stage 10.1 Moscow production verifier          PASS
+Stage 10.2 permanent-way verifier              PASS
+
+30-ring / 40.5 m Stage 10.2 stress:
+  sleeper count                                68
+  sleeper pitch                                0.5952380952380952 m
+  duplicate permanent-way face groups         0
+  stable periodic parent IDs across chunks    true
+```
+
+The exact final HEAD should still be checked after the final documentation
+commits before reporting Stage 10.2 closed.
+
+### Important transitional civil-shell note
+
+Track concrete already closes down to the researched physical Moscow 5.1 m
+intrados. The visible lining remains the old Stage-9/Tunnel-Scanner shell until
+Stage 10.4.
+
+Therefore the lower concrete boundary can appear separated from the current
+visible lining. This is an intentional bounded-stage mismatch. Do not move the
+track datums to the Stage-9 pavement/shell to hide that gap.
+
+The Stage-8/9 walkway and service tubes also remain transitional.
+
+### Next implementation boundary
+
+**Stage 10.3 only — contact rail.**
+
+Implement next:
+
+- RK contact-rail profile;
+- 690 +/- 8 mm horizontal placement from the running-rail reference;
+- working surface +160 +/- 6 mm above UGR;
+- legacy bracket/support chain;
+- initial insulator geometry;
+- 5.0 m deterministic support pitch within the researched 4.5-5.4 m range;
+- protective cover with strict historical-vs-modern-fallback metadata;
+- periodic support phase independent from sleepers and lining rings.
+
+Do not begin Stage 10.4 civil shell/walkway in the same bounded change unless
+the user explicitly asks to merge stages.
+
+Detailed Stage-10.2 notes:
+
+```text
+STAGE10_2_REPORT.md
+STAGE10_2_BLENDER_SMOKE_TEST.md
+```
+
+Detailed cast-iron tubing remains blocked pending defensible exact
+series/manufacturing drawings and must not be guessed.

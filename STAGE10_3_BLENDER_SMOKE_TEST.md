@@ -1,17 +1,18 @@
 # Stage 10.3 Blender smoke test
 
-This smoke test covers the current default Moscow production mode through the
-legacy contact rail.
+This smoke test covers the Stage-10.3 legacy-contact-rail compatibility mode.
+Stage 10.4 is now the current default.
 
 ## 1. Generate Stage 10.3
 
 From the repository root:
 
     python examples/generate_stage10_production_tunnel.py \
+      --domain-stage 10.3 \
       --rings 20 \
       --namespace stage10-3-smoke
 
-The default `domainStage` is 10.3.
+The explicit selector is required because the default `domainStage` is now 10.4.
 
 Expected additions over Stage 10.2:
 
@@ -81,20 +82,15 @@ Both remain inside the researched 4.5-5.4 m running-tunnel range.
 
 ## 4. Important civil-shell gap
 
-A visible gap of several decimetres — around 0.4 m in the current preview — can
-remain between `PROD_TRACK_CONCRETE` and the visible tubing/lining.
+A visible gap of several decimetres — around 0.4 m — remains expected when
+explicitly generating Stage 10.3. The concrete already terminates against the
+researched Moscow 5.1 m physical intrados, while that compatibility scene still
+uses the old Stage-9 shell.
 
-This is expected in Stage 10.3.
+Do not extend or vertically move the track concrete to hide it.
 
-The concrete already terminates against the researched Moscow 5.1 m physical
-intrados, while the visible lining is still the old Stage-9 Tunnel-Scanner
-shell. Do not extend or vertically move the track concrete to hide this gap.
-
-Stage 10.4 replaces the visible shell with the Moscow 5.5/5.1 civil geometry
-and closes this transitional interface.
-
-The existing walkway/service objects are likewise transitional until Stage
-10.4.
+The current Stage-10.4 default replaces the visible shell and walkway, closes
+this interface, and treats a similar gap there as a regression.
 
 ## 5. Compatibility modes
 
@@ -112,4 +108,4 @@ Stage 10.1:
       --rings 20 \
       --namespace stage10-1-smoke
 
-The same Stage-10 Blender verifier supports all three modes.
+The same Stage-10 Blender verifier supports Stage 10.1 through 10.4.

@@ -2,7 +2,7 @@
 
 > **Continuation / new-chat handoff:** read [`PROJECT_HANDOFF.md`](PROJECT_HANDOFF.md) first. It contains the full project state, resolved architecture decisions, Stage-9 production contract, Blender caveats, and the exact Stage-10 starting point.
 
-Current milestone: **Stage 9 — production geometry / long-tunnel assembly**.
+Current milestone: **Stage 10.1 — Moscow profile/data contract + production R65/gauge/UGR integration**.
 
 The project began as a geometry-side reconstruction of Yang et al. (2026), *Tunnel scanner: Geometry-informed synthetic point cloud generation and transfer learning for tunnel segmentation*. Stages 1–8 preserve that reference baseline. Stage 9 turns it into an independent production-oriented procedural asset generator intended for later real-time-engine use, including UNIGINE.
 
@@ -23,6 +23,8 @@ LiDAR synthesis is intentionally not the current priority.
     Stage 9    continuous production geometry, topology cleanup,
                long tunnels, optional chunking, stable IDs,
                low-poly rail profile
+    Stage 10.1 Moscow profile/data model, explicit UGR/frame mapping,
+               production R65 and working-face gauge placement
 
 Detailed reconstruction/production assumptions are documented in STAGE*_REPORT.md.
 
@@ -95,7 +97,7 @@ Default cross-section:
 
     16 vertices
 
-This is intentionally generic. A specific Moscow/Russian rail section belongs to Stage 10.
+This remains the compatibility path for Stage 9. Stage 10.1 adds a separate Moscow mode using the reconstructed GOST R65 profile, local UGR z=0, and 1.520 m gauge measured between the inner working faces 13 mm below UGR.
 
 ## Stable identity
 
@@ -179,6 +181,14 @@ This writes chunk JSON files plus a manifest containing global ring IDs, world o
         --rings 20 \
         --namespace stage9-smoke
 
+## Generate a Stage 10.1 Moscow/R65 scene
+
+    python examples/generate_stage10_production_tunnel.py \
+        --rings 20 \
+        --namespace stage10-smoke
+
+The current Stage 10 generator intentionally replaces only the two running rails with the Stage 10.1 Moscow/R65 contract. Permanent way, contact rail, and Moscow civil shell geometry remain deferred to Stage 10.2–10.4 and are explicitly marked as such in scene metadata.
+
 ## Blender 5.2 ID-property note
 
 Stage-9 persistent IDs are engine-neutral positive 63-bit integers. Blender 5.2.x scalar custom-property assignment can overflow when a Python integer exceeds the signed 32-bit C-int range.
@@ -201,6 +211,17 @@ The Stage-9 verifier applies bolt Booleans, removes temporary cutters, strips hi
 
 See STAGE9_BLENDER_SMOKE_TEST.md.
 
+For the Stage 10.1 scene use the Stage-10-aware verifier:
+
+    blender --background --python scripts/blender_verify_stage10.py -- \
+        examples/stage10_production_scene.json \
+        --report examples/blender_stage10_runtime_report.json \
+        --save-blend examples/stage10_production_scene.blend
+
+It validates R65 dimensions/profile metadata, the local UGR datum, the 13 mm gauge measurement plane, exact 1.520 m working-face gauge, persistent IDs, and the existing Blender Boolean/topology finalization path.
+
+See STAGE10_1_BLENDER_SMOKE_TEST.md.
+
 ## Tests and CI
 
 Install:
@@ -213,7 +234,7 @@ Run:
 
 Current automated baseline:
 
-    150 tests passed
+    158 tests passed
 
 CI also runs:
 
@@ -222,6 +243,8 @@ CI also runs:
     scripts/audit_stage9_topology.py
     scripts/verify_stage9_stress.py
     scripts/verify_stage9_trimesh.py
+    scripts/verify_stage10_1.py
+    examples/generate_stage10_production_tunnel.py  (CLI smoke)
 
 Latest Stage-9 production verification:
 
@@ -232,17 +255,6 @@ Latest Stage-9 production verification:
 
 ## Stage 10
 
-Stage 10 is intentionally a domain-profile change rather than another Tunnel Scanner reconstruction step.
+Stage 10 is a domain-profile change rather than another Tunnel Scanner reconstruction step. Stage 10.1 is implemented and keeps the Stage-9 production architecture while adding the source-backed Moscow data contract and R65/gauge/UGR placement.
 
-Planned Moscow Metro work includes:
-
-    tunnel/lining dimensions
-    actual rail standard
-    track gauge
-    sleepers and fasteners
-    central trough / drainage geometry
-    removal/replacement of the current walkway
-    Moscow-specific cable/service arrangement
-    other line/type/era-specific infrastructure
-
-Stage 9 should be visually approved in Blender before those geometry rules are introduced.
+The next bounded implementation stage is Stage 10.2: timber sleepers, KD-65 support chain, track concrete, central drain and crossfall. Contact rail and Moscow civil shell remain Stage 10.3 and 10.4 respectively. Exact cast-iron N/C/K ribs/bolts remain intentionally unresolved rather than guessed.

@@ -36,6 +36,7 @@ jobs:
           scripts/verify_stage10_2.py
           scripts/verify_stage10_3.py
           scripts/verify_stage10_4.py
+          scripts/verify_stage10_5.py
       - name: Unit and regression tests
         run: pytest
       - name: Stage 10.1 CLI compatibility smoke
@@ -65,13 +66,30 @@ jobs:
           --no-bolts
           --axis-noise-sigma 0
           --output /tmp/stage10_3_production_scene.json
-      - name: Stage 10.4 CLI civil-shell smoke
+      - name: Stage 10.4 CLI civil-shell compatibility smoke
         run: >-
           python examples/generate_stage10_production_tunnel.py
+          --domain-stage 10.4
           --rings 4
           --namespace stage10-4-ci
           --axis-noise-sigma 0
           --output /tmp/stage10_4_production_scene.json
+      - name: Stage 10.5 CLI modern-service smoke
+        run: >-
+          python examples/generate_stage10_production_tunnel.py
+          --rings 4
+          --namespace stage10-5-ci
+          --axis-noise-sigma 0
+          --output /tmp/stage10_5_production_scene.json
+      - name: Stage 10.5 CLI legacy-service compatibility smoke
+        run: >-
+          python examples/generate_stage10_production_tunnel.py
+          --domain-stage 10.5
+          --service-preset legacy
+          --rings 4
+          --namespace stage10-5-legacy-ci
+          --axis-noise-sigma 0
+          --output /tmp/stage10_5_legacy_scene.json
       - name: Stage 8 stress verification
         run: python scripts/verify_stage8_stress.py
       - name: Stage 8 independent trimesh verification
@@ -90,3 +108,5 @@ jobs:
         run: python scripts/verify_stage10_3.py
       - name: Stage 10.4 civil-shell verification
         run: python scripts/verify_stage10_4.py
+      - name: Stage 10.5 modern-service verification
+        run: python scripts/verify_stage10_5.py

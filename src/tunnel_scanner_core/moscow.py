@@ -25,6 +25,7 @@ class MoscowCoordinateContract:
     ugr_z_m: float
     profile_x_to_core_x_sign: int
     engineering_route_left_to_profile_x_sign: int
+    profile_z_to_core_z_offset_m: float
 
     def __post_init__(self) -> None:
         if self.units != "m":
@@ -35,6 +36,8 @@ class MoscowCoordinateContract:
             raise ValueError("profile X to core X sign must be +/-1")
         if self.engineering_route_left_to_profile_x_sign not in (-1, 1):
             raise ValueError("route-left to profile-X sign must be +/-1")
+        if not math.isfinite(self.profile_z_to_core_z_offset_m):
+            raise ValueError("profile Z to core Z offset must be finite")
 
     def research_xz_to_core_xz(
         self,
@@ -42,14 +45,20 @@ class MoscowCoordinateContract:
         z_m: float,
     ) -> tuple[float, float]:
         """Map the Stage-10 2D profile frame into the core XZ cross-section."""
-        return self.profile_x_to_core_x_sign * float(lateral_x_m), float(z_m)
+        return (
+            self.profile_x_to_core_x_sign * float(lateral_x_m),
+            float(z_m) + self.profile_z_to_core_z_offset_m,
+        )
 
     def core_xz_to_research_xz(
         self,
         core_x_m: float,
         core_z_m: float,
     ) -> tuple[float, float]:
-        return self.profile_x_to_core_x_sign * float(core_x_m), float(core_z_m)
+        return (
+            self.profile_x_to_core_x_sign * float(core_x_m),
+            float(core_z_m) - self.profile_z_to_core_z_offset_m,
+        )
 
     def engineering_route_to_core_local(
         self,
@@ -60,7 +69,11 @@ class MoscowCoordinateContract:
         """Map route (+X chainage,+Y left,+Z up) to core (+Y longitudinal)."""
         profile_x = self.engineering_route_left_to_profile_x_sign * float(left_m)
         core_x = self.profile_x_to_core_x_sign * profile_x
-        return core_x, float(chainage_m), float(z_m)
+        return (
+            core_x,
+            float(chainage_m),
+            float(z_m) + self.profile_z_to_core_z_offset_m,
+        )
 
     def core_local_to_engineering_route(
         self,
@@ -70,7 +83,11 @@ class MoscowCoordinateContract:
     ) -> tuple[float, float, float]:
         profile_x = self.profile_x_to_core_x_sign * float(core_x_m)
         left_m = self.engineering_route_left_to_profile_x_sign * profile_x
-        return float(core_y_m), left_m, float(core_z_m)
+        return (
+            float(core_y_m),
+            left_m,
+            float(core_z_m) - self.profile_z_to_core_z_offset_m,
+        )
 
 
 @dataclass(frozen=True)
@@ -190,6 +207,9 @@ class MoscowStage10Profile:
             ),
             engineering_route_left_to_profile_x_sign=int(
                 mapping_contract["engineering_route_left_to_profile_x_sign"]
+            ),
+            profile_z_to_core_z_offset_m=-float(
+                landmarks["lining_axis_z_m"]
             ),
         )
         datums = MoscowDatums(

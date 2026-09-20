@@ -1160,17 +1160,29 @@ Any new Stage-10 Blender smoke test should preserve that backend behaviour.
 - Stage-9 Blender smoke test and 63-bit Blender-ID compatibility fix;
 - focused Stage-10 research pass for the initial Moscow archetype;
 - **Stage 10.1 — Moscow profile/data integration + R65/gauge/UGR contract**;
-- **Stage 10.2 — timber/KD-65 permanent way + track concrete/drainage**;
+- **Stage 10.2 — legacy timber/KD-65 permanent way + track concrete/drainage**;
 - **Stage 10.3 — legacy RK contact rail / sleeper-mounted support chain**;
-- **Stage 10.4 — smooth Moscow 5.5/5.1 civil shell + raised walkway**.
+- **Stage 10.4 — smooth Moscow 5.5/5.1 civil shell + raised walkway**;
+- **Stage 10.5 — modern LVT-M/APC-4 service preset, segmented contact cover,
+  dedicated contact supports, R2K11 cable racks, DN80 water main and
+  zero-error sweep optimization**.
 
-### Ready to start
+The Stage-10.2/10.3 timber/KD-65 path remains a supported **legacy alternative**
+inside Stage 10.5 and has not been removed.
 
-- **Stage 10.5 — production integration / final initial-archetype validation.**
+### Ready for operator validation
+
+- **Real Blender 5.2.2 visual/runtime review of the Stage-10.5 modern preset.**
+- After that review: address only source-backed visual regressions or move to
+  exporter/instancing work.
 
 ### Still intentionally blocked
 
-- exact series-accurate classic 5.5/5.1 cast-iron tubing LOD0.
+- exact series-accurate classic 5.5/5.1 cast-iron tubing LOD0;
+- exact APC-4 small-part CAD;
+- exact modern contact-support hood and cover corner radii;
+- project-specific cable schedules/rack elevation;
+- exact project water-main schedule/mounting brackets.
 
 ---
 
@@ -1178,23 +1190,33 @@ Any new Stage-10 Blender smoke test should preserve that backend behaviour.
 
 Use this as the starting instruction:
 
-> Read `PROJECT_HANDOFF.md`, `STAGE10_4_REPORT.md`, `STAGE10_3_REPORT.md`, `research/moscow_metro_tunnels/21_stage10_initial_archetype.md`, `data/stage10_initial_profile.json`, and `data/stage10_source_pinpoints.json`. Stages 10.1–10.4 are implemented. Begin only Stage 10.5 production integration/final initial-archetype validation: verify the combined Moscow civil shell, track concrete, R65/timber/KD-65 permanent way, contact rail and walkway as one production asset across long scenes, ring-aligned and exact-length chunks, Blender runtime, stable parent IDs and duplicate/coplanar topology gates; prepare the scene contract for a future UNIGINE exporter without coupling core geometry to Blender. Keep exact N/C/K cast-iron ribs/bolts blocked unless new manufacturing drawings resolve them.
+> Read `PROJECT_HANDOFF.md`, `STAGE10_5_REPORT.md`, `STAGE10_5_BLENDER_SMOKE_TEST.md`, `research/moscow_metro_tunnels/21_stage10_initial_archetype.md`, `data/stage10_initial_profile.json`, and `data/stage10_source_pinpoints.json`. Stages 10.1–10.5 are implemented and CI-validated. Do not remove the legacy timber/KD-65 preset. First inspect the user's Blender 5.2.2 result for the default Stage-10.5 modern preset: LVT-M/APC-4, segmented rounded contact cover, dedicated contact supports, R2K11 racks/cables, DN80 water main, 5.5/5.1 shell and sweep compaction. Fix only demonstrated regressions or source-backed dimensional issues. Keep exact N/C/K cast-iron detail and unresolved small hardware blocked rather than inventing it.
 
 ---
 
 ## 46. Final note
 
-The first Moscow running-tunnel archetype now contains the researched physical
-5.5/5.1 shell, R65 track, timber/KD-65 permanent way, drainage, legacy contact
-rail and raised walkway.
+The first Moscow running-tunnel archetype now has two service-era variants on
+one civil/gauge contract:
 
-The several-decimetre gap that was intentionally visible through Stage
-10.2/10.3 is closed in Stage 10.4 because track concrete and the visible shell
-now share the same 2.550 m physical intrados. A similar gap in a regenerated
-Stage-10.4 scene is now a regression.
+```text
+modern default:
+  R65 + LVT-M/APC-4
+  modern segmented contact cover + dedicated supports
+  R2K11 racks / representative cables
+  one DN80-minimum water main
 
-The next bounded task is Stage 10.5 integration/validation. Keep the unresolved
-series-accurate cast-iron N/C/K detail boundary explicit.
+legacy selectable:
+  R65 + timber/KD-65
+  legacy sleeper-mounted contact support
+  legacy service preview
+```
+
+The selected civil shell remains the classic 5.5/5.1 family, so the Blender
+internal diameter of approximately 5.10 m is intentional.
+
+The next authoritative gate is a real Blender 5.2.2 visual/runtime review of
+the modern preset. Keep unresolved factory/project-specific details explicit.
 
 
 ---

@@ -1516,6 +1516,32 @@ def _translate_scene_object(
     )
 
 
+def _event_chainage_belongs_to_chunk(
+    chainage_m: float,
+    chunk: ChunkDescriptor,
+    *,
+    total_length_m: float,
+    tolerance_m: float = 1e-12,
+) -> bool:
+    """Assign one periodic event to exactly one metric chunk.
+
+    Chunk starts are inclusive. Chunk ends are exclusive except for the final
+    tunnel end. This keeps periodic assets independent from lining-ring IDs,
+    which is required for EXACT_LENGTH chunking.
+    """
+    c = float(chainage_m)
+    if c < chunk.start_chainage_m - tolerance_m:
+        return False
+    final_chunk = math.isclose(
+        chunk.end_chainage_m,
+        total_length_m,
+        abs_tol=tolerance_m,
+    )
+    if final_chunk:
+        return c <= chunk.end_chainage_m + tolerance_m
+    return c < chunk.end_chainage_m - tolerance_m
+
+
 def build_chunk_scene_packages(
     production: ProductionTunnelBuild,
     *,
@@ -1531,10 +1557,20 @@ def build_chunk_scene_packages(
     )
     total = production.assembly.length_by_chainage_m
     source_continuous_ids = {spec.instance_id for spec in production.asset_specs}
-    ring_objects = tuple(
+    non_continuous_objects = tuple(
         obj
         for obj in production.scene.objects
         if obj.instance_id not in source_continuous_ids
+    )
+    periodic_objects = tuple(
+        obj
+        for obj in non_continuous_objects
+        if "eventChainageM" in obj.extra_properties
+    )
+    ring_objects = tuple(
+        obj
+        for obj in non_continuous_objects
+        if "eventChainageM" not in obj.extra_properties
     )
 
     packages: list[ScenePackage] = []
@@ -1557,6 +1593,27 @@ def build_chunk_scene_packages(
             for obj in ring_objects
             if obj.ring_id in ring_id_set
         ]
+        objects.extend(
+            _translate_scene_object(
+                obj,
+                dx=0.0,
+                dy=0.0,
+                dz=0.0,
+                collection_prefix=chunk_prefix,
+                extra_properties={
+                    "chunkID": chunk.chunk_id,
+                    "chunkStartChainageM": chunk.start_chainage_m,
+                    "chunkEndChainageM": chunk.end_chainage_m,
+                    "chunkAssignmentRule": "event_chainage",
+                },
+            )
+            for obj in periodic_objects
+            if _event_chainage_belongs_to_chunk(
+                float(obj.extra_properties["eventChainageM"]),
+                chunk,
+                total_length_m=total,
+            )
+        )
         clipped = clipped_alignment_stations(
             production.alignment_stations,
             start_chainage_m=chunk.start_chainage_m,
@@ -1661,6 +1718,7 @@ def build_chunk_scene_packages(
                         "worldTransformRestoresGlobalCoordinates": True,
                         "internalLongitudinalCaps": False,
                         "sourceContinuousAssetIDsStableAcrossChunking": True,
+                        "periodicAssetsAssignedByEventChainage": True,
                     },
                 },
             )

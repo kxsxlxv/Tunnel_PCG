@@ -399,10 +399,10 @@ def build_stage10_2_local_event_meshes(
     # shoulder envelope. The rail-seat height is the explicit machine-profile
     # assembly-fit fallback needed to reconcile the independent Moscow datums.
     bp_half = 0.5 * k.baseplate_transverse_m
-    seat_half = 0.0755  # 151 mm source seat width from drawing 96
-    shoulder_inner = 0.0795
-    shoulder_outer = 0.1095
-    bp_outer_top = baseplate_z0 + 0.012
+    seat_half = k.baseplate_rail_seat_half_width_m
+    shoulder_inner = k.baseplate_shoulder_inner_x_m
+    shoulder_outer = k.baseplate_shoulder_outer_x_m
+    bp_outer_top = baseplate_z0 + k.baseplate_outer_wing_top_height_m
     bp_max = baseplate_z0 + k.baseplate_max_height_m
     bp_profile = (
         (-bp_half, baseplate_z0),
@@ -470,7 +470,7 @@ def build_stage10_2_local_event_meshes(
         hx = 0.5 * k.baseplate_hole_spacing_transverse_m
         hy = 0.5 * k.baseplate_hole_spacing_longitudinal_m
         screw_head_z0 = bp_outer_top
-        screw_head_z1 = screw_head_z0 + 0.008
+        screw_head_z1 = screw_head_z0 + k.track_screw_head_height_m
         for sx in (-hx, +hx):
             for sy in (-hy, +hy):
                 screws.append(
@@ -486,14 +486,14 @@ def build_stage10_2_local_event_meshes(
                     _cylinder_z_mesh(
                         center_x_m=center_x + sx,
                         center_y_m=sy,
-                        radius_m=0.018,
+                        radius_m=k.track_screw_head_radius_m,
                         z0_m=screw_head_z0,
                         z1_m=screw_head_z1,
                         segments=8,
                     )
                 )
 
-        bolt_x = 0.100
+        bolt_x = k.clamp_bolt_axis_offset_m
         bolt_z0 = baseplate_seat_z
         bolt_z1 = bolt_z0 + k.clamp_bolt_length_m
         nut_z0 = bolt_z1 - k.nut_height_m
@@ -511,7 +511,7 @@ def build_stage10_2_local_event_meshes(
                 _cylinder_z_mesh(
                     center_x_m=center_x + sx,
                     center_y_m=0.0,
-                    radius_m=0.018,
+                    radius_m=k.nut_circumradius_m,
                     z0_m=nut_z0,
                     z1_m=bolt_z1,
                     segments=6,
@@ -519,15 +519,22 @@ def build_stage10_2_local_event_meshes(
             )
             # Simplified KDP-2/PK clamp silhouette. Exact spring-clamp CAD is
             # explicitly outside the initial-profile source boundary.
-            clamp_center_x = center_x + math.copysign(0.082, sx)
+            clamp_center_x = (
+                center_x
+                + math.copysign(k.spring_clamp_center_offset_m, sx)
+            )
+            clamp_z0 = (
+                baseplate_seat_z
+                + k.spring_clamp_base_above_rail_seat_m
+            )
             clamp_hardware.append(
                 _box_mesh(
                     center_x_m=clamp_center_x,
                     center_y_m=0.0,
-                    size_x_m=0.055,
-                    size_y_m=0.055,
-                    z0_m=baseplate_seat_z + 0.010,
-                    z1_m=baseplate_seat_z + 0.022,
+                    size_x_m=k.spring_clamp_box_transverse_m,
+                    size_y_m=k.spring_clamp_box_longitudinal_m,
+                    z0_m=clamp_z0,
+                    z1_m=clamp_z0 + k.spring_clamp_box_height_m,
                 )
             )
 
@@ -560,6 +567,7 @@ def build_stage10_2_local_event_meshes(
                 "holeSpacingLongitudinalM": k.baseplate_hole_spacing_longitudinal_m,
                 "holeDiameterM": k.baseplate_hole_diameter_m,
                 "railSeatHeightMode": "derived_stack_fit_fallback",
+                "baseplateMeshMode": k.baseplate_mesh_mode,
                 "contactBottomFacesOmitted": True,
             },
         ),
@@ -587,7 +595,9 @@ def build_stage10_2_local_event_meshes(
                 "trackScrewLengthM": k.track_screw_length_m,
                 "quantityPerBaseplate": k.track_screws_per_baseplate,
                 "metroFastener": "24x150_flat_head",
-                "headGeometry": "simplified_visible_head",
+                "headGeometry": k.track_screw_head_mode,
+                "headRadiusM": k.track_screw_head_radius_m,
+                "headHeightM": k.track_screw_head_height_m,
             },
         ),
         (
@@ -602,7 +612,13 @@ def build_stage10_2_local_event_meshes(
                 "nutHeightM": k.nut_height_m,
                 "nutsPerBaseplate": k.nuts_per_baseplate,
                 "springClampsPerBaseplate": k.spring_clamps_per_baseplate,
-                "springClampGeometry": "simplified_parameterized_initial_geometry",
+                "springClampGeometry": k.clamp_geometry_mode,
+                "clampBoltAxisOffsetM": k.clamp_bolt_axis_offset_m,
+                "nutCircumradiusM": k.nut_circumradius_m,
+                "springClampCenterOffsetM": k.spring_clamp_center_offset_m,
+                "springClampBoxTransverseM": k.spring_clamp_box_transverse_m,
+                "springClampBoxLongitudinalM": k.spring_clamp_box_longitudinal_m,
+                "springClampBoxHeightM": k.spring_clamp_box_height_m,
             },
         ),
     ):

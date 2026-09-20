@@ -1,11 +1,13 @@
 import math
 
 from tunnel_scanner_core import (
+    ChunkBoundaryPolicy,
     LabelPolicy,
     ProductionConfig,
     R65ProductionProfile,
     TunnelAssemblyConfig,
     audit_exact_coincident_faces,
+    build_chunk_scene_packages,
     build_production_tunnel,
     build_stage10_2_local_event_meshes,
     load_stage10_initial_moscow_profile,
@@ -265,3 +267,48 @@ def test_stage10_2_permanent_way_has_no_exact_duplicate_faces():
         object_filter=lambda obj: obj.object_type in permanent_way_types,
     )
     assert audit.duplicate_group_count == 0
+
+
+def test_stage10_2_exact_length_chunking_assigns_each_periodic_event_once():
+    profile = load_stage10_initial_moscow_profile()
+    build = build_production_tunnel(
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=5,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.0,
+        ),
+        include_bolts=False,
+        production_config=ProductionConfig(
+            namespace="stage10-2-exact-chunks",
+            moscow_profile=profile,
+            moscow_stage="10.2",
+        ),
+        seed=5812,
+    )
+    source = {
+        obj.custom_properties["persistentKey"]: obj.instance_id
+        for obj in build.scene.objects_of_type("production_sleeper")
+    }
+
+    for chunk_m in (1.0, 1.3):
+        packages = build_chunk_scene_packages(
+            build,
+            chunk_length_m=chunk_m,
+            boundary_policy=ChunkBoundaryPolicy.EXACT_LENGTH,
+        )
+        occurrences = []
+        ids = {}
+        for package in packages:
+            assert package.metadata["productionChunk"][
+                "periodicAssetsAssignedByEventChainage"
+            ] is True
+            for obj in package.objects_of_type("production_sleeper"):
+                occurrences.append(obj.custom_properties["persistentKey"])
+                ids[obj.custom_properties["persistentKey"]] = obj.instance_id
+                assert (
+                    obj.custom_properties["chunkAssignmentRule"]
+                    == "event_chainage"
+                )
+        assert len(occurrences) == len(set(occurrences))
+        assert set(occurrences) == set(source)
+        assert ids == source

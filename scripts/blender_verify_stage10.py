@@ -157,7 +157,9 @@ def main() -> None:
             "ugrZLocalM": -1.670,
             "gaugeM": 1.520,
             "gaugeMeasurementBelowUGRM": 0.013,
-            "gaugeMeasurementZLocalM": -0.013,
+            "gaugeMeasurementProfileZLocalM": -0.013,
+            "gaugeMeasurementCoreZLocalM": -1.683,
+            "gaugeMeasurementZLocalM": -1.683,
         }
         for key, expected in dimensional_checks.items():
             if key not in props or not _close(props[key], expected):

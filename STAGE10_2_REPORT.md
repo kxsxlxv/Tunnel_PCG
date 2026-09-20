@@ -31,9 +31,10 @@ Stage 10.2 deliberately does **not** implement the contact rail or the Moscow
 
     moscow_stage="10.1"
     moscow_stage="10.2"
+    moscow_stage="10.3"
 
-Stage 10.1 remains a compatibility mode. The Stage-10 command-line generator
-defaults to Stage 10.2.
+Stage 10.1 and 10.2 remain compatibility modes. The Stage-10 command-line
+generator now defaults to Stage 10.3.
 
 In Stage 10.2 the old Stage-8/9 pavement asset is removed and replaced with one
 continuous `production_track_concrete` asset. The Stage-8/9 walkway and service
@@ -45,8 +46,9 @@ The deterministic profile remains:
 
     research/moscow_metro_tunnels/data/stage10_initial_profile.json
 
-Schema version 1.4 records the final Stage-10.2 procedural contract, including the sleeper-edge crossfall datum, rather than
-burying missing dimensions in production code.
+The Stage-10.2 contract was closed in schema 1.4. The shared machine profile has
+since advanced to schema 1.5 for Stage-10.3 contact-rail data; the Stage-10.2
+permanent-way values remain unchanged.
 
 Source-backed/derived data includes:
 
@@ -320,9 +322,10 @@ The full CI retains every previous Stage-8, Stage-9 and Stage-10.1 gate.
 
 ## User-facing workflow
 
-Stage 10.2 is now the default:
+Stage 10.2 is now an explicit compatibility mode:
 
     python examples/generate_stage10_production_tunnel.py \
+        --domain-stage 10.2 \
         --rings 20 \
         --namespace stage10-2-smoke
 
@@ -334,17 +337,18 @@ Stage 10.1 remains available explicitly:
         --namespace stage10-1-smoke
 
 The Stage-10 Blender verifier reads `domainStage` from scene metadata and
-validates either contract.
+validates Stage 10.1, 10.2 or 10.3.
 
 ## Deferred by design
 
 Still not implemented in Stage 10.2:
 
-- contact rail / bracket / insulator / protective assembly — Stage 10.3;
+- contact rail / bracket / insulator / protective assembly — implemented in Stage 10.3;
 - actual Moscow 5.5/5.1 civil shell and +0.200 m walkway — Stage 10.4;
 - series-accurate N/C/K cast-iron ribs, bolts, grout plug and rebates;
 - exact historical KDP-2 solid geometry;
 - exact local hand-finished concrete fillets/corner radii;
 - curve/cant variant of the deterministic straight fixture.
 
-The next bounded implementation stage is Stage 10.3 contact rail.
+The next bounded implementation stage after Stage 10.3 is Stage 10.4 civil
+shell / walkway. See STAGE10_3_REPORT.md.

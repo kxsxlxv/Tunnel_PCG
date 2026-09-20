@@ -10,7 +10,9 @@ from tunnel_scanner_core import (
     build_chunk_scene_packages,
     build_modern_contact_support_meshes,
     build_modern_lvt_local_event_meshes,
+    build_r2k11_local_rack_mesh,
     build_production_tunnel,
+    cable_rack_chainages,
     contact_rail_axis_profile_x,
     load_stage10_initial_moscow_profile,
     modern_contact_support_chainages,
@@ -76,6 +78,35 @@ def test_stage10_5_profile_contains_modern_default_and_legacy_alternative():
     assert math.isclose(cr.cover_top_wall_m, 0.003, abs_tol=1e-12)
     assert math.isclose(cr.support_block_height_m, 0.040, abs_tol=1e-12)
     assert math.isclose(cr.support_dowel_length_m, 0.140, abs_tol=1e-12)
+
+    rack = profile.cable_rack
+    assert rack.family == "R2K11"
+    assert rack.horn_count == 11
+    assert math.isclose(rack.overall_arc_length_m, 1.440, abs_tol=1e-12)
+    assert math.isclose(rack.upright_width_longitudinal_m, 0.048, abs_tol=1e-12)
+    assert math.isclose(rack.upright_thickness_m, 0.003, abs_tol=1e-12)
+    assert math.isclose(rack.horn_thickness_m, 0.004, abs_tol=1e-12)
+    assert math.isclose(rack.horn_radius_m, 0.0325, abs_tol=1e-12)
+    assert math.isclose(rack.horn_pitch_m, 0.125, abs_tol=1e-12)
+    assert math.isclose(rack.max_cable_diameter_m, 0.065, abs_tol=1e-12)
+
+
+def test_stage10_5_r2k11_racks_repeat_on_both_walls_and_stay_inside_shell():
+    profile = load_stage10_initial_moscow_profile()
+    chainages = cable_rack_chainages(5.4, profile)
+    assert chainages == (0.5, 1.5, 2.5, 3.5, 4.5)
+
+    for side in (-1, 1):
+        rack = build_r2k11_local_rack_mesh(profile, side_sign=side)
+        assert rack.properties["family"] == "R2K11"
+        assert rack.properties["hornCount"] == 11
+        assert rack.properties["cablePlacesPerHorn"] == 2
+        assert rack.vertices
+        max_radius = max(
+            math.hypot(x, z)
+            for x, _y, z in rack.vertices
+        )
+        assert max_radius < profile.intrados_radius_m
 
 
 def test_stage10_5_modern_cover_is_low_rounded_wrap_not_legacy_tall_box():
@@ -262,6 +293,27 @@ def test_stage10_5_modern_is_default_and_legacy_remains_selectable():
         modern.scene.objects_of_type("production_contact_rail_support_hood")
     ) == support_count
     assert mm["contactRailSupportSeparateFromRunningSupport"] is True
+    assert len(modern.scene.objects_of_type("production_tube")) == 0
+    assert len(modern.scene.objects_of_type("production_service_cable")) == 22
+    rack_count = len(
+        modern.scene.objects_of_type("production_cable_rack_r2k11")
+    )
+    assert rack_count == 22
+    assert mm["serviceCableCount"] == 22
+    assert mm["serviceCableRackCount"] == rack_count
+    assert mm["serviceCableRackFamily"] == "R2K11"
+    assert mm["serviceCableRackHornCount"] == 11
+    assert mm["serviceCableRacksPerCivilRing"] == 2
+    assert mm["servicePipeStatus"] == "unresolved_not_generated"
+    assert mm["legacyStage8TubeCount"] == 0
+
+    for cable in modern.scene.objects_of_type("production_service_cable"):
+        # Straight zero-noise fixture: all cable-section vertices remain inside
+        # the physical Moscow 2.55 m intrados.
+        assert max(
+            math.hypot(x, z)
+            for x, _y, z in cable.vertices
+        ) < profile.intrados_radius_m
 
     lm = legacy.scene.metadata["productionGeometry"]
     assert legacy.config.resolved_moscow_service_preset == "legacy"
@@ -271,6 +323,8 @@ def test_stage10_5_modern_is_default_and_legacy_remains_selectable():
     assert len(legacy.scene.objects_of_type("production_lvt_block")) == 0
     assert len(legacy.scene.objects_of_type("production_contact_rail_cover")) == 1
     assert len(legacy.scene.objects_of_type("production_contact_rail_cover_span")) == 0
+    assert len(legacy.scene.objects_of_type("production_tube")) == 6
+    assert len(legacy.scene.objects_of_type("production_service_cable")) == 0
 
 
 def test_stage10_5_modern_objects_have_no_exact_duplicate_faces_and_stable_ids():

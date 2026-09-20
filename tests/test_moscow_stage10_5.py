@@ -21,6 +21,7 @@ from tunnel_scanner_core import (
     modern_lvt_chainages,
     modern_protective_cover_profile_xz,
     modern_cable_sections_core,
+    modern_water_main_section_core,
     r65_rail_center_offsets_for_gauge,
 )
 
@@ -40,6 +41,11 @@ MODERN_TYPES = {
     "production_contact_rail_fastening_unit",
     "production_contact_rail_attachment_dowels",
     "production_contact_rail_support_hood",
+    "production_service_cable",
+    "production_cable_rack_r2k11",
+    "production_water_main",
+    "production_moscow_walkway",
+    "production_moscow_civil_shell_ring",
 }
 
 
@@ -57,8 +63,12 @@ def test_stage10_5_profile_contains_modern_default_and_legacy_alternative():
     pw = profile.modern_permanent_way
     cr = profile.modern_contact_rail
 
-    assert profile.schema_version == "1.8"
+    assert profile.schema_version == "1.9"
     assert profile.default_service_preset == "MODERN_MOSCOW_LVT_SERVICES_2020S"
+    assert profile.water_main.min_nominal_dn_mm == 80
+    assert profile.water_main.quantity_single_track_tunnel == 1
+    assert profile.water_main.side_profile_x_sign == 1
+    assert math.isclose(profile.water_main.center_profile_z_m, 0.70, abs_tol=1e-12)
 
     assert pw.preset_id == "MOSCOW_LVT_M_R65_APC4_2020S"
     assert pw.fastening_family == "APC-4"
@@ -307,7 +317,12 @@ def test_stage10_5_modern_is_default_and_legacy_remains_selectable():
     assert mm["serviceCableRackFamily"] == "R2K11"
     assert mm["serviceCableRackHornCount"] == 11
     assert mm["serviceCableRacksPerCivilRing"] == 2
-    assert mm["servicePipeStatus"] == "unresolved_not_generated"
+    assert mm["servicePipeStatus"] == (
+        "implemented_normative_DN80_with_explicit_placement_fallback"
+    )
+    assert mm["serviceWaterMainCount"] == 1
+    assert mm["serviceWaterMainMinNominalDNmm"] == 80
+    assert len(modern.scene.objects_of_type("production_water_main")) == 1
     assert mm["legacyStage8TubeCount"] == 0
 
     # Validate containment in the core-local cross-section. World X/Z include
@@ -319,6 +334,14 @@ def test_stage10_5_modern_is_default_and_legacy_remains_selectable():
             for x, z in section
         ) < profile.intrados_radius_m
 
+    water_section, water_props = modern_water_main_section_core(profile)
+    assert max(math.hypot(x, z) for x, z in water_section) < (
+        profile.intrados_radius_m
+    )
+    assert water_props["minNominalDNmm"] == 80
+    assert water_props["positionRule"] == "above_UGR_weak_current_side"
+    assert water_props["exactProjectRouteResolved"] is False
+
     lm = legacy.scene.metadata["productionGeometry"]
     assert legacy.config.resolved_moscow_service_preset == "legacy"
     assert lm["servicePreset"] == "legacy"
@@ -329,6 +352,7 @@ def test_stage10_5_modern_is_default_and_legacy_remains_selectable():
     assert len(legacy.scene.objects_of_type("production_contact_rail_cover_span")) == 0
     assert len(legacy.scene.objects_of_type("production_tube")) == 6
     assert len(legacy.scene.objects_of_type("production_service_cable")) == 0
+    assert len(legacy.scene.objects_of_type("production_water_main")) == 0
 
 
 def test_stage10_5_modern_objects_have_no_exact_duplicate_faces_and_stable_ids():

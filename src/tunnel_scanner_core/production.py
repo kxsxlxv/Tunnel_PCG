@@ -367,6 +367,49 @@ def clipped_alignment_stations(
     return result
 
 
+def compact_exact_collinear_alignment_stations(
+    stations: Sequence[AlignmentStation],
+    *,
+    tolerance_m: float = 1e-12,
+) -> tuple[AlignmentStation, ...]:
+    """Remove mathematically redundant samples from a continuous sweep path.
+
+    Stage-9 inserts explicit ring-boundary midpoint stations so ring-local
+    geometry stitches exactly. For a continuous sweep those midpoints lie on
+    the same piecewise-linear segment and can be removed with zero geometric
+    change. Stage 10.5 enables this as a safe polygon-count optimization.
+    """
+    result = tuple(stations)
+    if len(result) <= 2:
+        return result
+    if not math.isfinite(tolerance_m) or tolerance_m < 0.0:
+        raise ValueError(
+            "alignment compaction tolerance must be finite and non-negative"
+        )
+
+    kept: list[AlignmentStation] = [result[0]]
+    for i in range(1, len(result) - 1):
+        a = kept[-1]
+        b = result[i]
+        d = result[i + 1]
+        span = d.chainage_m - a.chainage_m
+        if span <= 0.0:
+            raise ValueError("alignment stations must be strictly increasing")
+        u = (b.chainage_m - a.chainage_m) / span
+        expected_y = a.world_y_m + u * (d.world_y_m - a.world_y_m)
+        expected_x = a.offset_x_m + u * (d.offset_x_m - a.offset_x_m)
+        expected_z = a.offset_z_m + u * (d.offset_z_m - a.offset_z_m)
+        if (
+            abs(b.world_y_m - expected_y) <= tolerance_m
+            and abs(b.offset_x_m - expected_x) <= tolerance_m
+            and abs(b.offset_z_m - expected_z) <= tolerance_m
+        ):
+            continue
+        kept.append(b)
+    kept.append(result[-1])
+    return tuple(kept)
+
+
 # ---------------------------------------------------------------------------
 # Continuous asset specs and sweep meshing
 # ---------------------------------------------------------------------------

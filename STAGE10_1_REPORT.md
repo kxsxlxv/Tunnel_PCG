@@ -153,8 +153,9 @@ Stage 10.1 now has the same two-step operator workflow as Stage 9.
 Generate:
 
     python examples/generate_stage10_production_tunnel.py \
+        --domain-stage 10.1 \
         --rings 20 \
-        --namespace stage10-smoke
+        --namespace stage10-1-smoke
 
 This writes `examples/stage10_production_scene.json` by default plus a summary
 JSON. The generator enables `ProductionConfig.moscow_profile` and performs

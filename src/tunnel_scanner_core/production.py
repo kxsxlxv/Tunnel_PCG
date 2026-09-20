@@ -2132,6 +2132,7 @@ class ProductionConfig:
     moscow_profile: MoscowStage10Profile | None = None
     moscow_stage: str = "10.1"
     moscow_service_preset: str = "auto"
+    compact_exact_collinear_continuous_stations: bool | None = None
     keep_stage8_ring_ancillary: bool = False
     keep_prescribed_outer_joint_solids: bool = False
     stitch_ring_geometry: bool = True
@@ -2169,6 +2170,15 @@ class ProductionConfig:
         if self.moscow_service_preset == "auto":
             return "modern" if self.moscow_stage == "10.5" else "legacy"
         return self.moscow_service_preset
+
+    @property
+    def resolved_compact_exact_collinear_continuous_stations(self) -> bool:
+        if self.compact_exact_collinear_continuous_stations is None:
+            return (
+                self.moscow_profile is not None
+                and self.moscow_stage == "10.5"
+            )
+        return bool(self.compact_exact_collinear_continuous_stations)
 
 
 @dataclass(frozen=True)
@@ -2255,6 +2265,9 @@ def build_production_scene(
             spec,
             stations,
             namespace=config.namespace,
+            compact_exact_collinear_stations=(
+                config.resolved_compact_exact_collinear_continuous_stations
+            ),
         )
         for spec in specs
     )
@@ -2398,6 +2411,11 @@ def build_production_scene(
                     "independent of chunk length"
                 ),
                 "chunking": "optional export partitioning, not a precision requirement",
+                "continuousSweepAlignmentCompaction": (
+                    "exact_zero_error_collinear"
+                    if config.resolved_compact_exact_collinear_continuous_stations
+                    else "disabled"
+                ),
             },
             "productionAlignmentStations": len(stations),
         }
@@ -3052,6 +3070,9 @@ def build_chunk_scene_packages(
                         chunk.end_chainage_m, total, abs_tol=1e-12
                     ),
                     collection_prefix=chunk_prefix,
+                    compact_exact_collinear_stations=(
+                        production.config.resolved_compact_exact_collinear_continuous_stations
+                    ),
                     extra_properties={
                         "chunkID": chunk.chunk_id,
                         "chunkStartChainageM": chunk.start_chainage_m,

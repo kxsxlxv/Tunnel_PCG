@@ -704,6 +704,36 @@
       "system": "ballastless low-vibration track; individual reinforced-concrete blocks on elastic pads in rubber boots, monolithically embedded in track concrete",
       "source": "P10-MOSMETRO-LVT-2022;P10-RU186427-LVT",
       "confidence": "A/B"
+    },
+    "fastening_details": {
+      "family": "APC-4",
+      "under_rail_pad": {
+        "designation": "АРС-04.07.003 / ЦП-204-АРС family",
+        "nominal_thickness_m": 0.014,
+        "source": "P10-APC4-PAD-14MM",
+        "confidence": "B_current_supplier_plus_instruction"
+      },
+      "component_topology": {
+        "clamps_per_rail_seat": 2,
+        "monoregulators_per_rail_seat": 2,
+        "underclamp_pieces_per_rail_seat": 2,
+        "insulating_angles_per_rail_seat": 2,
+        "anchors_per_rail_seat": 1,
+        "source": "P10-APC4-COMPONENTS",
+        "confidence": "B",
+        "exact_component_solids": "not_resolved_for_initial_modern_preview"
+      },
+      "initial_mesh": {
+        "mode": "source_topology_simplified_APC4_v1",
+        "rail_pad_plan_transverse_m": 0.18,
+        "rail_pad_plan_longitudinal_m": 0.095,
+        "clamp_preview_transverse_m": 0.045,
+        "clamp_preview_longitudinal_m": 0.035,
+        "clamp_preview_height_m": 0.025,
+        "monoregulator_preview_radius_m": 0.014,
+        "confidence": "B_pad_thickness_C_small_hardware_preview",
+        "reason": "14 mm pad thickness and component topology are source-backed; exact public factory solids/plan dimensions for all APC-4 small parts are not yet resolved."
+      }
     }
   },
   "service_era_presets": {

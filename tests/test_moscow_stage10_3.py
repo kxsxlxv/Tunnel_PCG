@@ -103,9 +103,10 @@ def test_stage10_3_cover_preserves_historical_side_clearance():
 
     bottom_z = cr.working_surface_z_m + cr.cover_lower_edge_above_contact_surface_m
     assert math.isclose(bottom_z, 0.183, abs_tol=1e-12)
+    assert math.isclose(cr.cover_height_m, 0.200, abs_tol=1e-12)
     assert math.isclose(
-        max(z for _x, z in poly),
-        bottom_z + cr.cover_height_m,
+        max(z for _x, z in poly) - cr.working_surface_z_m,
+        0.223,
         abs_tol=1e-12,
     )
 

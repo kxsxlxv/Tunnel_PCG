@@ -54,6 +54,14 @@ def parse_args() -> argparse.Namespace:
             "use legacy to retain timber/KD-65 and the legacy contact assembly."
         ),
     )
+    parser.add_argument(
+        "--dense-continuous-sweeps",
+        action="store_true",
+        help=(
+            "Disable Stage-10.5 zero-error removal of mathematically collinear "
+            "continuous-sweep stations. Intended only for regression comparison."
+        ),
+    )
     parser.add_argument("--no-bolts", action="store_true")
     parser.add_argument(
         "--label-policy",
@@ -398,6 +406,9 @@ def main() -> None:
             moscow_profile=profile,
             moscow_stage=args.domain_stage,
             moscow_service_preset=args.service_preset,
+            compact_exact_collinear_continuous_stations=(
+                False if args.dense_continuous_sweeps else None
+            ),
         ),
         seed=args.seed,
     )
@@ -436,6 +447,9 @@ def main() -> None:
             args.domain_stage in {"10.4", "10.5"}
         ),
         "servicePreset": production_meta.get("servicePreset"),
+        "continuousSweepAlignmentCompaction": production_meta.get(
+            "continuousSweepAlignmentCompaction"
+        ),
         "labelPolicy": args.label_policy,
         "sceneObjects": len(build.scene.objects),
         "productionInfrastructureObjects": len(production_objects),
@@ -501,6 +515,19 @@ def main() -> None:
         ),
         "railProfile": production_meta["railProfile"],
         "railProfileVertices": int(rails[0].custom_properties["railProfileVertices"]),
+        "railSourceAlignmentStations": int(
+            rails[0].custom_properties.get("sourceAlignmentStationCount", 0)
+        ),
+        "railSweepAlignmentStations": int(
+            rails[0].custom_properties.get("sweepAlignmentStationCount", 0)
+        ),
+        "railExactCollinearStationsRemoved": int(
+            rails[0].custom_properties.get(
+                "exactCollinearAlignmentStationsRemoved",
+                0,
+            )
+        ),
+        "railFaceCountEach": len(rails[0].faces),
         "workingFaceGaugeM": working_face_gauge,
         "innerWorkingFacesX": working_faces,
         "gaugeMeasurementBelowUGRM": profile.track.gauge_measurement_below_ugr_m,

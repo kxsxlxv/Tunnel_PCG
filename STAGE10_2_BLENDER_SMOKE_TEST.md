@@ -55,7 +55,7 @@ in addition to the Stage-10.1 R65/gauge/UGR contract:
 - track-concrete count = 1;
 - sleeper count matches scene metadata;
 - one grouped under-pad/baseplate/rail-pad/screw/clamp object per sleeper event;
-- R65 support-contact bottom faces are omitted;
+- the continuous R65 underside is preserved and only rail-pad contact spans are omitted;
 - drain width/depth and crossfall metadata;
 - sleeper dimensions/top datum;
 - KD-65 plan dimensions;

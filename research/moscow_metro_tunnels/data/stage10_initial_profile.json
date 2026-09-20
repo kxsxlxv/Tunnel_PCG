@@ -168,7 +168,22 @@
           0.008,
           0.01,
           0.03
-        ]
+        ],
+        "plan_orientation": {
+          "overall_length_axis": "profile/transverse X along timber sleeper",
+          "overall_width_axis": "track/longitudinal Y",
+          "hole_center_spacing_transverse_x_m": 0.31,
+          "hole_center_spacing_longitudinal_y_m": 0.1,
+          "basis": "P10-ALBUM-KD65 drawings 95-96 assembly/plate orientation",
+          "confidence": "B"
+        },
+        "initial_rail_seat_height_m": {
+          "value": 0.02,
+          "mode": "derived_stack_fit_fallback",
+          "derivation": "R65 base z (-0.180) - sleeper top z (-0.220) = 0.040 m support gap; subtract 0.006 m under-baseplate pad and 0.014 m rail-pad total thickness -> 0.020 m baseplate rail-seat height",
+          "source_geometry_context": "P10-ALBUM-KD65 drawing 96 provides the local KD65 plate profile including 16/20.5/23.6/55.6 mm callouts, but the exact metro assembly datum reconciliation is not separately dimensioned",
+          "confidence": "C_explicit_assembly_fit"
+        }
       },
       "rail_pad": {
         "geometry_mode": "dimensioned_historical_album",
@@ -304,14 +319,29 @@
       "width_m": 0.05,
       "depth_m": 0.025,
       "source": "P10-FROLOV-1.14",
-      "note": "caption states 25x50 mm; initial orientation uses 50 mm width x 25 mm depth"
+      "note": "caption states 25x50 mm; initial orientation uses 50 mm width x 25 mm depth",
+      "initial_position": {
+        "mode": "centered_in_central_drain_bottom_fallback",
+        "center_x_m": 0,
+        "rule": "represent the source-dimensioned 50 mm wide x 25 mm deep groove as a centered longitudinal notch in the 0.900 m central drain bottom for deterministic v1 geometry",
+        "confidence": "C_explicit_position_fallback",
+        "reason": "Fig.1.14 dimensions the groove but the inspected source text does not provide a separate numeric lateral offset"
+      }
     },
     "shoulder_geometry": {
       "mode": "procedural_from_source_constraints",
       "rule": "outside sleepers, track-concrete top follows 0.03 transverse fall toward central drain; sides fill down to circular intrados; do not use Cmk as a physical surface",
       "exact_breakpoint_coordinates": "not_required_for_initial_profile",
       "confidence": "B",
-      "nominal_surface_rule": "adjacent to sleepers use sleeper-top minus 10 mm as the local datum and apply the 0.03 fall toward the central drain; exact hand-finished breakpoints remain replaceable"
+      "nominal_surface_rule": "adjacent to sleepers use sleeper-top minus 10 mm as the local datum and apply the 0.03 fall toward the central drain; exact hand-finished breakpoints remain replaceable",
+      "initial_surface_reference": {
+        "mode": "rail_axis_datum_fallback",
+        "reference_x": "each R65 symmetry axis from the Stage10.1 working-face gauge solution",
+        "reference_z_m": -0.23,
+        "rule": "set concrete top z=-0.230 m at each running-rail symmetry axis, then apply 0.03 fall toward the central drain; continue the same plane outward until it intersects the physical 5.1 m intrados",
+        "confidence": "C_explicit_procedural_fallback",
+        "reason": "source fixes the adjacent concrete datum and 0.03 fall but does not dimension the exact hand-finished crossfall breakpoint"
+      }
     },
     "nominal_concrete_top_at_sleeper_datum_z_m": {
       "value": -0.23,

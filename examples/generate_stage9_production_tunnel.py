@@ -50,6 +50,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--sagitta-mm", type=float, default=2.0)
     parser.add_argument("--chunk-m", type=float, default=None)
     parser.add_argument(
+        "--chunks-only",
+        action="store_true",
+        help=(
+            "When --chunk-m is set, skip writing the monolithic full-scene JSON. "
+            "The geometry is still generated in global coordinates internally; only "
+            "the serialized output is partitioned."
+        ),
+    )
+    parser.add_argument(
         "--chunk-policy",
         choices=[x.value for x in ChunkBoundaryPolicy],
         default=ChunkBoundaryPolicy.RING_ALIGNED.value,
@@ -101,7 +110,10 @@ def main() -> None:
 
     output = args.output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
-    write_scene_package_json(build.scene, output)
+    if args.chunks_only and args.chunk_m is None:
+        raise ValueError("--chunks-only requires --chunk-m")
+    if not args.chunks_only:
+        write_scene_package_json(build.scene, output)
 
     production_objects = [
         obj for obj in build.scene.objects if obj.object_type.startswith("production_")
@@ -125,7 +137,18 @@ def main() -> None:
         "productionPavements": len(build.scene.objects_of_type("production_pavement")),
         "railProfile": "stage9_generic_lowpoly_16",
         "alignmentStations": len(build.alignment_stations),
-        "sceneJson": output.name,
+        "sceneJson": None if args.chunks_only else output.name,
+        "fullSceneSerialized": not args.chunks_only,
+        "tunnelInstanceID": build.scene.metadata["productionGeometry"]["tunnelInstanceID"],
+        "infrastructureAssets": [
+            {
+                "persistentKey": spec.persistent_key,
+                "instanceID": spec.instance_id,
+                "objectType": spec.object_type,
+                "category": spec.category,
+            }
+            for spec in build.asset_specs
+        ],
     }
 
     if args.chunk_m is not None:
@@ -162,9 +185,22 @@ def main() -> None:
                 {
                     "stage": 9,
                     "namespace": args.namespace,
+                    "tunnelInstanceID": build.scene.metadata["productionGeometry"][
+                        "tunnelInstanceID"
+                    ],
                     "chunkLengthRequestedM": args.chunk_m,
                     "boundaryPolicy": args.chunk_policy,
                     "localizedForBlender": args.localize_chunks_for_blender,
+                    "globalCoordinatesAreCanonical": True,
+                    "infrastructureAssets": [
+                        {
+                            "persistentKey": spec.persistent_key,
+                            "instanceID": spec.instance_id,
+                            "objectType": spec.object_type,
+                            "category": spec.category,
+                        }
+                        for spec in build.asset_specs
+                    ],
                     "chunks": manifest,
                 },
                 indent=2,

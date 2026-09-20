@@ -1,6 +1,7 @@
 import math
 
 from tunnel_scanner_core import (
+    AlignmentStation,
     ChunkBoundaryPolicy,
     LabelPolicy,
     ProductionConfig,
@@ -8,6 +9,7 @@ from tunnel_scanner_core import (
     TunnelAssemblyConfig,
     audit_exact_coincident_faces,
     build_chunk_scene_packages,
+    compact_exact_collinear_alignment_stations,
     build_modern_contact_support_meshes,
     build_modern_lvt_local_event_meshes,
     build_r2k11_local_rack_mesh,
@@ -387,3 +389,60 @@ def test_stage10_5_lvt_support_chain_is_600mm_half_phase():
         math.isclose(b - a, 0.600, abs_tol=2e-12)
         for a, b in zip(chainages, chainages[1:])
     )
+
+
+def test_stage10_5_exact_alignment_compaction_removes_only_collinear_samples():
+    stations = (
+        AlignmentStation(0.0, 0.0, 0.0, 0.0, "start"),
+        AlignmentStation(0.5, 0.5, 0.5, -0.25, "mid_exact"),
+        AlignmentStation(1.0, 1.0, 1.0, -0.5, "end_segment"),
+        AlignmentStation(1.5, 1.5, 1.2, -0.1, "bend"),
+    )
+    compact = compact_exact_collinear_alignment_stations(stations)
+    assert [s.source for s in compact] == ["start", "end_segment", "bend"]
+
+
+def test_stage10_5_continuous_sweeps_use_zero_error_station_compaction_by_default():
+    profile = load_stage10_initial_moscow_profile()
+    assembly = TunnelAssemblyConfig(
+        n_rings=20,
+        ring_width_m=1.35,
+        axis_noise_sigma_m=0.0,
+    )
+    compact = build_production_tunnel(
+        assembly_config=assembly,
+        include_bolts=False,
+        production_config=ProductionConfig(
+            namespace="stage10-5-compact",
+            moscow_profile=profile,
+            moscow_stage="10.5",
+        ),
+        seed=5812,
+    )
+    dense = build_production_tunnel(
+        assembly_config=assembly,
+        include_bolts=False,
+        production_config=ProductionConfig(
+            namespace="stage10-5-dense",
+            moscow_profile=profile,
+            moscow_stage="10.5",
+            compact_exact_collinear_continuous_stations=False,
+        ),
+        seed=5812,
+    )
+
+    c_rail = compact.scene.objects_of_type("production_rail")[0]
+    d_rail = dense.scene.objects_of_type("production_rail")[0]
+    cp = c_rail.custom_properties
+    dp = d_rail.custom_properties
+    assert cp["alignmentCompactionMode"] == "exact_zero_error_collinear"
+    assert dp["alignmentCompactionMode"] == "disabled"
+    assert cp["sourceAlignmentStationCount"] == dp["sourceAlignmentStationCount"]
+    assert cp["sweepAlignmentStationCount"] < cp["sourceAlignmentStationCount"]
+    assert cp["exactCollinearAlignmentStationsRemoved"] > 0
+    assert len(c_rail.faces) < len(d_rail.faces)
+
+    # The optimization is topology-only along mathematically collinear spans:
+    # tunnel endpoints and rail cross-section are unchanged.
+    assert c_rail.vertices[:118] == d_rail.vertices[:118]
+    assert c_rail.vertices[-118:] == d_rail.vertices[-118:]

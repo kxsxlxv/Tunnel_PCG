@@ -162,12 +162,28 @@ def _validate_stage10_build(build, profile, domain_stage: str) -> tuple[float, l
                     f"{obj_type}: count does not match sleeper count"
                 )
         for rail in rails:
-            if not rail.custom_properties.get(
-                "railFootBottomContactFaceOmitted",
+            props = rail.custom_properties
+            if props.get("railFootBottomContactFaceOmitted", True):
+                raise AssertionError(
+                    f"{rail.name}: continuous R65 underside must remain visible"
+                )
+            if int(props.get("omittedLongitudinalEdgeCount", -1)) != 0:
+                raise AssertionError(
+                    f"{rail.name}: unexpected continuous rail-edge omission"
+                )
+            if props.get("supportContactSurfacePolicy") != (
+                "discrete_rail_pad_top_contact_span_omitted"
+            ):
+                raise AssertionError(
+                    f"{rail.name}: wrong discrete support contact policy"
+                )
+        for pad in build.scene.objects_of_type("production_rail_pad"):
+            if not pad.custom_properties.get(
+                "railFootContactFaceOmitted",
                 False,
             ):
                 raise AssertionError(
-                    f"{rail.name}: support-contact bottom face was not omitted"
+                    f"{pad.name}: rail-foot contact span was not omitted"
                 )
     return gauge, working_faces
 

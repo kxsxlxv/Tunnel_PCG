@@ -1481,6 +1481,115 @@ def _build_stage10_3_contact_scene_objects(
     return tuple(result)
 
 
+def _build_stage10_4_civil_shell_objects(
+    *,
+    profile: MoscowStage10Profile,
+    namespace: str,
+    assembly: TunnelAssembly,
+    stations: Sequence[AlignmentStation],
+    label_policy: LabelPolicy,
+) -> tuple[SceneObject, ...]:
+    total = assembly.length_by_chainage_m
+    label_id, semantic = _civil_semantics(label_policy)
+    result: list[SceneObject] = []
+    source_ring_width = assembly.config.ring_width_m
+
+    ranges = civil_ring_ranges(
+        total,
+        ring_pitch_m=profile.ring_pitch_m,
+    )
+    for ring_index, start_chainage, end_chainage in ranges:
+        clipped = clipped_alignment_stations(
+            stations,
+            start_chainage_m=start_chainage,
+            end_chainage_m=end_chainage,
+        )
+        mesh = build_annular_shell_sweep(
+            profile,
+            tuple(
+                (
+                    station.offset_x_m,
+                    station.world_y_m,
+                    station.offset_z_m,
+                )
+                for station in clipped
+            ),
+            angular_segments=96,
+            cap_start=math.isclose(start_chainage, 0.0, abs_tol=1e-12),
+            cap_end=math.isclose(end_chainage, total, abs_tol=1e-12),
+        )
+        midpoint = 0.5 * (start_chainage + end_chainage)
+        representative_ring_id = min(
+            assembly.config.n_rings - 1,
+            max(0, int(math.floor(midpoint / source_ring_width))),
+        )
+        key = f"{namespace}/civil-shell/ring/{ring_index:06d}"
+        iid = stable_instance_id(key)
+        result.append(
+            SceneObject(
+                name=f"PROD_MOSCOW_CIVIL_RING_{ring_index:06d}",
+                vertices=mesh.vertices,
+                faces=mesh.faces,
+                object_type="production_moscow_civil_shell_ring",
+                ring_id=representative_ring_id,
+                label_id=label_id,
+                instance_id=iid,
+                semantic_class=semantic,
+                reconstruction="stage10_4_moscow_smooth_concentric_shell",
+                collection_path=(
+                    "Tunnel",
+                    namespace,
+                    "CivilShell",
+                    "Rings",
+                ),
+                extra_properties={
+                    "persistentKey": key,
+                    "persistentInstanceID": iid,
+                    "tunnelInstanceID": stable_instance_id(
+                        f"{namespace}/tunnel"
+                    ),
+                    "identityScope": "periodic_moscow_civil_ring",
+                    "domainGeometryStage": "10.4",
+                    "eventChainageM": midpoint,
+                    "chunkAssignmentDatum": "moscow_ring_midpoint_chainage",
+                    "moscowCivilRingIndex": ring_index,
+                    "moscowCivilRingStartChainageM": start_chainage,
+                    "moscowCivilRingEndChainageM": end_chainage,
+                    "moscowCivilRingPitchM": profile.ring_pitch_m,
+                    "partialFinalRing": (
+                        end_chainage - start_chainage
+                        < profile.ring_pitch_m - 1e-12
+                    ),
+                    "civilFamily": profile.civil_family,
+                    "civilGeometryMode": profile.civil_geometry_mode,
+                    "circumferentialSegmentSurfaceMode": (
+                        profile.civil_segment_surface_mode
+                    ),
+                    "coarseSegmentCountReference": 11,
+                    "coarseSegmentCountIsGeometry": False,
+                    "seriesAccurateTubingLOD0": False,
+                    "intradosRadiusM": profile.intrados_radius_m,
+                    "intradosDiameterM": 2.0 * profile.intrados_radius_m,
+                    "extradosRadiusM": profile.extrados_radius_m,
+                    "extradosDiameterM": 2.0 * profile.extrados_radius_m,
+                    "structuralDepthM": (
+                        profile.extrados_radius_m
+                        - profile.intrados_radius_m
+                    ),
+                    "liningAxisProfileZM": profile.datums.lining_axis_z_m,
+                    "liningAxisCoreZM": 0.0,
+                    "angularSegments": mesh.angular_segments,
+                    "internalRingEndCaps": False,
+                    "moscowProfileID": profile.profile_id,
+                    "moscowProfileSHA256": (
+                        profile.provenance.canonical_sha256
+                    ),
+                },
+            )
+        )
+    return tuple(result)
+
+
 # ---------------------------------------------------------------------------
 # Production scene
 # ---------------------------------------------------------------------------
@@ -1504,12 +1613,12 @@ class ProductionConfig:
             raise ValueError(
                 "specify either rail_profile or moscow_profile, not both"
             )
-        if self.moscow_stage not in {"10.1", "10.2", "10.3"}:
+        if self.moscow_stage not in {"10.1", "10.2", "10.3", "10.4"}:
             raise ValueError(
-                "moscow_stage must be '10.1', '10.2' or '10.3'"
+                "moscow_stage must be '10.1', '10.2', '10.3' or '10.4'"
             )
         if self.moscow_stage != "10.1" and self.moscow_profile is None:
-            raise ValueError("Moscow Stage 10.2/10.3 requires moscow_profile")
+            raise ValueError("Moscow Stage 10.2/10.3/10.4 requires moscow_profile")
 
 
 @dataclass(frozen=True)
@@ -1546,6 +1655,19 @@ def build_production_scene(
 
     objects: list[SceneObject] = []
     for obj in source_scene.objects:
+        if (
+            config.moscow_profile is not None
+            and config.moscow_stage == "10.4"
+            and obj.object_type
+            in {
+                "lining_segment",
+                "bolt_pocket_cutter",
+                "bolt_head",
+                "prescribed_radial_joint",
+                "prescribed_circumferential_joint",
+            }
+        ):
+            continue
         if (
             not config.keep_stage8_ring_ancillary
             and obj.object_type.startswith("ancillary_")
@@ -1589,7 +1711,7 @@ def build_production_scene(
     stage10_2_periodic: tuple[SceneObject, ...] = ()
     if (
         config.moscow_profile is not None
-        and config.moscow_stage in {"10.2", "10.3"}
+        and config.moscow_stage in {"10.2", "10.3", "10.4"}
     ):
         stage10_2_periodic = _build_stage10_2_periodic_scene_objects(
             profile=config.moscow_profile,
@@ -1603,7 +1725,7 @@ def build_production_scene(
     stage10_3_contact_periodic: tuple[SceneObject, ...] = ()
     if (
         config.moscow_profile is not None
-        and config.moscow_stage == "10.3"
+        and config.moscow_stage in {"10.3", "10.4"}
     ):
         stage10_3_contact_periodic = _build_stage10_3_contact_scene_objects(
             profile=config.moscow_profile,
@@ -1613,6 +1735,20 @@ def build_production_scene(
             label_policy=source_scene.label_policy,
         )
         objects.extend(stage10_3_contact_periodic)
+
+    stage10_4_civil_rings: tuple[SceneObject, ...] = ()
+    if (
+        config.moscow_profile is not None
+        and config.moscow_stage == "10.4"
+    ):
+        stage10_4_civil_rings = _build_stage10_4_civil_shell_objects(
+            profile=config.moscow_profile,
+            namespace=config.namespace,
+            assembly=source_build.assembly,
+            stations=stations,
+            label_policy=source_scene.label_policy,
+        )
+        objects.extend(stage10_4_civil_rings)
 
     metadata = dict(source_scene.metadata)
     metadata.update(

@@ -470,13 +470,14 @@
           "mode": "modern_silhouette_width_adjusted_to_historical_clearance",
           "outer_top_width_m": 0.112,
           "outer_base_width_m": 0.134,
-          "height_m": 0.111,
+          "height_m": 0.2,
           "side_wall_m": 0.002,
           "top_wall_m": 0.003,
           "lower_edge_z_above_contact_surface_m": 0.023,
-          "derivation": "modern 92/114 mm silhouette widened by 20 mm total so the 134 mm base with 2 mm side walls gives 130 mm internal clearance, preserving at least 20 mm lateral clearance around the 90 mm maximum RK width",
+          "derivation": "historical 223 mm rail+protective vertical envelope minus 23 mm lower-edge offset fixes 200 mm effective cover height; modern silhouette contributes wall thickness/shape proportions only. Width is adjusted so the 134 mm base with 2 mm side walls gives 130 mm internal clearance, preserving at least 20 mm lateral clearance around the 90 mm maximum RK width",
           "confidence": "C_explicit_era_mismatch_geometry",
-          "era_mismatch": true
+          "era_mismatch": true,
+          "historical_vertical_envelope_preserved_m": 0.223
         }
       },
       "historical_cover_family": "legacy wooden-board protective box per 1986 VNiR installation terminology"

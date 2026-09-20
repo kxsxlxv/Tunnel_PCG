@@ -374,6 +374,21 @@
       ],
       "limitation": "The inspected public TU does not expose the full dimensioned segment shop drawings needed for N/C/K angles, rib coordinates, bolt-hole coordinates, grout-plug coordinate, and rebate/falts profile.",
       "confidence": "A_for_family_specification_not_segment_CAD"
+    },
+    {
+      "id": "P10-CONTACT-SUSPENSION-1997",
+      "title": "RU3729U1 — Узел подвески контактного рельса",
+      "url": "https://patents.google.com/patent/RU3729U1/ru",
+      "locator": {
+        "description_paragraphs": "legacy prior-art description",
+        "cited_original": "Инструкция по текущему содержанию пути и контактного рельса метрополитенов, 1984, p.50 Fig.33 and p.143 Fig.3"
+      },
+      "supports": [
+        "conventional metro contact-rail bracket is fixed to a timber sleeper by three track screws",
+        "legacy suspension consists of bracket, bolted retaining clip and porcelain insulator on the contact rail",
+        "adjustment of the legacy bracket position is made at the sleeper attachment"
+      ],
+      "confidence": "B_secondary_patent_description_of_1984_metro_instruction"
     }
   ]
 }

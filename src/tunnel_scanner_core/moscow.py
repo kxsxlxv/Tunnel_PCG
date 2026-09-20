@@ -281,7 +281,8 @@ class MoscowKD65Profile:
 @dataclass(frozen=True)
 class MoscowTrackConcreteProfile:
     surface_cross_slope_to_drain: float
-    concrete_top_at_rail_z_m: float
+    surface_reference_abs_x_m: float
+    surface_reference_z_m: float
     minimum_bottom_at_rail_z_m: float
     central_drain_center_x_m: float
     central_drain_clear_width_m: float
@@ -296,6 +297,7 @@ class MoscowTrackConcreteProfile:
     def __post_init__(self) -> None:
         positive = (
             self.surface_cross_slope_to_drain,
+            self.surface_reference_abs_x_m,
             self.central_drain_clear_width_m,
             self.water_groove_width_m,
             self.water_groove_depth_m,
@@ -304,9 +306,11 @@ class MoscowTrackConcreteProfile:
             raise ValueError("track-concrete dimensions/slope must be positive")
         if self.water_groove_width_m >= self.central_drain_clear_width_m:
             raise ValueError("water-release groove must fit inside central drain")
-        if self.minimum_bottom_at_rail_z_m >= self.concrete_top_at_rail_z_m:
+        if not math.isfinite(self.surface_reference_z_m):
+            raise ValueError("concrete surface reference z must be finite")
+        if self.minimum_bottom_at_rail_z_m >= self.surface_reference_z_m:
             raise ValueError("concrete minimum bottom must lie below top datum")
-        if self.central_drain_bottom_z_m >= self.concrete_top_at_rail_z_m:
+        if self.central_drain_bottom_z_m >= self.surface_reference_z_m:
             raise ValueError("central drain bottom must lie below concrete top")
 
 
@@ -555,11 +559,10 @@ class MoscowStage10Profile:
             surface_cross_slope_to_drain=float(
                 concrete_raw["surface_cross_slope_to_drain"]
             ),
-            concrete_top_at_rail_z_m=float(
-                concrete_raw["nominal_concrete_top_at_sleeper_datum_z_m"][
-                    "value"
-                ]
+            surface_reference_abs_x_m=float(
+                concrete_reference["reference_abs_x_m"]
             ),
+            surface_reference_z_m=float(concrete_reference["reference_z_m"]),
             minimum_bottom_at_rail_z_m=float(
                 concrete_raw[
                     "derived_min_concrete_bottom_z_at_rail_on_straight_m"
@@ -624,6 +627,24 @@ class MoscowStage10Profile:
             )
         if not math.isclose(sleeper_profile.pitch_m, 1000.0 / 1680.0, abs_tol=1e-12):
             raise ValueError("initial straight sleeper density must remain 1680/km")
+
+        if not math.isclose(
+            concrete_profile.surface_reference_abs_x_m,
+            0.5 * sleeper_profile.length_m,
+            abs_tol=1e-12,
+        ):
+            raise ValueError(
+                "Stage-10.2 concrete crossfall reference must remain at the "
+                "outer end of the deterministic timber sleeper"
+            )
+        if not math.isclose(
+            sleeper_profile.top_z_m - concrete_profile.surface_reference_z_m,
+            0.010,
+            abs_tol=1e-12,
+        ):
+            raise ValueError(
+                "Stage-10.2 sleeper-end exposure must remain 0.010 m"
+            )
 
         digest = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
         return cls(

@@ -114,6 +114,7 @@ from .moscow import (
     MoscowTimberSleeperProfile,
     MoscowKD65Profile,
     MoscowTrackConcreteProfile,
+    MoscowWalkwayProfile,
     MoscowContactRailProfile,
     R65Primitive,
     R65ProductionProfile,
@@ -128,6 +129,13 @@ from .permanent_way import (
     sleeper_chainages,
     track_concrete_core_xz,
     track_concrete_profile_xz,
+)
+from .civil import (
+    CivilShellMesh,
+    build_annular_shell_sweep,
+    civil_ring_ranges,
+    walkway_core_xz,
+    walkway_profile_xz,
 )
 from .contact_rail import (
     LocalContactRailMesh,
@@ -286,6 +294,7 @@ __all__ = [
     "MoscowTimberSleeperProfile",
     "MoscowKD65Profile",
     "MoscowTrackConcreteProfile",
+    "MoscowWalkwayProfile",
     "MoscowContactRailProfile",
     "R65Primitive",
     "R65ProductionProfile",
@@ -298,6 +307,11 @@ __all__ = [
     "sleeper_chainages",
     "track_concrete_core_xz",
     "track_concrete_profile_xz",
+    "CivilShellMesh",
+    "build_annular_shell_sweep",
+    "civil_ring_ranges",
+    "walkway_core_xz",
+    "walkway_profile_xz",
     "LocalContactRailMesh",
     "build_stage10_3_local_support_meshes",
     "contact_rail_axis_profile_x",

@@ -76,7 +76,9 @@ def test_stage10_2_profile_closes_sleeper_kd65_and_concrete_data():
     assert math.isclose(tc.central_drain_bottom_z_m, -0.530, abs_tol=1e-12)
     assert math.isclose(tc.water_groove_width_m, 0.050, abs_tol=1e-12)
     assert math.isclose(tc.water_groove_depth_m, 0.025, abs_tol=1e-12)
-    assert tc.surface_reference_mode == "rail_axis_datum_fallback"
+    assert math.isclose(tc.surface_reference_abs_x_m, 1.325, abs_tol=1e-12)
+    assert math.isclose(tc.surface_reference_z_m, -0.230, abs_tol=1e-12)
+    assert tc.surface_reference_mode == "sleeper_outer_edge_datum_fallback"
     assert tc.groove_position_mode == "centered_in_central_drain_bottom_fallback"
 
 
@@ -89,9 +91,11 @@ def test_stage10_2_track_concrete_profile_has_source_backed_drain_slope_and_intr
     )
 
     drain_half = 0.45
-    drain_top_expected = (
+    sleeper_end = 0.5 * profile.sleeper.length_m
+    drain_top_expected = -0.230 + 0.03 * (drain_half - sleeper_end)
+    rail_top_concrete_expected = (
         -0.230
-        + 0.03 * (drain_half - abs(centers[1]))
+        + 0.03 * (abs(centers[1]) - sleeper_end)
     )
     assert math.isclose(poly[1][0], -drain_half, abs_tol=1e-12)
     assert math.isclose(poly[1][1], drain_top_expected, abs_tol=1e-12)
@@ -104,9 +108,30 @@ def test_stage10_2_track_concrete_profile_has_source_backed_drain_slope_and_intr
     assert math.isclose(poly[7][0], +drain_half, abs_tol=1e-12)
     assert math.isclose(poly[7][1], -0.530, abs_tol=1e-12)
 
+    assert math.isclose(
+        rail_top_concrete_expected,
+        -0.24586628402424962,
+        abs_tol=2e-12,
+    )
+    assert math.isclose(
+        profile.sleeper.top_z_m - profile.track_concrete.surface_reference_z_m,
+        0.010,
+        abs_tol=1e-12,
+    )
+    # The 3% plane must not rise above the flat timber sleeper top anywhere
+    # between the drain side and the sleeper end.
+    for i in range(101):
+        x = drain_half + (sleeper_end - drain_half) * i / 100.0
+        z = (
+            profile.track_concrete.surface_reference_z_m
+            + profile.track_concrete.surface_cross_slope_to_drain
+            * (x - profile.track_concrete.surface_reference_abs_x_m)
+        )
+        assert z <= profile.sleeper.top_z_m - 0.010 + 2e-12
+
     xout, zout = poly[9]
-    assert math.isclose(xout, 1.7315755630613174, abs_tol=2e-12)
-    assert math.isclose(zout, -0.20193644908391087, abs_tol=2e-12)
+    assert math.isclose(xout, 1.7136722791407735, abs_tol=2e-12)
+    assert math.isclose(zout, -0.2183398316257768, abs_tol=2e-12)
     circle_error = (
         xout * xout
         + (zout - profile.datums.lining_axis_z_m) ** 2

@@ -24,14 +24,38 @@ def cable_rack_chainages(
     total_length_m: float,
     profile: MoscowStage10Profile,
 ) -> tuple[float, ...]:
+    """One cable-rack station at the midpoint of every Moscow civil ring.
+
+    This includes a final partial civil ring. The machine-profile phase remains
+    0.5 m for full 1.0 m rings, but a 0.5 m terminal ring correctly receives a
+    rack at its own 0.25 m midpoint instead of being silently skipped.
+    """
     rack = profile.cable_rack
     if not math.isfinite(total_length_m) or total_length_m <= 0.0:
         raise ValueError("total_length_m must be finite and positive")
+    if not math.isclose(
+        rack.repeat_pitch_m,
+        profile.ring_pitch_m,
+        abs_tol=1e-12,
+    ):
+        raise ValueError(
+            "modern cable-rack repeat pitch must match Moscow civil-ring pitch"
+        )
+    if not math.isclose(
+        rack.phase_m,
+        0.5 * rack.repeat_pitch_m,
+        abs_tol=1e-12,
+    ):
+        raise ValueError(
+            "modern cable-rack full-ring phase must be half the repeat pitch"
+        )
+
     result: list[float] = []
-    chainage = rack.phase_m
-    while chainage < total_length_m - 1e-12:
-        result.append(chainage)
-        chainage += rack.repeat_pitch_m
+    start = 0.0
+    while start < total_length_m - 1e-12:
+        end = min(total_length_m, start + rack.repeat_pitch_m)
+        result.append(0.5 * (start + end))
+        start = end
     return tuple(result)
 
 

@@ -276,6 +276,33 @@
       ],
       "confidence": "B_current_resource_geometry",
       "warning": "use dimensions as component-envelope references; fastener length differs from Frolov 2001 legacy 24x150 assembly"
+    },
+    {
+      "id": "P10-ALBUM-KD65",
+      "title": "Альбом чертежей верхнего строения железнодорожного пути",
+      "url": "https://files.stroyinf.ru/Data2/1/4294847/4294847205.htm",
+      "locator": {
+        "table": "22",
+        "drawings": [
+          "95 KD65 assembly on timber sleeper",
+          "96 KD65/K4-65 baseplate",
+          "97 under-baseplate pad",
+          "98 track screw",
+          "99 R65 rail-foot pad"
+        ]
+      },
+      "supports": [
+        "KD65 assembly on timber sleeper",
+        "one baseplate",
+        "one under-baseplate pad",
+        "four track screws",
+        "one R65 rail-foot pad",
+        "two M22x75 clamp bolts",
+        "M22x22 nuts",
+        "two PK clamps",
+        "double-turn washers"
+      ],
+      "confidence": "B/C_non_metro_railway_detail_used_only_for_shape/pad_fallback"
     }
   ]
 }

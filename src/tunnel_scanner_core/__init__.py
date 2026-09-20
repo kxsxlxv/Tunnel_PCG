@@ -128,6 +128,8 @@ from .moscow import (
 from .permanent_way import (
     LocalPermanentWayMesh,
     build_stage10_2_local_event_meshes,
+    build_modern_lvt_local_event_meshes,
+    modern_lvt_chainages,
     sleeper_chainages,
     track_concrete_core_xz,
     track_concrete_profile_xz,
@@ -313,6 +315,8 @@ __all__ = [
     "r65_rail_center_offsets_for_gauge",
     "LocalPermanentWayMesh",
     "build_stage10_2_local_event_meshes",
+    "build_modern_lvt_local_event_meshes",
+    "modern_lvt_chainages",
     "sleeper_chainages",
     "track_concrete_core_xz",
     "track_concrete_profile_xz",

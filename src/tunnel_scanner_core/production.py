@@ -729,7 +729,7 @@ def stitch_ring_scene_object_to_alignment(
             if obj.reconstruction
             else "stage9_stitched_ring_alignment"
         ),
-        collection_path=obj.collection_path,
+        collection_path=(*collection_prefix, *obj.collection_path),
         extra_properties=props,
     )
 
@@ -1025,6 +1025,7 @@ def _translate_scene_object(
     dy: float,
     dz: float,
     extra_properties: Mapping[str, Any] | None = None,
+    collection_prefix: tuple[str, ...] = (),
 ) -> SceneObject:
     props = {**dict(obj.extra_properties), **dict(extra_properties or {})}
     return SceneObject(
@@ -1069,8 +1070,22 @@ def build_chunk_scene_packages(
     packages: list[ScenePackage] = []
     for chunk in chunks:
         ring_id_set = set(chunk.ring_ids)
+        chunk_prefix = ("Chunks", f"Chunk_{chunk.chunk_id:05d}")
         objects: list[SceneObject] = [
-            obj for obj in ring_objects if obj.ring_id in ring_id_set
+            _translate_scene_object(
+                obj,
+                dx=0.0,
+                dy=0.0,
+                dz=0.0,
+                collection_prefix=chunk_prefix,
+                extra_properties={
+                    "chunkID": chunk.chunk_id,
+                    "chunkStartChainageM": chunk.start_chainage_m,
+                    "chunkEndChainageM": chunk.end_chainage_m,
+                },
+            )
+            for obj in ring_objects
+            if obj.ring_id in ring_id_set
         ]
         clipped = clipped_alignment_stations(
             production.alignment_stations,
@@ -1110,7 +1125,7 @@ def build_chunk_scene_packages(
                     cap_end=math.isclose(
                         chunk.end_chainage_m, total, abs_tol=1e-12
                     ),
-                    collection_prefix=("Chunks", f"Chunk_{chunk.chunk_id:05d}"),
+                    collection_prefix=chunk_prefix,
                     extra_properties={
                         "chunkID": chunk.chunk_id,
                         "chunkStartChainageM": chunk.start_chainage_m,

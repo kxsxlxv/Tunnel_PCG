@@ -11,8 +11,9 @@ production geometry.
 From the repository root:
 
     python examples/generate_stage10_production_tunnel.py \
+      --domain-stage 10.1 \
       --rings 20 \
-      --namespace stage10-smoke
+      --namespace stage10-1-smoke
 
 This writes:
 

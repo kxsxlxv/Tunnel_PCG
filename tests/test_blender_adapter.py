@@ -11,7 +11,10 @@ from tunnel_scanner_core import (
     sample_joint_config,
     sample_six_segment_angles,
 )
-from tunnel_scanner_core.blender_adapter import build_scene_package_in_blender
+from tunnel_scanner_core.blender_adapter import (
+    _blender_custom_property_scalar,
+    build_scene_package_in_blender,
+)
 from tunnel_scanner_core.scene import build_nominal_scene_package
 
 
@@ -193,3 +196,50 @@ def test_stage6_boolean_plan_orders_pocket_before_head_for_each_bolt():
         assert pocket.remove_tool_after is True
         assert head.tool_type == "bolt_head"
         assert head.remove_tool_after is False
+
+
+def test_blender_custom_property_scalar_preserves_large_ids_losslessly():
+    assert _blender_custom_property_scalar(True) is True
+    assert _blender_custom_property_scalar(2**31 - 1) == 2**31 - 1
+    assert _blender_custom_property_scalar(-(2**31)) == -(2**31)
+    assert _blender_custom_property_scalar(2**31) == str(2**31)
+    assert _blender_custom_property_scalar(-(2**31) - 1) == str(-(2**31) - 1)
+    assert _blender_custom_property_scalar(2**63 - 1) == str(2**63 - 1)
+
+
+def test_stage9_blender_adapter_serializes_63bit_persistent_ids_as_decimal_strings(
+    monkeypatch,
+):
+    from tunnel_scanner_core import (
+        ProductionConfig,
+        TunnelAssemblyConfig,
+        build_production_tunnel,
+    )
+
+    fake = _FakeBpy()
+    monkeypatch.setitem(sys.modules, "bpy", fake)
+    build = build_production_tunnel(
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=2,
+            ring_width_m=1.35,
+        ),
+        include_bolts=False,
+        production_config=ProductionConfig(namespace="blender-id-test"),
+        seed=5812,
+    )
+
+    build_scene_package_in_blender(
+        build.scene,
+        apply_bolt_booleans=False,
+    )
+    source = build.scene.objects[0]
+    blender_obj = fake.data.objects.get(source.name)
+    assert blender_obj is not None
+
+    encoded = blender_obj["persistentInstanceID"]
+    assert isinstance(encoded, str)
+    assert int(encoded) == source.custom_properties["persistentInstanceID"]
+    assert int(blender_obj["instanceID"]) == source.instance_id
+    assert int(blender_obj["tunnelInstanceID"]) == source.custom_properties[
+        "tunnelInstanceID"
+    ]

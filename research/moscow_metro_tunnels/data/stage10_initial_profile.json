@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.2",
+  "schema_version": "1.3",
   "profile_id": "stage10_initial_profile_CAST_IRON_5500_R1000_R65_TIMBER_LEGACY",
   "purpose": "first deterministic XZ profile for Blender/LiDAR implementation",
   "readiness": {
@@ -183,6 +183,16 @@
           "derivation": "R65 base z (-0.180) - sleeper top z (-0.220) = 0.040 m support gap; subtract 0.006 m under-baseplate pad and 0.014 m rail-pad total thickness -> 0.020 m baseplate rail-seat height",
           "source_geometry_context": "P10-ALBUM-KD65 drawing 96 provides the local KD65 plate profile including 16/20.5/23.6/55.6 mm callouts, but the exact metro assembly datum reconciliation is not separately dimensioned",
           "confidence": "C_explicit_assembly_fit"
+        },
+        "initial_mesh_profile": {
+          "outer_wing_top_height_m": 0.012,
+          "shoulder_inner_x_m": 0.0795,
+          "shoulder_outer_x_m": 0.1095,
+          "rail_seat_half_width_m": 0.0755,
+          "rail_seat_half_width_derivation": "0.151 m drawing callout / 2",
+          "mode": "source_callout_simplified_section",
+          "confidence": "B_geometry_interpretation",
+          "source": "P10-ALBUM-KD65 drawing 96"
         }
       },
       "rail_pad": {
@@ -228,7 +238,14 @@
         "head": "flat",
         "quantity_per_baseplate": 4,
         "source": "P10-FROLOV-FASTENING",
-        "comparison_note": "The general-railway KD65 album drawing 98 uses 24x170; the Moscow metro Fig.1.17 explicitly labels 24x150, therefore 24x150 is retained for this service preset."
+        "comparison_note": "The general-railway KD65 album drawing 98 uses 24x170; the Moscow metro Fig.1.17 explicitly labels 24x150, therefore 24x150 is retained for this service preset.",
+        "initial_visual_head": {
+          "radius_m": 0.018,
+          "height_m": 0.008,
+          "mode": "simplified_visible_flat_head_fallback",
+          "confidence": "C_visual_only",
+          "reason": "metro source fixes 24x150 and flat-head family but the exact head solid required by the production preview is not completely dimensioned in the selected metro figure"
+        }
       },
       "clamp_bolt": {
         "thread": "M22",
@@ -263,6 +280,19 @@
         "initial_metro_geometry": "not_required_for_initial_profile",
         "source": "P10-ALBUM-KD65 Table 22",
         "confidence": "B"
+      },
+      "initial_clamp_geometry": {
+        "mode": "simplified_parameterized_initial_geometry",
+        "clamp_bolt_axis_offset_from_rail_center_m": 0.1,
+        "nut_circumradius_m": 0.018,
+        "spring_clamp_center_offset_from_rail_center_m": 0.082,
+        "spring_clamp_box_transverse_m": 0.055,
+        "spring_clamp_box_longitudinal_m": 0.055,
+        "spring_clamp_box_height_m": 0.012,
+        "spring_clamp_base_above_rail_seat_m": 0.01,
+        "confidence": "C_visual_only",
+        "reason": "Frolov fixes assembly topology and M22x75 hardware; exact KDP-2 spring-clamp solid and local slot/axis coordinates are not required/resolved for the initial profile",
+        "source": "P10-FROLOV-FASTENING"
       }
     },
     "sleeper_bottom_z_m": {

@@ -74,8 +74,8 @@ Source-backed/derived data includes:
     metro track screw                 0.024 x 0.150 m
     clamp bolt                        M22 x 0.075 m
 
-    concrete top datum at rail        -0.230 m profile z
-    transverse fall                   0.03
+    surface datum at sleeper end     x=+/-1.325 m, z=-0.230 m
+    transverse fall                   0.03 toward central drain
     drain clear width                 0.900 m
     drain bottom                      -0.530 m profile z
     water groove                      0.050 x 0.025 m
@@ -199,8 +199,10 @@ and then translated into the production core.
 
 Deterministic profile values:
 
-    concrete top at R65 symmetry axes  -0.230000000 m
-    drain-edge top                     -0.240383716 m
+    sleeper-end reference x            +/-1.325000000 m
+    concrete top at sleeper end        -0.230000000 m
+    concrete top at R65 symmetry axis  -0.245866284 m
+    drain-edge top                     -0.256250000 m
     drain side x                       +/-0.450000000 m
     drain bottom                       -0.530000000 m
     groove sides                       +/-0.025000000 m
@@ -217,8 +219,8 @@ meets the **physical Moscow 5.1 m intrados**, never the Cmk clearance envelope.
 For the initial procedural surface rule the positive-X intersection is
 approximately:
 
-    x = 1.731575563 m
-    z = -0.201936449 m profile
+    x = 1.713672279 m
+    z = -0.218339832 m profile
 
 The lower concrete boundary follows the physical 2.550 m intrados circle down
 to:
@@ -239,17 +241,32 @@ interface.
 
 ## Surface/reference fallbacks
 
-The source fixes the 3% transverse fall and the approximately 10 mm sleeper
-exposure but does not dimension every hand-finished crossfall breakpoint. The
-initial deterministic surface therefore uses the R65 symmetry axes as its
-profile z=-0.230 m reference.
+The source fixes the 3% transverse fall and approximately 10 mm sleeper
+exposure at the drawn sleeper edge, but it does not dimension every
+hand-finished crossfall breakpoint.
+
+The initial implementation first anchored z=-0.230 m at the R65 symmetry axes.
+That deterministic rule was rejected during Stage-10.2 closure because the 3%
+plane rose to about z=-0.214 m at the 2.650 m sleeper ends and therefore buried
+part of the flat z=-0.220 m sleeper top.
+
+The corrected deterministic surface is anchored at the physical sleeper ends:
+
+    |x| = 2.650 / 2 = 1.325 m
+    z   = -0.230 m
+
+and applies the 0.03 fall inward toward the central drain. This preserves the
+source-derived 10 mm sleeper exposure at the outer end and keeps the concrete
+surface below the sleeper top throughout the sleeper shoulder.
 
 This is encoded as:
 
-    rail_axis_datum_fallback
+    sleeper_outer_edge_datum_fallback
 
-and carries C-confidence in the machine profile. It is replaceable if a more
-fully dimensioned track-concrete section is found.
+with a numeric machine-profile reference x/z and
+`B_derived_surface_anchor` confidence. The exact hand-finished breakpoint
+geometry remains replaceable if a more completely dimensioned cross-section is
+found.
 
 The timber sleeper remains a full embedded object. Its hidden volume may
 overlap the concrete fill by design; the exposed/visible datum is controlled by

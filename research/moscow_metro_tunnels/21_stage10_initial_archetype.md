@@ -39,18 +39,19 @@ Frolov/Golitsynskiy/Ledyaev, *Metropoliteny* (2001), printed p.27, Fig.1.14; pub
 
 The same source family provides:
 - central drainage clear width **0.900 m**;
-- drainage depth **0.500–0.600 m below UGR**;
+- **running-tunnel Fig.1.14 gives an exact 0.530 m depth below UGR** for the 900 mm trough; the adjacent text gives the general family range **0.500–0.600 m**;
 - drainage longitudinal grade = track grade;
 - B12.5 track concrete;
 - minimum concrete under timber sleeper at rail locations:
   - **0.160 m straight**;
   - **0.100 m curves/turnouts**;
+- track-concrete top approximately **10 mm below sleeper top** at the drawn sleeper edge;
 - 3% transverse fall toward the central drain;
 - small water-release groove **25×50 mm** in Fig.1.14.
 
-For deterministic first geometry the drain depth is set to **0.550 m**, the midpoint of the source range. This is explicitly a fallback, not a newly discovered exact value.
+The deterministic first geometry therefore uses **0.530 m** drain depth, not the earlier 0.550 m midpoint fallback. Fig.1.14 draws the trough as an open rectangle. Exact corner radii and local hand-finished side/bottom fillets are not numerically specified and remain replaceable.
 
-Exact numerical corner radii or side batter of the central drain are not stated. Version 1 uses an open rectangular trough; this must remain replaceable.
+With sleeper top at z=-0.220 m and the 165 mm sleeper thickness, the sleeper bottom is z=-0.385 m. The adjacent concrete datum is z≈-0.230 m; the minimum straight-track concrete bottom beneath the sleeper at the rail position is therefore z=-0.545 m. These are derived from source dimensions, not from Cмк.
 
 The track-concrete surface is physical geometry and is never derived from Cmk.
 
@@ -95,9 +96,13 @@ However, public material inspected so far does **not** uniquely supply, for one 
 - exact grout-plug coordinate;
 - exact falts/rebate profile.
 
-There is also a documented family distinction: Lentrublit 5.49/5.1 and DZMO 5.5/5.1 variants differ, including 10 vs 11 elements in historical literature.
+The manufacturer-family distinction is now better pinned:
+- **Lentrublit 5.49/5.1** — 10 tubings/ring;
+- **DZMO 5.5/5.1** — 11 tubings/ring.
 
-**Conclusion: CAST_IRON_5500_R1000 is ready for a closed civil XZ profile and coarse ring rhythm, but is NOT series-accurate LOD0-ready.**
+Therefore the 11-piece coarse topology is tagged as a **DZMO_5500_5100_11_SEGMENT_REFERENCE** candidate, not as a generic truth for every 5.5/5.1 ring. TU 35-521-90 publicly confirms the controlled 5.5/5.1 tubing family and references manufacturing drawings, but the inspected public material still does not provide those shop drawings with the missing N/C/K angles, rib coordinates, bolt-hole coordinates, grout-plug coordinate and falts/rebate profile.
+
+**Conclusion: CAST_IRON_5500_R1000 is ready for a closed civil XZ profile and a manufacturer-qualified coarse ring rhythm, but is NOT series-accurate LOD0-ready.**
 
 The first version must not invent the missing tubing CAD.
 
@@ -120,13 +125,15 @@ Frolov Fig.1.17 provides the KD-65 assembly topology and fasteners:
 - KD-65 baseplate;
 - rail pad and under-baseplate pad.
 
-GOST 16277-2016 Fig.3 is the dimensioned KD-65 drawing:
-- overall plan envelope 370×165 mm;
-- four Ø26 +1.5/-0.5 mm holes;
-- 55.6 mm reference maximum section height;
-- the figure contains the rail-seat/local profile dimensions and radii needed for CAD reconstruction.
+The 1995 MPS drawing album now closes most of the fastening geometry without generic-pad guesses:
+- **drawing 96** — KD65/K4-65 baseplate, 370×165 mm, four Ø26 holes, 310×100 mm hole-center spacing, 55.6 mm maximum section height plus the local seat profile, radii and 1:10 / 1:16 / 1:20 slopes;
+- **drawing 97** — under-baseplate KD65 pad **370×165×6 mm**, four Ø28 holes on the same 310×100 mm centers, corner R10 max;
+- **drawing 99** — R65 rail-foot pad **190×148 mm**, 7 mm base thickness, 14 mm total raised thickness, 170 mm raised seat length, 21×Ø20 perforations;
+- **Table 22** records the complete general-railway KD65 component set.
 
-The first procedural version should reconstruct the baseplate directly from GOST Fig.3. Until then an envelope mesh is allowed only as an explicitly tagged fallback.
+This replaces the earlier generic D65-family 360×170×8 mm under-baseplate fallback. GOST 16277-2016 Fig.3 remains a high-quality dimensional confirmation for the KD65 plate itself.
+
+One important metro/railway divergence is kept explicit: the 1995 general-railway album drawing 98 uses a **24×170 mm** track screw, while Frolov Fig.1.17 for the metro assembly labels **24×150 mm**. The Stage-10 Moscow service preset therefore keeps 24×150 mm.
 
 ## 6. Contact rail
 
@@ -143,7 +150,7 @@ For the rail object itself, a manufacturer drawing gives the metro RK section:
 - web width 20±1 mm.
 
 For bracket silhouette the Moscow material schedule gives a tunnel bracket envelope:
-**540×620×100 mm**.
+**540×620×100 mm**. The text immediately before Frolov Fig.1.20 gives a characteristic support spacing of **4.5–5.4 m**; the deterministic fixture uses 5.0 m as an in-range placement fallback.
 
 Historical VNiR §V3-5-47 supplies cover installation geometry:
 - 20 mm gap between adjacent covers;
@@ -163,7 +170,8 @@ Initial services:
 - R65 running rail;
 - timber sleepers in track concrete;
 - KD-65 fastening;
-- legacy bottom-collection contact rail;
+- bottom-collection steel contact rail with post-1975/1981 modernized legacy suspension topology represented by Frolov Fig.1.20;
+- legacy wooden-board protective-box constraints from 1986 VNiR; the exact wooden extrusion remains unresolved and the modern polymer box is silhouette fallback only;
 - raised +200 mm walkway;
 - legacy open cable racks;
 - legacy tunnel lighting.
@@ -208,9 +216,9 @@ For first-version planning:
 - exact cable-rack/luminaire products.
 
 ### Safe simplifications for v1
-- central drain = 0.9 m rectangular open trough, depth 0.55 m;
-- detailed KD-65 plate may temporarily use a tagged envelope mesh;
-- historical cover may use a tagged modern silhouette fallback;
-- cast-iron lining may use smooth 5.5/5.1 shell + 1.0 m ring seams, but **must not fake segment ribs/bolts as series-accurate LOD0**.
+- central drain = 0.9 m open rectangular trough, **depth 0.53 m from Fig.1.14**; only corner radii/local finishing remain simplified;
+- KD-65 baseplate and both pads should now use drawings 96/97/99 rather than generic envelopes;
+- historical wooden contact-rail cover may use a tagged modern silhouette fallback while preserving the historical installation clearances;
+- cast-iron lining may use smooth 5.5/5.1 shell + 1.0 m ring seams and the DZMO 11-piece rhythm as a coarse reference, but **must not fake segment ribs/bolts as series-accurate LOD0**.
 
 This separation is intentional: synthetic LiDAR should know which returns come from source-backed geometry and which come from a visual fallback.

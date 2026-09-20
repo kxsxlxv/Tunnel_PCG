@@ -125,3 +125,18 @@ The repository is suitable for an implementation agent to build both tunnel arch
 ## Koltsevaya real-route pilot
 
 `examples/koltsevaya_line_v0/` contains the first real-route test: all 12 station anchors, current OSM relation 1462012, a clearly marked station-anchor XY fallback spline, curvature QA, Blender plan preview and a pyosmium relation extractor. See `20_koltsevaya_line_pilot.md`.
+
+
+## Stage 10 — first implementable cross-section
+
+Selected implementation target:
+`CAST_IRON_5500_R1000 + LEGACY_R65_TIMBER_KD65_2001_REFERENCE`.
+
+Files:
+- `21_stage10_initial_archetype.md` — engineering decision, readiness boundaries and unresolved details;
+- `data/stage10_initial_profile.json` — deterministic machine profile with **zero null values**;
+- `data/stage10_source_pinpoints.json` — page/figure/table/clause locator for every critical dimension.
+
+The civil XZ section, legacy R65/timber/KD65 permanent way, raised walkway and contact-rail initial geometry are implementation-ready with explicit fallback metadata where needed.
+
+The generic 5.5/5.1 cast-iron family is **not yet series-accurate ring LOD0-ready** because exact N/C/K angles, rib pattern, bolt-hole coordinates, grout-plug coordinate and rebate profile have not been located for one unambiguously identified factory series.

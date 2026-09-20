@@ -1160,11 +1160,12 @@ Any new Stage-10 Blender smoke test should preserve that backend behaviour.
 - Stage-9 Blender smoke test and 63-bit Blender-ID compatibility fix;
 - focused Stage-10 research pass for the initial Moscow archetype;
 - **Stage 10.1 — Moscow profile/data integration + R65/gauge/UGR contract**;
-- **Stage 10.2 — timber/KD-65 permanent way + track concrete/drainage**.
+- **Stage 10.2 — timber/KD-65 permanent way + track concrete/drainage**;
+- **Stage 10.3 — legacy RK contact rail / sleeper-mounted support chain**.
 
 ### Ready to start
 
-- **Stage 10.3 — legacy contact rail / support chain.**
+- **Stage 10.4 — Moscow 5.5/5.1 civil shell + raised walkway.**
 
 ### Still intentionally blocked
 
@@ -1176,18 +1177,23 @@ Any new Stage-10 Blender smoke test should preserve that backend behaviour.
 
 Use this as the starting instruction:
 
-> Read `PROJECT_HANDOFF.md`, `STAGE10_2_REPORT.md`, `research/moscow_metro_tunnels/21_stage10_initial_archetype.md`, `data/stage10_initial_profile.json`, and `data/stage10_source_pinpoints.json`. Stages 10.1 and 10.2 are closed and CI-validated. Begin only Stage 10.3: implement the legacy Moscow contact rail using the researched RK profile, 690±8 mm horizontal placement, +160±6 mm working-surface datum, bracket/support/insulator chain, deterministic support pitch independent from sleepers/rings, and explicit fallback metadata for unresolved historical protective-cover/insulator details. Preserve the Stage-10.1/10.2 frame, R65, gauge, permanent-way, chunking and stable-ID contracts. Do not implement fake series-accurate cast-iron ribs/bolts.
+> Read `PROJECT_HANDOFF.md`, `STAGE10_3_REPORT.md`, `research/moscow_metro_tunnels/21_stage10_initial_archetype.md`, `data/stage10_initial_profile.json`, and `data/stage10_source_pinpoints.json`. Stages 10.1–10.3 are closed and CI-validated. Begin only Stage 10.4: replace the temporary Stage-9 civil shell with the researched Moscow classic 5.5/5.1 concentric shell, using lining axis +1.670 m above UGR, 2.550 m intrados radius, 2.750 m extrados radius and 1.0 m ring pitch; implement the source-backed raised walkway at +0.200 m with inner edge x=+1.660 m and physical-intrados-clipped outer edge. Preserve all Stage-10.1–10.3 track/contact-rail datums, stable IDs and chunking. Do not invent series-accurate N/C/K ribs/bolts where manufacturing drawings remain unresolved.
 
 ---
 
 ## 46. Final note
 
-The repository now contains an implemented first Moscow running-tunnel track
-archetype through permanent way and drainage. The next conversation should
-start from Stage 10.3 contact rail, not re-open Stage 10.1/10.2 unless a
-regression or source correction requires it.
+The repository now contains the first Moscow running-tunnel archetype through
+R65 track, timber/KD-65 permanent way, drainage and legacy contact rail.
 
-Keep the unresolved cast-iron-detail boundary explicit.
+A visible several-decimetre gap (about 0.4 m in the current preview) between
+`PROD_TRACK_CONCRETE` and the visible tubings is expected until Stage 10.4:
+the concrete already uses the researched 5.1 m Moscow intrados, while the
+visible shell is still Stage-9 geometry. Do not move the track geometry to hide
+that transitional mismatch.
+
+The next conversation should start from Stage 10.4 civil shell/walkway and keep
+the unresolved detailed cast-iron N/C/K boundary explicit.
 
 
 ---
@@ -1345,7 +1351,8 @@ it is not silently claimed as a separately dimensioned Moscow factory value.
 
 ### Explicit visual fallbacks
 
-The machine profile schema is now 1.4. Production code does not hide unresolved
+Stage 10.2 closed on profile schema 1.4; the shared profile is now schema 1.5
+after Stage 10.3 contact-rail additions. Production code does not hide unresolved
 fastening dimensions as magic constants.
 
 C-confidence visual fallbacks are recorded for:
@@ -1378,10 +1385,11 @@ Important APIs:
 
 ### Operator workflow
 
-Stage 10.2 is now the default Stage-10 generator mode:
+Stage 10.2 is now an explicit compatibility mode:
 
 ```text
 python examples/generate_stage10_production_tunnel.py \
+  --domain-stage 10.2 \
   --rings 20 \
   --namespace stage10-2-smoke
 
@@ -1450,21 +1458,8 @@ The Stage-8/9 walkway and service tubes also remain transitional.
 
 ### Next implementation boundary
 
-**Stage 10.3 only — contact rail.**
-
-Implement next:
-
-- RK contact-rail profile;
-- 690 +/- 8 mm horizontal placement from the running-rail reference;
-- working surface +160 +/- 6 mm above UGR;
-- legacy bracket/support chain;
-- initial insulator geometry;
-- 5.0 m deterministic support pitch within the researched 4.5-5.4 m range;
-- protective cover with strict historical-vs-modern-fallback metadata;
-- periodic support phase independent from sleepers and lining rings.
-
-Do not begin Stage 10.4 civil shell/walkway in the same bounded change unless
-the user explicitly asks to merge stages.
+Historical boundary: Stage 10.3 contact rail is now implemented and closed.
+The current bounded next stage is Stage 10.4 civil shell / walkway.
 
 Detailed Stage-10.2 notes:
 
@@ -1475,3 +1470,143 @@ STAGE10_2_BLENDER_SMOKE_TEST.md
 
 Detailed cast-iron tubing remains blocked pending defensible exact
 series/manufacturing drawings and must not be guessed.
+
+
+---
+
+## Stage 10.3 implementation update (2026-09-20)
+
+Stage 10.3 is implemented on `master`.
+
+### Bounded scope completed
+
+Production Moscow mode now adds to Stage 10.2:
+
+- continuous bottom-collection RK contact rail;
+- contact axis at profile x=-1.450 m;
+- working surface at profile z=+0.160 m / core z=-1.510 m;
+- 690 mm placement from the nearest running-rail inner working face;
+- RK principal section 90/80/20/118 mm with explicitly linearized unresolved
+  transition radii;
+- independent 5.0 m target support chain;
+- deterministic snapping of supports to actual timber sleepers;
+- resulting 4.761904762 / 5.357142857 m interval family within the researched
+  4.5-5.4 m range;
+- curved-channel bracket preview;
+- three 24x150 mm sleeper-attachment screws per support;
+- 150x112 mm porcelain-insulator envelope;
+- simplified retaining/fastening unit;
+- protective-cover preview with strict `eraMismatch=true`.
+
+### Protective-cover contract
+
+Historical clearances/envelope have priority over the modern silhouette
+fallback:
+
+```text
+lower cover edge above contact surface   0.023 m
+working-surface-to-cover-top envelope    0.223 m
+effective cover height                   0.200 m
+historical lateral rail/board gap        0.020 m
+```
+
+The current preview width is adjusted so the 90 mm RK section keeps 20 mm
+internal lateral clearance:
+
+```text
+outer top width  0.112 m
+outer base width 0.134 m
+side wall        0.002 m
+top wall         0.003 m
+```
+
+The modern product silhouette is explicitly **not** asserted to be historical
+Moscow CAD.
+
+### Stable identity / chunks
+
+Continuous keys:
+
+```text
+<namespace>/infrastructure/contact-rail/0
+<namespace>/infrastructure/contact-rail-cover/0
+```
+
+Support-event keys:
+
+```text
+<namespace>/contact-rail/support-event/<event-index>/<category>
+```
+
+Periodic support objects carry `eventChainageM` and therefore use the same
+event-chainage exact-length chunk assignment introduced in Stage 10.2.
+
+### Important civil-shell mismatch
+
+The ~0.4 m visible gap between `PROD_TRACK_CONCRETE` and the current tubings is
+**not a bug**. Track concrete already closes to the researched physical 5.1 m
+Moscow intrados; the visible lining remains the old Stage-9 shell.
+
+Do not alter track/contact-rail datums to hide this gap. Stage 10.4 replaces the
+civil shell and closes the interface.
+
+### Operator workflow
+
+Stage 10.3 is now the default:
+
+```text
+python examples/generate_stage10_production_tunnel.py \
+  --rings 20 \
+  --namespace stage10-3-smoke
+
+blender --background --python scripts/blender_verify_stage10.py -- \
+  examples/stage10_production_scene.json \
+  --report examples/blender_stage10_runtime_report.json \
+  --save-blend examples/stage10_production_scene.blend
+```
+
+Stage 10.2 compatibility requires `--domain-stage 10.2`.
+
+### Verification
+
+Regression file:
+
+```text
+tests/test_moscow_stage10_3.py
+```
+
+Stress gate:
+
+```text
+scripts/verify_stage10_3.py
+```
+
+CI includes Stage-10.1/10.2/10.3 CLI smoke plus all prior Stage-8/9 stress and
+topology gates.
+
+Detailed notes:
+
+```text
+STAGE10_3_REPORT.md
+STAGE10_3_BLENDER_SMOKE_TEST.md
+```
+
+### Next implementation boundary
+
+**Stage 10.4 only — Moscow civil shell / walkway.**
+
+Implement:
+
+- 5.5/5.1 concentric physical shell;
+- lining axis +1.670 m above UGR;
+- intrados radius 2.550 m;
+- extrados radius 2.750 m;
+- 1.0 m civil ring pitch;
+- raised walkway top +0.200 m;
+- walkway inner edge x=+1.660 m;
+- walkway outer edge clipped to physical intrados;
+- preserve the existing Stage-10 track/contact-rail coordinate contracts.
+
+Keep series-accurate N/C/K ribs, bolt-hole coordinates, grout-plug coordinates
+and rebate geometry unresolved unless defensible manufacturing drawings are
+found.

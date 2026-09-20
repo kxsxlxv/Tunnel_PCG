@@ -1,17 +1,18 @@
 # Stage 10.2 Blender smoke test
 
-This smoke test covers the current default Moscow production mode: Stage 10.2
-permanent way on top of the Stage-10.1 R65/UGR/gauge contract.
+This smoke test covers the Stage-10.2 compatibility mode: permanent way on top
+of the Stage-10.1 R65/UGR/gauge contract. Stage 10.3 is now the default.
 
 ## 1. Generate a short Stage 10.2 scene
 
 From the repository root:
 
     python examples/generate_stage10_production_tunnel.py \
+      --domain-stage 10.2 \
       --rings 20 \
       --namespace stage10-2-smoke
 
-Stage 10.2 is the default, so `--domain-stage 10.2` is optional.
+The explicit selector is now required because Stage 10.3 is the default.
 
 The generator writes:
 
@@ -105,5 +106,5 @@ To reproduce the previous Stage-10.1 rails-only scene:
       --rings 20 \
       --namespace stage10-1-smoke
 
-The same `scripts/blender_verify_stage10.py` verifier supports both domain
-stages.
+The same `scripts/blender_verify_stage10.py` verifier supports Stage 10.1,
+10.2 and 10.3.

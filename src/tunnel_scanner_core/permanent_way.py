@@ -61,21 +61,17 @@ def _lower_intrados_z(
 def _top_z_at_x(
     profile: MoscowStage10Profile,
     x_m: float,
-    *,
-    rail_axis_abs_x_m: float,
 ) -> float:
     tc = profile.track_concrete
     return (
-        tc.concrete_top_at_rail_z_m
+        tc.surface_reference_z_m
         + tc.surface_cross_slope_to_drain
-        * (abs(float(x_m)) - rail_axis_abs_x_m)
+        * (abs(float(x_m)) - tc.surface_reference_abs_x_m)
     )
 
 
 def _outer_surface_intersection_x(
     profile: MoscowStage10Profile,
-    *,
-    rail_axis_abs_x_m: float,
 ) -> float:
     # Solve top_plane(x) == lower_intrados(x) on the positive-X shoulder.
     drain_half = 0.5 * profile.track_concrete.central_drain_clear_width_m
@@ -84,11 +80,7 @@ def _outer_surface_intersection_x(
 
     def f(x: float) -> float:
         return (
-            _top_z_at_x(
-                profile,
-                x,
-                rail_axis_abs_x_m=rail_axis_abs_x_m,
-            )
+            _top_z_at_x(profile, x)
             - _lower_intrados_z(profile, x)
         )
 
@@ -118,8 +110,9 @@ def track_concrete_profile_xz(
 ) -> tuple[tuple[float, float], ...]:
     """Return the Stage-10.2 track-concrete polygon in profile XZ coordinates.
 
-    The source-backed top datum is anchored at the two R65 symmetry axes. The
-    source-backed 3% fall is applied toward the 0.9 m central drain. The same
+    The source-backed/derived top datum is anchored at the outer ends of the
+    2.650 m timber sleeper, 10 mm below its flat top. The source-backed 3% fall
+    is applied toward the 0.9 m central drain. The same
     plane continues outward until it meets the physical 5.1 m intrados. The
     deterministic v1 50x25 mm water-release groove is centered in the drain
     bottom per the explicit C-confidence machine-profile fallback.
@@ -128,23 +121,15 @@ def track_concrete_profile_xz(
         raise ValueError("track concrete requires two running-rail centers")
     if intrados_samples < 8:
         raise ValueError("intrados_samples must be >= 8")
-    rail_abs = 0.5 * (
-        abs(float(rail_centers_profile_x[0]))
-        + abs(float(rail_centers_profile_x[1]))
-    )
+    rail_abs = max(abs(float(v)) for v in rail_centers_profile_x)
     tc = profile.track_concrete
+    if rail_abs >= tc.surface_reference_abs_x_m:
+        raise ValueError("running-rail axes must lie inside sleeper-edge reference")
     drain_half = 0.5 * tc.central_drain_clear_width_m
     groove_half = 0.5 * tc.water_groove_width_m
-    xout = _outer_surface_intersection_x(
-        profile,
-        rail_axis_abs_x_m=rail_abs,
-    )
-    zout = _top_z_at_x(profile, xout, rail_axis_abs_x_m=rail_abs)
-    zdrain_top = _top_z_at_x(
-        profile,
-        drain_half,
-        rail_axis_abs_x_m=rail_abs,
-    )
+    xout = _outer_surface_intersection_x(profile)
+    zout = _top_z_at_x(profile, xout)
+    zdrain_top = _top_z_at_x(profile, drain_half)
     zbottom = tc.central_drain_bottom_z_m
     zgroove = zbottom - tc.water_groove_depth_m
     groove_center = tc.water_groove_center_x_m

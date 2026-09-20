@@ -1849,27 +1849,40 @@ def build_production_scene(
                 ),
                 "permanentWayStatus": (
                     "implemented_stage10_2_initial_geometry"
-                    if config.moscow_stage in {"10.2", "10.3"}
+                    if config.moscow_stage in {"10.2", "10.3", "10.4"}
                     else "deferred_to_stage10_2"
                 ),
                 "trackConcreteStatus": (
                     "implemented_stage10_2_source_backed_with_explicit_fallbacks"
-                    if config.moscow_stage in {"10.2", "10.3"}
+                    if config.moscow_stage in {"10.2", "10.3", "10.4"}
                     else "deferred_to_stage10_2"
                 ),
                 "contactRailStatus": (
                     "implemented_stage10_3_initial_geometry_with_explicit_fallbacks"
-                    if config.moscow_stage == "10.3"
+                    if config.moscow_stage in {"10.3", "10.4"}
                     else "deferred_to_stage10_3"
                 ),
-                "civilShellStatus": "deferred_to_stage10_4",
+                "civilShellStatus": (
+                    "implemented_stage10_4_smooth_concentric_shell"
+                    if config.moscow_stage == "10.4"
+                    else "deferred_to_stage10_4"
+                ),
+                "walkwayStatus": (
+                    "implemented_stage10_4_source_backed_geometry"
+                    if config.moscow_stage == "10.4"
+                    else "deferred_to_stage10_4"
+                ),
                 "nonRailInfrastructureStatus": (
-                    "stage8_walkway_and_services_until_stage10_4"
-                    if config.moscow_stage == "10.3"
+                    "moscow_walkway_stage10_4_stage8_services_transitional"
+                    if config.moscow_stage == "10.4"
                     else (
-                        "stage8_walkway_and_services_until_stage10_3_to_10_4"
-                        if config.moscow_stage == "10.2"
-                        else "stage8_baseline_until_stage10_2_to_10_4"
+                        "stage8_walkway_and_services_until_stage10_4"
+                        if config.moscow_stage == "10.3"
+                        else (
+                            "stage8_walkway_and_services_until_stage10_3_to_10_4"
+                            if config.moscow_stage == "10.2"
+                            else "stage8_baseline_until_stage10_2_to_10_4"
+                        )
                     )
                 ),
                 "sleeperCount": (
@@ -1878,17 +1891,17 @@ def build_production_scene(
                         for obj in stage10_2_periodic
                         if obj.object_type == "production_sleeper"
                     )
-                    if config.moscow_stage in {"10.2", "10.3"}
+                    if config.moscow_stage in {"10.2", "10.3", "10.4"}
                     else 0
                 ),
                 "sleeperPitchM": (
                     config.moscow_profile.sleeper.pitch_m
-                    if config.moscow_stage in {"10.2", "10.3"}
+                    if config.moscow_stage in {"10.2", "10.3", "10.4"}
                     else None
                 ),
                 "sleeperPhaseRule": (
                     "half_pitch_from_tunnel_start"
-                    if config.moscow_stage in {"10.2", "10.3"}
+                    if config.moscow_stage in {"10.2", "10.3", "10.4"}
                     else None
                 ),
                 "contactRailSupportCount": (
@@ -1897,33 +1910,86 @@ def build_production_scene(
                         for obj in stage10_3_contact_periodic
                         if obj.object_type == "production_contact_rail_bracket"
                     )
-                    if config.moscow_stage == "10.3"
+                    if config.moscow_stage in {"10.3", "10.4"}
                     else 0
                 ),
                 "contactRailTargetPitchM": (
                     config.moscow_profile.contact_rail.support_target_pitch_m
-                    if config.moscow_stage == "10.3"
+                    if config.moscow_stage in {"10.3", "10.4"}
                     else None
                 ),
                 "contactRailSupportSchedule": (
                     "independent_5m_targets_snapped_to_nearest_timber_sleeper"
-                    if config.moscow_stage == "10.3"
+                    if config.moscow_stage in {"10.3", "10.4"}
                     else None
                 ),
                 "contactRailAxisProfileXM": (
                     contact_rail_axis_profile_x(config.moscow_profile)
-                    if config.moscow_stage == "10.3"
+                    if config.moscow_stage in {"10.3", "10.4"}
                     else None
                 ),
                 "contactRailWorkingSurfaceProfileZM": (
                     config.moscow_profile.contact_rail.working_surface_z_m
-                    if config.moscow_stage == "10.3"
+                    if config.moscow_stage in {"10.3", "10.4"}
                     else None
                 ),
                 "contactRailCoverEraMismatch": (
                     config.moscow_profile.contact_rail.cover_era_mismatch
-                    if config.moscow_stage == "10.3"
+                    if config.moscow_stage in {"10.3", "10.4"}
                     else None
+                ),
+                "stage9CivilGeometryRemoved": (
+                    config.moscow_stage == "10.4"
+                ),
+                "moscowCivilRingCount": (
+                    len(stage10_4_civil_rings)
+                    if config.moscow_stage == "10.4"
+                    else 0
+                ),
+                "moscowCivilRingPitchM": (
+                    config.moscow_profile.ring_pitch_m
+                    if config.moscow_stage == "10.4"
+                    else None
+                ),
+                "moscowCivilIntradosRadiusM": (
+                    config.moscow_profile.intrados_radius_m
+                    if config.moscow_stage == "10.4"
+                    else None
+                ),
+                "moscowCivilExtradosRadiusM": (
+                    config.moscow_profile.extrados_radius_m
+                    if config.moscow_stage == "10.4"
+                    else None
+                ),
+                "moscowCivilGeometryMode": (
+                    config.moscow_profile.civil_geometry_mode
+                    if config.moscow_stage == "10.4"
+                    else None
+                ),
+                "moscowCivilSegmentSurfaceMode": (
+                    config.moscow_profile.civil_segment_surface_mode
+                    if config.moscow_stage == "10.4"
+                    else None
+                ),
+                "moscowWalkwayTopProfileZM": (
+                    config.moscow_profile.walkway.top_z_m
+                    if config.moscow_stage == "10.4"
+                    else None
+                ),
+                "moscowWalkwayInnerEdgeProfileXM": (
+                    config.moscow_profile.walkway.inner_edge_x_m
+                    if config.moscow_stage == "10.4"
+                    else None
+                ),
+                "moscowWalkwayOuterEdgeProfileXM": (
+                    config.moscow_profile.walkway.outer_edge_x_m
+                    if config.moscow_stage == "10.4"
+                    else None
+                ),
+                "transitionalCivilGapStatus": (
+                    "closed_by_stage10_4_moscow_shell"
+                    if config.moscow_stage == "10.4"
+                    else "open_until_stage10_4"
                 ),
             }
         )
@@ -1972,11 +2038,16 @@ def build_production_tunnel(
         config=ancillary_config,
     )
 
+    effective_include_bolts = include_bolts and not (
+        production_config is not None
+        and production_config.moscow_profile is not None
+        and production_config.moscow_stage == "10.4"
+    )
     source = build_procedural_nominal_tunnel(
         ring_config=ring_config,
         assembly_config=assembly_config,
         surface_meshing=surface_meshing,
-        include_bolts=include_bolts,
+        include_bolts=effective_include_bolts,
         include_ancillary=False,
         include_prescribed_joint_solids=(
             production_config.keep_prescribed_outer_joint_solids

@@ -243,6 +243,39 @@
         "legacy interruptions every 300-350 m permitted for rail stock/adjacent structures"
       ],
       "confidence": "B_normative_text_mirror"
+    },
+    {
+      "id": "P10-MODERN-COVER-FALLBACK",
+      "title": "АРМО-ИНТЕК — защитный короб контактного рельса метро",
+      "url": "https://armo-intek.ru/product/korob/",
+      "locator": {
+        "section": "ХАРАКТЕРИСТИКИ"
+      },
+      "supports": [
+        "top width 92 mm",
+        "base width 114 mm",
+        "height 111 mm",
+        "side wall 2 mm",
+        "top wall 3 mm"
+      ],
+      "confidence": "C_fallback",
+      "warning": "modern product; not asserted as the historical cover used with the 2001-reference service preset"
+    },
+    {
+      "id": "P10-METRO-MATERIAL-2024",
+      "title": "2024 metro construction resource update",
+      "url": "https://kccs.ru/docs2024/20240809.pdf",
+      "locator": {
+        "section": "1.20.2.10 / table GESN 29-03-016"
+      },
+      "supports": [
+        "contact-rail tunnel bracket 540x620x100 mm",
+        "low-voltage porcelain contact-rail insulator 150x112 mm",
+        "steel safety bracket 87x56 mm",
+        "track screw M24x170 in current resource family"
+      ],
+      "confidence": "B_current_resource_geometry",
+      "warning": "use dimensions as component-envelope references; fastener length differs from Frolov 2001 legacy 24x150 assembly"
     }
   ]
 }

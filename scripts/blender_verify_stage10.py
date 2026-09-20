@@ -156,6 +156,7 @@ def main() -> None:
             "production_contact_rail_attachment_dowels": support_count,
             "production_contact_rail_support_hood": support_count,
             "production_service_cable": 22,
+            "production_water_main": 1,
             "production_cable_rack_r2k11": int(
                 production_meta.get("serviceCableRackCount", 0)
             ),
@@ -448,8 +449,28 @@ def main() -> None:
             errors.append("Stage 10.5 cable-rack family is not R2K11")
         if int(production_meta.get("serviceCableRackHornCount", -1)) != 11:
             errors.append("Stage 10.5 R2K11 horn count is not 11")
-        if production_meta.get("servicePipeStatus") != "unresolved_not_generated":
-            errors.append("Stage 10.5 unresolved service pipes should not be generated")
+        if production_meta.get("servicePipeStatus") != (
+            "implemented_normative_DN80_with_explicit_placement_fallback"
+        ):
+            errors.append("Stage 10.5 modern water-main status mismatch")
+        if int(production_meta.get("serviceWaterMainCount", -1)) != 1:
+            errors.append("Stage 10.5 must contain one tunnel water main")
+        if int(production_meta.get("serviceWaterMainMinNominalDNmm", -1)) != 80:
+            errors.append("Stage 10.5 water main must remain at least DN80")
+        water = [
+            o for o in production
+            if o.object_type == "production_water_main"
+        ]
+        if len(water) == 1:
+            wp = water[0].custom_properties
+            if wp.get("positionRule") != "above_UGR_weak_current_side":
+                errors.append(f"{water[0].name}: wrong water-main routing rule")
+            if wp.get("exactProjectRouteResolved") is not False:
+                errors.append(
+                    f"{water[0].name}: placement fallback incorrectly marked exact"
+                )
+            if not _close(wp.get("previewOuterDiameterM", -1), 0.089):
+                errors.append(f"{water[0].name}: wrong DN80-class preview diameter")
 
         for block in [
             o for o in production if o.object_type == "production_lvt_block"
@@ -659,6 +680,12 @@ def main() -> None:
         "serviceCableRackCount": production_meta.get("serviceCableRackCount"),
         "serviceCableRackFamily": production_meta.get("serviceCableRackFamily"),
         "servicePipeStatus": production_meta.get("servicePipeStatus"),
+        "serviceWaterMainCount": production_meta.get(
+            "serviceWaterMainCount"
+        ),
+        "serviceWaterMainMinNominalDNmm": production_meta.get(
+            "serviceWaterMainMinNominalDNmm"
+        ),
         "walkwayStatus": production_meta.get("walkwayStatus"),
         "moscowCivilRingCount": production_meta.get("moscowCivilRingCount"),
         "moscowCivilRingPitchM": production_meta.get("moscowCivilRingPitchM"),

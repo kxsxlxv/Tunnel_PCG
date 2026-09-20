@@ -130,6 +130,16 @@ def main() -> None:
         0.03,
         abs_tol=2e-12,
     )
+    assert math.isclose(
+        float(concrete.custom_properties["concreteSurfaceReferenceAbsXM"]),
+        1.325,
+        abs_tol=2e-12,
+    )
+    assert math.isclose(
+        float(concrete.custom_properties["concreteSurfaceReferenceProfileZM"]),
+        -0.230,
+        abs_tol=2e-12,
+    )
 
     audit = audit_exact_coincident_faces(
         build.scene,
@@ -165,6 +175,8 @@ def main() -> None:
                 "sleeper_pitch_m": profile.sleeper.pitch_m,
                 "periodic_permanent_way_parent_ids": len(periodic_keys_a),
                 "track_concrete_assets": 1,
+                "concrete_surface_reference_abs_x_m": 1.325,
+                "concrete_surface_reference_profile_z_m": -0.23,
                 "central_drain_clear_width_m": 0.9,
                 "central_drain_bottom_profile_z_m": -0.53,
                 "water_release_groove_width_m": 0.05,

@@ -366,3 +366,63 @@ def modern_cable_sections_core(
                 )
             )
     return tuple(result)
+
+
+def modern_water_main_section_core(
+    profile: MoscowStage10Profile,
+    *,
+    circle_vertices: int = 16,
+) -> tuple[tuple[tuple[float, float], ...], Mapping[str, Any]]:
+    """Build one current tunnel water-main preview inside the physical intrados.
+
+    The current metro code fixes one main per single-track tunnel, minimum DN80,
+    above UGR and normally on the weak-current side. Exact project coordinates
+    and pipe OD/wall thickness are not universal, so those remain explicit
+    preview fallbacks in the machine profile.
+    """
+    if circle_vertices < 8:
+        raise ValueError("water-main circle requires at least 8 vertices")
+    water = profile.water_main
+    radius = 0.5 * water.preview_outer_diameter_m
+    core_z = (
+        water.center_profile_z_m
+        + profile.coordinate.profile_z_to_core_z_offset_m
+    )
+    r = profile.intrados_radius_m
+    if abs(core_z) + radius >= r:
+        raise ValueError("water-main z lies outside Moscow intrados")
+    shell_x_abs = math.sqrt(r * r - core_z * core_z)
+    center_x_abs = (
+        shell_x_abs
+        - water.shell_clearance_inward_m
+        - radius
+    )
+    if center_x_abs <= 0.0:
+        raise ValueError("water-main fallback placement has no wall clearance")
+    center_x = water.side_profile_x_sign * center_x_abs
+    points = tuple(
+        (
+            center_x + radius * math.cos(2.0 * math.pi * i / circle_vertices),
+            core_z + radius * math.sin(2.0 * math.pi * i / circle_vertices),
+        )
+        for i in range(circle_vertices)
+    )
+    if max(math.hypot(x, z) for x, z in points) >= r - 1e-9:
+        raise AssertionError("water-main preview escapes physical intrados")
+    return points, {
+        "serviceFamily": "tunnel_water_main",
+        "minNominalDNmm": water.min_nominal_dn_mm,
+        "quantitySingleTrackTunnel": water.quantity_single_track_tunnel,
+        "sideProfileXSign": water.side_profile_x_sign,
+        "positionRule": "above_UGR_weak_current_side",
+        "centerProfileZM": water.center_profile_z_m,
+        "previewOuterDiameterM": water.preview_outer_diameter_m,
+        "outerDiameterMode": water.outer_diameter_mode,
+        "shellClearanceInwardM": water.shell_clearance_inward_m,
+        "placementMode": water.placement_mode,
+        "materialFamily": water.material_family,
+        "normativeSource": water.normative_source,
+        "confidence": water.confidence,
+        "exactProjectRouteResolved": False,
+        "insideMoscowIntrados": True,
+    }

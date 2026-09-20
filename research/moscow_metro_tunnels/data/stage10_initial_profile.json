@@ -1,0 +1,341 @@
+{
+  "schema_version": "1.0",
+  "profile_id": "stage10_initial_profile_CAST_IRON_5500_R1000_R65_TIMBER_LEGACY",
+  "purpose": "first deterministic XZ profile for Blender/LiDAR implementation",
+  "readiness": {
+    "civil_closed_xz": "READY",
+    "track_invert_xz": "READY_WITH_EXPLICIT_FALLBACKS",
+    "permanent_way": "READY_FOR_INITIAL_GEOMETRY",
+    "contact_rail": "READY_FOR_INITIAL_GEOMETRY_WITH_COVER_FALLBACK",
+    "series_accurate_cast_iron_ring_LOD0": "BLOCKED_BY_PUBLIC_SOURCE_GAPS"
+  },
+  "coordinate_system": {
+    "units": "m",
+    "origin": "track centerline at UGR",
+    "x_positive": "walkway side / opposite contact rail",
+    "z_positive": "up",
+    "ugr_z_m": 0
+  },
+  "civil_lining": {
+    "family": "CAST_IRON_5500_R1000",
+    "shape": "concentric circular shell for initial cross-section",
+    "intrados": {
+      "type": "circle",
+      "center_x_m": 0,
+      "center_z_m": 1.67,
+      "radius_m": 2.55,
+      "diameter_m": 5.1,
+      "source": "P10-FROLOV-1.14"
+    },
+    "extrados": {
+      "type": "circle",
+      "center_x_m": 0,
+      "center_z_m": 1.67,
+      "radius_m": 2.75,
+      "diameter_m": 5.5,
+      "basis": "documented 5.5/5.1 family; concentric 0.20 m structural depth used for closed initial shell",
+      "confidence": "B"
+    },
+    "vertical_landmarks": {
+      "lining_axis_z_m": 1.67,
+      "intrados_crown_z_m": 4.22,
+      "intrados_invert_z_m": -0.88,
+      "extrados_crown_z_m": 4.42,
+      "extrados_invert_z_m": -1.08,
+      "ugr_to_lining_axis_m": 1.67,
+      "lining_axis_to_intrados_invert_m": 2.55,
+      "ugr_to_intrados_invert_m": 0.88
+    },
+    "ring_pitch_m": 1,
+    "coarse_ring_topology": {
+      "total_segments": 11,
+      "normal_segments": 8,
+      "adjacent_to_key_segments": 2,
+      "key_segments": 1,
+      "source": "P10-FROLOV-RING",
+      "confidence": "B",
+      "warning": "11-segment table variant is not uniquely tied to every Moscow 5.5/5.1 series; Lentrublit/DZMO and later unified families differ."
+    },
+    "ring_detail_LOD0": {
+      "status": "not_ready",
+      "use_for_initial_profile": "not_required_for_initial_profile",
+      "blocked_fields": [
+        "series-specific N/C/K central angles",
+        "key central angle and exact wedge geometry",
+        "exact radial-rib count and angular positions per segment type",
+        "exact bolt-hole coordinates",
+        "exact grout-plug coordinate",
+        "exact flange/rebate/falts cross-section",
+        "unambiguous factory/series designation for the 11-segment Figure 4.14 variant"
+      ]
+    }
+  },
+  "running_rail_and_track": {
+    "service_preset": "LEGACY_R65_TIMBER_KD65_2001_REFERENCE",
+    "rail_type": "R65",
+    "rail_profile_source": "existing reference_impl R65 engineering reconstruction from GOST R 51685-2022",
+    "gauge_m": 1.52,
+    "ugr_definition": "top plane of running-rail heads",
+    "rail_height_m": 0.18,
+    "sleeper_top_z_m": {
+      "mode": "source_drawing_interpretation",
+      "value": -0.22,
+      "source": "P10-FROLOV-1.14",
+      "confidence": "B",
+      "reason": "Fig.1.14 vertical 220 mm callout is used as UGR-to-sleeper/fastening support datum for the deterministic initial section."
+    },
+    "timber_sleeper": {
+      "standard": "GOST 22830-77",
+      "length_m": 2.65,
+      "thickness_m": 0.165,
+      "upper_face_width_m": 0.165,
+      "lower_face_width_m": 0.25,
+      "sawn_side_height_m": 0.135,
+      "source": "P10-GOST22830"
+    },
+    "sleeper_density_per_km": {
+      "straight_and_radius_ge_1200": 1680,
+      "radius_lt_1200": 1840,
+      "source": "P10-FROLOV-TRACK-TEXT"
+    },
+    "fastening": {
+      "family": "KD-65 separate fastening on timber sleeper",
+      "source_assembly": "P10-FROLOV-FASTENING",
+      "baseplate": {
+        "designation": "KD-65",
+        "overall_plan_length_m": 0.37,
+        "overall_plan_width_m": 0.165,
+        "maximum_section_envelope_height_m": 0.0556,
+        "holes": {
+          "count": 4,
+          "diameter_m": 0.026,
+          "tolerance_m": {
+            "plus": 0.0015,
+            "minus": 0.0005
+          }
+        },
+        "exact_local_profile_source": "P10-GOST16277-KD65 Figure 3",
+        "initial_mesh_mode": "dimensioned_GOST_Fig3_when_agent_reconstructs; envelope_box_fallback_allowed",
+        "fallback_confidence": "B"
+      },
+      "rail_pad": {
+        "geometry_mode": "fallback",
+        "value_envelope_m": [
+          0.165,
+          0.148,
+          0.007
+        ],
+        "confidence": "C",
+        "reason": "common R65/KD65 pad envelope from railway assembly references; exact Moscow-era pad drawing not confirmed"
+      },
+      "under_baseplate_pad": {
+        "geometry_mode": "fallback",
+        "value_envelope_m": [
+          0.36,
+          0.17,
+          0.008
+        ],
+        "confidence": "C",
+        "reason": "common KD65 under-baseplate pad envelope; exact Moscow-era polymer/rubber formulation and contour not confirmed"
+      },
+      "track_screw": {
+        "diameter_m": 0.024,
+        "length_m": 0.15,
+        "head": "flat",
+        "quantity_per_baseplate": 4,
+        "source": "P10-FROLOV-FASTENING"
+      },
+      "clamp_bolt": {
+        "thread": "M22",
+        "length_m": 0.075,
+        "quantity_per_baseplate": 2,
+        "source": "P10-FROLOV-FASTENING"
+      },
+      "nut": {
+        "thread": "M22",
+        "height_m": 0.022,
+        "quantity_per_baseplate": 2,
+        "source": "P10-FROLOV-FASTENING"
+      },
+      "spring_clamp": {
+        "designation": "KDP-2 / KD-family spring clamp",
+        "quantity_per_baseplate": 2,
+        "exact_shape": "not_required_for_initial_profile",
+        "source": "P10-FROLOV-FASTENING"
+      },
+      "visible_sleeper_after_concreting": {
+        "mode": "fallback",
+        "rule": "expose upper sleeper face and fastening footprint; track-concrete surface terminates 0.010 m below sleeper top outside fastening footprint",
+        "confidence": "C",
+        "basis": "metro track-concrete descriptions state sleepers are embedded and concrete surface is ~10 mm below sleeper top; exact edge fillets/recesses are not dimensioned in Fig.1.14"
+      }
+    }
+  },
+  "track_concrete_and_invert": {
+    "material": "concrete B12.5 historical reference",
+    "source": "P10-FROLOV-TRACK-TEXT",
+    "surface_cross_slope_to_drain": 0.03,
+    "surface_below_sleeper_top_m": 0.01,
+    "minimum_below_sleeper_at_rail_m": {
+      "straight": 0.16,
+      "curve_or_turnout": 0.1,
+      "source": "P10-FROLOV-TRACK-TEXT"
+    },
+    "central_drain": {
+      "center_x_m": 0,
+      "clear_width_m": 0.9,
+      "depth_from_ugr_m": {
+        "source_range": [
+          0.5,
+          0.6
+        ],
+        "initial_geometry_value": 0.55
+      },
+      "initial_shape": "rectangular_open_trough",
+      "shape_status": "fallback",
+      "confidence": "B_dimensions_C_exact_corner_shape",
+      "reason": "width/depth are source values; exact corner radii/side batter are not numerically stated",
+      "longitudinal_grade_rule": "same as track grade",
+      "sources": [
+        "P10-FROLOV-1.14",
+        "P10-FROLOV-TRACK-TEXT"
+      ]
+    },
+    "water_release_groove": {
+      "width_m": 0.05,
+      "depth_m": 0.025,
+      "source": "P10-FROLOV-1.14",
+      "note": "caption states 25x50 mm; initial orientation uses 50 mm width x 25 mm depth"
+    },
+    "shoulder_geometry": {
+      "mode": "procedural_from_source_constraints",
+      "rule": "outside sleepers, track-concrete top follows 0.03 transverse fall toward central drain; sides fill down to circular intrados; do not use Cmk as a physical surface",
+      "exact_breakpoint_coordinates": "not_required_for_initial_profile",
+      "confidence": "B"
+    }
+  },
+  "walkway": {
+    "type": "raised concrete pedestrian/service walkway integrated with invert fill",
+    "side": "x_positive_opposite_contact_rail",
+    "top_z_m": 0.2,
+    "inner_edge_x_m": 1.66,
+    "outer_edge": {
+      "mode": "intersection_with_physical_intrados_circle_at_walkway_top",
+      "x_m": 2.083651602,
+      "basis": "sqrt(2.55^2-(0.200-1.670)^2)",
+      "confidence": "B"
+    },
+    "top_clear_width_m": {
+      "value": 0.423651602,
+      "derivation": "physical intrados intersection minus Fig.1.14 inner-edge offset; not derived from clearance envelope",
+      "confidence": "B"
+    },
+    "sources": [
+      "P10-FROLOV-1.14",
+      "P10-SP-WALKWAY"
+    ],
+    "service_era_interpretation": "legacy raised banquette/walkway; not a modern retrofit-only element"
+  },
+  "contact_rail": {
+    "side": "x_negative_for_initial_profile",
+    "collection": "bottom",
+    "placement": {
+      "horizontal_from_running_rail_reference_m": 0.69,
+      "horizontal_tolerance_m": 0.008,
+      "working_surface_z_m": 0.16,
+      "vertical_tolerance_m": 0.006,
+      "source": "P10-FROLOV-CONTACT",
+      "note": "placement constraints only; object dimensions come from separate profile/assembly sources"
+    },
+    "rail_profile": {
+      "family": "RK metro contact rail",
+      "overall_height_m": 0.118,
+      "top_width_m": 0.08,
+      "base_width_m": 0.09,
+      "web_width_m": 0.02,
+      "secondary_vertical_callouts_m": [
+        0.023,
+        0.04,
+        0.046
+      ],
+      "source": "P10-DMZ-CONTACT",
+      "confidence": "B",
+      "era_warning": "manufacturer 2021 profile is used as dimensional fallback for legacy Moscow silhouette; exact historical Moscow rolling section not proven identical"
+    },
+    "protective_assembly": {
+      "historical_overall_vertical_envelope_m": 0.223,
+      "source": "P10-FROLOV-CONTACT",
+      "cover_profile": {
+        "mode": "historical_constraint_plus_modern_fallback",
+        "initial_geometry": {
+          "top_width_m": 0.092,
+          "base_width_m": 0.114,
+          "height_m": 0.111,
+          "side_wall_m": 0.002,
+          "top_wall_m": 0.003
+        },
+        "initial_geometry_source": "modern commercially published metro protective-box profile",
+        "confidence": "C",
+        "era_mismatch": true,
+        "historical_constraints": {
+          "gap_between_boxes_m": 0.02,
+          "gap_box_to_insulator_m": 0.025,
+          "side_to_rail_head_gap_m": 0.02,
+          "lower_edge_to_contact_surface_m": 0.023,
+          "fastening_support_offset_from_box_end_m": 0.3,
+          "source": "P10-VNIR-COVER"
+        }
+      }
+    },
+    "support": {
+      "bracket_envelope_m": [
+        0.54,
+        0.62,
+        0.1
+      ],
+      "source": "P10-TSN-CONTACT-BRACKET",
+      "shape_rule": "arched channel-like tunnel bracket fixed to timber sleeper; reproduce topology from Frolov Fig.1.20",
+      "exact_bend_radii_and_hole_coordinates": "not_required_for_initial_profile",
+      "bracket_spacing_m": {
+        "source_range": [
+          4.5,
+          5.4
+        ],
+        "initial_value": 5,
+        "value_mode": "deterministic_fallback_within_normative_range",
+        "confidence": "B"
+      }
+    },
+    "insulator": {
+      "initial_envelope_m": [
+        0.15,
+        0.112
+      ],
+      "mode": "fallback_from_metro_material_schedule",
+      "confidence": "C",
+      "exact_porcelain_profile": "not_required_for_initial_profile"
+    }
+  },
+  "service_era_preset": {
+    "id": "LEGACY_R65_TIMBER_KD65_2001_REFERENCE",
+    "civil_era": "classic postwar 5.5/5.1 cast-iron family; exact factory series unresolved",
+    "service_reference_era": "late Soviet / legacy configuration documented in 2001 textbook",
+    "running_rail": "R65",
+    "permanent_way": "timber sleepers embedded in track concrete",
+    "fastening": "KD-65",
+    "contact_rail": "bottom-collection steel RK-like rail with legacy suspension and protective cover",
+    "walkway": "raised +0.200 m banquette opposite contact rail",
+    "cable_infrastructure": "legacy open wall-mounted cable racks; geometry generated by separate equipment preset",
+    "lighting": "legacy tunnel luminaires; exact luminaire body not required for initial cross-section",
+    "modernization_rule": "civil lining and service preset are independently replaceable; modern LVT/LED/cables may be applied later without changing civil shell"
+  },
+  "first_version_exclusions": [
+    "series-accurate cast-iron segment/rib/bolt mesh",
+    "exact historical protective-cover extrusion profile",
+    "exact historical porcelain insulator CAD",
+    "exact cable-rack and luminaire product geometry",
+    "local drainage sumps/cross-drains/special chambers",
+    "curve cant version of this base XZ fixture"
+  ],
+  "source_pinpoints_file": "data/stage10_source_pinpoints.json"
+}

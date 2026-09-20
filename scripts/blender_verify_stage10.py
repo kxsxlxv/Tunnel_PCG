@@ -1,8 +1,9 @@
 """Real-Blender verifier for the current Stage-10 production scene.
 
-The verifier is stage-aware for Moscow Stage 10.1, 10.2 and 10.3. Stage 10.3
-extends the Stage-10.2 permanent way with the legacy contact-rail family,
-protective-cover fallback and periodic support chain.
+The verifier is stage-aware for Moscow Stage 10.1 through 10.4. Stage 10.4
+replaces the temporary Stage-9 civil shell/walkway with the researched Moscow
+5.5/5.1 smooth concentric shell and raised walkway while preserving the
+Stage-10.1..10.3 track/contact-rail contracts.
 """
 
 from __future__ import annotations
@@ -69,7 +70,7 @@ def main() -> None:
     errors: list[str] = []
     production_meta = package.metadata.get("productionGeometry", {})
     domain_stage = str(production_meta.get("domainStage", ""))
-    if domain_stage not in {"10.1", "10.2", "10.3"}:
+    if domain_stage not in {"10.1", "10.2", "10.3", "10.4"}:
         errors.append(
             f"unsupported/missing Moscow domainStage: {domain_stage!r}"
         )
@@ -88,15 +89,19 @@ def main() -> None:
     expected_status = {
         "permanentWayStatus": (
             "implemented_stage10_2_initial_geometry"
-            if domain_stage in {"10.2", "10.3"}
+            if domain_stage in {"10.2", "10.3", "10.4"}
             else "deferred_to_stage10_2"
         ),
         "contactRailStatus": (
             "implemented_stage10_3_initial_geometry_with_explicit_fallbacks"
-            if domain_stage == "10.3"
+            if domain_stage in {"10.3", "10.4"}
             else "deferred_to_stage10_3"
         ),
-        "civilShellStatus": "deferred_to_stage10_4",
+        "civilShellStatus": (
+            "implemented_stage10_4_smooth_concentric_shell"
+            if domain_stage == "10.4"
+            else "deferred_to_stage10_4"
+        ),
     }
     for key, expected in expected_status.items():
         if production_meta.get(key) != expected:
@@ -110,12 +115,13 @@ def main() -> None:
     if any(obj.object_type.startswith("ancillary_") for obj in package.objects):
         errors.append("ring-local Stage-8 ancillary objects remain in production scene")
 
-    if domain_stage in {"10.2", "10.3"}:
+    if domain_stage in {"10.2", "10.3", "10.4"}:
         sleeper_count = int(production_meta.get("sleeperCount", 0))
         expected_counts = {
             "production_pavement": 0,
             "production_track_concrete": 1,
-            "production_walkway": 1,
+            "production_walkway": 0 if domain_stage == "10.4" else 1,
+            "production_moscow_walkway": 1 if domain_stage == "10.4" else 0,
             "production_rail": 2,
             "production_tube": 6,
             "production_sleeper": sleeper_count,
@@ -125,7 +131,7 @@ def main() -> None:
             "production_track_screw": sleeper_count,
             "production_clamp_hardware": sleeper_count,
         }
-        if domain_stage == "10.3":
+        if domain_stage in {"10.3", "10.4"}:
             support_count = int(
                 production_meta.get("contactRailSupportCount", 0)
             )
@@ -138,6 +144,10 @@ def main() -> None:
                     "production_contact_rail_attachment_screws": support_count,
                     "production_contact_rail_fastening_unit": support_count,
                 }
+            )
+        if domain_stage == "10.4":
+            expected_counts["production_moscow_civil_shell_ring"] = int(
+                production_meta.get("moscowCivilRingCount", 0)
             )
     else:
         expected_counts = {
@@ -205,7 +215,7 @@ def main() -> None:
             "inner_working_faces_at_ugr_minus_13mm"
         ):
             errors.append(f"{rail.name}: wrong gauge placement rule")
-        if domain_stage in {"10.2", "10.3"}:
+        if domain_stage in {"10.2", "10.3", "10.4"}:
             if bool(props.get("railFootBottomContactFaceOmitted", True)):
                 errors.append(
                     f"{rail.name}: continuous R65 underside was incorrectly omitted"
@@ -251,7 +261,7 @@ def main() -> None:
                 f"{profile.track.gauge_m!r}"
             )
 
-    if domain_stage in {"10.2", "10.3"}:
+    if domain_stage in {"10.2", "10.3", "10.4"}:
         concrete = [
             o for o in production
             if o.object_type == "production_track_concrete"
@@ -293,7 +303,7 @@ def main() -> None:
             if not _close(bp.get("baseplatePlanLongitudinalM", -1), 0.165):
                 errors.append(f"{baseplate.name}: wrong KD-65 longitudinal size")
 
-    if domain_stage in {"10.2", "10.3"}:
+    if domain_stage in {"10.2", "10.3", "10.4"}:
         for pad in [
             o for o in production
             if o.object_type == "production_rail_pad"
@@ -303,7 +313,7 @@ def main() -> None:
             ):
                 errors.append(f"{pad.name}: rail-foot contact span retained")
 
-    if domain_stage == "10.3":
+    if domain_stage in {"10.3", "10.4"}:
         contact = [
             o for o in production
             if o.object_type == "production_contact_rail"
@@ -381,11 +391,103 @@ def main() -> None:
                     f"{insulator.name}: porcelain fallback marker missing"
                 )
 
+    if domain_stage == "10.4":
+        if any(o.object_type == "lining_segment" for o in package.objects):
+            errors.append("Stage 10.4 retained Stage-9 lining_segment objects")
+        if any(o.object_type == "bolt_head" for o in package.objects):
+            errors.append("Stage 10.4 retained Stage-9 lining bolt heads")
+        if any(o.object_type == "bolt_pocket_cutter" for o in package.objects):
+            errors.append("Stage 10.4 retained Stage-9 lining bolt cutters")
+        if production_meta.get("walkwayStatus") != (
+            "implemented_stage10_4_source_backed_geometry"
+        ):
+            errors.append("Stage 10.4 walkway status mismatch")
+        if production_meta.get("transitionalCivilGapStatus") != (
+            "closed_by_stage10_4_moscow_shell"
+        ):
+            errors.append("Stage 10.4 civil-gap status is not closed")
+
+        civil = [
+            o for o in production
+            if o.object_type == "production_moscow_civil_shell_ring"
+        ]
+        if not civil:
+            errors.append("Stage 10.4 generated no Moscow civil rings")
+        for ring in civil:
+            rp = ring.custom_properties
+            civil_checks = {
+                "intradosRadiusM": 2.550,
+                "extradosRadiusM": 2.750,
+                "structuralDepthM": 0.200,
+                "moscowCivilRingPitchM": 1.000,
+                "liningAxisProfileZM": 1.670,
+                "liningAxisCoreZM": 0.000,
+            }
+            for key, expected in civil_checks.items():
+                if key not in rp or not _close(rp[key], expected):
+                    errors.append(
+                        f"{ring.name}: {key}={rp.get(key)!r} != {expected!r}"
+                    )
+            if rp.get("seriesAccurateTubingLOD0") is not False:
+                errors.append(f"{ring.name}: false series-accurate LOD0 claim")
+            if rp.get("coarseSegmentCountIsGeometry") is not False:
+                errors.append(f"{ring.name}: 11-piece reference used as geometry")
+            if rp.get("internalRingEndCaps") is not False:
+                errors.append(f"{ring.name}: internal ring end caps retained")
+
+        walkway = [
+            o for o in production
+            if o.object_type == "production_moscow_walkway"
+        ]
+        if len(walkway) == 1:
+            wp = walkway[0].custom_properties
+            walkway_checks = {
+                "walkwayTopProfileZM": 0.200,
+                "walkwayTopCoreZM": -1.470,
+                "walkwayInnerEdgeProfileXM": 1.660,
+                "walkwayOuterEdgeProfileXM": 2.083650643,
+                "walkwayTopClearWidthM": 0.423650643,
+            }
+            for key, expected in walkway_checks.items():
+                if key not in wp or not _close(wp[key], expected, 2e-9):
+                    errors.append(
+                        f"{walkway[0].name}: {key}={wp.get(key)!r} != {expected!r}"
+                    )
+            if wp.get("trackConcreteContactFacesOmitted") is not True:
+                errors.append(f"{walkway[0].name}: concrete contact faces retained")
+            if wp.get("liningContactFacesOmitted") is not True:
+                errors.append(f"{walkway[0].name}: lining contact faces retained")
+
+        concrete = [
+            o for o in production
+            if o.object_type == "production_track_concrete"
+        ]
+        if len(concrete) == 1:
+            cp = concrete[0].custom_properties
+            if cp.get("physicalBottomSurface") != "moscow_5100_intrados":
+                errors.append(
+                    f"{concrete[0].name}: concrete does not close on Moscow intrados"
+                )
+            if cp.get("walkwayShoulderPartitioned") is not True:
+                errors.append(
+                    f"{concrete[0].name}: walkway shoulder was not partitioned"
+                )
+            if cp.get("liningContactFacesOmitted") is not True:
+                errors.append(
+                    f"{concrete[0].name}: lining contact faces retained"
+                )
+
     ring_count = int(package.metadata.get("ringCount", 0))
-    if ring_count > 1 and result.lining_cap_faces_removed <= 0:
-        errors.append("no internal lining cap faces were removed")
-    if result.lining_interface_faces_removed <= 0:
-        errors.append("no coincident segment-interface faces were removed")
+    if domain_stage == "10.4":
+        if result.lining_cap_faces_removed != 0:
+            errors.append("Stage 10.4 unexpectedly stripped legacy lining caps")
+        if result.lining_interface_faces_removed != 0:
+            errors.append("Stage 10.4 unexpectedly stripped legacy lining interfaces")
+    else:
+        if ring_count > 1 and result.lining_cap_faces_removed <= 0:
+            errors.append("no internal lining cap faces were removed")
+        if result.lining_interface_faces_removed <= 0:
+            errors.append("no coincident segment-interface faces were removed")
 
     report = {
         "stage": domain_stage,
@@ -427,6 +529,18 @@ def main() -> None:
             "contactRailCoverEraMismatch"
         ),
         "civilShellStatus": production_meta.get("civilShellStatus"),
+        "walkwayStatus": production_meta.get("walkwayStatus"),
+        "moscowCivilRingCount": production_meta.get("moscowCivilRingCount"),
+        "moscowCivilRingPitchM": production_meta.get("moscowCivilRingPitchM"),
+        "moscowCivilIntradosRadiusM": production_meta.get(
+            "moscowCivilIntradosRadiusM"
+        ),
+        "moscowCivilExtradosRadiusM": production_meta.get(
+            "moscowCivilExtradosRadiusM"
+        ),
+        "transitionalCivilGapStatus": production_meta.get(
+            "transitionalCivilGapStatus"
+        ),
         "errors": errors,
         "result": "PASS" if not errors else "FAIL",
     }

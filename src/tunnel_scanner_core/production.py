@@ -51,6 +51,11 @@ from .contact_rail import (
     protective_cover_core_xz,
     rk_contact_rail_core_xz,
 )
+from .civil import (
+    build_annular_shell_sweep,
+    civil_ring_ranges,
+    walkway_core_xz,
+)
 from .scene import LabelPolicy, SceneMode, SceneObject, ScenePackage
 from .tunnel import ProceduralTunnelBuild, build_procedural_nominal_tunnel
 
@@ -495,6 +500,56 @@ def _ancillary_semantics(
     raise NotImplementedError(label_policy)
 
 
+def _civil_semantics(
+    label_policy: LabelPolicy,
+) -> tuple[int, str]:
+    if label_policy is LabelPolicy.STSD_COARSE:
+        return 1, "segments"
+    if label_policy is LabelPolicy.SEG2TUNNEL_LIKE:
+        return 0, "clutter"
+    raise NotImplementedError(label_policy)
+
+
+def _edges_on_core_intrados(
+    points: Sequence[tuple[float, float]],
+    *,
+    radius_m: float,
+    tolerance_m: float = 2e-9,
+) -> tuple[int, ...]:
+    result: list[int] = []
+    n = len(points)
+    for i in range(n):
+        p0 = points[i]
+        p1 = points[(i + 1) % n]
+        if (
+            abs(math.hypot(p0[0], p0[1]) - radius_m) <= tolerance_m
+            and abs(math.hypot(p1[0], p1[1]) - radius_m) <= tolerance_m
+        ):
+            result.append(i)
+    return tuple(result)
+
+
+def _edges_on_vertical_contact(
+    points: Sequence[tuple[float, float]],
+    *,
+    x_m: float,
+    max_z_m: float,
+    tolerance_m: float = 2e-9,
+) -> tuple[int, ...]:
+    result: list[int] = []
+    n = len(points)
+    for i in range(n):
+        p0 = points[i]
+        p1 = points[(i + 1) % n]
+        if (
+            abs(p0[0] - x_m) <= tolerance_m
+            and abs(p1[0] - x_m) <= tolerance_m
+            and max(p0[1], p1[1]) <= max_z_m + tolerance_m
+        ):
+            result.append(i)
+    return tuple(result)
+
+
 def _edges_with_both_vertices_at_z(
     points: Sequence[tuple[float, float]],
     z_m: float,
@@ -531,10 +586,12 @@ def build_continuous_asset_specs(
 ) -> tuple[ContinuousAssetSpec, ...]:
     if not namespace:
         raise ValueError("namespace must not be empty")
-    if moscow_stage not in {"10.1", "10.2", "10.3"}:
-        raise ValueError("moscow_stage must be '10.1', '10.2' or '10.3'")
+    if moscow_stage not in {"10.1", "10.2", "10.3", "10.4"}:
+        raise ValueError(
+            "moscow_stage must be '10.1', '10.2', '10.3' or '10.4'"
+        )
     if moscow_stage != "10.1" and moscow_profile is None:
-        raise ValueError("Moscow Stage 10.2/10.3 requires moscow_profile")
+        raise ValueError("Moscow Stage 10.2/10.3/10.4 requires moscow_profile")
     profile = rail_profile or RailProfile.generic_from_ancillary(ancillary.config)
     specs: list[ContinuousAssetSpec] = []
 
@@ -543,8 +600,14 @@ def build_continuous_asset_specs(
             continue
         if (
             moscow_profile is not None
-            and moscow_stage in {"10.2", "10.3"}
+            and moscow_stage in {"10.2", "10.3", "10.4"}
             and mesh.category == "pavement"
+        ):
+            continue
+        if (
+            moscow_profile is not None
+            and moscow_stage == "10.4"
+            and mesh.category == "walkway"
         ):
             continue
         label_id, semantic = _ancillary_semantics(label_policy, mesh.category)
@@ -578,7 +641,7 @@ def build_continuous_asset_specs(
             )
         )
 
-    if moscow_profile is not None and moscow_stage in {"10.2", "10.3"}:
+    if moscow_profile is not None and moscow_stage in {"10.2", "10.3", "10.4"}:
         r65_for_concrete = R65ProductionProfile()
         centers_for_concrete = r65_rail_center_offsets_for_gauge(
             moscow_profile.track.gauge_m,
@@ -591,12 +654,46 @@ def build_continuous_asset_specs(
             track_concrete_core_xz(
                 moscow_profile,
                 rail_centers_profile_x=centers_for_concrete,
+                walkway_inner_edge_x_m=(
+                    moscow_profile.walkway.inner_edge_x_m
+                    if moscow_stage == "10.4"
+                    else None
+                ),
             )
         )
         label_id, semantic = _ancillary_semantics(
             label_policy,
             "pavement",
         )
+        concrete_omitted_edges: tuple[int, ...] = ()
+        if moscow_stage == "10.4":
+            walkway_x_core = (
+                moscow_profile.coordinate.profile_x_to_core_x_sign
+                * moscow_profile.walkway.inner_edge_x_m
+            )
+            walkway_concrete_top_profile_z = (
+                moscow_profile.track_concrete.surface_reference_z_m
+                + moscow_profile.track_concrete.surface_cross_slope_to_drain
+                * (
+                    moscow_profile.walkway.inner_edge_x_m
+                    - moscow_profile.track_concrete.surface_reference_abs_x_m
+                )
+            )
+            walkway_concrete_top_core_z = (
+                walkway_concrete_top_profile_z
+                + moscow_profile.coordinate.profile_z_to_core_z_offset_m
+            )
+            concrete_omitted_edges = tuple(sorted(set(
+                _edges_on_core_intrados(
+                    concrete_section,
+                    radius_m=moscow_profile.intrados_radius_m,
+                )
+                + _edges_on_vertical_contact(
+                    concrete_section,
+                    x_m=walkway_x_core,
+                    max_z_m=walkway_concrete_top_core_z,
+                )
+            )))
         specs.append(
             ContinuousAssetSpec(
                 persistent_key=(
@@ -608,6 +705,7 @@ def build_continuous_asset_specs(
                 cross_section_xz=concrete_section,
                 label_id=label_id,
                 semantic_class=semantic,
+                omitted_longitudinal_edges=concrete_omitted_edges,
                 properties={
                     "productionContinuous": True,
                     "domainGeometryStage": "10.2",
@@ -642,7 +740,89 @@ def build_continuous_asset_specs(
                         moscow_profile.track_concrete.surface_reference_mode
                     ),
                     "physicalBottomSurface": (
-                        "future_moscow_5100_intrados_not_clearance_envelope"
+                        "moscow_5100_intrados"
+                        if moscow_stage == "10.4"
+                        else "future_moscow_5100_intrados_not_clearance_envelope"
+                    ),
+                    "walkwayShoulderPartitioned": moscow_stage == "10.4",
+                    "liningContactFacesOmitted": moscow_stage == "10.4",
+                    "moscowProfileID": moscow_profile.profile_id,
+                    "moscowProfileSHA256": (
+                        moscow_profile.provenance.canonical_sha256
+                    ),
+                },
+            )
+        )
+
+    if moscow_profile is not None and moscow_stage == "10.4":
+        walkway_section = _ensure_ccw_xz(walkway_core_xz(moscow_profile))
+        walkway_label, walkway_semantic = _ancillary_semantics(
+            label_policy,
+            "walkway",
+        )
+        walkway_x_core = (
+            moscow_profile.coordinate.profile_x_to_core_x_sign
+            * moscow_profile.walkway.inner_edge_x_m
+        )
+        walkway_concrete_top_profile_z = (
+            moscow_profile.track_concrete.surface_reference_z_m
+            + moscow_profile.track_concrete.surface_cross_slope_to_drain
+            * (
+                moscow_profile.walkway.inner_edge_x_m
+                - moscow_profile.track_concrete.surface_reference_abs_x_m
+            )
+        )
+        walkway_concrete_top_core_z = (
+            walkway_concrete_top_profile_z
+            + moscow_profile.coordinate.profile_z_to_core_z_offset_m
+        )
+        walkway_omitted_edges = tuple(sorted(set(
+            _edges_on_core_intrados(
+                walkway_section,
+                radius_m=moscow_profile.intrados_radius_m,
+            )
+            + _edges_on_vertical_contact(
+                walkway_section,
+                x_m=walkway_x_core,
+                max_z_m=walkway_concrete_top_core_z,
+            )
+        )))
+        specs.append(
+            ContinuousAssetSpec(
+                persistent_key=f"{namespace}/infrastructure/walkway/0",
+                name="PROD_MOSCOW_WALKWAY",
+                object_type="production_moscow_walkway",
+                category="walkway",
+                cross_section_xz=walkway_section,
+                label_id=walkway_label,
+                semantic_class=walkway_semantic,
+                omitted_longitudinal_edges=walkway_omitted_edges,
+                properties={
+                    "productionContinuous": True,
+                    "domainGeometryStage": "10.4",
+                    "geometryMode": moscow_profile.walkway.geometry_mode,
+                    "walkwayTopProfileZM": moscow_profile.walkway.top_z_m,
+                    "walkwayTopCoreZM": (
+                        moscow_profile.walkway.top_z_m
+                        + moscow_profile.coordinate.profile_z_to_core_z_offset_m
+                    ),
+                    "walkwayInnerEdgeProfileXM": (
+                        moscow_profile.walkway.inner_edge_x_m
+                    ),
+                    "walkwayOuterEdgeProfileXM": (
+                        moscow_profile.walkway.outer_edge_x_m
+                    ),
+                    "walkwayTopClearWidthM": (
+                        moscow_profile.walkway.top_clear_width_m
+                    ),
+                    "sideProfileXSign": (
+                        moscow_profile.walkway.side_profile_x_sign
+                    ),
+                    "oppositeContactRail": True,
+                    "trackConcreteContactFacesOmitted": True,
+                    "liningContactFacesOmitted": True,
+                    "serviceEraInterpretation": (
+                        moscow_profile.walkway.service_era_interpretation
                     ),
                     "moscowProfileID": moscow_profile.profile_id,
                     "moscowProfileSHA256": (
@@ -652,7 +832,7 @@ def build_continuous_asset_specs(
             )
         )
 
-    if moscow_profile is not None and moscow_stage == "10.3":
+    if moscow_profile is not None and moscow_stage in {"10.3", "10.4"}:
         cr = moscow_profile.contact_rail
         contact_axis_profile_x = contact_rail_axis_profile_x(moscow_profile)
         contact_section = _ensure_ccw_xz(
@@ -931,7 +1111,7 @@ def build_continuous_asset_specs(
                         "railFootBottomContactFaceOmitted": False,
                         "supportContactSurfacePolicy": (
                             "discrete_rail_pad_top_contact_span_omitted"
-                            if moscow_stage in {"10.2", "10.3"}
+                            if moscow_stage in {"10.2", "10.3", "10.4"}
                             else "stage10_1_closed_rail_profile"
                         ),
                     },

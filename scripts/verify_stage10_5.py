@@ -31,6 +31,7 @@ MODERN_TYPES = {
     "production_contact_rail_support_hood",
     "production_service_cable",
     "production_cable_rack_r2k11",
+    "production_water_main",
     "production_moscow_walkway",
     "production_moscow_civil_shell_ring",
 }
@@ -126,7 +127,16 @@ def main() -> None:
     assert len(build.scene.objects_of_type("production_cable_rack_r2k11")) == 2 * civil_count
     assert meta["serviceCableRackFamily"] == "R2K11"
     assert int(meta["serviceCableRackHornCount"]) == 11
-    assert meta["servicePipeStatus"] == "unresolved_not_generated"
+    assert meta["servicePipeStatus"] == (
+        "implemented_normative_DN80_with_explicit_placement_fallback"
+    )
+    assert int(meta["serviceWaterMainCount"]) == 1
+    assert int(meta["serviceWaterMainMinNominalDNmm"]) == 80
+    water = build.scene.objects_of_type("production_water_main")
+    assert len(water) == 1
+    wp = water[0].custom_properties
+    assert wp["positionRule"] == "above_UGR_weak_current_side"
+    assert wp["exactProjectRouteResolved"] is False
 
     audit = audit_exact_coincident_faces(
         build.scene,
@@ -199,6 +209,10 @@ def main() -> None:
                 "civil_ring_count": civil_count,
                 "service_cable_count": meta["serviceCableCount"],
                 "service_rack_count": meta["serviceCableRackCount"],
+                "water_main_count": meta["serviceWaterMainCount"],
+                "water_main_min_nominal_dn_mm": meta[
+                    "serviceWaterMainMinNominalDNmm"
+                ],
                 "duplicate_modern_face_groups": audit.duplicate_group_count,
                 "stable_continuous_parent_ids_across_chunk_sizes": True,
                 "stable_periodic_ids_across_chunk_sizes": True,

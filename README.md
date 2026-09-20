@@ -177,6 +177,17 @@ This writes chunk JSON files plus a manifest containing global ring IDs, world o
         --rings 20 \
         --namespace stage9-smoke
 
+## Blender 5.2 ID-property note
+
+Stage-9 persistent IDs are engine-neutral positive 63-bit integers. Blender 5.2.x scalar custom-property assignment can overflow when a Python integer exceeds the signed 32-bit C-int range.
+
+The Blender adapter therefore uses a lossless backend-only encoding:
+
+    signed 32-bit values     native Blender integer
+    larger integer IDs      decimal string
+
+The ScenePackage/JSON representation is unchanged and keeps the original 63-bit integer. Blender verification reads ID fields through `int(...)`, so the exact identity is preserved.
+
 ## Blender verification
 
     blender --background --python scripts/blender_verify_stage9.py -- \
@@ -200,7 +211,7 @@ Run:
 
 Current automated baseline:
 
-    148 tests passed
+    150 tests passed
 
 CI also runs:
 

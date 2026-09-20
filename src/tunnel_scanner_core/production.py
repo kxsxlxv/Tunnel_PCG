@@ -1248,10 +1248,17 @@ def scene_object_from_continuous_asset(
     cap_end: bool = True,
     collection_prefix: tuple[str, ...] = (),
     extra_properties: Mapping[str, Any] | None = None,
+    compact_exact_collinear_stations: bool = False,
 ) -> SceneObject:
+    source_station_count = len(stations)
+    sweep_stations = (
+        compact_exact_collinear_alignment_stations(stations)
+        if compact_exact_collinear_stations
+        else tuple(stations)
+    )
     mesh = build_sweep_mesh(
         spec.cross_section_xz,
-        stations,
+        sweep_stations,
         cap_start=cap_start,
         cap_end=cap_end,
         omit_edge_indices=spec.omitted_longitudinal_edges,
@@ -1266,6 +1273,16 @@ def scene_object_from_continuous_asset(
         "sourceRingScope": "global",
         "productionCrossSectionVertices": mesh.cross_section_vertices,
         "productionStationCount": mesh.station_count,
+        "sourceAlignmentStationCount": source_station_count,
+        "sweepAlignmentStationCount": len(sweep_stations),
+        "exactCollinearAlignmentStationsRemoved": (
+            source_station_count - len(sweep_stations)
+        ),
+        "alignmentCompactionMode": (
+            "exact_zero_error_collinear"
+            if compact_exact_collinear_stations
+            else "disabled"
+        ),
         "capStart": cap_start,
         "capEnd": cap_end,
         "omittedLongitudinalEdgeCount": len(spec.omitted_longitudinal_edges),

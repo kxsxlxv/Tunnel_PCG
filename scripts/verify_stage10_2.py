@@ -90,8 +90,12 @@ def main() -> None:
     rails = build.scene.objects_of_type("production_rail")
     assert len(rails) == 2
     for rail in rails:
-        assert rail.custom_properties["railFootBottomContactFaceOmitted"] is True
-        assert int(rail.custom_properties["omittedLongitudinalEdgeCount"]) == 2
+        assert rail.custom_properties["railFootBottomContactFaceOmitted"] is False
+        assert int(rail.custom_properties["omittedLongitudinalEdgeCount"]) == 0
+        assert (
+            rail.custom_properties["supportContactSurfacePolicy"]
+            == "discrete_rail_pad_top_contact_span_omitted"
+        )
         assert math.isclose(
             float(rail.custom_properties["railBaseCoreZLocalM"]),
             -1.85,
@@ -101,6 +105,7 @@ def main() -> None:
     railpads = build.scene.objects_of_type("production_rail_pad")
     assert railpads
     for pad in railpads:
+        assert pad.custom_properties["railFootContactFaceOmitted"] is True
         local_top = max(v[2] for v in pad.vertices)
         station_offset = float(pad.custom_properties["alignmentOffsetZ"])
         assert math.isclose(
@@ -165,7 +170,8 @@ def main() -> None:
                 "water_release_groove_width_m": 0.05,
                 "water_release_groove_depth_m": 0.025,
                 "rail_base_core_z_m": -1.85,
-                "rail_foot_bottom_edges_omitted_per_rail": 2,
+                "rail_foot_bottom_edges_omitted_per_rail": 0,
+                "rail_pad_contact_span_omitted": True,
                 "duplicate_permanent_way_face_groups": (
                     audit.duplicate_group_count
                 ),

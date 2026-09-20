@@ -30,8 +30,8 @@ from tunnel_scanner_core.scene_io import write_scene_package_json
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Generate the Stage 10 production scene using the current "
-            "Stage 10.1 Moscow profile contract (R65/UGR/gauge)."
+            "Generate the Moscow Stage 10 production scene. Stage 10.2 is "
+            "the default; Stage 10.1 remains available as a compatibility mode."
         )
     )
     size = parser.add_mutually_exclusive_group()
@@ -39,6 +39,12 @@ def parse_args() -> argparse.Namespace:
     size.add_argument("--length-m", type=float, default=None)
     parser.add_argument("--seed", type=int, default=5812)
     parser.add_argument("--namespace", default="stage10")
+    parser.add_argument(
+        "--domain-stage",
+        choices=["10.1", "10.2"],
+        default="10.2",
+        help="Moscow production domain stage; default: 10.2",
+    )
     parser.add_argument("--no-bolts", action="store_true")
     parser.add_argument(
         "--label-policy",
@@ -82,10 +88,13 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _validate_stage10_1_build(build, profile) -> tuple[float, list[float]]:
+def _validate_stage10_build(build, profile, domain_stage: str) -> tuple[float, list[float]]:
     meta = build.scene.metadata["productionGeometry"]
-    if meta.get("domainStage") != "10.1":
-        raise AssertionError("generated scene is not tagged as Stage 10.1")
+    if meta.get("domainStage") != domain_stage:
+        raise AssertionError(
+            f"generated scene domainStage {meta.get('domainStage')!r} "
+            f"does not match requested {domain_stage!r}"
+        )
     if meta.get("moscowProfileID") != profile.profile_id:
         raise AssertionError("generated scene Moscow profile ID mismatch")
     if meta.get("moscowProfileSHA256") != profile.provenance.canonical_sha256:
@@ -127,6 +136,39 @@ def _validate_stage10_1_build(build, profile) -> tuple[float, list[float]]:
             abs_tol=2e-12,
         ):
             raise AssertionError(f"{rail.name}: unexpected gauge measurement plane")
+    if domain_stage == "10.2":
+        if meta.get("permanentWayStatus") != (
+            "implemented_stage10_2_initial_geometry"
+        ):
+            raise AssertionError("Stage 10.2 permanent way is not implemented")
+        if len(build.scene.objects_of_type("production_pavement")) != 0:
+            raise AssertionError("Stage 10.2 must replace Stage-9 pavement")
+        if len(build.scene.objects_of_type("production_track_concrete")) != 1:
+            raise AssertionError("Stage 10.2 requires one track-concrete asset")
+        sleeper_count = len(build.scene.objects_of_type("production_sleeper"))
+        if sleeper_count <= 0:
+            raise AssertionError("Stage 10.2 generated no sleepers")
+        if sleeper_count != int(meta.get("sleeperCount", -1)):
+            raise AssertionError("Stage 10.2 sleeper metadata mismatch")
+        for obj_type in (
+            "production_under_baseplate_pad",
+            "production_baseplate",
+            "production_rail_pad",
+            "production_track_screw",
+            "production_clamp_hardware",
+        ):
+            if len(build.scene.objects_of_type(obj_type)) != sleeper_count:
+                raise AssertionError(
+                    f"{obj_type}: count does not match sleeper count"
+                )
+        for rail in rails:
+            if not rail.custom_properties.get(
+                "railFootBottomContactFaceOmitted",
+                False,
+            ):
+                raise AssertionError(
+                    f"{rail.name}: support-contact bottom face was not omitted"
+                )
     return gauge, working_faces
 
 
@@ -164,10 +206,15 @@ def main() -> None:
         production_config=ProductionConfig(
             namespace=args.namespace,
             moscow_profile=profile,
+            moscow_stage=args.domain_stage,
         ),
         seed=args.seed,
     )
-    working_face_gauge, working_faces = _validate_stage10_1_build(build, profile)
+    working_face_gauge, working_faces = _validate_stage10_build(
+        build,
+        profile,
+        args.domain_stage,
+    )
 
     output = args.output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -182,7 +229,7 @@ def main() -> None:
     production_meta = build.scene.metadata["productionGeometry"]
     rails = build.scene.objects_of_type("production_rail")
     summary = {
-        "stage": "10.1",
+        "stage": args.domain_stage,
         "seed": args.seed,
         "namespace": args.namespace,
         "ringCount": n_rings,
@@ -198,6 +245,20 @@ def main() -> None:
         "productionTubes": len(build.scene.objects_of_type("production_tube")),
         "productionWalkways": len(build.scene.objects_of_type("production_walkway")),
         "productionPavements": len(build.scene.objects_of_type("production_pavement")),
+        "productionTrackConcrete": len(
+            build.scene.objects_of_type("production_track_concrete")
+        ),
+        "productionSleepers": len(
+            build.scene.objects_of_type("production_sleeper")
+        ),
+        "productionKD65Baseplates": len(
+            build.scene.objects_of_type("production_baseplate")
+        ),
+        "sleeperPitchM": (
+            profile.sleeper.pitch_m
+            if args.domain_stage == "10.2"
+            else None
+        ),
         "railProfile": production_meta["railProfile"],
         "railProfileVertices": int(rails[0].custom_properties["railProfileVertices"]),
         "workingFaceGaugeM": working_face_gauge,
@@ -259,7 +320,7 @@ def main() -> None:
         manifest_path.write_text(
             json.dumps(
                 {
-                    "stage": "10.1",
+                    "stage": args.domain_stage,
                     "namespace": args.namespace,
                     "moscowProfileID": profile.profile_id,
                     "moscowProfileSHA256": profile.provenance.canonical_sha256,

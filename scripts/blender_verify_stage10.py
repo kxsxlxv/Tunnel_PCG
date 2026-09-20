@@ -1,8 +1,8 @@
 """Real-Blender verifier for the current Stage-10 production scene.
 
-The verifier is stage-aware for Moscow Stage 10.1 and 10.2. Stage 10.2 adds
-timber sleepers, the initial KD-65 support chain and source-backed track
-concrete/drainage while preserving the Stage-10.1 R65/UGR/gauge contract.
+The verifier is stage-aware for Moscow Stage 10.1, 10.2 and 10.3. Stage 10.3
+extends the Stage-10.2 permanent way with the legacy contact-rail family,
+protective-cover fallback and periodic support chain.
 """
 
 from __future__ import annotations
@@ -69,7 +69,7 @@ def main() -> None:
     errors: list[str] = []
     production_meta = package.metadata.get("productionGeometry", {})
     domain_stage = str(production_meta.get("domainStage", ""))
-    if domain_stage not in {"10.1", "10.2"}:
+    if domain_stage not in {"10.1", "10.2", "10.3"}:
         errors.append(
             f"unsupported/missing Moscow domainStage: {domain_stage!r}"
         )
@@ -88,10 +88,14 @@ def main() -> None:
     expected_status = {
         "permanentWayStatus": (
             "implemented_stage10_2_initial_geometry"
-            if domain_stage == "10.2"
+            if domain_stage in {"10.2", "10.3"}
             else "deferred_to_stage10_2"
         ),
-        "contactRailStatus": "deferred_to_stage10_3",
+        "contactRailStatus": (
+            "implemented_stage10_3_initial_geometry_with_explicit_fallbacks"
+            if domain_stage == "10.3"
+            else "deferred_to_stage10_3"
+        ),
         "civilShellStatus": "deferred_to_stage10_4",
     }
     for key, expected in expected_status.items():
@@ -106,7 +110,7 @@ def main() -> None:
     if any(obj.object_type.startswith("ancillary_") for obj in package.objects):
         errors.append("ring-local Stage-8 ancillary objects remain in production scene")
 
-    if domain_stage == "10.2":
+    if domain_stage in {"10.2", "10.3"}:
         sleeper_count = int(production_meta.get("sleeperCount", 0))
         expected_counts = {
             "production_pavement": 0,
@@ -121,6 +125,20 @@ def main() -> None:
             "production_track_screw": sleeper_count,
             "production_clamp_hardware": sleeper_count,
         }
+        if domain_stage == "10.3":
+            support_count = int(
+                production_meta.get("contactRailSupportCount", 0)
+            )
+            expected_counts.update(
+                {
+                    "production_contact_rail": 1,
+                    "production_contact_rail_cover": 1,
+                    "production_contact_rail_bracket": support_count,
+                    "production_contact_rail_insulator": support_count,
+                    "production_contact_rail_attachment_screws": support_count,
+                    "production_contact_rail_fastening_unit": support_count,
+                }
+            )
     else:
         expected_counts = {
             "production_pavement": 1,
@@ -187,7 +205,7 @@ def main() -> None:
             "inner_working_faces_at_ugr_minus_13mm"
         ):
             errors.append(f"{rail.name}: wrong gauge placement rule")
-        if domain_stage == "10.2":
+        if domain_stage in {"10.2", "10.3"}:
             if bool(props.get("railFootBottomContactFaceOmitted", True)):
                 errors.append(
                     f"{rail.name}: continuous R65 underside was incorrectly omitted"
@@ -233,7 +251,7 @@ def main() -> None:
                 f"{profile.track.gauge_m!r}"
             )
 
-    if domain_stage == "10.2":
+    if domain_stage in {"10.2", "10.3"}:
         concrete = [
             o for o in production
             if o.object_type == "production_track_concrete"
@@ -275,7 +293,7 @@ def main() -> None:
             if not _close(bp.get("baseplatePlanLongitudinalM", -1), 0.165):
                 errors.append(f"{baseplate.name}: wrong KD-65 longitudinal size")
 
-    if domain_stage == "10.2":
+    if domain_stage in {"10.2", "10.3"}:
         for pad in [
             o for o in production
             if o.object_type == "production_rail_pad"
@@ -284,6 +302,84 @@ def main() -> None:
                 pad.custom_properties.get("railFootContactFaceOmitted", False)
             ):
                 errors.append(f"{pad.name}: rail-foot contact span retained")
+
+    if domain_stage == "10.3":
+        contact = [
+            o for o in production
+            if o.object_type == "production_contact_rail"
+        ]
+        cover = [
+            o for o in production
+            if o.object_type == "production_contact_rail_cover"
+        ]
+        if len(contact) == 1:
+            cp = contact[0].custom_properties
+            checks = {
+                "contactRailAxisProfileXM": -1.450,
+                "horizontalOffsetFromInnerWorkingFaceM": 0.690,
+                "workingSurfaceProfileZM": 0.160,
+                "workingSurfaceCoreZM": -1.510,
+                "overallHeightM": 0.118,
+                "topWidthM": 0.080,
+                "baseWidthM": 0.090,
+                "webWidthM": 0.020,
+            }
+            for key, expected in checks.items():
+                if key not in cp or not _close(cp[key], expected):
+                    errors.append(
+                        f"{contact[0].name}: {key}={cp.get(key)!r} != {expected!r}"
+                    )
+            if cp.get("horizontalReference") != (
+                "nearest_running_rail_inner_working_face"
+            ):
+                errors.append(
+                    f"{contact[0].name}: wrong horizontal reference"
+                )
+            if cp.get("eraMismatch") is not True:
+                errors.append(
+                    f"{contact[0].name}: RK legacy-era fallback not tagged"
+                )
+        if len(cover) == 1:
+            cv = cover[0].custom_properties
+            if cv.get("eraMismatch") is not True:
+                errors.append(f"{cover[0].name}: cover eraMismatch missing")
+            if cv.get("modernFallbackIsNotHistoricalClaim") is not True:
+                errors.append(
+                    f"{cover[0].name}: modern fallback provenance missing"
+                )
+            cover_checks = {
+                "historicalSideGapM": 0.020,
+                "outerTopWidthM": 0.112,
+                "outerBaseWidthM": 0.134,
+                "heightM": 0.111,
+                "lowerEdgeAboveContactSurfaceM": 0.023,
+            }
+            for key, expected in cover_checks.items():
+                if key not in cv or not _close(cv[key], expected):
+                    errors.append(
+                        f"{cover[0].name}: {key}={cv.get(key)!r} != {expected!r}"
+                    )
+        supports = [
+            o for o in production
+            if o.object_type == "production_contact_rail_bracket"
+        ]
+        for support in supports:
+            sp = support.custom_properties
+            if sp.get("snappedToNearestTimberSleeper") is not True:
+                errors.append(
+                    f"{support.name}: support was not snapped to sleeper"
+                )
+            if not _close(sp.get("targetPitchM", -1), 5.0):
+                errors.append(f"{support.name}: wrong target support pitch")
+        for insulator in [
+            o for o in production
+            if o.object_type == "production_contact_rail_insulator"
+        ]:
+            ip = insulator.custom_properties
+            if ip.get("exactPorcelainProfileResolved") is not False:
+                errors.append(
+                    f"{insulator.name}: porcelain fallback marker missing"
+                )
 
     ring_count = int(package.metadata.get("ringCount", 0))
     if ring_count > 1 and result.lining_cap_faces_removed <= 0:
@@ -318,6 +414,18 @@ def main() -> None:
         "sleeperCount": production_meta.get("sleeperCount"),
         "sleeperPitchM": production_meta.get("sleeperPitchM"),
         "contactRailStatus": production_meta.get("contactRailStatus"),
+        "contactRailSupportCount": production_meta.get(
+            "contactRailSupportCount"
+        ),
+        "contactRailAxisProfileXM": production_meta.get(
+            "contactRailAxisProfileXM"
+        ),
+        "contactRailWorkingSurfaceProfileZM": production_meta.get(
+            "contactRailWorkingSurfaceProfileZM"
+        ),
+        "contactRailCoverEraMismatch": production_meta.get(
+            "contactRailCoverEraMismatch"
+        ),
         "civilShellStatus": production_meta.get("civilShellStatus"),
         "errors": errors,
         "result": "PASS" if not errors else "FAIL",

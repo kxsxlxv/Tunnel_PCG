@@ -45,7 +45,7 @@ The deterministic profile remains:
 
     research/moscow_metro_tunnels/data/stage10_initial_profile.json
 
-Schema version 1.3 adds explicit Stage-10.2 procedural fallbacks rather than
+Schema version 1.4 records the final Stage-10.2 procedural contract, including the sleeper-edge crossfall datum, rather than
 burying missing dimensions in production code.
 
 Source-backed/derived data includes:

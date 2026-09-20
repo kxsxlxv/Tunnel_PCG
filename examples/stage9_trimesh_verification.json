@@ -1,0 +1,10 @@
+{
+  "stage": 9,
+  "trimeshVersion": "5.1.0",
+  "productionAssetsChecked": 10,
+  "expectedOpenContactMeshes": 3,
+  "expectedClosedMeshes": 7,
+  "failureCount": 0,
+  "failures": [],
+  "result": "PASS"
+}

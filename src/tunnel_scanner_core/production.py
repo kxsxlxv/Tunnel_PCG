@@ -39,6 +39,11 @@ from .moscow import (
     r65_inner_working_face_x,
     r65_rail_center_offsets_for_gauge,
 )
+from .permanent_way import (
+    build_stage10_2_local_event_meshes,
+    sleeper_chainages,
+    track_concrete_core_xz,
+)
 from .scene import LabelPolicy, SceneMode, SceneObject, ScenePackage
 from .tunnel import ProceduralTunnelBuild, build_procedural_nominal_tunnel
 
@@ -515,14 +520,25 @@ def build_continuous_asset_specs(
     label_policy: LabelPolicy,
     rail_profile: RailProfile | None = None,
     moscow_profile: MoscowStage10Profile | None = None,
+    moscow_stage: str = "10.1",
 ) -> tuple[ContinuousAssetSpec, ...]:
     if not namespace:
         raise ValueError("namespace must not be empty")
+    if moscow_stage not in {"10.1", "10.2"}:
+        raise ValueError("moscow_stage must be '10.1' or '10.2'")
+    if moscow_stage != "10.1" and moscow_profile is None:
+        raise ValueError("Moscow Stage 10.2 requires moscow_profile")
     profile = rail_profile or RailProfile.generic_from_ancillary(ancillary.config)
     specs: list[ContinuousAssetSpec] = []
 
     for mesh in ancillary.meshes:
         if mesh.category == "rail":
+            continue
+        if (
+            moscow_profile is not None
+            and moscow_stage == "10.2"
+            and mesh.category == "pavement"
+        ):
             continue
         label_id, semantic = _ancillary_semantics(label_policy, mesh.category)
         key = f"{namespace}/infrastructure/{mesh.category}/{mesh.name}"
@@ -551,6 +567,77 @@ def build_continuous_asset_specs(
                     **mesh.properties,
                     "sourceStage8Name": mesh.name,
                     "productionContinuous": True,
+                },
+            )
+        )
+
+    if moscow_profile is not None and moscow_stage == "10.2":
+        r65_for_concrete = R65ProductionProfile()
+        centers_for_concrete = r65_rail_center_offsets_for_gauge(
+            moscow_profile.track.gauge_m,
+            profile=r65_for_concrete,
+            measurement_below_top_m=(
+                moscow_profile.track.gauge_measurement_below_ugr_m
+            ),
+        )
+        concrete_section = _ensure_ccw_xz(
+            track_concrete_core_xz(
+                moscow_profile,
+                rail_centers_profile_x=centers_for_concrete,
+            )
+        )
+        label_id, semantic = _ancillary_semantics(
+            label_policy,
+            "pavement",
+        )
+        specs.append(
+            ContinuousAssetSpec(
+                persistent_key=(
+                    f"{namespace}/infrastructure/track-concrete/0"
+                ),
+                name="PROD_TRACK_CONCRETE",
+                object_type="production_track_concrete",
+                category="track_concrete",
+                cross_section_xz=concrete_section,
+                label_id=label_id,
+                semantic_class=semantic,
+                properties={
+                    "productionContinuous": True,
+                    "domainGeometryStage": "10.2",
+                    "concreteMaterial": (
+                        moscow_profile.track_concrete.concrete_material
+                    ),
+                    "surfaceCrossSlopeToDrain": (
+                        moscow_profile.track_concrete.surface_cross_slope_to_drain
+                    ),
+                    "concreteTopAtRailProfileZM": (
+                        moscow_profile.track_concrete.concrete_top_at_rail_z_m
+                    ),
+                    "centralDrainClearWidthM": (
+                        moscow_profile.track_concrete.central_drain_clear_width_m
+                    ),
+                    "centralDrainBottomProfileZM": (
+                        moscow_profile.track_concrete.central_drain_bottom_z_m
+                    ),
+                    "waterReleaseGrooveWidthM": (
+                        moscow_profile.track_concrete.water_groove_width_m
+                    ),
+                    "waterReleaseGrooveDepthM": (
+                        moscow_profile.track_concrete.water_groove_depth_m
+                    ),
+                    "waterReleaseGroovePositionMode": (
+                        moscow_profile.track_concrete.groove_position_mode
+                    ),
+                    "surfaceReferenceMode": (
+                        moscow_profile.track_concrete.surface_reference_mode
+                    ),
+                    "physicalBottomSurface": (
+                        "future_moscow_5100_intrados_not_clearance_envelope"
+                    ),
+                    "moscowProfileID": moscow_profile.profile_id,
+                    "moscowProfileSHA256": (
+                        moscow_profile.provenance.canonical_sha256
+                    ),
                 },
             )
         )
@@ -649,6 +736,15 @@ def build_continuous_asset_specs(
             )
             key = f"{namespace}/infrastructure/rail/{rail_index}"
             label_id, semantic = _ancillary_semantics(label_policy, "rail")
+            rail_bottom_edges = (
+                _edges_with_both_vertices_at_z(points, base_core_z)
+                if moscow_stage == "10.2"
+                else ()
+            )
+            if moscow_stage == "10.2" and len(rail_bottom_edges) != 1:
+                raise AssertionError(
+                    "Stage-10.2 R65 must expose one support-contact bottom edge"
+                )
             specs.append(
                 ContinuousAssetSpec(
                     persistent_key=key,
@@ -658,6 +754,7 @@ def build_continuous_asset_specs(
                     cross_section_xz=points,
                     label_id=label_id,
                     semantic_class=semantic,
+                    omitted_longitudinal_edges=rail_bottom_edges,
                     properties={
                         "railIndex": rail_index,
                         "railSide": (
@@ -716,7 +813,10 @@ def build_continuous_asset_specs(
                             moscow_profile.track.rail_profile_source
                         ),
                         "productionContinuous": True,
-                        "domainGeometryStage": "10.1",
+                        "domainGeometryStage": moscow_stage,
+                        "railFootBottomContactFaceOmitted": bool(
+                            rail_bottom_edges
+                        ),
                     },
                 )
             )
@@ -870,6 +970,118 @@ def stitch_ring_scene_object_to_alignment(
     )
 
 
+def _build_stage10_2_periodic_scene_objects(
+    *,
+    profile: MoscowStage10Profile,
+    namespace: str,
+    assembly: TunnelAssembly,
+    stations: Sequence[AlignmentStation],
+    label_policy: LabelPolicy,
+) -> tuple[SceneObject, ...]:
+    r65 = R65ProductionProfile()
+    rail_centers = r65_rail_center_offsets_for_gauge(
+        profile.track.gauge_m,
+        profile=r65,
+        measurement_below_top_m=(
+            profile.track.gauge_measurement_below_ugr_m
+        ),
+    )
+    local_meshes = build_stage10_2_local_event_meshes(
+        profile,
+        rail_centers_profile_x=rail_centers,
+    )
+    pitch = profile.sleeper.pitch_m
+    phase = 0.5 * pitch
+    chainages = sleeper_chainages(
+        assembly.length_by_chainage_m,
+        pitch_m=pitch,
+        phase_m=phase,
+    )
+    label_id, semantic = _ancillary_semantics(label_policy, "rail")
+    result: list[SceneObject] = []
+    L = assembly.config.ring_width_m
+
+    folder_by_category = {
+        "sleeper": "Sleepers",
+        "under_baseplate_pad": "UnderBaseplatePads",
+        "baseplate": "KD65Baseplates",
+        "rail_pad": "RailPads",
+        "track_screw": "TrackScrews",
+        "clamp_hardware": "ClampHardware",
+    }
+
+    for event_index, chainage in enumerate(chainages):
+        station = sample_alignment_station(stations, chainage)
+        ring_id = min(
+            assembly.config.n_rings - 1,
+            max(0, int(math.floor(chainage / L))),
+        )
+        for local in local_meshes:
+            key = (
+                f"{namespace}/permanent-way/sleeper-event/"
+                f"{event_index:06d}/{local.category}"
+            )
+            iid = stable_instance_id(key)
+            vertices = tuple(
+                (
+                    x + station.offset_x_m,
+                    y + station.world_y_m,
+                    z + station.offset_z_m,
+                )
+                for x, y, z in local.vertices
+            )
+            result.append(
+                SceneObject(
+                    name=(
+                        f"PROD_PW_{event_index:06d}__"
+                        f"{local.name_suffix}"
+                    ),
+                    vertices=vertices,
+                    faces=local.faces,
+                    object_type=local.object_type,
+                    ring_id=ring_id,
+                    label_id=label_id,
+                    instance_id=iid,
+                    semantic_class=semantic,
+                    reconstruction="stage10_2_moscow_permanent_way",
+                    collection_path=(
+                        "Tunnel",
+                        namespace,
+                        "PermanentWay",
+                        folder_by_category[local.category],
+                    ),
+                    extra_properties={
+                        **dict(local.properties),
+                        "persistentKey": key,
+                        "persistentInstanceID": iid,
+                        "tunnelInstanceID": stable_instance_id(
+                            f"{namespace}/tunnel"
+                        ),
+                        "identityScope": "periodic_permanent_way_asset",
+                        "domainGeometryStage": "10.2",
+                        "periodicEventIndex": event_index,
+                        "eventChainageM": chainage,
+                        "sleeperPitchM": pitch,
+                        "sleeperDensityPerKm": (
+                            profile.sleeper.density_per_km
+                        ),
+                        "periodicPhaseM": phase,
+                        "periodicPhaseRule": (
+                            "half_pitch_from_tunnel_start"
+                        ),
+                        "alignmentOffsetX": station.offset_x_m,
+                        "alignmentOffsetZ": station.offset_z_m,
+                        "alignmentWorldY": station.world_y_m,
+                        "moscowProfileID": profile.profile_id,
+                        "moscowProfileSHA256": (
+                            profile.provenance.canonical_sha256
+                        ),
+                    },
+                )
+            )
+    return tuple(result)
+
+
 # ---------------------------------------------------------------------------
 # Production scene
 # ---------------------------------------------------------------------------
@@ -880,6 +1092,7 @@ class ProductionConfig:
     namespace: str = "default"
     rail_profile: RailProfile | None = None
     moscow_profile: MoscowStage10Profile | None = None
+    moscow_stage: str = "10.1"
     keep_stage8_ring_ancillary: bool = False
     keep_prescribed_outer_joint_solids: bool = False
     stitch_ring_geometry: bool = True
@@ -892,6 +1105,10 @@ class ProductionConfig:
             raise ValueError(
                 "specify either rail_profile or moscow_profile, not both"
             )
+        if self.moscow_stage not in {"10.1", "10.2"}:
+            raise ValueError("moscow_stage must be '10.1' or '10.2'")
+        if self.moscow_stage != "10.1" and self.moscow_profile is None:
+            raise ValueError("Moscow Stage 10.2 requires moscow_profile")
 
 
 @dataclass(frozen=True)
@@ -923,6 +1140,7 @@ def build_production_scene(
         label_policy=source_scene.label_policy,
         rail_profile=config.rail_profile,
         moscow_profile=config.moscow_profile,
+        moscow_stage=config.moscow_stage,
     )
 
     objects: list[SceneObject] = []
@@ -966,6 +1184,20 @@ def build_production_scene(
         )
         for spec in specs
     )
+
+    stage10_2_periodic: tuple[SceneObject, ...] = ()
+    if (
+        config.moscow_profile is not None
+        and config.moscow_stage == "10.2"
+    ):
+        stage10_2_periodic = _build_stage10_2_periodic_scene_objects(
+            profile=config.moscow_profile,
+            namespace=config.namespace,
+            assembly=source_build.assembly,
+            stations=stations,
+            label_policy=source_scene.label_policy,
+        )
+        objects.extend(stage10_2_periodic)
 
     metadata = dict(source_scene.metadata)
     metadata.update(
@@ -1015,7 +1247,7 @@ def build_production_scene(
         production_meta = metadata["productionGeometry"]
         production_meta.update(
             {
-                "domainStage": "10.1",
+                "domainStage": config.moscow_stage,
                 "moscowProfileID": config.moscow_profile.profile_id,
                 "moscowProfileSHA256": (
                     config.moscow_profile.provenance.canonical_sha256
@@ -1064,11 +1296,37 @@ def build_production_scene(
                 "gaugePlacement": (
                     "R65 inner working faces at UGR-0.013m"
                 ),
-                "permanentWayStatus": "deferred_to_stage10_2",
+                "permanentWayStatus": (
+                    "implemented_stage10_2_initial_geometry"
+                    if config.moscow_stage == "10.2"
+                    else "deferred_to_stage10_2"
+                ),
+                "trackConcreteStatus": (
+                    "implemented_stage10_2_source_backed_with_explicit_fallbacks"
+                    if config.moscow_stage == "10.2"
+                    else "deferred_to_stage10_2"
+                ),
                 "contactRailStatus": "deferred_to_stage10_3",
                 "civilShellStatus": "deferred_to_stage10_4",
                 "nonRailInfrastructureStatus": (
-                    "stage8_baseline_until_stage10_2_to_10_4"
+                    "stage8_walkway_and_services_until_stage10_3_to_10_4"
+                    if config.moscow_stage == "10.2"
+                    else "stage8_baseline_until_stage10_2_to_10_4"
+                ),
+                "sleeperCount": (
+                    len(stage10_2_periodic) // 6
+                    if config.moscow_stage == "10.2"
+                    else 0
+                ),
+                "sleeperPitchM": (
+                    config.moscow_profile.sleeper.pitch_m
+                    if config.moscow_stage == "10.2"
+                    else None
+                ),
+                "sleeperPhaseRule": (
+                    "half_pitch_from_tunnel_start"
+                    if config.moscow_stage == "10.2"
+                    else None
                 ),
             }
         )

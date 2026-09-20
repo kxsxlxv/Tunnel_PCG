@@ -365,6 +365,7 @@ class MoscowModernPermanentWayProfile:
     boot_bottom_width_wide_m: float
     boot_bottom_width_narrow_m: float
     boot_side_height_m: float
+    boot_preview_wall_thickness_m: float
     fastening_family: str
     rail_pad_thickness_m: float
     rail_pad_plan_transverse_m: float
@@ -395,6 +396,7 @@ class MoscowModernPermanentWayProfile:
             self.boot_bottom_width_wide_m,
             self.boot_bottom_width_narrow_m,
             self.boot_side_height_m,
+            self.boot_preview_wall_thickness_m,
             self.rail_pad_thickness_m,
             self.rail_pad_plan_transverse_m,
             self.rail_pad_plan_longitudinal_m,
@@ -1111,6 +1113,7 @@ class MoscowStage10Profile:
 
         block_raw = modern_pw_raw["block"]
         boot_raw = modern_pw_raw["rubber_boot"]
+        boot_mesh_raw = boot_raw["initial_mesh"]
         modern_fastening_raw = modern_pw_raw["fastening_details"]
         modern_pad_raw = modern_fastening_raw["under_rail_pad"]
         modern_fastening_topology_raw = modern_fastening_raw["component_topology"]
@@ -1136,6 +1139,9 @@ class MoscowStage10Profile:
             boot_bottom_width_wide_m=float(boot_raw["bottom_width_wide_m"]),
             boot_bottom_width_narrow_m=float(boot_raw["bottom_width_narrow_m"]),
             boot_side_height_m=float(boot_raw["side_height_m"]),
+            boot_preview_wall_thickness_m=float(
+                boot_mesh_raw["preview_wall_thickness_m"]
+            ),
             fastening_family=str(modern_pw_raw["fastening"]),
             rail_pad_thickness_m=float(modern_pad_raw["nominal_thickness_m"]),
             rail_pad_plan_transverse_m=float(

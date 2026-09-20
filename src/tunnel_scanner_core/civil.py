@@ -50,10 +50,21 @@ def walkway_profile_xz(
         raise ValueError("initial Stage-10.4 walkway is expected on +profile-X side")
 
     inner_x = w.inner_edge_x_m
-    outer_x = w.outer_edge_x_m
     top_z = w.top_z_m
     c = profile.datums.lining_axis_z_m
     r = profile.intrados_radius_m
+    outer_x_exact = math.sqrt(r * r - (top_z - c) * (top_z - c))
+    if not math.isclose(
+        w.outer_edge_x_m,
+        outer_x_exact,
+        abs_tol=1e-9,
+    ):
+        raise ValueError(
+            "documented walkway outer edge does not match physical intrados"
+        )
+    # Geometry uses the exact circle intersection. The machine-profile datum is
+    # rounded to 9 decimal places for source readability/provenance.
+    outer_x = outer_x_exact
 
     inner_bottom_z = c - math.sqrt(r * r - inner_x * inner_x)
     concrete_top_z = (
@@ -63,12 +74,6 @@ def walkway_profile_xz(
     )
     if not (inner_bottom_z < concrete_top_z < top_z):
         raise ValueError("walkway inner-riser contact datums are inconsistent")
-
-    outer_circle_error = (
-        outer_x * outer_x + (top_z - c) * (top_z - c) - r * r
-    )
-    if abs(outer_circle_error) > 2e-9:
-        raise ValueError("walkway outer top edge does not close on intrados")
 
     points: list[tuple[float, float]] = [
         (inner_x, inner_bottom_z),

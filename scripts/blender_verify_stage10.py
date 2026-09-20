@@ -188,14 +188,18 @@ def main() -> None:
         ):
             errors.append(f"{rail.name}: wrong gauge placement rule")
         if domain_stage == "10.2":
-            if not bool(props.get("railFootBottomContactFaceOmitted", False)):
+            if bool(props.get("railFootBottomContactFaceOmitted", True)):
                 errors.append(
-                    f"{rail.name}: Stage 10.2 rail support-contact face retained"
+                    f"{rail.name}: continuous R65 underside was incorrectly omitted"
                 )
-            if int(props.get("omittedLongitudinalEdgeCount", 0)) != 2:
+            if int(props.get("omittedLongitudinalEdgeCount", -1)) != 0:
                 errors.append(
-                    f"{rail.name}: expected two split R65 foot-bottom edges"
+                    f"{rail.name}: unexpected continuous rail-edge omission"
                 )
+            if props.get("supportContactSurfacePolicy") != (
+                "discrete_rail_pad_top_contact_span_omitted"
+            ):
+                errors.append(f"{rail.name}: wrong support contact policy")
         if props.get("moscowProfileID") != profile.profile_id:
             errors.append(f"{rail.name}: Moscow profile ID mismatch")
         if (
@@ -268,6 +272,16 @@ def main() -> None:
                 errors.append(f"{baseplate.name}: wrong KD-65 transverse size")
             if not _close(bp.get("baseplatePlanLongitudinalM", -1), 0.165):
                 errors.append(f"{baseplate.name}: wrong KD-65 longitudinal size")
+
+    if domain_stage == "10.2":
+        for pad in [
+            o for o in production
+            if o.object_type == "production_rail_pad"
+        ]:
+            if not bool(
+                pad.custom_properties.get("railFootContactFaceOmitted", False)
+            ):
+                errors.append(f"{pad.name}: rail-foot contact span retained")
 
     ring_count = int(package.metadata.get("ringCount", 0))
     if ring_count > 1 and result.lining_cap_faces_removed <= 0:

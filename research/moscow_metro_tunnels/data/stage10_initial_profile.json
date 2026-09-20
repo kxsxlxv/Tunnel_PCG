@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.8",
+  "schema_version": "1.9",
   "profile_id": "stage10_initial_profile_CAST_IRON_5500_R1000_R65_TIMBER_LEGACY",
   "purpose": "first deterministic XZ profile for Blender/LiDAR implementation",
   "readiness": {
@@ -819,9 +819,27 @@
       "note": "The rack capacity is two cable places per level; v1 populates one representative longitudinal cable on each of 11 levels per side until a project-specific cable schedule is sourced."
     },
     "pipes": {
-      "status": "unresolved_project_specific_routes",
-      "default_preview": false,
-      "note": "Stage-8 generic pipes are removed from the modern preset rather than left outside the 5.1 m shell. Source-backed modern pipe routes remain a follow-up."
+      "status": "source_backed_tunnel_water_main_with_explicit_placement_fallback",
+      "water_main": {
+        "min_nominal_dn_mm": 80,
+        "quantity_single_track_tunnel": 1,
+        "side": "positive_profile_x_weak_current_side_opposite_contact_rail",
+        "position_rule": "above_UGR",
+        "preview_outer_diameter_m": 0.089,
+        "preview_outer_diameter_mode": "DN80_class_visual_proxy_exact_project_pipe_schedule_unresolved",
+        "center_profile_z_m": 0.7,
+        "shell_clearance_inward_m": 0.04,
+        "placement_mode": "weak_current_side_historical_0.6_0.8m_height_midpoint_fallback",
+        "material_family": "corrosion_resistant_steel",
+        "normative_source": "S022",
+        "normative_clauses": [
+          "5.9.1.6(b)",
+          "5.9.1.7",
+          "5.9.4.1(a)"
+        ],
+        "confidence": "A_normative_DN_side_and_above_UGR_C_exact_XZ_and_outer_diameter",
+        "note": "SP fixes minimum DN80, one main per single-track tunnel, above rail head and normally weak-current side. Exact project pipe OD/wall thickness and mounting coordinates are not fixed for this archetype; 89 mm is a visual DN80-class proxy and z=+0.70 m is the midpoint of the historical 0.6-0.8 m reference range already recorded in tunnel_equipment.json."
+      }
     }
   }
 }

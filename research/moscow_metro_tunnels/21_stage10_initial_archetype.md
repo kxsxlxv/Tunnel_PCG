@@ -152,6 +152,8 @@ For the rail object itself, a manufacturer drawing gives the metro RK section:
 For bracket silhouette the Moscow material schedule gives a tunnel bracket envelope:
 **540×620×100 mm**. The text immediately before Frolov Fig.1.20 gives a characteristic support spacing of **4.5–5.4 m**; the deterministic fixture uses 5.0 m as an in-range placement fallback.
 
+A 1997 patent description of the conventional metro suspension, explicitly citing the 1984 metro maintenance instruction (p.50 Fig.33 / p.143 Fig.3), adds the attachment detail: the bracket is fixed to a timber sleeper by **three track screws**; the retaining clip/insulator assembly is bolted to the bracket. Exact legacy bracket slot/hole coordinates are still not public in the inspected set.
+
 Historical VNiR §V3-5-47 supplies cover installation geometry:
 - 20 mm gap between adjacent covers;
 - 25 mm cover-to-insulator gap;
@@ -170,7 +172,7 @@ Initial services:
 - R65 running rail;
 - timber sleepers in track concrete;
 - KD-65 fastening;
-- bottom-collection steel contact rail with post-1975/1981 modernized legacy suspension topology represented by Frolov Fig.1.20;
+- bottom-collection steel contact rail with late-Soviet/2001 legacy bracket-insulator suspension topology represented by Frolov Fig.1.20;
 - legacy wooden-board protective-box constraints from 1986 VNiR; the exact wooden extrusion remains unresolved and the modern polymer box is silhouette fallback only;
 - raised +200 mm walkway;
 - legacy open cable racks;

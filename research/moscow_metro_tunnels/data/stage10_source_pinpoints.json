@@ -436,6 +436,31 @@
         "measurement point is 13 mm below the rail-head running surface"
       ],
       "confidence": "B_non_metro_cross_check"
+    },
+    {
+      "id": "P10-SP-WATER-MAIN",
+      "title": "СП 120.13330.2022 Метрополитены, current consolidated water-supply clauses",
+      "basis": "current_published_consolidated_standard",
+      "url": "https://meganorm.ru/mega_doc/norm_update_01052026/metodika/0/sp_120_13330_2022_svod_pravil_metropoliteny_snip_32-02-2003.html",
+      "locator": {
+        "clauses": [
+          "5.9.1.6(b)",
+          "5.9.1.7",
+          "5.9.4.1(a)"
+        ]
+      },
+      "supports": [
+        "tunnel water-main nominal diameter not less than DN80",
+        "one water main in each single-track tunnel",
+        "water main routed above rail head",
+        "normal routing on weak-current side",
+        "main water-supply pipes use corrosion-resistant steel families specified by the current SP"
+      ],
+      "confidence": "A_current_normative_requirements",
+      "notes": [
+        "The clauses do not fix one universal X/Z mounting coordinate for this specific 5.5/5.1 archetype.",
+        "The 89 mm preview outer diameter and +0.70 m profile-Z center remain explicitly tagged visualization/placement fallbacks, not normative dimensions."
+      ]
     }
   ]
 }

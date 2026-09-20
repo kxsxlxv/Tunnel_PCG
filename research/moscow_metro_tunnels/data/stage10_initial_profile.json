@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.7",
+  "schema_version": "1.8",
   "profile_id": "stage10_initial_profile_CAST_IRON_5500_R1000_R65_TIMBER_LEGACY",
   "purpose": "first deterministic XZ profile for Blender/LiDAR implementation",
   "readiness": {
@@ -765,6 +765,63 @@
         "cable_infrastructure": "legacy open wall-mounted cable racks",
         "reference_era": "2001"
       }
+    }
+  },
+  "modern_service_infrastructure": {
+    "cable_rack": {
+      "family": "R2K11",
+      "related_flat_wall_family": "R2V11",
+      "application": "curved tunnel wall, transport tunnels including metro",
+      "overall_arc_length_m": 1.44,
+      "upright_width_longitudinal_m": 0.048,
+      "upright_thickness_m": 0.003,
+      "horn_count": 11,
+      "horn_thickness_m": 0.004,
+      "horn_radius_m": 0.0325,
+      "max_cable_diameter_m": 0.065,
+      "load_per_horn_n": 180,
+      "load_total_n": 1980,
+      "horn_pitch_m": {
+        "value": 0.125,
+        "mode": "derived_from_catalog_family_length_increment",
+        "derivation": "R2K(n) overall length increments by 125 mm for each additional horn; 11 horns span ten 125 mm intervals",
+        "confidence": "B_derived_catalog_series"
+      },
+      "sources": [
+        "P10-R2K11-CATALOG",
+        "P10-R2V11-R2K11-OSKOL"
+      ],
+      "placement": {
+        "sides": "both_profile_x_sides",
+        "repeat_pitch_m": 1,
+        "phase_m": 0.5,
+        "relation_to_civil_rings": "one rack per side per 1.0 m Moscow civil ring",
+        "center_profile_z_m": 1.25,
+        "shell_clearance_inward_m": 0.02,
+        "confidence": "C_photo_constrained_placement",
+        "reason": "catalog fixes bracket geometry but public project drawings inspected so far do not fix the rack elevation for this exact running-tunnel family"
+      },
+      "initial_horn_mesh": {
+        "mode": "double_cradle_ribbon_v1",
+        "longitudinal_width_m": 0.03,
+        "first_cable_center_inward_m": 0.07,
+        "second_cable_center_inward_m": 0.14,
+        "confidence": "B_radius_C_projection_and_slot_offsets",
+        "note": "Two cable places are source-backed; local radial projection and exact horn-strip width remain preview fallbacks."
+      }
+    },
+    "cable_preview": {
+      "occupancy": "one_cable_per_horn_level_per_side",
+      "representative_diameter_m": 0.04,
+      "circle_vertices": 8,
+      "exact_route_schedule_resolved": false,
+      "confidence": "C_visual_density_only",
+      "note": "The rack capacity is two cable places per level; v1 populates one representative longitudinal cable on each of 11 levels per side until a project-specific cable schedule is sourced."
+    },
+    "pipes": {
+      "status": "unresolved_project_specific_routes",
+      "default_preview": false,
+      "note": "Stage-8 generic pipes are removed from the modern preset rather than left outside the 5.1 m shell. Source-backed modern pipe routes remain a follow-up."
     }
   }
 }

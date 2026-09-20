@@ -1314,7 +1314,11 @@ def build_production_scene(
                     else "stage8_baseline_until_stage10_2_to_10_4"
                 ),
                 "sleeperCount": (
-                    len(stage10_2_periodic) // 6
+                    sum(
+                        1
+                        for obj in stage10_2_periodic
+                        if obj.object_type == "production_sleeper"
+                    )
                     if config.moscow_stage == "10.2"
                     else 0
                 ),

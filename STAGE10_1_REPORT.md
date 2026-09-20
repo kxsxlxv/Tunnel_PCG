@@ -208,4 +208,4 @@ Not implemented in Stage 10.1:
 - 5.5/5.1 Moscow civil shell generation and walkway;
 - detailed cast-iron N/C/K tubing/ribs/bolts.
 
-The next bounded implementation stage is Stage 10.2 permanent way/invert geometry.
+Historical Stage-10.1 boundary: the next bounded implementation stage was Stage 10.2 permanent way/invert geometry. Stage 10.2 is now implemented; see STAGE10_2_REPORT.md.

@@ -52,14 +52,21 @@ def main() -> None:
         1.520,
         abs_tol=2e-12,
     )
-    assert all(
-        math.isclose(
-            max(v[2] for v in rail.vertices),
-            0.0,
-            abs_tol=2e-12,
+    for rail in rails:
+        n = rail.custom_properties["productionCrossSectionVertices"]
+        assert (
+            rail.custom_properties["productionStationCount"]
+            == len(build.alignment_stations)
         )
-        for rail in rails
-    )
+        for station_index, station in enumerate(build.alignment_stations):
+            section = rail.vertices[
+                station_index * n:(station_index + 1) * n
+            ]
+            assert math.isclose(
+                max(v[2] - station.offset_z_m for v in section),
+                0.0,
+                abs_tol=2e-12,
+            )
 
     audit = audit_exact_coincident_faces(
         build.scene,

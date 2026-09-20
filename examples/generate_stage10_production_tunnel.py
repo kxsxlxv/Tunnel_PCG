@@ -30,8 +30,8 @@ from tunnel_scanner_core.scene_io import write_scene_package_json
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Generate the Moscow Stage 10 production scene. Stage 10.3 is "
-            "the default; Stage 10.1/10.2 remain compatibility modes."
+            "Generate the Moscow Stage 10 production scene. Stage 10.4 is "
+            "the default; Stage 10.1/10.2/10.3 remain compatibility modes."
         )
     )
     size = parser.add_mutually_exclusive_group()
@@ -41,9 +41,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--namespace", default="stage10")
     parser.add_argument(
         "--domain-stage",
-        choices=["10.1", "10.2", "10.3"],
-        default="10.3",
-        help="Moscow production domain stage; default: 10.3",
+        choices=["10.1", "10.2", "10.3", "10.4"],
+        default="10.4",
+        help="Moscow production domain stage; default: 10.4",
     )
     parser.add_argument("--no-bolts", action="store_true")
     parser.add_argument(
@@ -136,7 +136,7 @@ def _validate_stage10_build(build, profile, domain_stage: str) -> tuple[float, l
             abs_tol=2e-12,
         ):
             raise AssertionError(f"{rail.name}: unexpected gauge measurement plane")
-    if domain_stage in {"10.2", "10.3"}:
+    if domain_stage in {"10.2", "10.3", "10.4"}:
         if meta.get("permanentWayStatus") != (
             "implemented_stage10_2_initial_geometry"
         ):
@@ -185,7 +185,7 @@ def _validate_stage10_build(build, profile, domain_stage: str) -> tuple[float, l
                 raise AssertionError(
                     f"{pad.name}: rail-foot contact span was not omitted"
                 )
-    if domain_stage == "10.3":
+    if domain_stage in {"10.3", "10.4"}:
         if meta.get("contactRailStatus") != (
             "implemented_stage10_3_initial_geometry_with_explicit_fallbacks"
         ):
@@ -227,6 +227,44 @@ def _validate_stage10_build(build, profile, domain_stage: str) -> tuple[float, l
                 raise AssertionError(
                     f"{obj_type}: count does not match contact support count"
                 )
+    if domain_stage == "10.4":
+        if meta.get("civilShellStatus") != (
+            "implemented_stage10_4_smooth_concentric_shell"
+        ):
+            raise AssertionError("Stage 10.4 civil shell is not implemented")
+        if meta.get("walkwayStatus") != (
+            "implemented_stage10_4_source_backed_geometry"
+        ):
+            raise AssertionError("Stage 10.4 walkway is not implemented")
+        if meta.get("transitionalCivilGapStatus") != (
+            "closed_by_stage10_4_moscow_shell"
+        ):
+            raise AssertionError("Stage 10.4 civil gap is not marked closed")
+        if build.scene.objects_of_type("lining_segment"):
+            raise AssertionError("Stage 10.4 retained Stage-9 lining segments")
+        if build.scene.objects_of_type("bolt_head"):
+            raise AssertionError("Stage 10.4 retained Stage-9 lining bolt heads")
+        if build.scene.objects_of_type("bolt_pocket_cutter"):
+            raise AssertionError("Stage 10.4 retained Stage-9 bolt cutters")
+        if build.scene.objects_of_type("production_walkway"):
+            raise AssertionError("Stage 10.4 retained Stage-8/9 walkway")
+        civil = build.scene.objects_of_type(
+            "production_moscow_civil_shell_ring"
+        )
+        if not civil:
+            raise AssertionError("Stage 10.4 generated no Moscow civil rings")
+        if len(civil) != int(meta.get("moscowCivilRingCount", -1)):
+            raise AssertionError("Stage 10.4 civil ring metadata mismatch")
+        if len(build.scene.objects_of_type("production_moscow_walkway")) != 1:
+            raise AssertionError("Stage 10.4 requires one Moscow walkway")
+        for ring in civil:
+            p = ring.custom_properties
+            if not math.isclose(float(p["intradosRadiusM"]), 2.55, abs_tol=2e-12):
+                raise AssertionError(f"{ring.name}: wrong intrados radius")
+            if not math.isclose(float(p["extradosRadiusM"]), 2.75, abs_tol=2e-12):
+                raise AssertionError(f"{ring.name}: wrong extrados radius")
+            if p.get("seriesAccurateTubingLOD0") is not False:
+                raise AssertionError(f"{ring.name}: false LOD0 accuracy claim")
     return gauge, working_faces
 
 
@@ -295,7 +333,12 @@ def main() -> None:
         "generatedLengthM": build.assembly.length_by_chainage_m,
         "globalCoordinates": True,
         "sourceRingWidthM": ring_cfg.width_m,
-        "includeBolts": not args.no_bolts,
+        "includeBolts": (
+            not args.no_bolts and args.domain_stage != "10.4"
+        ),
+        "stage9CivilBoltsSuppressedForStage10_4": (
+            args.domain_stage == "10.4"
+        ),
         "labelPolicy": args.label_policy,
         "sceneObjects": len(build.scene.objects),
         "productionInfrastructureObjects": len(production_objects),
@@ -321,9 +364,15 @@ def main() -> None:
         "productionContactRailBrackets": len(
             build.scene.objects_of_type("production_contact_rail_bracket")
         ),
+        "productionMoscowCivilRings": len(
+            build.scene.objects_of_type("production_moscow_civil_shell_ring")
+        ),
+        "productionMoscowWalkways": len(
+            build.scene.objects_of_type("production_moscow_walkway")
+        ),
         "sleeperPitchM": (
             profile.sleeper.pitch_m
-            if args.domain_stage in {"10.2", "10.3"}
+            if args.domain_stage in {"10.2", "10.3", "10.4"}
             else None
         ),
         "railProfile": production_meta["railProfile"],
@@ -350,6 +399,18 @@ def main() -> None:
             "contactRailCoverEraMismatch"
         ),
         "civilShellStatus": production_meta["civilShellStatus"],
+        "walkwayStatus": production_meta.get("walkwayStatus"),
+        "moscowCivilRingCount": production_meta.get("moscowCivilRingCount"),
+        "moscowCivilRingPitchM": production_meta.get("moscowCivilRingPitchM"),
+        "moscowCivilIntradosRadiusM": production_meta.get(
+            "moscowCivilIntradosRadiusM"
+        ),
+        "moscowCivilExtradosRadiusM": production_meta.get(
+            "moscowCivilExtradosRadiusM"
+        ),
+        "transitionalCivilGapStatus": production_meta.get(
+            "transitionalCivilGapStatus"
+        ),
         "nonRailInfrastructureStatus": production_meta["nonRailInfrastructureStatus"],
         "alignmentStations": len(build.alignment_stations),
         "sceneJson": None if args.chunks_only else output.name,

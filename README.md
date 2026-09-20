@@ -279,7 +279,7 @@ Run:
 
 Current automated baseline:
 
-    173 tests passed
+    179 tests passed
 
 CI also runs:
 

@@ -1,7 +1,7 @@
 # Stage 10.2 Blender smoke test
 
 This smoke test covers the Stage-10.2 compatibility mode: permanent way on top
-of the Stage-10.1 R65/UGR/gauge contract. Stage 10.3 is now the default.
+of the Stage-10.1 R65/UGR/gauge contract. Stage 10.4 is now the default.
 
 ## 1. Generate a short Stage 10.2 scene
 
@@ -12,7 +12,7 @@ From the repository root:
       --rings 20 \
       --namespace stage10-2-smoke
 
-The explicit selector is now required because Stage 10.3 is the default.
+The explicit selector is now required because Stage 10.4 is the default.
 
 The generator writes:
 
@@ -106,5 +106,5 @@ To reproduce the previous Stage-10.1 rails-only scene:
       --rings 20 \
       --namespace stage10-1-smoke
 
-The same `scripts/blender_verify_stage10.py` verifier supports Stage 10.1,
-10.2 and 10.3.
+The same `scripts/blender_verify_stage10.py` verifier supports Stage 10.1
+through 10.4.

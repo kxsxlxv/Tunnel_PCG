@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "research_date": "2026-09-20",
   "sources": [
     {
@@ -23,9 +23,15 @@
         "walkway inner-edge transverse offset 1.660 m from track/tunnel axis",
         "contact rail placement 0.690 m horizontal and 0.160 m vertical",
         "track-concrete surface slope callout 0.03",
-        "water-release groove 25 x 50 mm"
+        "water-release groove 25 x 50 mm",
+        "running-tunnel central drainage depth 0.530 m from UGR",
+        "track-concrete surface approximately 10 mm below sleeper top at the drawn sleeper edge"
       ],
-      "confidence": "A_for_drawn_dimensions_B_for_interpretation_of_unlabelled_breakpoints"
+      "confidence": "A_for_drawn_dimensions_B_for_interpretation_of_unlabelled_breakpoints",
+      "notes": [
+        "Use the 530 mm callout inside the 900 mm central trough for the deterministic running-tunnel drain depth.",
+        "Do not use the R2450 Cmk radius or other clearance-envelope ordinates as physical track-concrete geometry."
+      ]
     },
     {
       "id": "P10-FROLOV-TRACK-TEXT",
@@ -282,27 +288,88 @@
       "title": "Альбом чертежей верхнего строения железнодорожного пути",
       "url": "https://files.stroyinf.ru/Data2/1/4294847/4294847205.htm",
       "locator": {
-        "table": "22",
+        "table": {
+          "number": "22",
+          "printed_page": 98
+        },
         "drawings": [
-          "95 KD65 assembly on timber sleeper",
-          "96 KD65/K4-65 baseplate",
-          "97 under-baseplate pad",
-          "98 track screw",
-          "99 R65 rail-foot pad"
+          {
+            "number": "95",
+            "printed_page": 99,
+            "title": "KD65 (K4-65) assembly on timber sleeper"
+          },
+          {
+            "number": "96",
+            "printed_page": 100,
+            "title": "K4-65/KD65 baseplate"
+          },
+          {
+            "number": "97",
+            "printed_page": 100,
+            "title": "under-baseplate KD65 pad"
+          },
+          {
+            "number": "98",
+            "printed_page": 101,
+            "title": "24x170 general-railway track screw"
+          },
+          {
+            "number": "99",
+            "printed_page": 101,
+            "title": "R65 rail-foot pad for KD65"
+          }
         ]
       },
       "supports": [
-        "KD65 assembly on timber sleeper",
-        "one baseplate",
-        "one under-baseplate pad",
-        "four track screws",
-        "one R65 rail-foot pad",
-        "two M22x75 clamp bolts",
-        "M22x22 nuts",
-        "two PK clamps",
-        "double-turn washers"
+        "Table 22: one K4-65 baseplate, one KD65 under-baseplate pad, four general-railway track screws, one R65 rail-foot pad, two M22x75 clamp bolts, four M22x22 nuts, two PK clamps, four double-turn washers 25",
+        "drawing 96: baseplate 370 x 165 mm, four Ø26 holes, hole-center spacings 310 x 100 mm, section height 55.6 mm, local slopes/radii/profile callouts",
+        "drawing 97: under-baseplate pad 370 x 165 x 6 mm, four Ø28 holes, hole-center spacings 310 x 100 mm, R10 max corner",
+        "drawing 99: R65 rail-foot pad 190 x 148 mm, base thickness 7 mm, raised total thickness 14 mm, raised seat length 170 mm, 21 Ø20 perforations",
+        "drawing 98: general-railway screw is 24 x 170 mm; this differs from the metro-specific 24 x 150 mm screw in Frolov Fig.1.17 and is not used as the Stage-10 screw length"
       ],
-      "confidence": "B/C_non_metro_railway_detail_used_only_for_shape/pad_fallback"
+      "confidence": "B_historical_railway_drawing_same_KD65_family_not_Moscow_metro_specific"
+    },
+    {
+      "id": "P10-FROLOV-CONTACT-SPACING",
+      "title": "Фролов et al. Метрополитены. Text following the contact-rail discussion",
+      "url": "https://ru.djvu.online/file/hXOquNRuMqgHC",
+      "locator": {
+        "pdf_page": 34,
+        "printed_page": 32,
+        "section": "1.4; paragraph immediately before Fig.1.20"
+      },
+      "supports": [
+        "contact-rail bracket spacing 4.5-5.4 m in running tunnels"
+      ],
+      "confidence": "A"
+    },
+    {
+      "id": "P10-DZMO-LENTRUBLIT",
+      "title": "Е.А. Федоров. Эффективные конструктивные параметры облегченных чугунных обделок тоннелей метрополитенов",
+      "url": "https://tekhnosfera.com/effektivnye-konstruktivnye-parametry-oblegchennyh-chugunnyh-obdelok-tonneley-metropolitenov",
+      "locator": {
+        "section": "historical review of standard running-tunnel cast-iron linings"
+      },
+      "supports": [
+        "Lentrublit family Dn/Din 5.49/5.1 m uses 10 tubings per ring",
+        "DZMO family Dn/Din 5.5/5.1 m uses 11 tubings per ring"
+      ],
+      "confidence": "B_for_family_distinction_not_a_manufacturing_drawing"
+    },
+    {
+      "id": "P10-TU35-521-90",
+      "title": "ТУ 35-521-90. Тюбинги чугунные. Комплекты колец 5,5/5,1; 6,0/5,6; 7,5/7,0; 8,5/7,8; 9,5/8,8 и перемычек",
+      "url": "https://metrogiprotrans.com/documents/TU_35-521-90_Izm4.pdf",
+      "locator": {
+        "sheet": "3 of 64",
+        "section": "1.1 and Table I"
+      },
+      "supports": [
+        "technical conditions explicitly cover the 5.5/5.1 cast-iron tubing ring family",
+        "Table I points to controlled manufacturing drawings for the tubing set"
+      ],
+      "limitation": "The inspected public TU does not expose the full dimensioned segment shop drawings needed for N/C/K angles, rib coordinates, bolt-hole coordinates, grout-plug coordinate, and rebate/falts profile.",
+      "confidence": "A_for_family_specification_not_segment_CAD"
     }
   ]
 }

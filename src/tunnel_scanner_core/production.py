@@ -629,6 +629,13 @@ def build_continuous_asset_specs(
             and mesh.category == "walkway"
         ):
             continue
+        if (
+            moscow_profile is not None
+            and moscow_stage == "10.5"
+            and moscow_service_preset == "modern"
+            and mesh.category == "tube"
+        ):
+            continue
         label_id, semantic = _ancillary_semantics(label_policy, mesh.category)
         key = f"{namespace}/infrastructure/{mesh.category}/{mesh.name}"
         section = _ensure_ccw_xz(_section_from_ancillary_mesh(mesh, ancillary))
@@ -659,6 +666,46 @@ def build_continuous_asset_specs(
                 },
             )
         )
+
+    if (
+        moscow_profile is not None
+        and moscow_stage == "10.5"
+        and moscow_service_preset == "modern"
+    ):
+        cable_label, cable_semantic = _ancillary_semantics(
+            label_policy,
+            "tube",
+        )
+        for cable_name, section, cable_props in modern_cable_sections_core(
+            moscow_profile
+        ):
+            specs.append(
+                ContinuousAssetSpec(
+                    persistent_key=(
+                        f"{namespace}/services/cable/{cable_name}"
+                    ),
+                    name=f"PROD_SERVICE_{cable_name.upper()}",
+                    object_type="production_service_cable",
+                    category="cable",
+                    cross_section_xz=_ensure_ccw_xz(section),
+                    label_id=cable_label,
+                    semantic_class=cable_semantic,
+                    properties={
+                        **dict(cable_props),
+                        "productionContinuous": True,
+                        "domainGeometryStage": "10.5",
+                        "servicePreset": (
+                            moscow_profile.default_service_preset
+                        ),
+                        "supportFamily": moscow_profile.cable_rack.family,
+                        "insideMoscowIntrados": True,
+                        "moscowProfileID": moscow_profile.profile_id,
+                        "moscowProfileSHA256": (
+                            moscow_profile.provenance.canonical_sha256
+                        ),
+                    },
+                )
+            )
 
     if moscow_profile is not None and moscow_stage in {"10.2", "10.3", "10.4", "10.5"}:
         r65_for_concrete = R65ProductionProfile()

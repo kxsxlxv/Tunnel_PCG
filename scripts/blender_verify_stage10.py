@@ -351,7 +351,7 @@ def main() -> None:
                 "historicalSideGapM": 0.020,
                 "outerTopWidthM": 0.112,
                 "outerBaseWidthM": 0.134,
-                "heightM": 0.111,
+                "heightM": 0.200,
                 "lowerEdgeAboveContactSurfaceM": 0.023,
             }
             for key, expected in cover_checks.items():

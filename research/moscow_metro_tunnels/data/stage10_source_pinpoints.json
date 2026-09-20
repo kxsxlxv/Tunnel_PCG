@@ -272,13 +272,16 @@
       "title": "2024 metro construction resource update",
       "url": "https://kccs.ru/docs2024/20240809.pdf",
       "locator": {
-        "section": "1.20.2.10 / table GESN 29-03-016"
+        "pdf_page": 172,
+        "pdf_zero_based_index": 171,
+        "section": "1.20.2.10",
+        "table": "GESN 29-03-016"
       },
       "supports": [
-        "contact-rail tunnel bracket 540x620x100 mm",
-        "low-voltage porcelain contact-rail insulator 150x112 mm",
-        "steel safety bracket 87x56 mm",
-        "track screw M24x170 in current resource family"
+        "page 172: contact-rail tunnel bracket 540x620x100 mm",
+        "page 172: low-voltage porcelain contact-rail insulator 150x112 mm",
+        "page 172: steel safety bracket 87x56 mm",
+        "page 172: M24x170 track screw in the current resource family"
       ],
       "confidence": "B_current_resource_geometry",
       "warning": "use dimensions as component-envelope references; fastener length differs from Frolov 2001 legacy 24x150 assembly"
@@ -327,7 +330,8 @@
         "drawing 99: R65 rail-foot pad 190 x 148 mm, base thickness 7 mm, raised total thickness 14 mm, raised seat length 170 mm, 21 Ø20 perforations",
         "drawing 98: general-railway screw is 24 x 170 mm; this differs from the metro-specific 24 x 150 mm screw in Frolov Fig.1.17 and is not used as the Stage-10 screw length"
       ],
-      "confidence": "B_historical_railway_drawing_same_KD65_family_not_Moscow_metro_specific"
+      "confidence": "B_historical_railway_drawing_same_KD65_family_not_Moscow_metro_specific",
+      "pdf_mirror": "https://kazpromexport.kz/images/gost/albom-chertezhey-puti.pdf"
     },
     {
       "id": "P10-FROLOV-CONTACT-SPACING",

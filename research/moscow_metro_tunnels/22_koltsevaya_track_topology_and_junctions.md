@@ -262,7 +262,7 @@ S120 adds an actual-site photo sequence of the same depot connection:
 - photo 13: a **tunnel gate/shutter ("затвор")** is visible, but its exact engineering type is not identified by the caption;
 - photos 16 and 20: the crossover chamber, including a panorama.
 
-S125 resolves an important topology ambiguity: it explicitly describes **one single-track service connection to Belorusskaya and a separate single-track service connection to Krasnopresnenskaya**. S124 independently uses the same "two separate branches" language. This is compatible with S120 because S120 only proves that a **local depot-side section is two-track** before/around the downstream split.
+S134 now provides the stronger historical engineering statement: the depot is connected to Line 5 by **two single-track branches**, adjoining the crossover-track systems at Belorusskaya and Krasnopresnenskaya. S125 gives later secondary corroboration, and S124 independently uses the same "two separate branches" language. This is compatible with S120 because S120 only proves that a **local depot-side section is two-track** before/around the downstream split.
 
 Therefore the complete Krasnaya Presnya connection is represented as:
 - `BRANCH_KRP_BELORUSSKAYA_LEG` — one physical track;
@@ -270,6 +270,30 @@ Therefore the complete Krasnaya Presnya connection is represented as:
 - a downstream local two-track/switch system whose exact node decomposition is still unknown.
 
 The geometry agent may therefore satisfy the first implementation sequence with the **single-track Belorusskaya leg**, but must place the model cut before the unresolved downstream two-track/switch system.
+
+### Historical engineering confirmation of the depot topology
+
+A stronger source than the later encyclopedia summaries is now available.
+
+S134 is the 1983 engineering collection `Мы строим метро` (P.A. Vasyukov, ed.; Moscow Worker), article by A.M. Gorkov `Проектирование трасс метрополитена`. Exact web line 116 states that:
+
+- the Koltsevaya depot was planned west of the ring near Krasnopresnenskaya Zastava;
+- it was connected to Line 5 by **two single-track branches**;
+- the two branches adjoin the **crossover-track systems at Belorusskaya and Krasnopresnenskaya**;
+- the branch/crossover arrangement allows trains to enter/leave the ring without reversing maneuvers;
+- the same passage independently describes the inner ring as clockwise and the outer ring as the reverse direction.
+
+This is now the **primary track-count/topology evidence** for the two Line-5 depot legs. S125 remains useful current secondary corroboration, while S120 supplies the later photographed local two-track depot-side section.
+
+The graph interpretation is therefore source-backed at the line-attachment level:
+
+`Belorusskaya crossover system -> one single-track depot branch leg`
+
+and separately
+
+`Krasnopresnenskaya crossover system -> one single-track depot branch leg`.
+
+It is still **not** source-backed to merge these into one continuous two-track `BRANCH_EDGE`; the downstream depot-side multi-edge/switch arrangement remains a separate unresolved graph section.
 
 ### Что не установлено для actual chamber
 
@@ -325,6 +349,21 @@ Machine contract:
 This is the first actual-source vertical/chainage constraint found for the Krasnaya Presnya depot-connection network and should supersede any generic vertical interpolation once the corresponding physical graph edge is identified.
 
 S120 supplies matching construction context but not dimensions: the branch passed a powerful quicksand zone, includes a closed-method section, and the photographed section is explicitly described as having been constructed with ground freezing. Metrostroy's own historical album S093 independently corroborates the same construction class on pp.100-101: this Circle-line depot branch is cited as a difficult deep-to-shallow transition where **ground freezing** was used. S120 also says Dorman's 1971 monograph contained a construction description of this section. The Russian State Library record S123 confirms that the complete 271-page Dorman volume is in open access; the exact relevant pages have not yet been extracted, so no Dorman-specific dimensions are asserted yet.
+
+### Dorman construction constraint: one Line-5 depot branch is 256 m
+
+S135, Ya.A. Dorman's article `Из опыта применения замораживания грунтов на строительстве метрополитена` in the same 1983 engineering collection, adds a real geometric constraint to the depot network:
+
+- a tunnel section at the exit toward Krasnopresnenskoye depot was built using artificial freezing of unstable/quicksand ground;
+- **two Koltsevaya crossover chambers** are explicitly included among the frozen-ground construction objects;
+- **one of the branches connecting Koltsevaya to the depot is 256 m long**;
+- that branch passed under dense residential/industrial development;
+- fan-arranged freezing holes formed frozen-ground "tents" above the tunnel;
+- about **18,000 linear metres** of freezing holes were drilled for this branch.
+
+The important limitation is explicit: the article says **"one of the branches"** and does not name Belorusskaya versus Krasnopresnenskaya. Therefore `256 m` is stored as an **unassigned one-of-two branch-length constraint**. It must not be assigned to `BRANCH_KRP_BELORUSSKAYA_LEG` or `BRANCH_KRP_KRASNOPRESNENSKAYA_LEG` until an independent plan/chainage source identifies which one Dorman describes.
+
+This strengthens the real construction context but still does not give the switch-to-round-tunnel split point or the branch civil section.
 
 ### Adjacent Krasnaya Presnya → TKL branch: actual single-track-tunnel analogue
 
@@ -845,7 +884,7 @@ Again: none of these generic dimensions are assigned to the actual Belorusskaya 
 | contact rail | must be event-based with gaps/ramps/sectioning | normative ranges known | exact local positions |
 | track foundation / drainage / walkway / services | turnout cannot inherit ordinary periodic track concrete; legacy ballasted-trough family and current passage/drainage/power/sign rules are known | event-based legacy/current presets are constrained separately | historical/as-built Belorusskaya foundation plan, drainage levels and service products |
 | vertical geometry | no invented Z; S121 now gives actual Krasnopresnenskaya-side depot-branch crown depths at local PK6+28–PK7+57 | crown trend can constrain the downstream branch after graph-edge binding | actual UGR/rail grade, absolute crown Z, Belorusskaya switch Z |
-| branch exit | two distinct single-track Line-5 branch legs are source-backed (S125), plus a local depot-side two-track section (S120) | selected Belorusskaya leg may be modeled and cut before unresolved downstream split/common section | exact split/merge chainages, shell arrangement, diameter/lining |
+| branch exit | two distinct single-track Line-5 branch legs are source-backed by the 1983 engineering account S134, plus a local depot-side two-track section (S120) | selected Belorusskaya leg may be modeled and cut before unresolved downstream split/common section | exact split/merge chainages, shell arrangement, diameter/lining |
 
 ---
 
@@ -853,8 +892,8 @@ Again: none of these generic dimensions are assigned to the actual Belorusskaya 
 
 The topology contract is now stronger than the first draft:
 
-- the **Belorusskaya-side Line-5 depot leg is source-backed as a single-track connection** (S125);
-- the **Krasnopresnenskaya-side Line-5 depot leg is a separate single-track connection** (S125);
+- the **Belorusskaya-side Line-5 depot leg is source-backed as a single-track connection** by S134 (S125 later corroboration);
+- the **Krasnopresnenskaya-side Line-5 depot leg is a separate single-track connection** by S134 (S125 later corroboration);
 - S120 proves that farther depot-side there is a **local two-track section** and then a switch dividing directions toward Belorusskaya/Krasnopresnenskaya;
 - therefore the first PCG implementation may safely instantiate one `BRANCH_EDGE` from the Belorusskaya divergence and terminate it at an `END_NODE` **before** the unresolved downstream depot-side merge/two-track/switch system;
 - this resolves **track count/topology only**. It does not prove a circular single-track civil shell, its diameter, or the chainage where such a shell begins.

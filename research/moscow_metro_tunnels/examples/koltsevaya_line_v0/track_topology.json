@@ -225,7 +225,8 @@
       "destination": "Люблинско-Дмитровская линия",
       "source_ids": [
         "S085",
-        "S089"
+        "S089",
+        "S104"
       ],
       "turnout_count": 5,
       "station_turnback_storage_tracks": 1,
@@ -241,7 +242,29 @@
           "source_id": "S089"
         }
       ],
-      "station_pk_semantics": "station reference/chainage context only; not switch-node chainage"
+      "station_pk_semantics": "station reference/chainage context only; not switch-node chainage",
+      "actual_visual_evidence": {
+        "source_id": "S104",
+        "status": "ACTUAL_SITE_PHOTO_CAPTIONS_C_CONFIDENCE",
+        "confirmed": [
+          "switch No.4 lies on Line-5 Track II; the caption identifies it as the outer ring and the view toward Komsomolskaya",
+          "the former Kurskaya turnback system is traversable back to the main track and has four turnouts in the photographed description",
+          "the Lyublinskaya/Chkalovskaya service branch was cut into the former turnback system in the 1990s",
+          "the service branch visibly/qualitatively dives downward to the left; no numerical delta-Z is available",
+          "a new divergence chamber contains switch No.7",
+          "switch No.4 exit chamber is described as fully monolithic",
+          "later/new chamber lining is mixed: mostly cast iron, with the widest span monolithic"
+        ],
+        "exact_photo_derived_dimensions": "not_permitted_without_scale",
+        "exact_xy": null,
+        "exact_z": null
+      },
+      "local_vertical_relation": {
+        "value": null,
+        "qualitative": "SSV descends below the photographed turnback/main-track level after the divergence",
+        "source_id": "S104",
+        "status": "SOURCE_BACKED_QUALITATIVE_NO_NUMERIC_Z"
+      }
     },
     {
       "id": "KOL5_TAGANSKAYA_SSV_SYSTEM",
@@ -304,7 +327,8 @@
       "destination": "Сокольническая линия / в сторону Фрунзенской",
       "source_ids": [
         "S085",
-        "S091"
+        "S091",
+        "S105"
       ],
       "turnout_count": 5,
       "station_turnback_storage_tracks": 1,
@@ -321,7 +345,18 @@
           "source_id": "S091"
         }
       ],
-      "station_pk_semantics": "station reference/chainage context only; not switch-node chainage"
+      "station_pk_semantics": "station reference/chainage context only; not switch-node chainage",
+      "actual_visual_evidence": {
+        "source_id": "S105",
+        "turnout_number": 4,
+        "diverging_route": "service connection to Sokolnicheskaya line",
+        "diverging_side_in_photographed_orientation": "right",
+        "exact_main_track_number": null,
+        "exact_xy": null,
+        "exact_chainage": null,
+        "dimensions": null,
+        "status": "ACTUAL_SITE_PHOTO_CAPTION_C_CONFIDENCE"
+      }
     }
   ],
   "selected_first_junction": {
@@ -441,5 +476,29 @@
     "exact_switch_xy_z": "UNKNOWN",
     "geometry_fallback_contract": "READY_WITH_EXPLICIT_FALLBACKS",
     "two_main_route_relations": "READY_CURRENT_OSM: A=300607 inner; B=1462011 outer; master=1462012"
-  }
+  },
+  "alternate_well_documented_junctions": [
+    {
+      "id": "JUNCTION_KOL5_KURSKAYA_LDL_1990S",
+      "topology_system_id": "KOL5_KURSKAYA_SSV_SYSTEM",
+      "reason": "rich actual-site photo series identifies switch numbers, Track II/outer ring, downward branch direction and mixed/monolithic chamber construction",
+      "source_ids": [
+        "S085",
+        "S089",
+        "S104"
+      ],
+      "recommended_use": "visual/civil validation archetype; dimensional mesh still constrained/unknown"
+    },
+    {
+      "id": "JUNCTION_KOL5_PARK_KULTURY_SL_SWITCH4",
+      "topology_system_id": "KOL5_PARK_KULTURY_SSV_SYSTEM",
+      "reason": "actual photo caption identifies switch No.4 and right-hand branch toward Sokolnicheskaya service connection",
+      "source_ids": [
+        "S085",
+        "S091",
+        "S105"
+      ],
+      "recommended_use": "topology/visual validation; exact track number and geometry remain unresolved"
+    }
+  ]
 }

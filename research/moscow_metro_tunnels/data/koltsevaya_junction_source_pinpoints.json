@@ -193,6 +193,21 @@
             "230/12 V transformer/socket boxes are installed at ATDP devices, turnouts and gates",
             "point blades of turnouts have a dedicated emergency-lighting group"
           ]
+        },
+        {
+          "clause": "5.7.1.19",
+          "supports": [
+            "current metro turnout/crossover under-rail foundations may use wooden bearers per GOST 8816",
+            "current metro turnout/crossover under-rail foundations may also use reinforced-concrete blocks with elastic elements in cases in track concrete"
+          ]
+        },
+        {
+          "clause": "5.10.6.5, Table 5.23",
+          "supports": [
+            "running/dead-end/connecting tunnel working illuminance is 20 lx at UGR",
+            "turnout point blades with working lighting off require 20 lx at UGR",
+            "service platform in a dead-end tunnel requires 30 lx at platform level"
+          ]
         }
       ],
       "confidence": "A_current_normative"

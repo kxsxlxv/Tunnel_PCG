@@ -71,15 +71,46 @@ deliberately Stage-9-like at the topology level: separate curved annular
 segments with explicit radial end faces, but adapted to the Moscow
 2.800/3.050 m radii, 1.000 m ring pitch and ten equal blocks.
 
-The current 8 mm inter-block seam is a visual fallback, not a source dimension.
-Exact radial-end chamfers, pin holes/seats and reinforcement-mesh CAD remain
-unresolved. The calculated annular volume is approximately 4.60 m3/ring, or
-0.46 m3 for one of ten equal blocks, matching the documented block volume.
+The old simplified 8 mm inter-block seam has been removed by the literal
+Stage-9 segment/joint transfer. Exact radial-end chamfers, pin holes/seats and
+reinforcement-mesh CAD remain unresolved. The calculated annular volume is
+approximately 4.60 m3/ring, or 0.46 m3 for one of ten equal blocks, matching
+the documented block volume.
 
 S026 does not publish a separate UGR-to-lining-axis placement for this family.
 The existing Stage-10 track/UGR datum therefore remains an explicit transfer
 rule; shell-contact geometry, walkway width and wall-following services are
 recomputed from the selected 2.800 m intrados.
+
+### Restored Stage-7/9 ring axial stagger
+
+The first Moscow K/B/A transfer accidentally pinned every K segment to the
+crown because the new 1.0 m civil objects bypassed Stage-7 `RingPose`
+rotation. That regression is now closed.
+
+The Moscow civil layer samples an independent pose stream at the civil pitch
+instead of indexing the source 1.35 m assembly poses. It reuses the Stage-7
+rotation policy and RNG stream:
+
+    ringwise_gaussian:
+        phi_nominal_i ~ truncated Gaussian within +/-6*theta_K
+        delta_i ~ N(0, (0.1*|phi_nominal_i|)^2)
+        phi_i = phi_nominal_i + delta_i
+
+For the default `theta_K=22.5 deg`, the nominal bound is +/-135 degrees.
+The complete civil assembly for a ring -- lining segments, prescribed joints,
+pocket cutters and bolt heads -- is rotated by the same `phi_i` in local XZ
+before the Stage-10 alignment map.
+
+This roll is deliberately **civil-only**. Permanent way, walkway, contact rail
+and service infrastructure stay in the tunnel gravity/alignment frame. The
+existing CLI `--rotation-strategy` selects `ringwise_gaussian`,
+`paper_constant_nominal` or `continuous`; the Stage-10 CLI default remains
+`ringwise_gaussian`.
+
+This is a transfer of the old Stage-7/9 reconstruction behaviour. It is not a
+claim that a particular Moscow RC project used the same statistical stagger
+distribution.
 
 ## Modern permanent way
 

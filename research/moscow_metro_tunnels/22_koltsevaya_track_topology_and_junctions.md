@@ -249,9 +249,18 @@ S120 adds an actual-site photo sequence of the same depot connection:
 - photo 7: explicitly captioned **two-track section of the depot branch**;
 - photo 8: a downstream switch divides the branch directions **left toward Belorusskaya / right toward Krasnopresnenskaya**;
 - photo 9: a closed-method tunnel segment of the depot branch;
+- photo 12: an **experimental permanent-way section**;
+- photo 13: a **tunnel gate/shutter ("затвор")** is visible, but its exact engineering type is not identified by the caption;
 - photos 16 and 20: the crossover chamber, including a panorama.
 
-This means the complete Krasnaya Presnya depot connection is a **multi-edge graph**. The geometry agent must not extend the first left-hand divergence as one indefinitely single-track branch.
+S125 resolves an important topology ambiguity: it explicitly describes **one single-track service connection to Belorusskaya and a separate single-track service connection to Krasnopresnenskaya**. S124 independently uses the same "two separate branches" language. This is compatible with S120 because S120 only proves that a **local depot-side section is two-track** before/around the downstream split.
+
+Therefore the complete Krasnaya Presnya connection is represented as:
+- `BRANCH_KRP_BELORUSSKAYA_LEG` — one physical track;
+- `BRANCH_KRP_KRASNOPRESNENSKAYA_LEG` — one physical track;
+- a downstream local two-track/switch system whose exact node decomposition is still unknown.
+
+The geometry agent may therefore satisfy the first implementation sequence with the **single-track Belorusskaya leg**, but must place the model cut before the unresolved downstream two-track/switch system.
 
 ### Что не установлено для actual chamber
 
@@ -286,20 +295,27 @@ S121 is a 2025 Moscow state historical-cultural expertise/project document. It s
 
 The same document gives site ground-surface absolute elevations **143.17–145.67 m**.
 
+The document also gives two independent vertical-reference pairs inside the ~ПК6+65/~ПК6+95 building footprint:
+- at axes **А-Г/5**: crown is ~7.9 m below mark 133.05 and ~3.9 m below mark 129.05 → both independently give a crown mark of **~125.15 m** in the document's concept vertical frame;
+- at axes **А/2-3**: ~6.8 m below 133.05 and ~2.8 m below 129.05 → both give **~126.25 m** in that same concept frame.
+
+The double derivation is internally consistent and is stored machine-readably, but the 133.05/129.05 frame is **not yet tied to an explicit geodetic datum**.
+
 These numbers are useful, but the datum semantics are deliberately kept narrow:
 
 - the quoted depth is to the **crown part of the structure**, not to UGR;
 - `0.000` is the project concept's conditional datum; its absolute elevation is not resolved here;
 - the PK values are **local chainage of the depot branch**, not Line-5 main-track chainage;
 - therefore the derived 36–41‰ values are **crown-elevation trends only**, not asserted rail gradients;
-- the branch cross-section/radius over these intervals is not given by this paragraph.
+- the branch cross-section/radius over these intervals is not given by this paragraph;
+- the ~125.15/~126.25 marks are therefore retained as **concept-frame crown elevations**, not absolute Moscow Z.
 
 Machine contract:
 `KRASNOPRESNENSKAYA_DEPOT_BRANCH_PROFILE_FRAGMENT_ACTUAL`.
 
 This is the first actual-source vertical/chainage constraint found for the Krasnaya Presnya depot-connection network and should supersede any generic vertical interpolation once the corresponding physical graph edge is identified.
 
-S120 supplies matching construction context but not dimensions: the branch passed a powerful quicksand zone, includes a closed-method section, and the photographed section is explicitly described as having been constructed with ground freezing. S120 also says Dorman's 1971 monograph contained a construction description of this section. The Russian State Library record S123 confirms that the complete 271-page Dorman volume is in open access; the exact relevant pages have not yet been extracted, so no Dorman-specific dimensions are asserted yet.
+S120 supplies matching construction context but not dimensions: the branch passed a powerful quicksand zone, includes a closed-method section, and the photographed section is explicitly described as having been constructed with ground freezing. Metrostroy's own historical album S093 independently corroborates the same construction class on pp.100-101: this Circle-line depot branch is cited as a difficult deep-to-shallow transition where **ground freezing** was used. S120 also says Dorman's 1971 monograph contained a construction description of this section. The Russian State Library record S123 confirms that the complete 271-page Dorman volume is in open access; the exact relevant pages have not yet been extracted, so no Dorman-specific dimensions are asserted yet.
 
 ## 5. Turnout geometry contract
 
@@ -638,7 +654,7 @@ Again: none of these generic dimensions are assigned to the actual Belorusskaya 
 | contact rail | must be event-based with gaps/ramps/sectioning | normative ranges known | exact local positions |
 | track foundation / drainage / walkway / services | turnout cannot inherit ordinary periodic track concrete; legacy ballasted-trough family and current passage/drainage/power/sign rules are known | event-based legacy/current presets are constrained separately | historical/as-built Belorusskaya foundation plan, drainage levels and service products |
 | vertical geometry | no invented Z; S121 now gives actual Krasnopresnenskaya-side depot-branch crown depths at local PK6+28–PK7+57 | crown trend can constrain the downstream branch after graph-edge binding | actual UGR/rail grade, absolute crown Z, Belorusskaya switch Z |
-| branch exit | tunnel-branch existence to Krasnaya Presnya is source-backed | generic reference says independent tunnels only after inter-track >6 m and after two-vault chamber 6 | actual split distance/track count/diameter/lining |
+| branch exit | two distinct single-track Line-5 branch legs are source-backed (S125), plus a local depot-side two-track section (S120) | selected Belorusskaya leg may be modeled and cut before unresolved downstream split/common section | exact split/merge chainages, shell arrangement, diameter/lining |
 
 ---
 

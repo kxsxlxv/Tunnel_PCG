@@ -1003,5 +1003,86 @@
       },
       "confidence": "B/C_transport_encyclopedia_topology_not_engineering_plan"
     }
+  ],
+  "acquisition_targets": [
+    {
+      "id": "TARGET_KLIMASHKINA_ISP_24_147",
+      "title": "ИСП-24-147. Предварительный геотехнический расчет изменения НДС тоннельных конструкций обделки действующих сооружений Московского метрополитена",
+      "organization": "ООО ИНЖСПЕЦПРОЕКТ",
+      "year": 2024,
+      "evidence_source_id": "S121",
+      "evidence_locator": "S121 bibliography / document list",
+      "priority": "VERY_HIGH",
+      "expected_value": [
+        "actual metro lining cross-section used in the calculation model",
+        "tunnel/branch radius or diameter",
+        "lining material/thickness or structural idealization",
+        "actual plan/elevation relation to the proposed building",
+        "possibly project/survey coordinates and structural deformation sections"
+      ],
+      "public_copy_found": false,
+      "status": "REFERENCED_BY_PUBLIC_MOSCOW_DOCUMENT_NOT_SEPARATELY_LOCATED"
+    },
+    {
+      "id": "TARGET_KLIMASHKINA_IGI3",
+      "title": "Б1210/ОР-24-ИГИ3. Инженерно-геологические изыскания, графическая часть",
+      "organization": "ООО ГЕОКОН",
+      "year": 2024,
+      "evidence_source_id": "S121",
+      "evidence_locator": "S121 bibliography / document list",
+      "priority": "HIGH",
+      "expected_value": [
+        "engineering-geological sections through the depot branch",
+        "absolute terrain/geology elevations",
+        "possible plotted metro-structure outline and depth datum"
+      ],
+      "public_copy_found": false,
+      "status": "REFERENCED_BY_PUBLIC_MOSCOW_DOCUMENT_NOT_SEPARATELY_LOCATED"
+    },
+    {
+      "id": "TARGET_KLIMASHKINA_IGI1_IGI2",
+      "title": "Б1210/ОР-24-ИГИ1 and Б1210/ОР-24-ИГИ2. Инженерно-геологические изыскания, текстовые части",
+      "organization": "ООО ГЕОКОН",
+      "year": 2024,
+      "evidence_source_id": "S121",
+      "priority": "MEDIUM_HIGH",
+      "expected_value": [
+        "borehole/elevation datum definitions",
+        "geotechnical description around the branch",
+        "possibly explicit absolute-height system used by the graphics"
+      ],
+      "public_copy_found": false,
+      "status": "REFERENCED_BY_PUBLIC_MOSCOW_DOCUMENT_NOT_SEPARATELY_LOCATED"
+    },
+    {
+      "id": "TARGET_KLIMASHKINA_PROJECT_KR1",
+      "title": "24-392-П-КР1 том 4.1. Конструктивные решения",
+      "organization": "ООО Проект СПиЧ",
+      "year": 2024,
+      "evidence_source_id": "S121",
+      "priority": "MEDIUM",
+      "expected_value": [
+        "building-to-metro clearance sections",
+        "reference elevations allowing the conditional 0.000 frame to be tied to an absolute datum"
+      ],
+      "public_copy_found": false,
+      "status": "REFERENCED_BY_PUBLIC_MOSCOW_DOCUMENT_NOT_SEPARATELY_LOCATED"
+    },
+    {
+      "id": "TARGET_DORMAN_1971_KRASNAIA_PRESNIA",
+      "title": "Я.А. Дорман. Искусственное замораживание грунтов при строительстве метрополитенов",
+      "year": 1971,
+      "evidence_source_id": "S123",
+      "cross_reference_source_id": "S120",
+      "priority": "HIGH",
+      "expected_value": [
+        "construction method and possibly section dimensions for the Krasnaya Presnya depot-branch frozen-ground section",
+        "freezing layout, boreholes, ground conditions or excavation sequence"
+      ],
+      "public_copy_found": true,
+      "public_access": "RSL online viewer",
+      "exact_relevant_pages": null,
+      "status": "FULL_TEXT_PUBLIC_PAGE_EXTRACTION_PENDING"
+    }
   ]
 }

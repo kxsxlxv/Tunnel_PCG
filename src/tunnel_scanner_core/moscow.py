@@ -539,6 +539,28 @@ class MoscowModernContactRailProfile:
     support_hood_length_m: float
     support_hood_extra_width_m: float
     support_hood_extra_height_m: float
+    drawing_reference_to_axis_m: float
+    drawing_reference_to_outer_envelope_m: float
+    drawing_upper_return_m: float
+    drawing_top_above_ugr_m: float
+    drawing_lower_bend_callout_m: float
+    drawing_upper_bend_callout_m: float
+    bracket_lower_bend_radius_m: float
+    bracket_upper_bend_radius_m: float
+    base_plate_transverse_m: float
+    base_plate_longitudinal_m: float
+    base_plate_thickness_m: float
+    base_plate_anchor_pitch_transverse_m: float
+    base_plate_anchor_pitch_longitudinal_m: float
+    base_plate_anchor_count: int
+    clamp_bridge_width_m: float
+    clamp_bridge_thickness_m: float
+    clamp_jaw_thickness_m: float
+    clamp_jaw_height_m: float
+    clamp_bolt_count: int
+    clamp_bolt_diameter_m: float
+    clamp_bolt_head_radius_m: float
+    clamp_bolt_head_height_m: float
 
     def __post_init__(self) -> None:
         vals = (
@@ -564,6 +586,26 @@ class MoscowModernContactRailProfile:
             self.support_hood_length_m,
             self.support_hood_extra_width_m,
             self.support_hood_extra_height_m,
+            self.drawing_reference_to_axis_m,
+            self.drawing_reference_to_outer_envelope_m,
+            self.drawing_upper_return_m,
+            self.drawing_top_above_ugr_m,
+            self.drawing_lower_bend_callout_m,
+            self.drawing_upper_bend_callout_m,
+            self.bracket_lower_bend_radius_m,
+            self.bracket_upper_bend_radius_m,
+            self.base_plate_transverse_m,
+            self.base_plate_longitudinal_m,
+            self.base_plate_thickness_m,
+            self.base_plate_anchor_pitch_transverse_m,
+            self.base_plate_anchor_pitch_longitudinal_m,
+            self.clamp_bridge_width_m,
+            self.clamp_bridge_thickness_m,
+            self.clamp_jaw_thickness_m,
+            self.clamp_jaw_height_m,
+            self.clamp_bolt_diameter_m,
+            self.clamp_bolt_head_radius_m,
+            self.clamp_bolt_head_height_m,
         )
         if any((not math.isfinite(v) or v <= 0.0) for v in vals):
             raise ValueError("modern contact-rail dimensions must be positive")
@@ -577,6 +619,12 @@ class MoscowModernContactRailProfile:
             <= self.support_normative_max_m
         ):
             raise ValueError("modern contact support target pitch outside normative range")
+        if self.base_plate_anchor_count != 4:
+            raise ValueError("dimensioned contact-support base plate requires four anchors")
+        if self.clamp_bolt_count != 2:
+            raise ValueError("dimensioned over-rail clamp requires two bolts")
+        if self.drawing_reference_to_outer_envelope_m <= self.drawing_reference_to_axis_m:
+            raise ValueError("contact-support drawing outer envelope must lie outboard of axis")
         if not self.preset_id:
             raise ValueError("modern contact-rail preset id must not be empty")
 
@@ -1192,6 +1240,14 @@ class MoscowStage10Profile:
         modern_bracket_raw = modern_support_raw["bracket"]
         modern_insulator_raw = modern_support_raw["insulator"]
         modern_hood_raw = modern_support_raw["support_hood"]
+        modern_drawing_raw = modern_support_raw["dimensioned_drawing"]
+        modern_drawing_callouts_raw = modern_drawing_raw["readable_callouts_m"]
+        modern_clamp_raw = modern_support_raw["clamp"]
+        modern_anchor_pattern = tuple(
+            float(v) for v in modern_bracket_raw["base_plate_anchor_pattern_m"]
+        )
+        if len(modern_anchor_pattern) != 2:
+            raise ValueError("modern contact-support anchor pattern must have two pitches")
         modern_contact_profile = MoscowModernContactRailProfile(
             preset_id=str(modern_contact_raw["id"]),
             cover_top_width_m=float(modern_cover_raw["top_width_m"]),
@@ -1232,7 +1288,100 @@ class MoscowStage10Profile:
             support_hood_extra_height_m=float(
                 modern_hood_raw["height_extra_over_main_cover_m"]
             ),
+            drawing_reference_to_axis_m=float(
+                modern_drawing_callouts_raw["running_reference_to_contact_axis"]
+            ),
+            drawing_reference_to_outer_envelope_m=float(
+                modern_drawing_callouts_raw[
+                    "running_reference_to_outer_bracket_envelope"
+                ]
+            ),
+            drawing_upper_return_m=float(
+                modern_drawing_callouts_raw["contact_axis_to_outer_upper_return"]
+            ),
+            drawing_top_above_ugr_m=float(
+                modern_drawing_callouts_raw["top_above_ugr_reference"]
+            ),
+            drawing_lower_bend_callout_m=float(
+                modern_drawing_callouts_raw["lower_bend_vertical_callout"]
+            ),
+            drawing_upper_bend_callout_m=float(
+                modern_drawing_callouts_raw["upper_bend_vertical_callout"]
+            ),
+            bracket_lower_bend_radius_m=float(
+                modern_bracket_raw["preview_lower_bend_radius_m"]
+            ),
+            bracket_upper_bend_radius_m=float(
+                modern_bracket_raw["preview_upper_bend_radius_m"]
+            ),
+            base_plate_transverse_m=float(
+                modern_bracket_raw["base_plate_transverse_m"]
+            ),
+            base_plate_longitudinal_m=float(
+                modern_bracket_raw["base_plate_longitudinal_m"]
+            ),
+            base_plate_thickness_m=float(
+                modern_bracket_raw["base_plate_thickness_m"]
+            ),
+            base_plate_anchor_pitch_transverse_m=modern_anchor_pattern[0],
+            base_plate_anchor_pitch_longitudinal_m=modern_anchor_pattern[1],
+            base_plate_anchor_count=int(
+                modern_bracket_raw["base_plate_anchor_count"]
+            ),
+            clamp_bridge_width_m=float(modern_clamp_raw["bridge_width_m"]),
+            clamp_bridge_thickness_m=float(
+                modern_clamp_raw["bridge_thickness_m"]
+            ),
+            clamp_jaw_thickness_m=float(
+                modern_clamp_raw["jaw_thickness_m"]
+            ),
+            clamp_jaw_height_m=float(modern_clamp_raw["jaw_height_m"]),
+            clamp_bolt_count=int(modern_clamp_raw["bolt_count"]),
+            clamp_bolt_diameter_m=float(
+                modern_clamp_raw["bolt_diameter_m"]
+            ),
+            clamp_bolt_head_radius_m=float(
+                modern_clamp_raw["bolt_head_radius_m"]
+            ),
+            clamp_bolt_head_height_m=float(
+                modern_clamp_raw["bolt_head_height_m"]
+            ),
         )
+
+        if not math.isclose(
+            modern_contact_profile.drawing_reference_to_axis_m,
+            contact_profile.horizontal_from_inner_working_face_m,
+            abs_tol=contact_profile.horizontal_tolerance_m,
+        ):
+            raise ValueError(
+                "dimensioned 683 mm support drawing must remain inside the "
+                "690 +/- tolerance contact-rail placement contract"
+            )
+        if not math.isclose(
+            modern_contact_profile.drawing_lower_bend_callout_m,
+            contact_profile.working_surface_z_m,
+            abs_tol=contact_profile.vertical_tolerance_m,
+        ):
+            raise ValueError(
+                "dimensioned 155 mm support drawing must remain inside the "
+                "+160 mm contact-surface height tolerance"
+            )
+        if abs(
+            (
+                modern_contact_profile.drawing_reference_to_outer_envelope_m
+                - modern_contact_profile.drawing_reference_to_axis_m
+            )
+            - modern_contact_profile.drawing_upper_return_m
+        ) > 0.015:
+            raise ValueError(
+                "873/683/180 mm support drawing callouts are mutually inconsistent"
+            )
+        if (
+            modern_contact_profile.drawing_top_above_ugr_m
+            <= contact_profile.working_surface_z_m
+            + contact_profile.rail_overall_height_m
+        ):
+            raise ValueError("dimensioned bracket top must lie above contact rail")
 
         block_raw = modern_pw_raw["block"]
         boot_raw = modern_pw_raw["rubber_boot"]

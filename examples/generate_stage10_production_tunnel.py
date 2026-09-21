@@ -435,13 +435,14 @@ def _validate_stage10_build(
             raise AssertionError("modern visual preset must occupy one cable place per used level")
 
     if domain_stage in {"10.4", "10.5"}:
-        is_rc_10block = (
+        is_rc = (
             profile.civil_family
             == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
         )
+        topology = str(meta.get("moscowCivilTopology", ""))
         expected_civil_status = (
-            "implemented_stage10_4_segmented_rc_10block_shell"
-            if is_rc_10block
+            f"implemented_stage10_4_rc_stage9_architecture_{topology}"
+            if is_rc
             else (
                 "implemented_stage10_4_cast_iron_smooth_envelope_"
                 "detail_deferred"
@@ -450,8 +451,8 @@ def _validate_stage10_build(
         if meta.get("civilShellStatus") != expected_civil_status:
             raise AssertionError("Stage 10.4 civil shell mode mismatch")
         expected_detail_status = (
-            "implemented_rc_10block_geometry_stage9_like"
-            if is_rc_10block
+            "stage9_segment_joint_bolt_architecture_transferred"
+            if is_rc
             else "cast_iron_detail_deferred_pending_research"
         )
         if meta.get("moscowCivilCompositeDetailStatus") != (
@@ -467,11 +468,7 @@ def _validate_stage10_build(
         ):
             raise AssertionError("Stage 10.4 civil gap is not marked closed")
         if build.scene.objects_of_type("lining_segment"):
-            raise AssertionError("Stage 10.4 retained Stage-9 lining segments")
-        if build.scene.objects_of_type("bolt_head"):
-            raise AssertionError("Stage 10.4 retained Stage-9 lining bolt heads")
-        if build.scene.objects_of_type("bolt_pocket_cutter"):
-            raise AssertionError("Stage 10.4 retained Stage-9 bolt cutters")
+            raise AssertionError("Stage 10.4 retained source Stage-9 lining segments")
         if build.scene.objects_of_type("production_walkway"):
             raise AssertionError("Stage 10.4 retained Stage-8/9 walkway")
         if build.scene.objects_of_type("production_moscow_civil_detail_ribs"):
@@ -480,85 +477,101 @@ def _validate_stage10_build(
             )
         if build.scene.objects_of_type("production_moscow_civil_bolt_heads"):
             raise AssertionError(
-                "unresolved cast-iron bolt-head geometry must not be generated"
+                "obsolete simplified civil bolt objects must not be generated"
             )
-        civil = build.scene.objects_of_type(
-            "production_moscow_civil_shell_ring"
-        )
-        if not civil:
-            raise AssertionError("Stage 10.4 generated no Moscow civil rings")
-        if len(civil) != int(meta.get("moscowCivilRingCount", -1)):
-            raise AssertionError("Stage 10.4 civil ring metadata mismatch")
         if len(build.scene.objects_of_type("production_moscow_walkway")) != 1:
             raise AssertionError("Stage 10.4 requires one Moscow walkway")
-        for ring in civil:
-            p = ring.custom_properties
-            if not math.isclose(
-                float(p["intradosRadiusM"]),
-                profile.intrados_radius_m,
-                abs_tol=2e-12,
-            ):
-                raise AssertionError(f"{ring.name}: wrong intrados radius")
-            if not math.isclose(
-                float(p["extradosRadiusM"]),
-                profile.extrados_radius_m,
-                abs_tol=2e-12,
-            ):
-                raise AssertionError(f"{ring.name}: wrong extrados radius")
-            if p.get("civilFamily") != profile.civil_family:
-                raise AssertionError(f"{ring.name}: wrong civil family")
-            if p.get("seriesAccurateCivilLOD0") is not False:
-                raise AssertionError(f"{ring.name}: false LOD0 accuracy claim")
 
-            if is_rc_10block:
-                if p.get("coarseSegmentCountIsGeometry") is not True:
+        if is_rc:
+            if topology not in {"ten_equal", "kba"}:
+                raise AssertionError("Stage 10.4 RC topology is unresolved")
+            civil_segments = build.scene.objects_of_type(
+                "production_moscow_civil_segment"
+            )
+            expected_per_ring = 10 if topology == "ten_equal" else 6
+            expected_segments = (
+                expected_per_ring * int(meta.get("moscowCivilRingCount", -1))
+            )
+            if len(civil_segments) != expected_segments:
+                raise AssertionError(
+                    "Stage 10.4 RC civil segment count mismatch"
+                )
+            if int(meta.get("moscowCivilRenderedBlockCount", -1)) != (
+                len(civil_segments)
+            ):
+                raise AssertionError("Stage 10.4 RC rendered-block metadata mismatch")
+            if meta.get("moscowCivilStage9ArchitectureTransferred") is not True:
+                raise AssertionError("Stage 9 civil architecture transfer missing")
+            for segment in civil_segments:
+                p = segment.custom_properties
+                if p.get("civilFamily") != profile.civil_family:
+                    raise AssertionError(f"{segment.name}: wrong civil family")
+                if p.get("moscowCivilTopology") != topology:
+                    raise AssertionError(f"{segment.name}: wrong civil topology")
+                if p.get(
+                    "stage9SegmentJointFastenerArchitectureTransferred"
+                ) is not True:
                     raise AssertionError(
-                        f"{ring.name}: ten-block topology is not geometry"
+                        f"{segment.name}: Stage-9 architecture marker missing"
                     )
-                if int(p.get("renderedRCBlockCount", -1)) != 10:
+            heads = build.scene.objects_of_type("bolt_head")
+            cutters = build.scene.objects_of_type("bolt_pocket_cutter")
+            if bool(meta.get("moscowCivilBoltsEnabled", False)):
+                if not heads or len(heads) != len(cutters):
                     raise AssertionError(
-                        f"{ring.name}: wrong rendered RC block count"
+                        "Stage 10.4 RC legacy bolt pocket/head pairs missing"
                     )
-                if p.get("stage9LikeCurvedSegmentConstruction") is not True:
-                    raise AssertionError(
-                        f"{ring.name}: RC blocks are not Stage-9-like curved sectors"
-                    )
+                for obj in (*heads, *cutters):
+                    p = obj.custom_properties
+                    if p.get(
+                        "stage9FastenerVisualTransferNotHistoricalMoscowClaim"
+                    ) is not True:
+                        raise AssertionError(
+                            f"{obj.name}: visual-transfer boundary missing"
+                        )
+                    if p.get("legacyBoltLayout") != "type1_centered":
+                        raise AssertionError(
+                            f"{obj.name}: wrong transferred Stage-9 bolt layout"
+                        )
+            elif heads or cutters:
+                raise AssertionError(
+                    "Stage 10.4 RC bolts generated despite --no-bolts"
+                )
+        else:
+            if build.scene.objects_of_type("bolt_head"):
+                raise AssertionError(
+                    "unresolved cast-iron bolt heads must not be generated"
+                )
+            if build.scene.objects_of_type("bolt_pocket_cutter"):
+                raise AssertionError(
+                    "unresolved cast-iron bolt cutters must not be generated"
+                )
+            civil = build.scene.objects_of_type(
+                "production_moscow_civil_shell_ring"
+            )
+            if not civil:
+                raise AssertionError("Stage 10.4 generated no cast-iron envelope")
+            if len(civil) != int(meta.get("moscowCivilRingCount", -1)):
+                raise AssertionError("Stage 10.4 civil ring metadata mismatch")
+            for ring in civil:
+                p = ring.custom_properties
                 if not math.isclose(
-                    float(p.get("renderedRCVisualSeamWidthM", -1)),
-                    0.008,
+                    float(p["intradosRadiusM"]),
+                    profile.intrados_radius_m,
                     abs_tol=2e-12,
                 ):
-                    raise AssertionError(
-                        f"{ring.name}: wrong RC visual seam width"
-                    )
+                    raise AssertionError(f"{ring.name}: wrong intrados radius")
                 if not math.isclose(
-                    float(p.get("rcWorkingRebarDiameterM", -1)),
-                    0.016,
+                    float(p["extradosRadiusM"]),
+                    profile.extrados_radius_m,
                     abs_tol=2e-12,
                 ):
+                    raise AssertionError(f"{ring.name}: wrong extrados radius")
+                if p.get("civilFamily") != profile.civil_family:
+                    raise AssertionError(f"{ring.name}: wrong civil family")
+                if p.get("seriesAccurateCivilLOD0") is not False:
                     raise AssertionError(
-                        f"{ring.name}: wrong RC working reinforcement datum"
-                    )
-                if not math.isclose(
-                    float(p.get("rcAssemblyPinDiameterM", -1)),
-                    0.022,
-                    abs_tol=2e-12,
-                ):
-                    raise AssertionError(
-                        f"{ring.name}: wrong RC erection-pin datum"
-                    )
-                if p.get("rcPermanentBoltedBlockJoints") is not False:
-                    raise AssertionError(
-                        f"{ring.name}: RC joints falsely marked bolted"
-                    )
-            else:
-                if p.get("coarseSegmentCountIsGeometry") is not False:
-                    raise AssertionError(
-                        f"{ring.name}: unresolved cast-iron topology became geometry"
-                    )
-                if p.get("stage9LikeCurvedSegmentConstruction") is not False:
-                    raise AssertionError(
-                        f"{ring.name}: cast iron must not reuse RC segment visuals"
+                        f"{ring.name}: false LOD0 accuracy claim"
                     )
     return gauge, working_faces
 
@@ -637,11 +650,13 @@ def main() -> None:
         "globalCoordinates": True,
         "sourceRingWidthM": ring_cfg.width_m,
         "includeBolts": (
-            not args.no_bolts and args.domain_stage not in {"10.4", "10.5"}
+            not args.no_bolts
+            and (
+                args.domain_stage not in {"10.4", "10.5"}
+                or production_meta.get("moscowCivilLegacyFastenerVisualTransfer")
+            )
         ),
-        "stage9CivilBoltsSuppressedForStage10_4Plus": (
-            args.domain_stage in {"10.4", "10.5"}
-        ),
+        "stage9CivilBoltsSuppressedForStage10_4Plus": False,
         "servicePreset": production_meta.get("servicePreset"),
         "civilArchetype": args.civil_archetype,
         "civilTopology": production_meta.get("moscowCivilTopology"),

@@ -189,6 +189,38 @@
       },
       "confidence": "C_actual_site_photo_captions",
       "mesh_rule": "Use for visual/civil-class validation only; no absolute dimensions from photos."
+    },
+    {
+      "id": "DOSTOEVSKAYA_SWITCHING_CHAMBER_NO1_13M_2026_ACTUAL",
+      "status": "ACTUAL_CURRENT_CONSTRUCTION_CONSTRAINED",
+      "site": "Кольцевая линия, future Dostoevskaya, traffic-switching chamber No.1",
+      "temporal_state": "2026 construction/bypass topology; not normal passenger-route final state",
+      "source_ids": [
+        "S115",
+        "S116"
+      ],
+      "function": "transition from operating Line-5 tunnel into temporary/bypass tunnel system so the original tunnel zone can be released for station construction",
+      "geometry": {
+        "stated_chamber_diameter_m": 13,
+        "diameter_semantics": "nonstandard chamber diameter stated in the construction report for chamber No.1",
+        "chamber_length_m": null,
+        "full_cross_section_profile": null,
+        "wall_thickness_m": null,
+        "invert_profile": null,
+        "operating_tunnel_axis_offset_m": null,
+        "bypass_tunnel_axis_offset_m": null,
+        "axis_separation_m": null,
+        "relative_z_m": null,
+        "longitudinal_transition_length_m": null
+      },
+      "construction_morphology": [
+        "upper half-vault construction took place over the operating Line-5 tunnel",
+        "cut half-rings/lining elements were installed while trains continued in the tunnel below",
+        "system consists of four switching chambers serving two directions and two ends of two bypass tunnels"
+      ],
+      "exact_turnout_or_rail_switch_geometry": null,
+      "confidence": "B/C_actual_construction_one_numeric_dimension",
+      "mesh_rule": "May be used as an actual current construction-state chamber envelope only for the 13 m diameter claim. All unsourced longitudinal, axis-offset, wall/invert and rail-switch geometry stays null."
     }
   ]
 }

@@ -217,7 +217,21 @@ def main() -> None:
             abs_tol=1e-12,
         )
         assert int(cp["cableSagControlStationsAdded"]) > 0
-    assert len(build.scene.objects_of_type("production_cable_rack_r2k11")) == 2 * civil_count
+    racks = build.scene.objects_of_type("production_cable_rack_r2k11")
+    assert len(racks) == 2 * civil_count
+    for rack_obj in racks:
+        rp = rack_obj.custom_properties
+        assert rp["hornGeometryMode"] == "double_u_cradle_pair_v6"
+        assert rp["centralOmegaCrest"] is False
+        assert int(rp["hornUCradleCount"]) == 2
+        assert math.isclose(float(rp["hornUVisualPairSpanM"]), 0.154, abs_tol=1e-12)
+        assert math.isclose(float(rp["hornUCentralGapM"]), 0.004, abs_tol=1e-12)
+        assert math.isclose(float(rp["hornUInnerClearDiameterM"]), 0.067, abs_tol=1e-12)
+        centers = tuple(float(x) for x in rp["hornUCableCenterOffsetsM"])
+        assert len(centers) == 2
+        assert math.isclose(centers[0], 0.0375, abs_tol=1e-12)
+        assert math.isclose(centers[1], 0.1165, abs_tol=1e-12)
+        assert int(rp["hornUArcSegments"]) == 8
     assert meta["serviceCableRackFamily"] == "R2K11"
     assert int(meta["serviceCableRackHornCount"]) == 11
     assert meta["serviceCableRackUprightDesignation"] == "K1351.001-09"

@@ -119,6 +119,16 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--prototype-json",
+        action="store_true",
+        help=(
+            "Encode translation-only periodic Stage-10 meshes once and store "
+            "instances as prototype references + translations. The project "
+            "reader reconstructs ordinary SceneObjects; reconstruction error is "
+            "bounded below 1e-9 m."
+        ),
+    )
+    parser.add_argument(
         "--chunk-policy",
         choices=[x.value for x in ChunkBoundaryPolicy],
         default=ChunkBoundaryPolicy.RING_ALIGNED.value,
@@ -749,6 +759,7 @@ def main() -> None:
             build.scene,
             output,
             compact=args.compact_json,
+            prototype_instances=args.prototype_json,
         )
 
     production_objects = [
@@ -994,6 +1005,7 @@ def main() -> None:
         "sceneJson": None if args.chunks_only else output.name,
         "fullSceneSerialized": not args.chunks_only,
         "compactSceneJson": bool(args.compact_json),
+        "prototypeSceneJson": bool(args.prototype_json),
         "tunnelInstanceID": production_meta["tunnelInstanceID"],
         "infrastructureAssets": [
             {
@@ -1024,6 +1036,7 @@ def main() -> None:
                 package,
                 chunk_path,
                 compact=args.compact_json,
+                prototype_instances=args.prototype_json,
             )
             chunk_count += 1
             manifest.append(
@@ -1051,6 +1064,7 @@ def main() -> None:
                     "chunkLengthRequestedM": args.chunk_m,
                     "boundaryPolicy": args.chunk_policy,
                     "localizedForBlender": args.localize_chunks_for_blender,
+                    "prototypeSceneJson": bool(args.prototype_json),
                     "globalCoordinatesAreCanonical": True,
                     "infrastructureAssets": [
                         {

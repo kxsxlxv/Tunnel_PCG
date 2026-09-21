@@ -1,4 +1,4 @@
-# Stage 10.4 Report — Moscow 5.5/5.1 civil shell and raised walkway
+# Stage 10.4 Report — Moscow civil shells and raised walkway
 
 ## Scope
 
@@ -11,21 +11,22 @@ the Moscow production scene:
 The Stage-10.1 R65/gauge/UGR contract, Stage-10.2 permanent way/drainage and
 Stage-10.3 contact rail remain unchanged.
 
-Implemented Stage-10.4 geometry:
+Implemented Stage-10.4 civil framework:
 
-- smooth concentric Moscow 5.5/5.1 m cast-iron-family shell;
-- physical intrados radius 2.550 m;
-- physical extrados radius 2.750 m;
-- structural depth 0.200 m;
-- lining axis profile z=+1.670 m / production-core z=0;
+- source-sized Moscow 5.5/5.1 m cast-iron envelope, with exact tubing detail
+  deliberately deferred;
+- selectable Moscow 6.1/5.6 m precast-RC family rendered as ten actual curved
+  blocks per 1.000 m ring;
+- family-specific intrados/extrados radii;
+- lining axis profile z=+1.670 m / production-core z=0 transfer rule;
 - independent 1.000 m Moscow civil-ring rhythm;
 - source-backed raised walkway at profile z=+0.200 m;
-- walkway inner edge x=+1.660 m;
-- walkway outer edge closed exactly on the physical intrados;
+- walkway outer edge recomputed against the selected physical intrados;
 - track-concrete / walkway partition at x=+1.660 m;
 - hidden concrete/walkway contact surfaces against the lining removed.
 
-Exact series-specific N/C/K tubing geometry remains intentionally disabled.
+Exact series-specific N/C/K cast-iron tubing geometry remains intentionally
+disabled. Exact RC block-end pin-hole/chamfer CAD also remains unresolved.
 
 ## The former ~0.4 m gap
 

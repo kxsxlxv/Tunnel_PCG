@@ -768,15 +768,27 @@ def test_stage10_5_rc_6100_5600_civil_archetype_adapts_geometry():
     )
 
     ring_count = int(meta["moscowCivilRingCount"])
-    segments = build.scene.objects_of_type(
-        "production_moscow_civil_segment"
-    )
-    radial = build.scene.objects_of_type(
-        "production_moscow_civil_prescribed_radial_joint"
-    )
-    circum = build.scene.objects_of_type(
-        "production_moscow_civil_prescribed_circumferential_joint"
-    )
+    segments = [
+        obj
+        for obj in build.scene.objects_of_type("lining_segment")
+        if obj.custom_properties.get(
+            "stage9SegmentJointFastenerArchitectureTransferred"
+        ) is True
+    ]
+    radial = [
+        obj
+        for obj in build.scene.objects_of_type("prescribed_radial_joint")
+        if obj.custom_properties.get(
+            "stage9SegmentJointFastenerArchitectureTransferred"
+        ) is True
+    ]
+    circum = [
+        obj
+        for obj in build.scene.objects_of_type("prescribed_circumferential_joint")
+        if obj.custom_properties.get(
+            "stage9SegmentJointFastenerArchitectureTransferred"
+        ) is True
+    ]
     assert len(segments) == 10 * ring_count
     assert len(radial) == 10 * ring_count
     assert len(circum) == 10 * (ring_count - 1)
@@ -870,9 +882,13 @@ def test_stage10_5_rc_kba_topology_reuses_stage9_fastener_pipeline():
     )
     ring_count = int(meta["moscowCivilRingCount"])
 
-    segments = build.scene.objects_of_type(
-        "production_moscow_civil_segment"
-    )
+    segments = [
+        obj
+        for obj in build.scene.objects_of_type("lining_segment")
+        if obj.custom_properties.get(
+            "stage9SegmentJointFastenerArchitectureTransferred"
+        ) is True
+    ]
     assert len(segments) == 6 * ring_count
     first_ring = [
         obj
@@ -889,9 +905,13 @@ def test_stage10_5_rc_kba_topology_reuses_stage9_fastener_pipeline():
         "B2",
     ]
 
-    radial = build.scene.objects_of_type(
-        "production_moscow_civil_prescribed_radial_joint"
-    )
+    radial = [
+        obj
+        for obj in build.scene.objects_of_type("prescribed_radial_joint")
+        if obj.custom_properties.get(
+            "stage9SegmentJointFastenerArchitectureTransferred"
+        ) is True
+    ]
     assert len(radial) == 6 * ring_count
     assert all(
         obj.custom_properties["legacyPrescribedJointGeometry"] is True

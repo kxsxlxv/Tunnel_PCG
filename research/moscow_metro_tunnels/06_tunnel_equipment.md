@@ -142,6 +142,10 @@ rounded-W / omega-like profile. It leaves the upright directly, forms the first
 cradle, rises through the central crest, forms the second cradle and turns up
 at the free end. There is no separate horizontal shelf, neck or wall-side tab.
 The production mesh therefore uses one continuous low-poly ribbon per horn.
+The v5 visual pass keeps that topology but raises the sparse profile sampling
+from two to four interpolation samples per anchor span. This removes the
+visibly faceted W-shape seen in Blender while remaining a lightweight mesh;
+it does not claim newly resolved factory bend radii.
 
 Placement remains one rack per side at each 1.0 m Moscow civil ring for the
 selected archetype. That longitudinal pitch is a procedural archetype choice,
@@ -150,7 +154,7 @@ the lining-axis height for its upright midpoint in the visual preset; this
 side-specific elevation is a photo/reference-driven layout rule, not a
 manufacturer mounting dimension.
 
-For visual density the current v4 preset occupies eight distributed levels and
+For visual density the current v5 preset occupies eight distributed levels and
 one cable place on each occupied level:
 
 ```text

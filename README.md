@@ -200,8 +200,9 @@ This writes chunk JSON files plus a manifest containing global ring IDs, world o
 
 Stage 10.5 + `modern` is now the default.
 
-The current preset keeps the researched 5.5/5.1 m civil shell and R65 gauge
-contract, but replaces the legacy service-era hardware with:
+The current preset keeps the researched R65/UGR contract and defaults to the
+5.5/5.1 m civil shell; the 6.1/5.6 m RC envelope is selectable independently.
+The modern service-era hardware includes:
 
     LVT-M independent half-sleeper blocks at 0.600 m pitch
     APC-4 fastening preview with 14 mm rail pad
@@ -307,7 +308,7 @@ CI also runs:
     scripts/verify_stage10_3.py
     scripts/verify_stage10_4.py
     scripts/verify_stage10_5.py
-    examples/generate_stage10_production_tunnel.py  (10.1 + 10.2 + 10.3 + 10.4 + 10.5 modern + 10.5 legacy CLI smoke)
+    examples/generate_stage10_production_tunnel.py  (10.1 + 10.2 + 10.3 + 10.4 + 10.5 modern + 10.5 RC6100 + 10.5 legacy CLI smoke)
 
 Latest Stage-9 production verification:
 

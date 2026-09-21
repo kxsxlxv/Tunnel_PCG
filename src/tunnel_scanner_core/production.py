@@ -2925,11 +2925,14 @@ def _build_stage10_4_rc_stage9_architecture_objects(
         )
 
         # Stage 9 uses TYPE1_CENTERED by default: three pockets/heads per
-        # segment at y=-0.4, 0, +0.4 m. A short clipped final ring cannot
-        # physically contain those longitudinal positions, so fasteners are
-        # omitted only for that partial ring rather than rescaled.
+        # segment at y=-0.4, 0, +0.4 m. The complete pocket/head geometry,
+        # not only its centre, assumes a full nominal ring. Therefore a clipped
+        # final civil ring gets no transferred fasteners rather than moving or
+        # rescaling the old Stage-9 hardware.
         bolts = None
-        full_longitudinal_bolt_layout_fits = width >= 0.8 - 1e-12
+        full_longitudinal_bolt_layout_fits = (
+            width >= profile.ring_pitch_m - 1e-9
+        )
         if include_bolts and full_longitudinal_bolt_layout_fits:
             bolt_cfg = sample_bolt_config(
                 seed=_stage9_child_seed(seed, ring_index, 3)

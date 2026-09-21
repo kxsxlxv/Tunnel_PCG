@@ -124,7 +124,7 @@ The repository is suitable for an implementation agent to build both tunnel arch
 
 ## Koltsevaya real-route pilot
 
-`examples/koltsevaya_line_v0/` contains the first real-route test: all 12 station anchors, current OSM relation 1462012, a clearly marked station-anchor XY fallback spline, curvature QA, Blender plan preview and a pyosmium relation extractor. See `20_koltsevaya_line_pilot.md`.
+`examples/koltsevaya_line_v0/` contains the first real-route test: all 12 station anchors, current OSM route_master 1462012 with child routes 300607 Inner and 1462011 Outer, a clearly marked station-anchor XY fallback spline, curvature QA, Blender plan preview and route-master-aware acquisition tools. See `20_koltsevaya_line_pilot.md`.
 
 
 ## Stage 10 — first implementable cross-section
@@ -158,4 +158,4 @@ The sourced identity is:
 - `KOLTSEVAYA_TRACK_A` = I main / inner / clockwise;
 - `KOLTSEVAYA_TRACK_B` = II main / outer / counterclockwise.
 
-The selected first real junction is the Belorusskaya/Krasnaya-Presnya depot-side divergence. Exact current OSM way/node IDs, site Z, installed turnout project and actual chamber dimensions remain deliberately unresolved where no source was obtained. No second tunnel is produced by lateral offset.
+The selected first real junction is the Belorusskaya/Krasnaya-Presnya depot-side divergence. Direction-level OSM route IDs are resolved (Inner 300607 / Outer 1462011); exact current member way/node IDs, site Z, installed turnout project and actual chamber dimensions remain deliberately unresolved where no source was obtained. No second tunnel is produced by lateral offset.

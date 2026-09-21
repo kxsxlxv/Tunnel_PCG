@@ -339,14 +339,16 @@ bottom-collection RK contact rail at the researched 690 mm / +160 mm placement,
 sleeper-snapped support chain and explicitly era-mismatched legacy-cover
 fallback.
 
-Stage 10.4 is closed: smooth concentric Moscow 5.5/5.1 m shell, independent
-1.0 m civil-ring rhythm and source-backed +0.200 m raised walkway.
+Stage 10.4 is closed: source-sized Moscow civil envelope, independent 1.0 m
+civil-ring rhythm, restored composite joint/rib visual detail, optional
+cast-iron M27 bolt heads and source-backed +0.200 m raised walkway.
 
 Stage 10.5 is the current default production preset. It adds modern LVT-M
 half-sleeper blocks, APC-4 fastening preview, a low rounded segmented
-contact-rail cover, dedicated contact supports, dimensioned R2K11/K1351.001-09 racks with open K1350.002 cradles,
-16 representative moderate-density cable routes with restrained midspan sag,
-one DN80-minimum tunnel water main with periodic supports and zero-error
+contact-rail cover, dedicated contact supports, dimensioned R2K11/K1351.001-09
+racks with continuous rounded-W / omega K1350.002 ribbons, 16 representative
+moderate-density cable routes with deterministic irregular sag, one
+DN80-minimum tunnel water main with periodic supports and zero-error
 continuous-sweep alignment compaction.
 
 The modern preset is default, but the complete timber/KD-65 implementation is

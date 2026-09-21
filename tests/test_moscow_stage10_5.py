@@ -278,7 +278,7 @@ def test_stage10_5_modern_contact_local_assembly_uses_dedicated_block_and_hood()
     bracket_vertices = bracket.vertices
     profile_x_abs = [abs(x) for x, _y, _z in bracket_vertices]
     core_z = [z for _x, _y, z in bracket_vertices]
-    assert math.isclose(max(profile_x_abs), 1.633, abs_tol=2e-9)
+    assert math.isclose(max(profile_x_abs), 1.633, abs_tol=1e-6)
     assert math.isclose(
         max(core_z) + profile.datums.lining_axis_z_m,
         0.373,

@@ -1,6 +1,6 @@
 # Stage 11/22 — Кольцевая линия: две физические трассы, стрелочные камеры и соединительные ветви
 
-Research date: 2026-09-21.
+Research date: 2026-09-22.
 
 ## 0. Scope and evidence policy
 
@@ -575,6 +575,24 @@ Therefore contact rail is an **event geometry**:
 
 ---
 
+### Service-era contact-rail constraint closest to the 2001 preset
+
+S126, the 2005 `Инструкция по текущему содержанию пути и контактного рельса метрополитенов`, is the closest located operational instruction to the selected `LEGACY_R65_TIMBER_KD65_2001_REFERENCE` preset. It is kept separate from both the 1986 construction norm S118 and the current SP S022.
+
+For turnout/crossover zones it gives:
+
+- turnout/crossover air gaps are **overlapping** and normally **≤7.7 m** (§3.10);
+- on a non-main turnout a gap may exceptionally be extended to **10 m** with permission;
+- equipment located inside the gap is at least **0.8 m** from the metallic ramp end;
+- main-track receiving / trailing ramps are **1:30 / 1:25** (§3.12);
+- on existing lines the older **1:25 receiving ramp may remain until reconstruction**;
+- station and connecting tracks use **1:25 at both ends**;
+- the protective box continues over the **full end-ramp length**;
+- ramp end tips are documented as **beech or polyethylene**;
+- a contact-rail segment including ramps is normally at least **18.7 m**, with **12.5 m** as an exceptional minimum for main/station/connecting tracks (§3.14).
+
+Therefore the geometry agent must expose at least two selectable contact-rail rule sets: `LEGACY_2005` and `CURRENT_SP120`. Current sectioning values must not silently overwrite the legacy ≤7.7 m overlapping-gap geometry when reproducing the selected historical service preset.
+
 ## 8. Track concrete, drainage, walkway and services
 
 Actual-site dimensioned plan for Белорусская switch chamber was not located.
@@ -593,6 +611,34 @@ Therefore the following **must not** be extended blindly from periodic Stage-10 
 - cabinets;
 - switch machine;
 - signals / autostop / sensors.
+
+### 8.1 Near-service-era turnout foundation: 2005 instruction
+
+S126 materially changes the first PCG turnout mesh relative to the ordinary Stage-10 running-tunnel preset:
+
+- on turnouts/crossovers the rails are laid **without rail inclination / poduklonka** (§2.4.2);
+- wooden turnout/crossover bearers are governed by GOST 8816 (§2.9.1);
+- a single turnout uses bearers from **3.00 to 5.25 m** long (§2.9.6);
+- turnouts and crossovers are laid on **ballast**;
+- ordinary **track concrete is omitted under the turnout/crossover** (§2.10.1);
+- the no-track-concrete zone continues **5–25 m on each side** of the turnout/crossover;
+- minimum compacted ballast thickness in a tunnel turnout/crossover is **0.24 m under each rail** (§2.10.2);
+- a **limit rail** is installed in the intertrack when converging/diverging track axes reach **3.400 m** separation; some pre-1963 lines may retain 3.300 m (§2.11.2);
+- the limit rail is fixed to sleepers/bearers and its top must not project above UGR;
+- counterrail/frog safety geometry is constrained by **≥1472 mm** between counterrail and frog-core working faces and **≤1435 mm** between counterrail and wing-rail working faces (§2.12.2).
+
+This is operationally closer to the 2001 service preset than the 1986 VNiR family. For the first legacy R65 turnout event it has higher service-era relevance than continuing the Stage-10 timber-sleeper-in-track-concrete section through the switch.
+
+S127 (GOST 8816-2003) independently closes the bearer **cross-section and aggregate set** for the R65/R50/R43 1:9 A4 family:
+
+- Type II sawn bearer nominal thickness **160 mm**;
+- widened top face **220 mm**; normal top face **175 mm**;
+- lower face **250 mm (+20/-5)**;
+- sawn-side height **≥120 mm**;
+- A4 = **68 bearers**;
+- length-count set: 17×3.00, 10×3.25, 8×3.50, 4×3.75, 6×4.00, 5×4.25, 6×4.50, 4×4.75, 4×5.00, 4×5.25 m.
+
+This length-count set exactly matches the project-2976 drawing inventory, providing an independent standard cross-check. The exact **longitudinal order / skew / widened-vs-normal width assignment** of every bearer remains tied to the project laying drawing; the machine contract does not invent it.
 
 Source-backed constraints that can already become events:
 
@@ -718,9 +764,11 @@ Use current child route 300607 for the Inner candidate chain and 1462011 for the
 
 ### C. Какая 3D геометрия рельсов и стрелочного перевода нужна?
 
-**Partially answered / constrained.**
+**Partially answered / constrained, with a usable tagged fallback mesh contract.**
 
-1:9 is source-backed for ordinary metro turnout. Exact installed project is unknown. Metro-specific R65 project 2976 gives a dimensioned first-mesh fallback, with explicit installed-model-unconfirmed flag. Z remains unresolved.
+For an ordinary metro turnout the **1:9** frog is source-backed. Project 2976 gives the R65/1520 first-mesh fallback: 31.035 m overall length, R300 m point curve, R200.060 m turnout curve, point-tip → turnout center 12.458 m, turnout center → mathematical frog center 13.722 m, and the stock-rail/point/frog/independent-guard-rail component topology. S126 adds no-poduklonka, ballasted turnout foundation and frog/guard-rail clearance constraints; S127 closes the 68-bearer dimensional set.
+
+Exact installed project, exact point-root/opening profile, full frog/wing-rail CAD, complete bearer longitudinal order, point-machine rods and actual site Z remain unresolved. Project 2976 therefore remains `installed_model_unconfirmed=true`, not an as-built Belorusskaya claim.
 
 ### D. Как меняется civil shell до самостоятельного branch tunnel?
 

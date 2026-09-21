@@ -343,6 +343,81 @@
       },
       "confidence": "A_for_raw_figure_dimensions_B_for_generic_layout_semantics",
       "mesh_rule": "Use only as a generic two-track-stub/crossover topology reference."
+    },
+    {
+      "id": "KRASNOPRESNENSKAYA_DEPOT_BRANCH_PROFILE_FRAGMENT_ACTUAL",
+      "status": "ACTUAL_SITE_PROFILE_CONSTRAINED",
+      "site": "ветка в ТЧ Красная Пресня со стороны ст. Краснопресненская, участок в районе ул. Климашкина",
+      "source_ids": [
+        "S121",
+        "S120",
+        "S123"
+      ],
+      "civil_context": {
+        "source_backed": [
+          "S121 reproduces archival Moscow Metro plan-elevation data for the branch crown over local PK intervals",
+          "S120 identifies the relevant depot connection as having a two-track section, a later split toward Belorusskaya/Krasnopresnenskaya, a closed-method segment, and a section constructed with ground freezing",
+          "S120 states that Dorman 1971 described construction of this section; S123 confirms the full Dorman volume is publicly viewable at RSL, but exact pages are not yet extracted"
+        ],
+        "geology_and_construction": {
+          "powerful_quicksand_context": "SOURCE_BACKED_BY_S120_PHOTO_ESSAY_TEXT_C_CONFIDENCE",
+          "ground_freezing_used": true,
+          "closed_method_segment_present": true,
+          "exact_freezing_scheme": null,
+          "exact_ice_wall_thickness_m": null,
+          "caisson_use": null
+        }
+      },
+      "local_profile": {
+        "stationing_reference": "branch-local PK from archival plan-elevation data, increasing in the direction used by the source; exact graph orientation not yet bound",
+        "crown_depth_segments": [
+          {
+            "pk_start": "6+28",
+            "pk_end": "7+57",
+            "length_m": 129,
+            "depth_start_m_approx": 19.3,
+            "depth_end_m_approx": 14,
+            "derived_crown_rise_m_approx": 5.3,
+            "derived_mean_crown_rise_per_mille_approx": 41.09
+          },
+          {
+            "pk_start": "6+45",
+            "pk_end": "7+05",
+            "length_m": 60,
+            "depth_start_m_approx": 18.5,
+            "depth_end_m_approx": 16.3,
+            "derived_crown_rise_m_approx": 2.2,
+            "derived_mean_crown_rise_per_mille_approx": 36.67
+          },
+          {
+            "pk_start_approx": "6+65",
+            "pk_end_approx": "6+95",
+            "length_m_approx": 30,
+            "depth_start_m_approx": 17.8,
+            "depth_end_m_approx": 16.7,
+            "derived_crown_rise_m_approx": 1.1,
+            "derived_mean_crown_rise_per_mille_approx": 36.67
+          }
+        ],
+        "source_datum": "conditional project concept 0.000",
+        "absolute_datum_elevation_m": null,
+        "site_ground_surface_absolute_elevation_range_m": [
+          143.17,
+          145.67
+        ],
+        "crown_absolute_z_m": null,
+        "ugr_z_m": null,
+        "track_grade_per_mille": null
+      },
+      "shell_geometry": {
+        "exact_cross_section": null,
+        "exact_lining_family": null,
+        "exact_internal_width_or_diameter_m": null,
+        "exact_crown_to_ugr_m": null,
+        "exact_two_track_axis_spacing_m": null
+      },
+      "pcg_rule": "This profile fragment is stronger than a generic branch fallback. Once the correct physical branch edge is identified, constrain the civil crown to the archival PK/depth observations, but keep UGR/rail grade and cross-section unresolved until a section/datum source is found.",
+      "confidence": "A/B_profile_C_construction_context"
     }
   ]
 }

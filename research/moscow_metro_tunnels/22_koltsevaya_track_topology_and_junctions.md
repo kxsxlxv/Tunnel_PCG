@@ -310,6 +310,17 @@ and separately
 
 It is still **not** source-backed to merge these into one continuous two-track `BRANCH_EDGE`; the downstream depot-side multi-edge/switch arrangement remains a separate unresolved graph section.
 
+### Actual-site chamber morphology visible in S120
+
+The S120 photo sequence adds useful **non-dimensional** constraints to S093:
+
+- photos 16 and 20 show a widened underground turnout chamber with a ribbed/cast-iron crown;
+- the bifurcation/end zone has two tunnel openings separated by a substantial central wall/pier zone;
+- the chamber is visibly not a constant-radius continuation of the ordinary running tunnel;
+- S093 independently identifies the end wall as monolithic reinforced concrete.
+
+This is enough to validate the **shape class** of the first civil mesh, but not its size. No chamber span, pier thickness, opening diameter or transition length is taken from the photographs.
+
 ### Что не установлено для actual chamber
 
 Публичный источник пока не дал:
@@ -851,6 +862,21 @@ S128 §§7.2–7.4 also closes part of the otherwise vague "safe zones / equipme
 - spare stock rails, points and frogs are part of the maintained turnout inventory.
 
 For PCG this creates explicit `STOCK_RAIL_STORAGE` / `TURNOUT_SPARES_STORAGE` events plus a `NO_STORAGE_FROG_TO_LIMIT_RAIL` zone. It still does not define a numeric historical walkway width at Belorusskaya, so that width remains unresolved rather than inferred.
+
+### 8.3 Actual Belorusskaya chamber service presence from photographs
+
+S120 photos 16 and 20 close part of the **object-presence** question for the selected real junction, without supplying dimensions:
+
+- the turnout permanent way is visibly carried by **discrete transverse supports/bearers**, with exposed ballast/aggregate zones around them;
+- the chamber does **not** visually resemble an ordinary Stage-10 continuous track-concrete section through the switch;
+- contact-rail protective-box runs are present around the chamber, but their exact gap/ramp endpoints cannot be measured from the images;
+- dense open cable racks occupy **both sidewalls**;
+- several electrical/control cabinets stand immediately adjacent to the turnout zone;
+- a trackside signal is visible;
+- local chamber lighting is visible;
+- service-access steps/platform elements are present at the chamber sides.
+
+For PCG these observations are event-presence constraints only. The numeric turnout foundation remains governed by the tagged service-era rule set (S128/S129/project 2976 fallback), and contact-rail endpoints remain governed by S128 Fig.10 rather than photo measurement.
 
 ### Current turnout service events for a modern-retrofit preset
 

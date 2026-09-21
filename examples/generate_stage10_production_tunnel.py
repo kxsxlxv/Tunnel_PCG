@@ -556,6 +556,55 @@ def _validate_stage10_build(
                     raise AssertionError(
                         f"{segment.name}: Stage-9 architecture marker missing"
                     )
+            rotation_strategy = str(
+                meta.get("moscowCivilRotationStrategy", "")
+            )
+            if meta.get("moscowCivilRotationModel") != (
+                "stage7_ring_pose_on_independent_moscow_civil_rhythm"
+            ):
+                raise AssertionError("Stage 10.4 RC civil roll model mismatch")
+            if meta.get("moscowCivilRotationAppliedOnlyToLining") is not True:
+                raise AssertionError("Stage 10.4 RC civil roll must be lining-only")
+            rotation_by_ring = {}
+            for segment in civil_segments:
+                p = segment.custom_properties
+                ring_index = int(p["moscowCivilRingIndex"])
+                rotation = round(float(p["ringRotationDeg"]), 12)
+                rotation_by_ring.setdefault(ring_index, set()).add(rotation)
+                if p.get("moscowCivilRotationStrategy") != rotation_strategy:
+                    raise AssertionError(
+                        f"{segment.name}: wrong civil rotation strategy"
+                    )
+                if p.get("moscowCivilIndependentRingPoseStream") is not True:
+                    raise AssertionError(
+                        f"{segment.name}: independent civil pose stream missing"
+                    )
+                if p.get("stage7RingAxialStaggerTransferred") is not True:
+                    raise AssertionError(
+                        f"{segment.name}: Stage-7 axial stagger missing"
+                    )
+            if any(len(values) != 1 for values in rotation_by_ring.values()):
+                raise AssertionError(
+                    "Stage 10.4 RC objects within one ring disagree on roll"
+                )
+            ring_rotations = [
+                next(iter(rotation_by_ring[index]))
+                for index in sorted(rotation_by_ring)
+            ]
+            if rotation_strategy == "ringwise_gaussian":
+                if not any(abs(value) > 1e-9 for value in ring_rotations):
+                    raise AssertionError(
+                        "ringwise RC civil rotation produced only zero rolls"
+                    )
+                if len(set(ring_rotations)) <= 1:
+                    raise AssertionError(
+                        "ringwise RC civil rotation did not vary by ring"
+                    )
+            elif rotation_strategy == "continuous":
+                if any(abs(value) > 1e-9 for value in ring_rotations):
+                    raise AssertionError(
+                        "continuous RC civil rotation produced nonzero roll"
+                    )
             heads = [
                 obj
                 for obj in build.scene.objects_of_type("bolt_head")
@@ -714,6 +763,12 @@ def main() -> None:
         "servicePreset": production_meta.get("servicePreset"),
         "civilArchetype": args.civil_archetype,
         "civilTopology": production_meta.get("moscowCivilTopology"),
+        "civilRotationStrategy": production_meta.get(
+            "moscowCivilRotationStrategy"
+        ),
+        "civilRotationModel": production_meta.get(
+            "moscowCivilRotationModel"
+        ),
         "civilStage9ArchitectureTransferred": production_meta.get(
             "moscowCivilStage9ArchitectureTransferred"
         ),

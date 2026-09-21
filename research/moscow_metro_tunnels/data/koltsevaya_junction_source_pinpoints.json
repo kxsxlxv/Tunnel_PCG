@@ -427,6 +427,78 @@
         ]
       },
       "confidence": "C_current_public_map_topology_not_engineering_survey"
+    },
+    {
+      "id": "S102",
+      "title": "ЕНиР Е36-2, вып.2, § Е36-2-75 — cast-iron crossover chamber",
+      "url": "https://files.stroyinf.ru/Data1/2/2617/index.htm",
+      "locator": {
+        "edition": "Москва, 1987; approved 5 Dec 1986",
+        "clause": "§ Е36-2-75",
+        "web_lines": "1587-1590",
+        "supports": [
+          "cast-iron tubing crossover chamber diameter 8.75 m",
+          "existing operating running tunnel inside chamber diameter 6.0 m",
+          "ring width 0.75 m",
+          "ring contains 11 cast-iron tubings: EK 1, ES 2, EN 6, NKU 2, plus two spacers/gaskets",
+          "NKU tubings use anchor bolts; other tubings use bolts on spherical washers",
+          "concrete foundation is provided under NKU tubings"
+        ]
+      },
+      "confidence": "A/B_historical_construction_norm_generic_not_Belorusskaya_specific"
+    },
+    {
+      "id": "S103",
+      "title": "Камеры съездов, раструбы и тупики — historical engineering overview",
+      "url": "https://fccland.ru/metro/268-kamery-sezdov-rastruby-i-tupiki.html",
+      "locator": {
+        "lines": "34-64",
+        "supports": [
+          "single-track running tunnels require special connecting tunnels and stepped widening chambers around turnouts",
+          "Moscow high-water sections widely used crossover chambers with cast-iron tubing crown and monolithic-concrete walls/invert, spans up to 14 m",
+          "junction/bellmouth end wall with two openings is monolithic reinforced concrete when single-track tunnels meet prefabricated-element chamber lining",
+          "historical binocle/common-wall chamber morphology and drainage examples are described"
+        ],
+        "limitation": "secondary web reprint; use for morphology/context only, not as project-specific Belorusskaya dimensions"
+      },
+      "confidence": "C"
+    },
+    {
+      "id": "S104",
+      "title": "Kurskaya Koltsevaya turnout / Lyublinskaya service-branch photo series",
+      "url": "https://loveopium.ru/neobychnoe/podzemnye-tonneli-kolcevoj-linii.html",
+      "locator": {
+        "article_date": "2016-11-16",
+        "author_credit": "Alexander Russos Popov",
+        "lines": "45-125",
+        "photo_captions": [
+          "photo 1: switch No.4 on II track; II track is outer ring; view toward Komsomolskaya",
+          "photo 3 text: Park Kultury and Kurskaya turnback tracks have four turnouts and can be traversed back to the main track; Kurskaya got a new SSV chamber in the 1990s toward the Lyublinskaya line",
+          "photos 4/6: switch No.4 exit chamber is fully monolithic",
+          "photo 8: SSV to Lyublinskaya dives downward on the left",
+          "photo 10: new chamber and switch No.7",
+          "photos 19-20: chamber lining is mixed; most is cast iron, widest span is monolithic"
+        ],
+        "limitation": "photographic/author-caption evidence; no absolute dimensions are extracted from images"
+      },
+      "confidence": "C_visual_actual_site"
+    },
+    {
+      "id": "S105",
+      "title": "Park Kultury Koltsevaya switch No.4 photo",
+      "url": "https://relay.transphoto.org/articles/1467/?st=60",
+      "locator": {
+        "item": "Park Kultury (Koltsevaya), photo count/index 546",
+        "date": "2013-01-19",
+        "author": "Vladislav Lysov",
+        "caption": "Стрелка №4. Направо - ССВ на Сокольническую линию",
+        "supports": [
+          "actual Line-5 Park Kultury switch No.4",
+          "service branch to Sokolnicheskaya line diverges to the right in the photographed orientation"
+        ],
+        "limitation": "photo caption does not by itself resolve main-track number, engineering XY, chainage, or dimensions"
+      },
+      "confidence": "C_visual_actual_site"
     }
   ]
 }

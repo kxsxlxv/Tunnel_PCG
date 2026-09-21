@@ -287,7 +287,7 @@ UNKNOWN:
 
 ### 6.2 Generic dimensioned metro transition reference
 
-S058, Frolov 2001, printed pp.146–149, Figs.4.33–4.35, даёт **не Белорусскую**, а dimensioned reference последовательного расширения камер.
+S058, Frolov 2001, printed pp.146–150, Figs.4.33–4.35, даёт **не Белорусскую**, а dimensioned reference последовательного расширения камер.
 
 | Chamber | Length | Civil section | Track-axis separation / offset parameter |
 |---|---:|---:|---:|
@@ -296,24 +296,37 @@ S058, Frolov 2001, printed pp.146–149, Figs.4.33–4.35, даёт **не Бе�
 | 3 | 15.00 m | circular ID 7.20 m | 2.22 m |
 | 4 | 11.25 m | circular ID 7.70 m | 3.36 m |
 | 5 | 9.75 m | max circular ID 9.00 m; text notes elliptical alternative | 4.46 m |
-| 6 | 15.00 m | two separate circular shells, each ID 5.14 m / OD 5.64 m | separate tunnels |
+| 6 | 15.00 m | **two-vault common-wall chamber**: two open single-track lining arches bearing on a concrete/RC wall | exact axis spacing not dimensioned |
+
+For chamber 6, Fig.4.34 section 2-2 gives a generic lining-arc reference:
+- intrados radius **2.57 m**;
+- extrados radius **2.82 m**;
+- lining axis **+1.70 m above UGR**;
+- one vault carries the main track and the other the connecting track;
+- exact central-wall thickness and exact inter-track axis spacing are not dimensioned.
+
+This corrects an earlier reading of Fig.4.34: chamber 6 is **not yet two independent circular running tunnels**. Printed p.150 explicitly describes it as two single-track open linings resting on a common concrete/reinforced-concrete wall. The same text states that the main and connecting tracks become independent single-track tunnels **only when inter-track spacing exceeds 6 m**.
 
 Derived:
-- from start of chamber 2 to start of two independent circular shells:
+- chamber 2 start → chamber 6 start:
   **46.00 m = 10 + 15 + 11.25 + 9.75**;
-- to end of chamber 6:
-  **61.00 m**.
+- chamber 2 start → chamber 6 end:
+  **61.00 m**;
+- independent single-track tunnel start is therefore only constrained as **later than / not before this 61 m generic progression**, with the additional source condition **inter-track spacing >6 m**. Exact post-chamber-6 chainage is not dimensioned.
 
 Point-tip coordinate inside chamber 2 is not dimensioned; therefore **point-tip → independent branch tunnel distance remains null**.
 
-The source also explains that an excessively large circular chamber becomes uneconomic; an elongated/elliptical section can be assembled by introducing additional adjacent/key tubings and wedge spacers.
+The source also explains:
+- an excessively large circular chamber becomes uneconomic;
+- an elongated/elliptical section can be assembled with additional adjacent/key tubings and wedge spacers;
+- end gaps between chambers of different spans are filled with monolithic concrete and waterproofed as required.
 
 ### Use rule
 
 This sequence may drive a **generic fallback transition algorithm**, but the generated shell must be labelled:
 `GENERIC_REFERENCE_NOT_BELORUSSKAYA_AS_BUILT`.
 
-Actual Belorusskaya chamber must not inherit 5.56 / 7.20 / 7.70 / 9.00 m diameters as facts.
+Actual Belorusskaya chamber must not inherit the 5.56 / 7.20 / 7.70 / 9.00 m diameters, chamber lengths, chamber-6 radii or >6 m split criterion as as-built dimensions.
 
 ---
 
@@ -365,10 +378,22 @@ Source-backed constraints that can already become events:
 
 - turnout has no superelevation in the Frolov reference zone — S058;
 - no transition curve in that zone — S058;
+- current turnout placement validator: turnout on straight track, longitudinal grade ≤**5‰** normally / ≤**10‰** in difficult conditions, beginning of plan or vertical curves ≥**20 m** from turnout center, station platform start ≥**25 m** from turnout center — S022 §5.3.5;
 - current SP requires protective anti-run-over timbers before facing points in the stated main-track condition and at station turnout/crossover locations — S022 §5.7.1.17;
-- current foundation rules allow project-specific concrete/ballast/support solutions; do not infer the historical Belorusskaya slab from the modern rule.
+- current SP also requires an UGR-level area near underground turnouts/crossovers for storage of metal turnout/crossover parts; exact pad dimensions are not given — S022 §5.7.1.17;
+- at turnout/crossover chambers the evacuation route may cross the permanent way through rails/sleepers; if the contact rail changes side, a **central passage** is required — S022 current evacuation-path rules;
+- minimum passage widths: **0.60 m side**, **0.90 m central**; where the route passes in the track gauge through an equipment/contact-rail transition, the covered constrained zone extends at least **1 m beyond each end**;
+- illuminated evacuation-direction signs are required at turnout/crossover transition locations;
+- current drainage rule for the cited turnout/crossover concrete-track condition: **2×Ø200 mm** pipes, or **3×Ø150 mm** in constrained conditions; trays at least **100×50 mm** (or radius ≥50 mm), grade ≥**0.003**, wells at ≤**20 m**;
+- current rules require turnout/crossover limit/clearance markers;
+- current electrical rules place trackside power boxes near turnouts, 230/12 V transformer/socket boxes at turnout/ATDP/gate locations, and a dedicated emergency-lighting group for turnout point blades.
 
-Project-2976 wooden switch bearers are allowed only as **turnout fallback geometry**, not as proof of the historical as-built chamber.
+These are **current normative event constraints**, not evidence that the original 1950s Belorusskaya chamber had the same service fit-out.
+
+Current foundation rules allow project-specific concrete/ballast/support solutions; do not infer the historical Belorusskaya slab from the modern rule. Project-2976 wooden switch bearers are allowed only as **turnout fallback geometry**, not as proof of the historical as-built chamber.
+
+Therefore PCG handling is explicitly event-based:
+`ordinary periodic tunnel services → junction override zone → turnout-specific drainage/passages/power/lighting/signs → ordinary branch/running-tunnel services after the event`.
 
 ---
 
@@ -392,11 +417,14 @@ For actual Belorusskaya / Krasnaya Presnya depot connection:
 - cut-marker XY = `null`.
 
 For the generic S058 fallback only:
-- independent circular shells start at beginning of chamber 6;
-- that is 46.0 m after beginning of chamber 2;
-- each shell ID 5.14 m, OD 5.64 m.
+- chamber 6 begins **46.0 m** after the beginning of chamber 2;
+- chamber 6 is a **15 m two-vault common-wall transition chamber**, not yet two independent circular tunnels;
+- its open lining arcs use reference radii **Rin=2.57 m / Rout=2.82 m**, with lining axis +**1.70 m** above UGR;
+- chamber 6 ends **61.0 m** after the beginning of chamber 2;
+- independent single-track tunnels begin only after the inter-track spacing exceeds **6 m**;
+- the exact chainage and exact diameter of those independent post-chamber-6 tunnels are **not dimensioned** in the source.
 
-Again: these values are not assigned to the actual Belorusskaya depot branch.
+Again: none of these generic dimensions are assigned to the actual Belorusskaya depot branch.
 
 ---
 
@@ -404,16 +432,16 @@ Again: these values are not assigned to the actual Belorusskaya depot branch.
 
 | Domain | KNOWN | CONSTRAINED | UNKNOWN |
 |---|---|---|---|
-| two main tracks | I=inner=clockwise; II=outer=counterclockwise | OSM must produce two independent physical cycles | exact current way IDs / child relation IDs |
+| two main tracks | I=inner=clockwise; II=outer=counterclockwise; OSM child routes 300607 Inner / 1462011 Outer are resolved | physical way/node chains must be extracted independently | exact current member way/node IDs |
 | junction location | Belorusskaya, Krasnopresnenskaya side; II straight, branch left | multi-switch turnback/depot system | exact switch XY / chainage / Z |
 | turnout | ordinary main/turnback turnout uses 1:9 | metro-specific R65 project 2976 usable as tagged fallback | exact installed project at Belorusskaya |
 | turnout rails | stock rails, points, frog, guard rails needed | project 2976 dimensions available | exact historical fastener/point machine at site |
 | actual chamber | cast-iron tubings + RC end wall | correct visual class confirmed by photo | actual length/width/height/tubing coordinates |
-| generic chamber progression | Frolov 5.56→7.20→7.70→9.00→2×5.14 m | can drive fallback algorithm only | correspondence to Belorusskaya |
+| generic chamber progression | Frolov 5.56→7.20→7.70→9.00 m widening, then 15 m two-vault common-wall chamber 6 | independent tunnels only after inter-track >6 m; can drive fallback algorithm only | exact post-chamber-6 split chainage and correspondence to Belorusskaya |
 | contact rail | must be event-based with gaps/ramps/sectioning | normative ranges known | exact local positions |
-| drainage/walkway/services | cannot be periodic through turnout | spawn event placeholders | actual plan/levels/products |
+| drainage/walkway/services | cannot be periodic through turnout; current passage/drainage/power/sign rules are known | event-based current-rule geometry is constrained | historical/as-built Belorusskaya plan/levels/products |
 | vertical geometry | no invented Z | future profile/survey solver | actual switch and branch UGR |
-| branch exit | eventual independent single-track tunnel required | generic chamber-6 fallback exists | actual split distance/diameter/lining |
+| branch exit | tunnel-branch existence to Krasnaya Presnya is source-backed | generic reference says independent tunnels only after inter-track >6 m and after two-vault chamber 6 | actual split distance/track count/diameter/lining |
 
 ---
 
@@ -441,6 +469,6 @@ Use current child route 300607 for the Inner candidate chain and 1462011 for the
 
 **Actual Belorusskaya only partially answered.**
 
-Actual material/class is known (cast iron + RC end wall), but dimensional transformation is unknown. Frolov provides a dimensioned generic multi-chamber transition ending in two 5.14 m independent circular tunnels; it is retained only as a fallback algorithm/reference and never presented as Belorusskaya as-built.
+Actual material/class is known (cast iron + RC end wall), but dimensional transformation is unknown. Frolov provides a dimensioned generic widening sequence through chamber 5 and a 15 m **two-vault common-wall chamber 6**; only after inter-track spacing exceeds 6 m do the tracks become independent single-track tunnels. The exact post-chamber-6 split chainage/diameter is not given. This is retained only as a fallback algorithm/reference and never presented as Belorusskaya as-built.
 
 This is the intended hand-off boundary: geometry-agent may implement source-backed topology and explicitly tagged fallback meshes, but must not convert the UNKNOWN column into silent assumptions.

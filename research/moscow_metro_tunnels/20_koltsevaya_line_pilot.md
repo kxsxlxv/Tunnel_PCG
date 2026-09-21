@@ -206,6 +206,15 @@ The two current OSM child routes are sufficient to seed the two main-track candi
 
 This is the required acquisition path for switch topology: route membership identifies the two main-route candidates; shared-node expansion exposes physical off-route branch candidates; `track_topology.json` supplies the semantic annotation.
 
+### Latest depot-connection refinement
+
+The Krasnaya Presnya system is no longer represented as one ambiguous generic branch:
+- S125 describes separate **single-track** Line-5 service-connection legs to Belorusskaya and Krasnopresnenskaya;
+- S120 simultaneously proves a **local two-track section** farther depot-side and a switch dividing directions toward the two Line-5 stations;
+- the selected first implementation therefore follows the Belorusskaya single-track leg and cuts it before the unresolved downstream depot-side multi-track/switch system.
+
+S121 additionally supplies a real archival crown-profile fragment for the Krasnopresnenskaya-side leg at local branch PK6+28–PK7+57. These values constrain the civil crown only; they are not UGR and are not transferred to the selected Belorusskaya leg.
+
 ## Stage 11/22 — physical two-track topology and junctions
 
 The pilot is no longer allowed to treat Line 5 as one centerline plus an offset.

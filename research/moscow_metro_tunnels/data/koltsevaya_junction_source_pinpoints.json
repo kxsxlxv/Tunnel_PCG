@@ -669,6 +669,64 @@
       },
       "limitation": "Actual current construction source with one chamber diameter, but not a complete dimensioned chamber drawing. Do not infer chamber length, wall thickness, turnout rail geometry or all four chamber diameters from the single 13 m statement.",
       "confidence": "B/C_actual_construction_detail"
+    },
+    {
+      "id": "S117",
+      "title": "Власов С.Н., Торгалов В.В., Виноградов Б.Н. Строительство метрополитенов",
+      "url": "https://www.metro.ru/library/stroitelstvo_metropolitenov/",
+      "locator": {
+        "edition": "М.: Транспорт, 1987; signed to print 30.09.1987",
+        "pages": [
+          {
+            "web_path": "/library/stroitelstvo_metropolitenov/524/",
+            "section": "Основные элементы пути",
+            "supports": [
+              "ballast layer is used on 15 m before turnouts and 15 m after them",
+              "ballast thickness below sleeper is 0.30 m",
+              "turnouts and rigid crossings use wooden switch bearers 2.75-6.75 m long"
+            ]
+          },
+          {
+            "web_path": "/library/stroitelstvo_metropolitenov/543/",
+            "section": "Укладка пути из одиночных рельсов",
+            "supports": [
+              "turnout laying document is an epure comprising bearer layout, geometric setting-out scheme, and component specification",
+              "bearers under switch/connecting rails to turnout center are perpendicular to straight-track axis",
+              "bearers under frog are perpendicular to frog-angle bisector",
+              "turnout is assembled and lifted onto mounting concrete cubes before crushed stone is filled/tamped under bearers"
+            ]
+          }
+        ]
+      },
+      "era": "1987 legacy metro construction practice",
+      "applicability": "generic Soviet metro turnout construction; not a site-specific Belorusskaya as-built drawing",
+      "confidence": "B"
+    },
+    {
+      "id": "S118",
+      "title": "ВНиР В3-5. Сооружение верхнего строения путей в подземных условиях",
+      "url": "https://meganorm.ru/mega_doc/norm/vnir_vedomstvennye-normy-i-rascenki/0/vnir_vedomstvennye_normy_i_rastsenki_na_stroitelnye_84.html",
+      "locator": {
+        "edition": "Минтрансстрой СССР, 23.12.1986 N ВС-1086",
+        "chapter": "Глава 3. Монтаж и балластировка стрелочных переводов и перекрестных съездов",
+        "technical_part_supports": [
+          "tunnel turnouts frog 1/9 and crossovers 2/9 are specified in R50 rail",
+          "reinforced-type wooden bearers treated with antiseptic",
+          "rail joints use joint bars with six bolts",
+          "rails and baseplates are fastened by track screws",
+          "baseplates without cant are used in turnout; transition to canted track uses special variable-cant baseplate set"
+        ],
+        "section": "§ В3-5-26",
+        "section_supports": [
+          "turnout/crossover is laid in tunnel on a rectangular-section concrete trough",
+          "crushed-stone ballasting is performed in four lifting/tamping stages",
+          "documented total compacted crushed-stone quantity: 55 m3 per turnout and 208 m3 per crossover",
+          "each lifting stage is approximately 0.32-0.35 m including settlement"
+        ]
+      },
+      "era": "1986",
+      "applicability": "source-backed legacy metro turnout construction family; does not identify the exact Belorusskaya installed turnout",
+      "confidence": "A/B"
     }
   ]
 }

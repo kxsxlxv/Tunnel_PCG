@@ -181,8 +181,10 @@ def main() -> None:
     assert not build.scene.objects_of_type(
         "production_moscow_civil_bolt_heads"
     )
-    assert int(meta["moscowCivilDetailRibObjectCount"]) == 0
-    assert int(meta["moscowCivilBoltObjectCount"]) == 0
+    assert int(meta["moscowCivilSegmentObjectCount"]) == 0
+    assert int(meta["moscowCivilPrescribedRadialJointCount"]) == 0
+    assert int(meta["moscowCivilPrescribedCircumferentialJointCount"]) == 0
+    assert int(meta["moscowCivilBoltPocketCount"]) == 0
     assert int(meta["moscowCivilBoltHeadCount"]) == 0
     assert meta["moscowCivilBoltsEnabled"] is False
     assert int(meta["moscowCivilRenderedBlockCount"]) == 0
@@ -286,12 +288,20 @@ def main() -> None:
             namespace="stage10-5-rc6100-check",
             moscow_profile=rc_profile,
             moscow_stage="10.5",
+            moscow_civil_topology="ten_equal",
         ),
         seed=5812,
     )
     rm = rc_build.scene.metadata["productionGeometry"]
     assert rm["civilArchetypeID"] == (
         "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+    )
+    assert rm["moscowCivilTopology"] == "ten_equal"
+    assert rm["civilShellStatus"] == (
+        "implemented_stage10_4_rc_stage9_architecture_ten_equal"
+    )
+    assert rm["moscowCivilCompositeDetailStatus"] == (
+        "stage9_segment_joint_bolt_architecture_transferred"
     )
     assert math.isclose(
         float(rm["moscowCivilIntradosRadiusM"]),
@@ -313,46 +323,75 @@ def main() -> None:
     assert rc_concrete[0].custom_properties["physicalBottomSurface"] == (
         "moscow_5600_intrados"
     )
-    rc_rings = rc_build.scene.objects_of_type(
-        "production_moscow_civil_shell_ring"
+
+    rc_segments = rc_build.scene.objects_of_type(
+        "production_moscow_civil_segment"
     )
-    assert rc_rings
-    assert rm["civilShellStatus"] == (
-        "implemented_stage10_4_segmented_rc_10block_shell"
+    rc_radial = rc_build.scene.objects_of_type(
+        "production_moscow_civil_prescribed_radial_joint"
     )
-    assert rm["moscowCivilCompositeDetailStatus"] == (
-        "implemented_rc_10block_geometry_stage9_like"
+    rc_circ = rc_build.scene.objects_of_type(
+        "production_moscow_civil_prescribed_circumferential_joint"
     )
-    assert not rc_build.scene.objects_of_type(
-        "production_moscow_civil_detail_ribs"
+    rc_ring_count = int(rm["moscowCivilRingCount"])
+    assert len(rc_segments) == 10 * rc_ring_count
+    assert len(rc_radial) == 10 * rc_ring_count
+    assert len(rc_circ) == 10 * (rc_ring_count - 1)
+    assert int(rm["moscowCivilRenderedBlockCount"]) == len(rc_segments)
+    assert int(rm["moscowCivilSegmentObjectCount"]) == len(rc_segments)
+    assert int(rm["moscowCivilPrescribedRadialJointCount"]) == len(rc_radial)
+    assert int(rm["moscowCivilPrescribedCircumferentialJointCount"]) == len(rc_circ)
+    assert not rc_build.scene.objects_of_type("bolt_head")
+    assert not rc_build.scene.objects_of_type("bolt_pocket_cutter")
+    assert int(rm["moscowCivilBoltHeadCount"]) == 0
+    assert int(rm["moscowCivilBoltPocketCount"]) == 0
+    assert rm["moscowCivilRCPermanentBoltedBlockJointsSource"] is False
+
+    kba_build = build_production_tunnel(
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=8,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.0,
+        ),
+        include_bolts=True,
+        production_config=ProductionConfig(
+            namespace="stage10-5-rc-kba-check",
+            moscow_profile=rc_profile,
+            moscow_stage="10.5",
+            moscow_civil_topology="kba",
+        ),
+        seed=5812,
     )
-    assert not rc_build.scene.objects_of_type(
-        "production_moscow_civil_bolt_heads"
+    km = kba_build.scene.metadata["productionGeometry"]
+    assert km["moscowCivilTopology"] == "kba"
+    assert km["civilShellStatus"] == (
+        "implemented_stage10_4_rc_stage9_architecture_kba"
     )
-    assert int(rm["moscowCivilRenderedBlockCount"]) == 10 * len(rc_rings)
+    kba_ring_count = int(km["moscowCivilRingCount"])
+    kba_segments = kba_build.scene.objects_of_type(
+        "production_moscow_civil_segment"
+    )
+    assert len(kba_segments) == 6 * kba_ring_count
+    first_kba = [
+        obj
+        for obj in kba_segments
+        if int(obj.custom_properties["moscowCivilRingIndex"]) == 0
+    ]
+    assert [obj.segment_name for obj in sorted(first_kba, key=lambda o: o.segment_id)] == [
+        "K", "B1", "A1", "A2", "A3", "B2"
+    ]
+    heads = kba_build.scene.objects_of_type("bolt_head")
+    cutters = kba_build.scene.objects_of_type("bolt_pocket_cutter")
+    assert heads
+    assert len(heads) == len(cutters)
+    assert int(km["moscowCivilBoltHeadCount"]) == len(heads)
+    assert int(km["moscowCivilBoltPocketCount"]) == len(cutters)
+    assert km["moscowCivilLegacyBoltLayout"] == "type1_centered"
     assert math.isclose(
-        float(rm["moscowCivilRCVisualSeamWidthM"]),
-        0.008,
+        float(km["moscowCivilLegacyBoltBooleanOverlapM"]),
+        0.005,
         abs_tol=1e-12,
     )
-    assert math.isclose(
-        float(rm["moscowCivilRCWorkingRebarDiameterM"]),
-        0.016,
-        abs_tol=1e-12,
-    )
-    assert math.isclose(
-        float(rm["moscowCivilRCAssemblyPinDiameterM"]),
-        0.022,
-        abs_tol=1e-12,
-    )
-    for ring in rc_rings:
-        rp = ring.custom_properties
-        assert int(rp["coarseSegmentCountReference"]) == 10
-        assert rp["coarseSegmentCountIsGeometry"] is True
-        assert rp["stage9LikeCurvedSegmentConstruction"] is True
-        assert int(rp["renderedRCBlockCount"]) == 10
-        assert int(rp["angularSegments"]) == 80
-        assert rp["rcPermanentBoltedBlockJoints"] is False
 
     legacy = build_production_tunnel(
         assembly_config=TunnelAssemblyConfig(

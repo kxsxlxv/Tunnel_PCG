@@ -47,6 +47,21 @@ def test_nominal_scene_has_segments_and_prescribed_joints_only():
     assert not package.objects_of_type("displacement_joint")
 
 
+def test_scene_package_reuses_structural_indexes_for_repeated_queries():
+    _, _, ring, prescribed, _ = _fixture()
+    package = build_nominal_scene_package(ring, prescribed, ring_id=12)
+
+    first = package.objects_of_type("lining_segment")
+    second = package.objects_of_type("lining_segment")
+    assert first is second
+    assert len(first) == 6
+
+    first_ring_ids = package.ring_ids
+    second_ring_ids = package.ring_ids
+    assert first_ring_ids is second_ring_ids
+    assert first_ring_ids == (12,)
+
+
 def test_deformed_scene_has_segments_and_displacement_joints_only():
     _, _, _, _, deformed = _fixture()
     package = build_deformed_scene_package(deformed, ring_id=12)

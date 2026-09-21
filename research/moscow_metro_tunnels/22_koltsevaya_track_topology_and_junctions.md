@@ -197,6 +197,15 @@ S114 is stored as a **separate future state**, not current operating Line 5:
 
 Therefore the procedural graph must have a topology epoch/preset. The 2026 normal-operating graph must not silently include the future Dostoevskaya station graph or construction bypasses.
 
+### Additional switch-number anchors on Line 5
+
+S133 gives two useful operational topology anchors without claiming engineering XY:
+
+- **Prospekt Mira KRL SSV:** turnouts **No.5, No.6, No.7** are explicitly listed as the service-connection switch set; exact mapping of each number to individual graph edges remains unresolved.
+- **Taganskaya area:** **switch No.5 on Line-5 Track I** is explicitly identified before Taganskaya; until 2023 the associated signals/switch were controlled from the TKL Taganskaya interlocking.
+
+These are stored as semantic switch-node anchors only. They do not supply branch radii, chainage, Z or chamber dimensions.
+
 ### Дополнительные actual-site visual anchors
 
 После выбора Белорусской как первого depot-side topology archetype удалось найти два полезных реальных фото-набора для валидации морфологии:
@@ -449,6 +458,47 @@ This is an era-aligned **construction constraint**, not a complete switch-rail p
 
 ---
 
+### 5.4 Component lengths and point-drive family cross-check
+
+Two additional manufacturer/legibility sources strengthen project 2976 without changing its fallback status.
+
+S131, an official Dnipro Switch Plant metro product table for the `2976Dn` analogue family, independently gives:
+- stock/frame rail component length **12.500 m**;
+- rotating point/ostryak component length **8.300 m**;
+- assembled frog component length **4.590 m**;
+- total turnout length **31.035 m**;
+- radii **300.00 / 200.06 m**;
+- paired right/left project variants.
+
+S130 is only a high-resolution supplier mirror, but its geometry image makes several drawing callouts legible:
+- point longitudinal projection **8298 mm** next to the 8300 mm component length;
+- point-root/heel opening callout **68.4 mm**;
+- the known 2765 / 12458 / 13722 / 2090 / 31035 dimension chain;
+- grouped bearer-spacing spans **5×520=2600**, **9×525=4725**, **14×505=7070**, **11×525=5775 mm**.
+
+The first two values are therefore stored as project-2976 mesh constraints, but S094 remains the primary numeric authority and S130 remains a C-confidence legibility source. The 68.4 mm callout is **not** interpreted as a track-centerline offset.
+
+From the point-tip datum:
+- point root longitudinal station = **2765 + 8298 = 11063 mm** from the front joint.
+
+S132 gives an official product-family compatibility record:
+- SP-6 point machine;
+- fitting project **16760-00-00 / 16760Dn.00.000**;
+- R65 1:9, 1520 mm, metro turnout family 2976Dn;
+- fitting mass **132 kg**.
+
+This still does **not** prove that the selected Belorusskaya switch uses SP-6 or that exact fitting set. It only closes a compatible drive family for an optional fallback mesh.
+
+Still unknown for a true turnout LOD0:
+- full point opening curve between tip and root;
+- point pivot/root hardware;
+- exact frog nose and wing-rail surface CAD;
+- front/rear chainage split of the known 4.590 m frog around the mathematical center;
+- exact guard-rail start/end chainages and flangeway profile;
+- complete 67-interval bearer-spacing sequence;
+- exact installed plate/fastening package;
+- site-specific point-machine rods and detector geometry.
+
 ## 6. Civil shell around turnout
 
 ### 6.1 Actual Belorusskaya
@@ -575,6 +625,28 @@ Therefore contact rail is an **event geometry**:
 
 ---
 
+### Dimensioned R65 1:9 contact-rail ramp layout
+
+A major gap in the first draft is now closed by **S128 Appendix 6, Fig.10**, printed p.158.
+
+The figure is explicitly titled:
+`Расположение концевых отводов на стрелочном переводе типа Р65 марки 1/9`.
+
+Its notes (given for Figs.7–12 on printed p.157) state:
+- dimensions are taken from the **metallic ends of the contact-rail ramps**;
+- dimensions marked `*` are reference dimensions.
+
+The figure is referenced to **ЦСП — the turnout center** and contains two direction/side variants. The machine contract preserves the raw callouts rather than guessing their local side before the actual contact-rail side is bound:
+
+- upper variant: **11750 min / 2750 max / 29000 min mm**;
+- lower variant: **12500* / 2750 max / 29000 min / 11750 min mm**.
+
+This is much stronger than the earlier generic `gap somewhere in turnout zone` rule. For the R65/1:9 service-era fallback, contact-rail ramp endpoints can now be generated from the source figure once the local travel direction and rail side are selected.
+
+The same appendix contains **Fig.12, R65 2/9 crossover**, with a separate multi-leg end-ramp layout. Its raw visible callouts are retained machine-readably rather than replaced by a symmetric approximation.
+
+The selected Belorusskaya actual gap still has no site laying plan, so Fig.10 is a **service-era/type reference**, not proof of the exact historical ramp positions at that junction.
+
 ### Service-era contact-rail constraint closest to the 2001 preset
 
 S128, the 2005 `Инструкция по текущему содержанию пути и контактного рельса метрополитенов`, is the closest located operational instruction to the selected `LEGACY_R65_TIMBER_KD65_2001_REFERENCE` preset. It is kept separate from both the 1986 construction norm S118 and the current SP S022.
@@ -671,6 +743,19 @@ Therefore PCG handling is explicitly event-based:
 `ordinary periodic tunnel services → junction override zone → turnout-specific drainage/passages/power/lighting/signs → ordinary branch/running-tunnel services after the event`.
 
 ---
+
+### Current turnout service events for a modern-retrofit preset
+
+For a **current/modern retrofit** event preset only, S022 now closes several previously generic service placeholders:
+
+- point-blade zone working/emergency lighting: **20 lx at UGR**;
+- point blades have a **separate emergency-lighting group**;
+- maintenance power boxes are installed at turnouts;
+- local **230/12 V transformer/socket boxes** are installed at turnout / ATDP / tunnel-gate locations;
+- an UGR-level turnout-parts storage area is required, but its plan dimensions are project-specific;
+- limit/clearance marker geometry is mandatory, but its exact local position still depends on the turnout layout.
+
+These are encoded as event objects, not repeated periodic tunnel assets, and are not evidence of the original 1950s Belorusskaya fit-out.
 
 ## 9. Exit of the branch
 

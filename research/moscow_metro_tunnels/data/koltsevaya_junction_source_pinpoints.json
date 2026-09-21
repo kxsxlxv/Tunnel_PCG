@@ -1127,6 +1127,46 @@
         }
       ],
       "confidence": "A_standard_dimensions_B_for_specific_project_applicability"
+    },
+    {
+      "id": "S130",
+      "title": "VSP74 — R65 1:9 project 2976 high-resolution drawing mirror",
+      "url": "https://www.vsp74.ru/strelochnye-perevody/perevod-strelochnyj-tip-r65-marka-1-9.html",
+      "locator": {
+        "webpage_lines": "136-154, 247-280",
+        "drawing_images": [
+          {
+            "label": "геом.размеры сп р65.jpg",
+            "direct_url": "https://www.vsp74.ru/upload/resize_cache/webp/medialibrary/b4f/scsob7pxv3b9pvplvzbxsg7m76j0myt2.webp",
+            "supports": [
+              "overall 31035 mm",
+              "front joint to point tip 2765 mm",
+              "point tip to mathematical frog center 26180 mm",
+              "point tip to turnout center 12458 mm",
+              "turnout center to mathematical frog center 13722 mm",
+              "mathematical frog center to rear joint 2090 mm",
+              "R300000 point radius and R200060 turnout radius",
+              "initial point angle beta_n = 0°27′19.57″"
+            ]
+          },
+          {
+            "label": "укладка сп р65.jpg",
+            "direct_url": "https://www.vsp74.ru/upload/resize_cache/webp/medialibrary/7bf/n89s2iyugcm11wzqq0yidky2b3qauhzy.webp",
+            "supports": [
+              "high-resolution bearer laying diagram",
+              "aggregate bearer length groups visually match the manufacturer-catalog project-2976 inventory"
+            ]
+          }
+        ],
+        "product_table_supports": [
+          "R65, gauge 1520, frog 1/9, project 2976.00.000",
+          "ordinary turnout; wooden bearer foundation; separate fastening",
+          "100 km/h straight / 40 km/h diverging product capability",
+          "stock rail + point pairs, assembled frog, independent guard-rail assemblies"
+        ]
+      },
+      "limitation": "Secondary supplier mirror. The page title/project field identifies 2976.00.000 but marketing prose also mentions inconsistent LPTP product codes. Use S094 manufacturer catalog as numeric authority and S130 only as a legibility/visual cross-check.",
+      "confidence": "C_supplemental_drawing_mirror"
     }
   ],
   "acquisition_targets": [

@@ -155,7 +155,9 @@
         "S120",
         "S121",
         "S122",
-        "S123"
+        "S123",
+        "S124",
+        "S125"
       ],
       "confirmed": [
         "depot serves Line 5",
@@ -276,7 +278,74 @@
         ],
         "confidence": "A/B"
       },
-      "actual_branch_vertical_trend_status": "PARTIALLY_RESOLVED_ON_KRASNOPRESNENSKAYA_SIDE_CROWN_ONLY"
+      "actual_branch_vertical_trend_status": "PARTIALLY_RESOLVED_ON_KRASNOPRESNENSKAYA_SIDE_CROWN_ONLY",
+      "line5_connection_legs": [
+        {
+          "edge_contract_id": "BRANCH_KRP_BELORUSSKAYA_LEG",
+          "entity_type": "BRANCH_EDGE",
+          "branch_role": "depot_connection",
+          "line_attachment": "Белорусская side / selected left-hand divergence from Track B system",
+          "track_count": 1,
+          "track_count_source_id": "S125",
+          "operational_corroboration_source_id": "S084",
+          "downstream_relation": "continues toward depot-side multi-track/switch system",
+          "exact_osm_way_ids": null,
+          "exact_from_switch_node_id": null,
+          "exact_to_switch_node_id": null,
+          "exact_xy": null,
+          "exact_z": null,
+          "civil_shell_section": null,
+          "status": "TOPOLOGY_SOURCE_BACKED_GEOMETRY_UNRESOLVED"
+        },
+        {
+          "edge_contract_id": "BRANCH_KRP_KRASNOPRESNENSKAYA_LEG",
+          "entity_type": "BRANCH_EDGE",
+          "branch_role": "depot_connection",
+          "line_attachment": "Краснопресненская side",
+          "track_count": 1,
+          "track_count_source_id": "S125",
+          "operational_corroboration_source_id": "S084",
+          "downstream_relation": "continues toward depot-side multi-track/switch system; S121 supplies a crown-depth profile fragment on this side",
+          "exact_osm_way_ids": null,
+          "exact_from_switch_node_id": null,
+          "exact_to_switch_node_id": null,
+          "exact_xy": null,
+          "exact_z": null,
+          "civil_shell_section": null,
+          "profile_constraint_ref": "actual_krasnopresnenskaya_side_profile_fragment",
+          "status": "TOPOLOGY_SOURCE_BACKED_PROFILE_PARTIAL_GEOMETRY_UNRESOLVED"
+        }
+      ],
+      "local_depot_side_two_track_section": {
+        "value": true,
+        "source_id": "S120",
+        "locator": "photo 7 caption: 'Двухпутный участок ветки в депо'",
+        "exact_start_end_chainage": null,
+        "exact_civil_shell_type": null,
+        "exact_axis_spacing_m": null,
+        "relationship_to_connection_legs": "S120 photo 8 shows a switch where directions toward Belorusskaya and Krasnopresnenskaya separate; exact graph-node decomposition and whether the two tracks share one shell are unresolved",
+        "status": "SOURCE_BACKED_VISUAL_TOPOLOGY"
+      },
+      "topology_reconciliation": {
+        "source_ids": [
+          "S084",
+          "S120",
+          "S124",
+          "S125"
+        ],
+        "resolved": [
+          "there are distinct Line-5 connection legs serving Belorusskaya and Krasnopresnenskaya",
+          "each line-attachment leg is described as single-track by S125",
+          "a local two-track depot-side section is directly captioned by S120",
+          "a downstream switch separates directions toward Belorusskaya and Krasnopresnenskaya"
+        ],
+        "not_resolved": [
+          "exact number and ordering of every switch node between the two single-track legs and the local two-track section",
+          "whether the local two-track section uses one common civil shell or two adjacent shells",
+          "exact chainages/XY/Z of merge/split nodes"
+        ],
+        "conflict_note": "Tertiary sources sometimes summarize the whole connection as one 'two-track connecting branch'. Do not encode that wording as a single end-to-end two-track TRACK_EDGE; the more granular sources support two distinct Line-5 branch legs plus a local two-track section."
+      }
     },
     {
       "id": "KOL5_PROSPEKT_MIRA_SSV_SYSTEM",
@@ -474,7 +543,7 @@
     "turnout_archetype_id": "MOSCOW_METRO_MAIN_TURNOUT_1_9_CONSTRAINT",
     "installed_turnout_project_confirmed": false,
     "civil_chamber_archetype_id": "BELORUSSKAYA_CAST_IRON_DEPOT_JUNCTION_ACTUAL_CONSTRAINT",
-    "branch_end_model": "for first local junction mesh, cut the Belorusskaya-side branch before the later depot-branch two-track/split system unless its physical graph is resolved; do not invent a single independent branch tunnel beyond the cut",
+    "branch_end_model": "follow BRANCH_KRP_BELORUSSKAYA_LEG only; cut at END_NODE before the unresolved downstream depot-side merge/two-track/switch system",
     "civil_fallback_reference_ids": [
       "METRO_STEPWISE_BRANCH_CHAMBER_TUBING_2001_REFERENCE",
       "CAST_IRON_CROSSOVER_CHAMBER_8750_1987_REFERENCE",
@@ -498,7 +567,10 @@
       "exact_xy": null,
       "exact_chainage": null,
       "civil_shell_arrangement": null
-    }
+    },
+    "branch_edge_contract_id": "BRANCH_KRP_BELORUSSKAYA_LEG",
+    "first_implementation_branch_track_count": 1,
+    "first_implementation_branch_track_count_source_id": "S125"
   },
   "global_unknowns": [
     "exact current OSM way IDs and node IDs inside child routes 300607 and 1462011 until relation/full or PBF bytes are acquired",
@@ -820,5 +892,19 @@
         "S116"
       ]
     }
-  ]
+  ],
+  "semantic_topology_skeleton": {
+    "krasnaya_presnya_depot_connection": {
+      "status": "SOURCE_BACKED_HIGH_LEVEL_GRAPH_EXACT_OSM_NODES_PENDING",
+      "branch_edges": [
+        "BRANCH_KRP_BELORUSSKAYA_LEG",
+        "BRANCH_KRP_KRASNOPRESNENSKAYA_LEG"
+      ],
+      "known_shared_or_parallel_section": "local two-track section exists near depot side (S120)",
+      "split_semantics": "S120 photo 8: from the depot-side view, left route leads to Belorusskaya and right route to Krasnopresnenskaya",
+      "exact_switch_node_count": null,
+      "exact_crossover_objects": null,
+      "exact_physical_way_ids": null
+    }
+  }
 }

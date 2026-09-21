@@ -53,7 +53,18 @@ def main() -> None:
 
     args = parse_args()
     package = read_scene_package_json(args.scene_json)
-    profile = load_stage10_initial_moscow_profile()
+    production_meta = package.metadata.get("productionGeometry", {})
+    civil_family = str(
+        production_meta.get("civilArchetypeID", "CAST_IRON_5500_R1000")
+    )
+    civil_archetype = (
+        "rc_block_6100_5600"
+        if civil_family == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+        else "cast_iron_5500_5100"
+    )
+    profile = load_stage10_initial_moscow_profile(
+        civil_archetype=civil_archetype
+    )
     r65 = R65ProductionProfile()
     expected_profile_vertices = len(r65.closed_profile_base_coordinates())
 
@@ -69,7 +80,6 @@ def main() -> None:
     )
 
     errors: list[str] = []
-    production_meta = package.metadata.get("productionGeometry", {})
     domain_stage = str(production_meta.get("domainStage", ""))
     if domain_stage not in {"10.1", "10.2", "10.3", "10.4", "10.5"}:
         errors.append(
@@ -157,7 +167,7 @@ def main() -> None:
             "production_contact_rail_clamp_bolts": support_count,
             "production_contact_rail_attachment_dowels": support_count,
             "production_contact_rail_support_hood": support_count,
-            "production_service_cable": 44,
+            "production_service_cable": 16,
             "production_water_main": 1,
             "production_water_main_support": int(
                 production_meta.get("serviceWaterMainSupportCount", 0)
@@ -460,10 +470,22 @@ def main() -> None:
             errors.append("Stage 10.5 wrong R2K11 horn designation")
         if int(production_meta.get("serviceCablePlacesPerHorn", -1)) != 2:
             errors.append("Stage 10.5 R2K11 must expose two cable places per horn")
-        if int(production_meta.get("serviceCableOccupiedPlacesPerHorn", -1)) != 2:
-            errors.append("Stage 10.5 modern visual preset must populate both cable places")
-        if int(production_meta.get("serviceCableCount", -1)) != 44:
-            errors.append("Stage 10.5 modern service cable count must be 44")
+        if int(production_meta.get("serviceCableOccupiedPlacesPerHorn", -1)) != 1:
+            errors.append(
+                "Stage 10.5 modern visual preset must occupy one cable place per used level"
+            )
+        if int(production_meta.get("serviceCableCount", -1)) != 16:
+            errors.append("Stage 10.5 modern service cable count must be 16")
+        cables = [
+            o for o in production
+            if o.object_type == "production_service_cable"
+        ]
+        for cable in cables:
+            cp = cable.custom_properties
+            if cp.get("cableSagApplied") is not True:
+                errors.append(f"{cable.name}: cable sag marker missing")
+            if not _close(cp.get("cableSagMidspanM", -1), 0.025):
+                errors.append(f"{cable.name}: wrong cable sag amount")
         if production_meta.get("servicePipeStatus") != (
             "implemented_normative_DN80_with_explicit_placement_fallback"
         ):
@@ -641,11 +663,13 @@ def main() -> None:
         for ring in civil:
             rp = ring.custom_properties
             civil_checks = {
-                "intradosRadiusM": 2.550,
-                "extradosRadiusM": 2.750,
-                "structuralDepthM": 0.200,
-                "moscowCivilRingPitchM": 1.000,
-                "liningAxisProfileZM": 1.670,
+                "intradosRadiusM": profile.intrados_radius_m,
+                "extradosRadiusM": profile.extrados_radius_m,
+                "structuralDepthM": (
+                    profile.extrados_radius_m - profile.intrados_radius_m
+                ),
+                "moscowCivilRingPitchM": profile.ring_pitch_m,
+                "liningAxisProfileZM": profile.datums.lining_axis_z_m,
                 "liningAxisCoreZM": 0.000,
             }
             for key, expected in civil_checks.items():
@@ -654,9 +678,13 @@ def main() -> None:
                         f"{ring.name}: {key}={rp.get(key)!r} != {expected!r}"
                     )
             if rp.get("seriesAccurateTubingLOD0") is not False:
-                errors.append(f"{ring.name}: false series-accurate LOD0 claim")
+                errors.append(f"{ring.name}: false series-accurate tubing LOD0 claim")
+            if rp.get("seriesAccurateCivilLOD0") is not False:
+                errors.append(f"{ring.name}: false series-accurate civil LOD0 claim")
+            if rp.get("civilFamily") != profile.civil_family:
+                errors.append(f"{ring.name}: civil-family metadata mismatch")
             if rp.get("coarseSegmentCountIsGeometry") is not False:
-                errors.append(f"{ring.name}: 11-piece reference used as geometry")
+                errors.append(f"{ring.name}: coarse segment reference used as geometry")
             if rp.get("internalRingEndCaps") is not False:
                 errors.append(f"{ring.name}: internal ring end caps retained")
 
@@ -667,11 +695,14 @@ def main() -> None:
         if len(walkway) == 1:
             wp = walkway[0].custom_properties
             walkway_checks = {
-                "walkwayTopProfileZM": 0.200,
-                "walkwayTopCoreZM": -1.470,
-                "walkwayInnerEdgeProfileXM": 1.660,
-                "walkwayOuterEdgeProfileXM": 2.083650643,
-                "walkwayTopClearWidthM": 0.423650643,
+                "walkwayTopProfileZM": profile.walkway.top_z_m,
+                "walkwayTopCoreZM": (
+                    profile.walkway.top_z_m
+                    + profile.coordinate.profile_z_to_core_z_offset_m
+                ),
+                "walkwayInnerEdgeProfileXM": profile.walkway.inner_edge_x_m,
+                "walkwayOuterEdgeProfileXM": profile.walkway.outer_edge_x_m,
+                "walkwayTopClearWidthM": profile.walkway.top_clear_width_m,
             }
             for key, expected in walkway_checks.items():
                 if key not in wp or not _close(wp[key], expected, 2e-9):
@@ -689,9 +720,12 @@ def main() -> None:
         ]
         if len(concrete) == 1:
             cp = concrete[0].custom_properties
-            if cp.get("physicalBottomSurface") != "moscow_5100_intrados":
+            expected_bottom_surface = (
+                f"moscow_{int(round(2000.0 * profile.intrados_radius_m))}_intrados"
+            )
+            if cp.get("physicalBottomSurface") != expected_bottom_surface:
                 errors.append(
-                    f"{concrete[0].name}: concrete does not close on Moscow intrados"
+                    f"{concrete[0].name}: concrete does not close on selected Moscow intrados"
                 )
             if cp.get("walkwayShoulderPartitioned") is not True:
                 errors.append(
@@ -771,6 +805,7 @@ def main() -> None:
             "contactRailCoverEraMismatch"
         ),
         "civilShellStatus": production_meta.get("civilShellStatus"),
+        "civilArchetypeID": production_meta.get("civilArchetypeID"),
         "serviceCableCount": production_meta.get("serviceCableCount"),
         "serviceCableRackCount": production_meta.get("serviceCableRackCount"),
         "serviceCableRackFamily": production_meta.get("serviceCableRackFamily"),

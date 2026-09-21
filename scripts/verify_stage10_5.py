@@ -34,6 +34,7 @@ MODERN_TYPES = {
     "production_service_cable",
     "production_cable_rack_r2k11",
     "production_water_main",
+    "production_water_main_support",
     "production_moscow_walkway",
     "production_moscow_civil_shell_ring",
 }
@@ -171,10 +172,14 @@ def main() -> None:
     assert len(build.scene.objects_of_type("production_moscow_civil_shell_ring")) == civil_count
     assert len(build.scene.objects_of_type("production_moscow_walkway")) == 1
 
-    assert len(build.scene.objects_of_type("production_service_cable")) == 22
+    assert len(build.scene.objects_of_type("production_service_cable")) == 44
     assert len(build.scene.objects_of_type("production_cable_rack_r2k11")) == 2 * civil_count
     assert meta["serviceCableRackFamily"] == "R2K11"
     assert int(meta["serviceCableRackHornCount"]) == 11
+    assert meta["serviceCableRackUprightDesignation"] == "K1351.001-09"
+    assert meta["serviceCableRackHornDesignation"] == "K1350.002"
+    assert int(meta["serviceCablePlacesPerHorn"]) == 2
+    assert int(meta["serviceCableOccupiedPlacesPerHorn"]) == 2
     assert meta["servicePipeStatus"] == (
         "implemented_normative_DN80_with_explicit_placement_fallback"
     )
@@ -182,6 +187,16 @@ def main() -> None:
     assert int(meta["serviceWaterMainMinNominalDNmm"]) == 80
     water = build.scene.objects_of_type("production_water_main")
     assert len(water) == 1
+    water_supports = build.scene.objects_of_type(
+        "production_water_main_support"
+    )
+    assert water_supports
+    assert len(water_supports) == int(meta["serviceWaterMainSupportCount"])
+    assert math.isclose(
+        float(meta["serviceWaterMainSupportMaxPitchM"]),
+        4.0,
+        abs_tol=1e-12,
+    )
     wp = water[0].custom_properties
     assert wp["positionRule"] == "above_UGR_weak_current_side"
     assert wp["exactProjectRouteResolved"] is False
@@ -262,6 +277,8 @@ def main() -> None:
                 "civil_ring_count": civil_count,
                 "service_cable_count": meta["serviceCableCount"],
                 "service_rack_count": meta["serviceCableRackCount"],
+                "service_cable_places_per_horn": meta["serviceCablePlacesPerHorn"],
+                "water_main_support_count": meta["serviceWaterMainSupportCount"],
                 "water_main_count": meta["serviceWaterMainCount"],
                 "water_main_min_nominal_dn_mm": meta[
                     "serviceWaterMainMinNominalDNmm"

@@ -2378,6 +2378,8 @@ def _build_stage10_5_service_rack_scene_objects(
     assembly: TunnelAssembly,
     stations: Sequence[AlignmentStation],
     label_policy: LabelPolicy,
+    start_chainage_m: float | None = None,
+    end_chainage_m: float | None = None,
 ) -> tuple[SceneObject, ...]:
     local_by_side = {
         side: build_r2k11_local_rack_mesh(profile, side_sign=side)
@@ -2393,6 +2395,13 @@ def _build_stage10_5_service_rack_scene_objects(
     rack = profile.cable_rack
 
     for event_index, chainage in enumerate(chainages):
+        if not _chainage_selected_for_window(
+            chainage,
+            total_length_m=assembly.length_by_chainage_m,
+            start_chainage_m=start_chainage_m,
+            end_chainage_m=end_chainage_m,
+        ):
+            continue
         station = sample_alignment_station(stations, chainage)
         source_ring_id = min(
             assembly.config.n_rings - 1,
@@ -2479,6 +2488,8 @@ def _build_stage10_5_water_main_support_scene_objects(
     assembly: TunnelAssembly,
     stations: Sequence[AlignmentStation],
     label_policy: LabelPolicy,
+    start_chainage_m: float | None = None,
+    end_chainage_m: float | None = None,
 ) -> tuple[SceneObject, ...]:
     local = build_water_main_support_local_mesh(profile)
     chainages = water_main_support_chainages(
@@ -2490,6 +2501,13 @@ def _build_stage10_5_water_main_support_scene_objects(
     source_ring_width = assembly.config.ring_width_m
 
     for event_index, chainage in enumerate(chainages):
+        if not _chainage_selected_for_window(
+            chainage,
+            total_length_m=assembly.length_by_chainage_m,
+            start_chainage_m=start_chainage_m,
+            end_chainage_m=end_chainage_m,
+        ):
+            continue
         station = sample_alignment_station(stations, chainage)
         source_ring_id = min(
             assembly.config.n_rings - 1,

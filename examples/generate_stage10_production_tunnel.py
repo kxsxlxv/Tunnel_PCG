@@ -379,6 +379,20 @@ def _validate_stage10_build(
                 abs_tol=1e-12,
             ):
                 raise AssertionError(f"{cable.name}: wrong cable sag")
+            if not math.isclose(
+                float(cp.get("cableSagVariationFraction", -1)),
+                0.35,
+                abs_tol=1e-12,
+            ):
+                raise AssertionError(f"{cable.name}: wrong cable sag variation")
+            if not math.isclose(
+                float(cp.get("cableSagPeakPhaseJitterFraction", -1)),
+                0.12,
+                abs_tol=1e-12,
+            ):
+                raise AssertionError(
+                    f"{cable.name}: wrong cable sag peak jitter"
+                )
         if len(build.scene.objects_of_type("production_water_main")) != 1:
             raise AssertionError("modern preset requires one tunnel water main")
         water_supports = build.scene.objects_of_type(
@@ -413,6 +427,10 @@ def _validate_stage10_build(
             "implemented_stage10_4_smooth_concentric_shell"
         ):
             raise AssertionError("Stage 10.4 civil shell is not implemented")
+        if meta.get("moscowCivilCompositeDetailStatus") != (
+            "implemented_source_sized_visual_joint_rib_bolt_overlay"
+        ):
+            raise AssertionError("Stage 10.4 civil detail overlay is not implemented")
         if meta.get("walkwayStatus") != (
             "implemented_stage10_4_source_backed_geometry"
         ):
@@ -436,6 +454,46 @@ def _validate_stage10_build(
             raise AssertionError("Stage 10.4 generated no Moscow civil rings")
         if len(civil) != int(meta.get("moscowCivilRingCount", -1)):
             raise AssertionError("Stage 10.4 civil ring metadata mismatch")
+        detail_ribs = build.scene.objects_of_type(
+            "production_moscow_civil_detail_ribs"
+        )
+        if len(detail_ribs) != len(civil):
+            raise AssertionError(
+                "Stage 10.4 requires one visual rib-detail object per civil ring"
+            )
+        if len(detail_ribs) != int(
+            meta.get("moscowCivilDetailRibObjectCount", -1)
+        ):
+            raise AssertionError("Stage 10.4 civil rib-detail metadata mismatch")
+        expected_segments = (
+            10
+            if profile.civil_family
+            == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+            else 11
+        )
+        for detail in detail_ribs:
+            p = detail.custom_properties
+            if int(p.get("visualSegmentCount", -1)) != expected_segments:
+                raise AssertionError(f"{detail.name}: wrong visual segment count")
+            if p.get("visualSegmentCountIsLOD0") is not False:
+                raise AssertionError(
+                    f"{detail.name}: visual segmentation falsely claims LOD0"
+                )
+        civil_bolts = build.scene.objects_of_type(
+            "production_moscow_civil_bolt_heads"
+        )
+        cast_iron = profile.civil_family == "CAST_IRON_5500_R1000"
+        if cast_iron and bool(meta.get("moscowCivilBoltsEnabled", False)):
+            if len(civil_bolts) != len(civil):
+                raise AssertionError(
+                    "cast-iron civil detail requires one bolt object per ring"
+                )
+            if int(meta.get("moscowCivilBoltHeadCount", -1)) != 22 * len(civil):
+                raise AssertionError("cast-iron M27 visual bolt count mismatch")
+        elif civil_bolts:
+            raise AssertionError(
+                "civil bolt detail generated for a non-applicable/disabled case"
+            )
         if len(build.scene.objects_of_type("production_moscow_walkway")) != 1:
             raise AssertionError("Stage 10.4 requires one Moscow walkway")
         for ring in civil:
@@ -589,6 +647,19 @@ def main() -> None:
         ),
         "productionMoscowCivilRings": len(
             build.scene.objects_of_type("production_moscow_civil_shell_ring")
+        ),
+        "productionMoscowCivilDetailRibs": len(
+            build.scene.objects_of_type(
+                "production_moscow_civil_detail_ribs"
+            )
+        ),
+        "productionMoscowCivilBoltObjects": len(
+            build.scene.objects_of_type(
+                "production_moscow_civil_bolt_heads"
+            )
+        ),
+        "productionMoscowCivilBoltHeads": production_meta.get(
+            "moscowCivilBoltHeadCount"
         ),
         "productionMoscowWalkways": len(
             build.scene.objects_of_type("production_moscow_walkway")

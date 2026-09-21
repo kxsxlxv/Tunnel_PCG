@@ -885,6 +885,84 @@ def test_stage10_5_rc_6100_5600_civil_archetype_adapts_geometry():
         ) < profile.intrados_radius_m
 
 
+def test_stage10_5_rc_ten_equal_topology_reuses_stage9_fastener_pipeline():
+    profile = load_stage10_initial_moscow_profile(
+        civil_archetype="rc_block_6100_5600"
+    )
+    build = build_production_tunnel(
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=2,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.0,
+        ),
+        include_bolts=True,
+        production_config=ProductionConfig(
+            namespace="stage10-5-rc-ten-equal-bolts",
+            moscow_profile=profile,
+            moscow_stage="10.5",
+            moscow_civil_topology="ten_equal",
+        ),
+        seed=5812,
+    )
+    meta = build.scene.metadata["productionGeometry"]
+    assert meta["moscowCivilTopology"] == "ten_equal"
+    assert meta["moscowCivilTopologyEvidenceStatus"] == (
+        "S026_source_backed_10_identical_blocks"
+    )
+    assert meta["moscowCivilBoltsEnabled"] is True
+    assert meta["moscowCivilLegacyBoltLayout"] == "type1_centered"
+    assert math.isclose(
+        meta["moscowCivilLegacyBoltBooleanOverlapM"],
+        0.005,
+        abs_tol=1e-12,
+    )
+
+    segments = [
+        obj
+        for obj in build.scene.objects_of_type("lining_segment")
+        if obj.custom_properties.get(
+            "stage9SegmentJointFastenerArchitectureTransferred"
+        ) is True
+    ]
+    heads = build.scene.objects_of_type("bolt_head")
+    cutters = build.scene.objects_of_type("bolt_pocket_cutter")
+    assert len(heads) == len(cutters)
+    assert heads
+
+    # 2 x 1.35 m source rings make two complete 1 m Moscow civil rings plus
+    # one clipped 0.7 m ring. The exact Stage-9 TYPE1 layout is three
+    # pockets/heads per segment and is intentionally omitted on the clipped
+    # final ring instead of rescaling the legacy hardware.
+    full_civil_rings = 2
+    assert len(heads) == full_civil_rings * 10 * 3
+    assert meta["moscowCivilBoltHeadCount"] == len(heads)
+    assert meta["moscowCivilBoltPocketCount"] == len(cutters)
+
+    full_ring_segment_names = {
+        obj.segment_name
+        for obj in segments
+        if obj.custom_properties["moscowCivilRingIndex"] < full_civil_rings
+    }
+    assert full_ring_segment_names == {
+        f"RC{i:02d}" for i in range(1, 11)
+    }
+
+    for head, cutter in zip(
+        sorted(heads, key=lambda o: o.custom_properties["boltIndex"]),
+        sorted(cutters, key=lambda o: o.custom_properties["boltIndex"]),
+    ):
+        hp = head.custom_properties
+        cp = cutter.custom_properties
+        assert hp["booleanTarget"] == cp["booleanTarget"]
+        assert hp["boltIndex"] == cp["boltIndex"]
+        assert hp["legacyBoltLayout"] == "type1_centered"
+        assert cp["legacyBoltLayout"] == "type1_centered"
+        assert hp["stage9FastenerVisualTransferNotHistoricalMoscowClaim"] is True
+        assert cp["stage9FastenerVisualTransferNotHistoricalMoscowClaim"] is True
+        assert cp["booleanOperation"] == "DIFFERENCE"
+        assert cp["removeAfterBoolean"] is True
+
+
 def test_stage10_5_rc_kba_topology_reuses_stage9_fastener_pipeline():
     profile = load_stage10_initial_moscow_profile(
         civil_archetype="rc_block_6100_5600"

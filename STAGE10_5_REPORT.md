@@ -377,7 +377,7 @@ Profile schema is now **2.2** because the dimensioned support drawing is part of
 
 Current fully green v6 code baseline:
 
-    194 tests passed
+    195 tests passed
     Stage 10.1 CLI compatibility smoke       PASS
     Stage 10.2 CLI compatibility smoke       PASS
     Stage 10.3 CLI compatibility smoke       PASS

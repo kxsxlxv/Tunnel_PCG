@@ -530,6 +530,12 @@ def main() -> None:
         "productionContactRailBrackets": len(
             build.scene.objects_of_type("production_contact_rail_bracket")
         ),
+        "productionContactRailBasePlates": len(
+            build.scene.objects_of_type("production_contact_rail_base_plate")
+        ),
+        "productionContactRailClampBolts": len(
+            build.scene.objects_of_type("production_contact_rail_clamp_bolts")
+        ),
         "productionMoscowCivilRings": len(
             build.scene.objects_of_type("production_moscow_civil_shell_ring")
         ),
@@ -589,6 +595,36 @@ def main() -> None:
             "contactRailWorkingSurfaceProfileZM"
         ),
         "contactRailSupportCount": production_meta.get("contactRailSupportCount"),
+        "contactSupportDrawingReferenceToAxisM": (
+            profile.modern_contact_rail.drawing_reference_to_axis_m
+            if args.domain_stage == "10.5"
+            else None
+        ),
+        "contactSupportDrawingOuterEnvelopeM": (
+            profile.modern_contact_rail.drawing_reference_to_outer_envelope_m
+            if args.domain_stage == "10.5"
+            else None
+        ),
+        "contactSupportDrawingUpperReturnM": (
+            profile.modern_contact_rail.drawing_upper_return_m
+            if args.domain_stage == "10.5"
+            else None
+        ),
+        "contactSupportDrawingTopAboveUGRM": (
+            profile.modern_contact_rail.drawing_top_above_ugr_m
+            if args.domain_stage == "10.5"
+            else None
+        ),
+        "contactSupportDrawingLowerBendCalloutM": (
+            profile.modern_contact_rail.drawing_lower_bend_callout_m
+            if args.domain_stage == "10.5"
+            else None
+        ),
+        "contactSupportDrawingUpperBendCalloutM": (
+            profile.modern_contact_rail.drawing_upper_bend_callout_m
+            if args.domain_stage == "10.5"
+            else None
+        ),
         "contactRailCoverSpanCount": production_meta.get(
             "contactRailCoverSpanCount"
         ),

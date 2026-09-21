@@ -1,7 +1,7 @@
 {
   "schema_version": "0.1",
   "route_id": "moscow_line_5_koltsevaya_v0",
-  "generated_date": "2026-09-20",
+  "generated_date": "2026-09-22",
   "policy": {
     "station_depths_are_absolute_ugr": false,
     "unresolved_chainage_allowed": true,
@@ -158,5 +158,26 @@
     "surface DEM or project terrain with explicit vertical datum",
     "exact Dostoevskaya project profile drawing if obtainable",
     "depth datum definition or absolute rail-level marks for station anchors"
+  ],
+  "project_track_chainage_constraints": [
+    {
+      "id": "DOST_EXISTING_RIGHT_LEFT_PK_2024",
+      "source_id": "S054",
+      "scope": "existing Line-5 main tracks bypassed by the future Dostoevskaya construction",
+      "right_main_track": {
+        "pk_start": "147+48.991",
+        "pk_end": "157+01.926",
+        "derived_span_m": 952.935
+      },
+      "left_main_track": {
+        "pk_start": "147+46.010",
+        "pk_end": "157+02.021",
+        "derived_span_m": 956.011
+      },
+      "right_left_to_track_A_B_mapping": null,
+      "relative_z_m": null,
+      "axis_spacing_m": null,
+      "note": "Track-local chainages only. No lateral spacing or Z is inferred."
+    }
   ]
 }

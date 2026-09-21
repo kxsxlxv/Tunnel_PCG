@@ -89,3 +89,24 @@ That last behavior is deliberate: a turnout/crossover must be resolved from expl
 Synthetic tests:
 - relation/full parser: 1/1 passed;
 - track stitching/filtering: 4/4 passed.
+
+## Branch-preserving physical track graph
+
+`osm_track_stitch.py` remains intentionally strict and rejects degree >2.
+
+For switch/crossover research, `osm_track_graph.py` adds a separate conservative extractor that:
+- preserves all physical `railway=subway` ways;
+- splits ways at shared OSM nodes, including shared nodes located inside a way;
+- retains degree >2 as `SWITCH_NODE`;
+- exposes degree-1 `END_NODE`;
+- preserves full OSM tags, node refs and coordinates;
+- leaves `z_ugr_m=null`;
+- never chooses straight/diverging routes or labels a branch as depot/crossover from geometry alone.
+
+Synthetic test cases were added in `tests/test_osm_track_graph.py`:
+- simple two-track loop;
+- single turnout branch;
+- crossover between two tracks;
+- depot branch.
+
+The current execution environment could not clone/run the repository because external DNS for GitHub is unavailable, so these new tests are **committed but not claimed as executed here**.

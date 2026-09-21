@@ -109,6 +109,7 @@ jobs:
           --chunk-m 2.35
           --chunk-policy exact_length
           --chunks-only
+          --workers 2
           --compact-json
           --prototype-json
           --output /tmp/stage10_5_rc_kba_chunk_first_scene.json

@@ -44,9 +44,11 @@ def main() -> None:
     meta = build.scene.metadata["productionGeometry"]
     assert meta["domainStage"] == "10.4"
     assert meta["stage9CivilGeometryRemoved"] is True
-    assert meta["civilShellStatus"] == "implemented_stage10_4_smooth_concentric_shell"
+    assert meta["civilShellStatus"] == (
+        "implemented_stage10_4_cast_iron_smooth_envelope_detail_deferred"
+    )
     assert meta["moscowCivilCompositeDetailStatus"] == (
-        "implemented_source_sized_visual_joint_rib_bolt_overlay"
+        "cast_iron_detail_deferred_pending_research"
     )
     assert meta["walkwayStatus"] == "implemented_stage10_4_source_backed_geometry"
     assert meta["transitionalCivilGapStatus"] == "closed_by_stage10_4_moscow_shell"
@@ -66,24 +68,13 @@ def main() -> None:
     bolt_details = build.scene.objects_of_type(
         "production_moscow_civil_bolt_heads"
     )
-    assert len(details) == len(civil)
-    assert len(bolt_details) == len(civil)
-    assert int(meta["moscowCivilDetailRibObjectCount"]) == len(civil)
-    assert int(meta["moscowCivilBoltObjectCount"]) == len(civil)
-    assert int(meta["moscowCivilBoltHeadCount"]) == 22 * len(civil)
-    assert meta["moscowCivilBoltsEnabled"] is True
-    assert all(
-        int(obj.custom_properties["visualSegmentCount"]) == 11
-        for obj in details
-    )
-    assert all(
-        obj.custom_properties["visualSegmentCountIsLOD0"] is False
-        for obj in details
-    )
-    assert all(
-        int(obj.custom_properties["boltHeadCount"]) == 22
-        for obj in bolt_details
-    )
+    assert not details
+    assert not bolt_details
+    assert int(meta["moscowCivilDetailRibObjectCount"]) == 0
+    assert int(meta["moscowCivilBoltObjectCount"]) == 0
+    assert int(meta["moscowCivilBoltHeadCount"]) == 0
+    assert meta["moscowCivilBoltsEnabled"] is False
+    assert int(meta["moscowCivilRenderedBlockCount"]) == 0
     assert len(walkway) == 1
     assert len(concrete) == 1
     assert int(meta["moscowCivilRingCount"]) == len(civil)
@@ -96,6 +87,10 @@ def main() -> None:
         assert math.isclose(float(p["structuralDepthM"]), 0.20, abs_tol=2e-12)
         assert p["seriesAccurateTubingLOD0"] is False
         assert p["coarseSegmentCountIsGeometry"] is False
+        assert p["civilRenderMode"] == (
+            "source_sized_smooth_cast_iron_envelope_detail_deferred"
+        )
+        assert p["stage9LikeCurvedSegmentConstruction"] is False
         assert p["internalRingEndCaps"] is False
     assert civil[-1].custom_properties["partialFinalRing"] is True
 
@@ -158,11 +153,9 @@ def main() -> None:
                 "source_stage9_rings": build.assembly.config.n_rings,
                 "length_m": build.assembly.length_by_chainage_m,
                 "moscow_civil_ring_count": len(civil),
-                "moscow_civil_detail_rib_count": len(details),
-                "moscow_civil_bolt_object_count": len(bolt_details),
-                "moscow_civil_bolt_head_count": int(
-                    meta["moscowCivilBoltHeadCount"]
-                ),
+                "moscow_civil_detail_rib_count": 0,
+                "moscow_civil_bolt_object_count": 0,
+                "moscow_civil_bolt_head_count": 0,
                 "moscow_civil_ring_pitch_m": 1.0,
                 "intrados_radius_m": 2.55,
                 "extrados_radius_m": 2.75,

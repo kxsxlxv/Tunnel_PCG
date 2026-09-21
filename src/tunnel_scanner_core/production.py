@@ -2888,7 +2888,15 @@ def _warp_civil_local_object_to_alignment(
         xr = rotation_cos * x + rotation_sin * z
         zr = -rotation_sin * x + rotation_cos * z
         chainage = midpoint + local_y
-        station = sample_alignment_station(stations, chainage)
+        try:
+            station = sample_alignment_station(stations, chainage)
+        except ValueError as exc:
+            raise ValueError(
+                f"{obj.name}: Moscow civil warp chainage {chainage:.17g} m "
+                f"outside alignment while mapping ring {ring_index} "
+                f"[{start_chainage_m:.17g}, {end_chainage_m:.17g}] m, "
+                f"local_y={local_y:.17g} m, object_type={obj.object_type}"
+            ) from exc
         vertices.append(
             (
                 xr + station.offset_x_m,

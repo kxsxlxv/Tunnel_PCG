@@ -151,14 +151,18 @@
         "S093",
         "S022",
         "S098",
-        "S106"
+        "S106",
+        "S120"
       ],
       "confirmed": [
         "depot serves Line 5",
         "trains can leave depot onto Track A/first track and Track B/second track",
         "Belorusskaya has a 3-switch turnback siding continuing to depot connection",
         "Krasnopresnenskaya has 3 turnouts and one turnback/storage track continuing to depot connection",
-        "an official infrastructure list explicitly identifies a tunnel-branch to Krasnaya Presnya depot"
+        "an official infrastructure list explicitly identifies a tunnel-branch to Krasnaya Presnya depot",
+        "actual photo sequence shows a two-track section of the depot branch",
+        "a photographed downstream switch divides directions toward Belorusskaya and Krasnopresnenskaya",
+        "the depot connection therefore must be modelled as a multi-edge graph rather than a single branch polyline"
       ],
       "crossover_between_main_tracks": "multi-switch turnback/depot system confirmed; exact direct main-to-main crossover semantics and switch-node decomposition remain unresolved",
       "exact_xy": null,
@@ -172,8 +176,22 @@
         "applicability": "current design rule; not proof that every historical physical segment at Krasnaya Presnya is a single two-track tunnel",
         "status": "SOURCE_BACKED_CONSTRAINT"
       },
-      "actual_physical_branch_count_and_shell_arrangement": null,
-      "actual_branch_arrangement_status": "UNRESOLVED; current sources prove service access to both Line-5 directions but do not yet resolve every physical branch edge/tunnel shell",
+      "actual_physical_branch_count_and_shell_arrangement": {
+        "topology": {
+          "two_track_depot_branch_section": true,
+          "downstream_direction_split": [
+            "toward Belorusskaya",
+            "toward Krasnopresnenskaya"
+          ],
+          "source_id": "S120",
+          "status": "SOURCE_BACKED_VISUAL_TOPOLOGY"
+        },
+        "civil_shell_arrangement": null,
+        "exact_merge_split_node_xy": null,
+        "exact_chainage": null,
+        "note": "Photo captions prove track topology, not whether the two tracks share one civil shell throughout."
+      },
+      "actual_branch_arrangement_status": "TRACK_TOPOLOGY_PARTIALLY_RESOLVED_FROM_ACTUAL_PHOTOS; civil shell and exact XY/chainage unresolved",
       "station_pk_context": [
         {
           "station": "Краснопресненская",
@@ -377,7 +395,8 @@
       "S084",
       "S085",
       "S086",
-      "S093"
+      "S093",
+      "S120"
     ],
     "main_track_id": "KOLTSEVAYA_TRACK_B",
     "main_track_number": "II",
@@ -399,7 +418,7 @@
     "turnout_archetype_id": "MOSCOW_METRO_MAIN_TURNOUT_1_9_CONSTRAINT",
     "installed_turnout_project_confirmed": false,
     "civil_chamber_archetype_id": "BELORUSSKAYA_CAST_IRON_DEPOT_JUNCTION_ACTUAL_CONSTRAINT",
-    "branch_end_model": "cut before depot; exact cut XY unresolved",
+    "branch_end_model": "for first local junction mesh, cut the Belorusskaya-side branch before the later depot-branch two-track/split system unless its physical graph is resolved; do not invent a single independent branch tunnel beyond the cut",
     "civil_fallback_reference_ids": [
       "METRO_STEPWISE_BRANCH_CHAMBER_TUBING_2001_REFERENCE",
       "CAST_IRON_CROSSOVER_CHAMBER_8750_1987_REFERENCE",
@@ -411,7 +430,19 @@
       "LEGACY_R50_1986_REFERENCE": "MOSCOW_METRO_R50_1_9_PROJECT_2891_REFERENCE_FALLBACK"
     },
     "legacy_R50_foundation_constraint_id": "MOSCOW_METRO_R50_1_9_VNIR_1986_LEGACY_CONSTRAINT",
-    "service_era_rule": "Select the turnout rail/project from explicit service-era/site evidence; civil opening year alone does not select R50/R65."
+    "service_era_rule": "Select the turnout rail/project from explicit service-era/site evidence; civil opening year alone does not select R50/R65.",
+    "downstream_depot_topology_constraint": {
+      "two_track_section_confirmed": true,
+      "later_switch_divides_toward": [
+        "Belorusskaya",
+        "Krasnopresnenskaya"
+      ],
+      "source_id": "S120",
+      "exact_graph_node_ids": null,
+      "exact_xy": null,
+      "exact_chainage": null,
+      "civil_shell_arrangement": null
+    }
   },
   "global_unknowns": [
     "exact current OSM way IDs and node IDs inside child routes 300607 and 1462011 until relation/full or PBF bytes are acquired",

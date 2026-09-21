@@ -37,8 +37,6 @@ MODERN_TYPES = {
     "production_water_main_support",
     "production_moscow_walkway",
     "production_moscow_civil_shell_ring",
-    "production_moscow_civil_detail_ribs",
-    "production_moscow_civil_bolt_heads",
 }
 
 
@@ -90,9 +88,11 @@ def main() -> None:
     assert meta["contactRailStatus"] == (
         "implemented_stage10_5_modern_segmented_cover_and_dedicated_support"
     )
-    assert meta["civilShellStatus"] == "implemented_stage10_4_smooth_concentric_shell"
+    assert meta["civilShellStatus"] == (
+        "implemented_stage10_4_cast_iron_smooth_envelope_detail_deferred"
+    )
     assert meta["moscowCivilCompositeDetailStatus"] == (
-        "implemented_source_sized_visual_joint_rib_bolt_overlay"
+        "cast_iron_detail_deferred_pending_research"
     )
     assert meta["transitionalCivilGapStatus"] == "closed_by_stage10_4_moscow_shell"
 
@@ -175,18 +175,17 @@ def main() -> None:
     civil_count = int(meta["moscowCivilRingCount"])
     assert civil_count > 0
     assert len(build.scene.objects_of_type("production_moscow_civil_shell_ring")) == civil_count
-    details = build.scene.objects_of_type(
+    assert not build.scene.objects_of_type(
         "production_moscow_civil_detail_ribs"
     )
-    assert len(details) == civil_count
-    assert int(meta["moscowCivilDetailRibObjectCount"]) == civil_count
+    assert not build.scene.objects_of_type(
+        "production_moscow_civil_bolt_heads"
+    )
+    assert int(meta["moscowCivilDetailRibObjectCount"]) == 0
     assert int(meta["moscowCivilBoltObjectCount"]) == 0
     assert int(meta["moscowCivilBoltHeadCount"]) == 0
     assert meta["moscowCivilBoltsEnabled"] is False
-    assert all(
-        int(obj.custom_properties["visualSegmentCount"]) == 11
-        for obj in details
-    )
+    assert int(meta["moscowCivilRenderedBlockCount"]) == 0
     assert len(build.scene.objects_of_type("production_moscow_walkway")) == 1
 
     assert len(build.scene.objects_of_type("production_service_cable")) == 16
@@ -318,21 +317,42 @@ def main() -> None:
         "production_moscow_civil_shell_ring"
     )
     assert rc_rings
-    rc_details = rc_build.scene.objects_of_type(
-        "production_moscow_civil_detail_ribs"
+    assert rm["civilShellStatus"] == (
+        "implemented_stage10_4_segmented_rc_10block_shell"
     )
-    assert len(rc_details) == len(rc_rings)
-    assert all(
-        int(obj.custom_properties["visualSegmentCount"]) == 10
-        for obj in rc_details
+    assert rm["moscowCivilCompositeDetailStatus"] == (
+        "implemented_rc_10block_geometry_stage9_like"
+    )
+    assert not rc_build.scene.objects_of_type(
+        "production_moscow_civil_detail_ribs"
     )
     assert not rc_build.scene.objects_of_type(
         "production_moscow_civil_bolt_heads"
     )
-    assert all(
-        int(ring.custom_properties["coarseSegmentCountReference"]) == 10
-        for ring in rc_rings
+    assert int(rm["moscowCivilRenderedBlockCount"]) == 10 * len(rc_rings)
+    assert math.isclose(
+        float(rm["moscowCivilRCVisualSeamWidthM"]),
+        0.008,
+        abs_tol=1e-12,
     )
+    assert math.isclose(
+        float(rm["moscowCivilRCWorkingRebarDiameterM"]),
+        0.016,
+        abs_tol=1e-12,
+    )
+    assert math.isclose(
+        float(rm["moscowCivilRCAssemblyPinDiameterM"]),
+        0.022,
+        abs_tol=1e-12,
+    )
+    for ring in rc_rings:
+        rp = ring.custom_properties
+        assert int(rp["coarseSegmentCountReference"]) == 10
+        assert rp["coarseSegmentCountIsGeometry"] is True
+        assert rp["stage9LikeCurvedSegmentConstruction"] is True
+        assert int(rp["renderedRCBlockCount"]) == 10
+        assert int(rp["angularSegments"]) == 80
+        assert rp["rcPermanentBoltedBlockJoints"] is False
 
     legacy = build_production_tunnel(
         assembly_config=TunnelAssemblyConfig(
@@ -372,11 +392,11 @@ def main() -> None:
                 "contact_base_anchor_count": 4,
                 "contact_cover_span_count": meta["contactRailCoverSpanCount"],
                 "civil_ring_count": civil_count,
-                "civil_detail_rib_count": meta[
-                    "moscowCivilDetailRibObjectCount"
+                "civil_rendered_block_count": meta[
+                    "moscowCivilRenderedBlockCount"
                 ],
-                "civil_bolt_object_count": meta[
-                    "moscowCivilBoltObjectCount"
+                "civil_detail_status": meta[
+                    "moscowCivilCompositeDetailStatus"
                 ],
                 "service_cable_count": meta["serviceCableCount"],
                 "service_rack_count": meta["serviceCableRackCount"],

@@ -449,13 +449,19 @@ S102, ЕНиР Е36-2, вып.2 (1987), §Е36-2-75:
 
 Это **generic late-Soviet construction reference**, а не проект Белорусской. Для Belorusskaya запрещено автоматически переносить D=8.75 m, D=6.0 m, pitch=0.75 m или эту 11-piece раскладку.
 
-S103 — secondary historical engineering reprint — даёт только morphology context для Москвы:
-- на водообильных участках Московского метро применялись камеры со **сводом из чугунных тюбингов** и **стенами/лотком из монолитного бетона**;
-- в этом семействе упоминаются пролёты до **14 m**;
-- крупные своды могли собираться из тюбингов станционных/эскалаторных тоннелей и клиновидных прокладок;
-- при сопряжении сборной камеры с двумя однопутными тоннелями торцевая стена могла быть монолитной железобетонной.
+S119 strengthens this morphology class with a 1975 Soviet engineering textbook, printed pp.68–69:
 
-S103 имеет C-confidence и используется только как morphology prior; 14 m **не является размером Белорусской**.
+- for deep lines with the two main tracks in **separate single-track tunnels**, a connecting tunnel is accommodated by **progressively widening each running tunnel through crossover chambers**;
+- chamber linings may be monolithic concrete, cast-iron tubings or precast reinforced concrete;
+- for Moscow Metro, the text explicitly describes widespread chamber construction with **cast-iron tubing crowns bearing on monolithic concrete foundations and concrete inverts**;
+- crowns in that Moscow family are reported with spans up to **14 m**;
+- the large crowns use standard station/escalator-tunnel tubings with **wedge-shaped cast-iron spacers**;
+- the same text defines a **bellmouth / раструб** as gradual widening where a two-track tunnel connects to two single-track tunnels, and notes the same morphology at connecting-tunnel junctions;
+- deep-level turnback tracks use special chambers structurally analogous to crossover chambers plus larger-span chambers at the crossover/turnback connections.
+
+The same source gives **12 m** between generic deep turnback-tunnel axes and describes a 1.2×1.2 m inspection ditch plus 1.2 m-high service platforms over 155 m. These are context values for a generic turnback facility, **not dimensions of the Belorusskaya divergence chamber or depot branch**.
+
+S103 remains only secondary corroboration. The 14 m span and the generic turnback dimensions are never promoted to Belorusskaya as-built values.
 
 ---
 

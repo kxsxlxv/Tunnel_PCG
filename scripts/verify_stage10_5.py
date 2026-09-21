@@ -172,14 +172,23 @@ def main() -> None:
     assert len(build.scene.objects_of_type("production_moscow_civil_shell_ring")) == civil_count
     assert len(build.scene.objects_of_type("production_moscow_walkway")) == 1
 
-    assert len(build.scene.objects_of_type("production_service_cable")) == 44
+    assert len(build.scene.objects_of_type("production_service_cable")) == 16
+    for cable in build.scene.objects_of_type("production_service_cable"):
+        cp = cable.custom_properties
+        assert cp["cableSagApplied"] is True
+        assert math.isclose(
+            float(cp["cableSagMidspanM"]),
+            0.025,
+            abs_tol=1e-12,
+        )
+        assert int(cp["cableSagControlStationsAdded"]) > 0
     assert len(build.scene.objects_of_type("production_cable_rack_r2k11")) == 2 * civil_count
     assert meta["serviceCableRackFamily"] == "R2K11"
     assert int(meta["serviceCableRackHornCount"]) == 11
     assert meta["serviceCableRackUprightDesignation"] == "K1351.001-09"
     assert meta["serviceCableRackHornDesignation"] == "K1350.002"
     assert int(meta["serviceCablePlacesPerHorn"]) == 2
-    assert int(meta["serviceCableOccupiedPlacesPerHorn"]) == 2
+    assert int(meta["serviceCableOccupiedPlacesPerHorn"]) == 1
     assert meta["servicePipeStatus"] == (
         "implemented_normative_DN80_with_explicit_placement_fallback"
     )
@@ -236,6 +245,56 @@ def main() -> None:
             packages,
             periodic_source,
         ) == periodic_source
+
+    rc_profile = load_stage10_initial_moscow_profile(
+        civil_archetype="rc_block_6100_5600"
+    )
+    rc_build = build_production_tunnel(
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=8,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.0,
+        ),
+        include_bolts=False,
+        production_config=ProductionConfig(
+            namespace="stage10-5-rc6100-check",
+            moscow_profile=rc_profile,
+            moscow_stage="10.5",
+        ),
+        seed=5812,
+    )
+    rm = rc_build.scene.metadata["productionGeometry"]
+    assert rm["civilArchetypeID"] == (
+        "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+    )
+    assert math.isclose(
+        float(rm["moscowCivilIntradosRadiusM"]),
+        2.800,
+        abs_tol=1e-12,
+    )
+    assert math.isclose(
+        float(rm["moscowCivilExtradosRadiusM"]),
+        3.050,
+        abs_tol=1e-12,
+    )
+    assert len(
+        rc_build.scene.objects_of_type("production_service_cable")
+    ) == 16
+    rc_concrete = rc_build.scene.objects_of_type(
+        "production_track_concrete"
+    )
+    assert len(rc_concrete) == 1
+    assert rc_concrete[0].custom_properties["physicalBottomSurface"] == (
+        "moscow_5600_intrados"
+    )
+    rc_rings = rc_build.scene.objects_of_type(
+        "production_moscow_civil_shell_ring"
+    )
+    assert rc_rings
+    assert all(
+        int(ring.custom_properties["coarseSegmentCountReference"]) == 10
+        for ring in rc_rings
+    )
 
     legacy = build_production_tunnel(
         assembly_config=TunnelAssemblyConfig(

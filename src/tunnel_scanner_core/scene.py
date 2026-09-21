@@ -115,23 +115,57 @@ class ScenePackage:
     label_policy: LabelPolicy
     objects: tuple[SceneObject, ...]
     metadata: Mapping[str, Any] = field(default_factory=dict)
+    _objects_by_type: Mapping[str, tuple[SceneObject, ...]] = field(
+        init=False,
+        repr=False,
+        compare=False,
+        default_factory=dict,
+    )
+    _ring_ids: tuple[int, ...] = field(
+        init=False,
+        repr=False,
+        compare=False,
+        default=(),
+    )
 
     def __post_init__(self) -> None:
         if not self.name:
             raise ValueError("scene package name must not be empty")
-        names = [o.name for o in self.objects]
-        if len(names) != len(set(names)):
-            raise ValueError("scene object names must be unique")
-        ids = [o.instance_id for o in self.objects]
-        if len(ids) != len(set(ids)):
-            raise ValueError("scene instance IDs must be unique")
+
+        # Build all structural indexes during the same validation pass. Large
+        # Stage-10 scenes query objects_of_type() dozens of times during
+        # validation/reporting, so repeatedly scanning hundreds of thousands
+        # of objects is avoidable post-build work.
+        names: set[str] = set()
+        ids: set[int] = set()
+        ring_ids: set[int] = set()
+        by_type: dict[str, list[SceneObject]] = {}
+        for obj in self.objects:
+            if obj.name in names:
+                raise ValueError("scene object names must be unique")
+            names.add(obj.name)
+            if obj.instance_id in ids:
+                raise ValueError("scene instance IDs must be unique")
+            ids.add(obj.instance_id)
+            ring_ids.add(obj.ring_id)
+            by_type.setdefault(obj.object_type, []).append(obj)
+
+        object.__setattr__(
+            self,
+            "_objects_by_type",
+            {
+                object_type: tuple(objects)
+                for object_type, objects in by_type.items()
+            },
+        )
+        object.__setattr__(self, "_ring_ids", tuple(sorted(ring_ids)))
 
     @property
     def ring_ids(self) -> tuple[int, ...]:
-        return tuple(sorted({o.ring_id for o in self.objects}))
+        return self._ring_ids
 
     def objects_of_type(self, object_type: str) -> tuple[SceneObject, ...]:
-        return tuple(o for o in self.objects if o.object_type == object_type)
+        return self._objects_by_type.get(object_type, ())
 
     def custom_property_keys(self) -> tuple[str, ...]:
         keys: set[str] = set()

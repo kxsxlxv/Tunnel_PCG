@@ -4724,19 +4724,36 @@ def plan_chunks(
     chunks = []
     start_chainage = 0.0
     cid = 0
+    next_ring_id = 0
+    n_rings = assembly.config.n_rings
     while start_chainage < total - 1e-12:
         end_chainage = min(total, start_chainage + chunk_length_m)
-        ring_ids = tuple(
-            i
-            for i in range(assembly.config.n_rings)
-            if start_chainage <= (i + 0.5) * L < end_chainage
-            or (
-                math.isclose(end_chainage, total, abs_tol=1e-12)
-                and math.isclose((i + 0.5) * L, end_chainage, abs_tol=1e-12)
+        final_chunk = math.isclose(end_chainage, total, abs_tol=1e-12)
+        assigned: list[int] = []
+
+        # Ring centres are monotonic, so EXACT_LENGTH chunk planning can walk
+        # them once instead of rescanning all N rings for every metric chunk.
+        while next_ring_id < n_rings:
+            center = (next_ring_id + 0.5) * L
+            if center < start_chainage:
+                next_ring_id += 1
+                continue
+            belongs = center < end_chainage or (
+                final_chunk
+                and math.isclose(center, end_chainage, abs_tol=1e-12)
             )
-        )
+            if not belongs:
+                break
+            assigned.append(next_ring_id)
+            next_ring_id += 1
+
         chunks.append(
-            ChunkDescriptor(cid, start_chainage, end_chainage, ring_ids)
+            ChunkDescriptor(
+                cid,
+                start_chainage,
+                end_chainage,
+                tuple(assigned),
+            )
         )
         cid += 1
         start_chainage = end_chainage

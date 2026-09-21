@@ -135,44 +135,42 @@ hardware remain explicit fallbacks.
 
 ### Civil geometry
 
-Two civil modes are available.
+Two civil families are available. The 5.5/5.1 m cast-iron option keeps only its
+source-sized envelope while exact tubing detail remains deferred.
 
-Default compatibility envelope:
+For the 6.1/5.6 m RC family, select the topology independently:
 
-    cast_iron_5500_5100
-    intrados radius     2.550 m
-    extrados radius     2.750 m
-    ring pitch          1.000 m
+    --civil-archetype rc_block_6100_5600 --civil-topology ten_equal
+        10 equal analytical segments RC01..RC10
+        S026 source-backed topology
 
-This cast-iron mode should currently look deliberately simple. Detailed N/C/K
-tubing geometry, ribs, rebates and fastenings are not considered resolved and
-are not fabricated.
+    --civil-archetype rc_block_6100_5600 --civil-topology kba
+        K, B1, A1, A2, A3, B2
+        literal old Stage-9 K/B/A topology
+        Moscow applicability currently user/photo-reference constrained
 
-The civil mode to inspect for composite lining in this iteration is:
+Both modes must visibly use the **old Stage-9 construction**, not the removed
+simplified sector sweep:
 
-    --civil-archetype rc_block_6100_5600
+- each block is an individual `lining_segment` built through
+  `SegmentMesh -> CurvedSegmentMesh`;
+- prescribed radial-joint solids are present at every segment interface;
+- prescribed circumferential-joint pieces are present between complete rings;
+- with bolts enabled, the old Stage-6 `TYPE1_CENTERED` arrangement is used:
+  three pocket/cutter/head assemblies per segment at the legacy longitudinal
+  positions;
+- Blender applies the same pocket/head Boolean pipeline and hidden-interface
+  cleanup as Stage 9.
 
-Expected RC geometry:
+For `ten_equal`, the Stage-9 bolt/pocket hardware is an explicitly requested
+visual architecture transfer. It must not be interpreted as a historical claim
+that the S026 ten-block family used permanent bolted block joints; S026 says it
+did not. The K/B/A Moscow applicability likewise remains pending a pinned
+historical/project source.
 
-    intrados radius             2.800 m
-    extrados radius             3.050 m
-    ring pitch                  1.000 m
-    actual blocks per ring      10
-    nominal angular span        36 degrees/block
-    block volume source         0.46 m3
-    block mass source           1.15 t
-    working reinforcement       16 mm
-    erection pins               22 mm
-    permanent block bolts       none
-
-Visually, one RC ring should resemble the **composite curved-segment language of
-Stage 9**, but it must use the Moscow dimensions above. It is not a smooth tube
-with ten lines drawn over it: the mesh contains ten disconnected full-depth
-curved annular block components with explicit radial end faces.
-
-The current 8 mm inter-block opening exists to make the composition readable
-and is a visual fallback, not a researched joint-width claim. Exact radial-end
-chamfers, pin holes/seats and reinforcement-mesh CAD remain deferred.
+The old 8 mm procedural inter-block gap has been removed. Exact RC end-face
+chamfers, Ø22 erection-pin holes/seats and reinforcement-cage CAD remain
+unresolved.
 
 ## 4. Polygon-count expectation
 

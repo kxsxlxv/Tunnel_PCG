@@ -135,13 +135,15 @@
         "S086",
         "S087",
         "S093",
-        "S022"
+        "S022",
+        "S098"
       ],
       "confirmed": [
         "depot serves Line 5",
         "trains can leave depot onto Track A/first track and Track B/second track",
         "Belorusskaya has a 3-switch turnback siding continuing to depot connection",
-        "Krasnopresnenskaya has 3 turnouts and one turnback/storage track continuing to depot connection"
+        "Krasnopresnenskaya has 3 turnouts and one turnback/storage track continuing to depot connection",
+        "an official infrastructure list explicitly identifies a tunnel-branch to Krasnaya Presnya depot"
       ],
       "crossover_between_main_tracks": "multi-switch turnback/depot system confirmed; exact direct main-to-main crossover semantics and switch-node decomposition remain unresolved",
       "exact_xy": null,
@@ -169,7 +171,14 @@
           "source_id": "S086"
         }
       ],
-      "station_pk_semantics": "station reference/chainage context only; not switch-node chainage"
+      "station_pk_semantics": "station reference/chainage context only; not switch-node chainage",
+      "branch_tunnel_existence": {
+        "value": true,
+        "source_id": "S098",
+        "status": "SOURCE_BACKED"
+      },
+      "branch_tunnel_track_count": null,
+      "branch_tunnel_section": null
     },
     {
       "id": "KOL5_PROSPEKT_MIRA_SSV_SYSTEM",

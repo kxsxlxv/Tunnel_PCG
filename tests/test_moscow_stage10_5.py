@@ -65,7 +65,7 @@ def test_stage10_5_profile_contains_modern_default_and_legacy_alternative():
     pw = profile.modern_permanent_way
     cr = profile.modern_contact_rail
 
-    assert profile.schema_version == "2.0"
+    assert profile.schema_version == "2.1"
     assert profile.default_service_preset == "MODERN_MOSCOW_LVT_SERVICES_2020S"
     assert profile.water_main.min_nominal_dn_mm == 80
     assert profile.water_main.quantity_single_track_tunnel == 1
@@ -103,6 +103,11 @@ def test_stage10_5_profile_contains_modern_default_and_legacy_alternative():
     assert math.isclose(cr.drawing_top_above_ugr_m, 0.373, abs_tol=1e-12)
     assert math.isclose(cr.drawing_lower_bend_callout_m, 0.155, abs_tol=1e-12)
     assert math.isclose(cr.drawing_upper_bend_callout_m, 0.090, abs_tol=1e-12)
+    assert math.isclose(
+        cr.minimum_clearance_to_lvt_block_m,
+        0.035,
+        abs_tol=1e-12,
+    )
     assert cr.base_plate_anchor_count == 4
     assert cr.clamp_bolt_count == 2
 
@@ -212,16 +217,37 @@ def test_stage10_5_modern_contact_local_assembly_uses_dedicated_block_and_hood()
         "production_contact_rail_attachment_dowels",
         "production_contact_rail_support_hood",
     }
+    centers = _rail_centers(profile)
+    lvt_outboard = (
+        max(abs(v) for v in centers)
+        + 0.5 * profile.modern_permanent_way.block_base_length_transverse_m
+    )
+
     block = by_type["production_contact_rail_support_block"]
     assert block.properties["separateFromRunningRailSupport"] is True
     assert math.isclose(block.properties["heightM"], 0.040, abs_tol=1e-12)
     assert math.isclose(block.properties["polymerDowelLengthM"], 0.140, abs_tol=1e-12)
+    assert math.isclose(
+        block.properties["lvtBlockOutboardProfileAbsXM"],
+        lvt_outboard,
+        abs_tol=1e-12,
+    )
+    assert math.isclose(
+        block.properties["actualInboardClearanceToLVTBlockM"],
+        0.035,
+        abs_tol=1e-12,
+    )
 
     base_plate = by_type["production_contact_rail_base_plate"]
     assert base_plate.properties["anchorCount"] == 4
     assert math.isclose(
         base_plate.properties["transverseM"],
         0.220,
+        abs_tol=1e-12,
+    )
+    assert math.isclose(
+        base_plate.properties["actualInboardClearanceToLVTBlockM"],
+        0.035,
         abs_tol=1e-12,
     )
 
@@ -247,6 +273,26 @@ def test_stage10_5_modern_contact_local_assembly_uses_dedicated_block_and_hood()
     assert math.isclose(
         bracket.properties["outerEnvelopeProfileAbsXM"],
         0.5 * profile.track.gauge_m + 0.873,
+        abs_tol=1e-12,
+    )
+    assert math.isclose(
+        bracket.properties["lvtBlockOutboardProfileAbsXM"],
+        lvt_outboard,
+        abs_tol=1e-12,
+    )
+    assert math.isclose(
+        bracket.properties["minimumClearanceToLVTBlockM"],
+        0.035,
+        abs_tol=1e-12,
+    )
+    assert math.isclose(
+        bracket.properties["actualLowerLegClearanceToLVTBlockM"],
+        0.035,
+        abs_tol=1e-12,
+    )
+    assert math.isclose(
+        bracket.properties["lowerLegInboardProfileAbsXM"],
+        lvt_outboard + 0.035,
         abs_tol=1e-12,
     )
 
@@ -278,6 +324,7 @@ def test_stage10_5_modern_contact_local_assembly_uses_dedicated_block_and_hood()
     bracket_vertices = bracket.vertices
     profile_x_abs = [abs(x) for x, _y, _z in bracket_vertices]
     core_z = [z for _x, _y, z in bracket_vertices]
+    assert min(profile_x_abs) >= lvt_outboard + 0.035 - 1e-9
     assert math.isclose(max(profile_x_abs), 1.633, abs_tol=1e-6)
     assert math.isclose(
         max(core_z) + profile.datums.lining_axis_z_m,

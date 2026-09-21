@@ -14,6 +14,7 @@ from tunnel_scanner_core import (
     TunnelAssemblyConfig,
     audit_exact_coincident_faces,
     build_chunk_scene_packages,
+    build_stage10_5_rc_modern_chunk_plan,
     compact_exact_collinear_alignment_stations,
     build_modern_contact_support_meshes,
     build_modern_lvt_local_event_meshes,
@@ -23,6 +24,7 @@ from tunnel_scanner_core import (
     build_procedural_nominal_tunnel,
     cable_rack_chainages,
     contact_rail_axis_profile_x,
+    iter_stage10_5_rc_modern_chunk_scene_packages,
     load_stage10_initial_moscow_profile,
     modern_contact_support_chainages,
     modern_lvt_chainages,
@@ -1580,6 +1582,135 @@ def test_stage10_5_periodic_assets_declare_exact_reusable_mesh_prototypes():
     # instances from a small fixed prototype set.
     assert any(count >= 5 for count in instances_by_key.values())
     assert len(local_by_key) < len(objects)
+
+
+def test_stage10_5_rc_chunk_first_matches_materialized_chunk_geometry():
+    profile = load_stage10_initial_moscow_profile(
+        civil_archetype="rc_block_6100_5600"
+    )
+    assembly = TunnelAssemblyConfig(
+        n_rings=6,
+        ring_width_m=1.35,
+        axis_noise_sigma_m=0.0,
+        ring_rotation_strategy=RingRotationStrategy.RINGWISE_GAUSSIAN,
+    )
+    config = ProductionConfig(
+        namespace="stage10-5-rc-chunk-first-equivalence",
+        moscow_profile=profile,
+        moscow_stage="10.5",
+        moscow_civil_topology="kba",
+    )
+    meshing = SurfaceMeshingConfig(max_sagitta_m=0.002)
+    full = build_production_tunnel(
+        assembly_config=assembly,
+        surface_meshing=meshing,
+        include_bolts=True,
+        production_config=config,
+        seed=5812,
+    )
+    plan = build_stage10_5_rc_modern_chunk_plan(
+        chunk_length_m=2.35,
+        boundary_policy=ChunkBoundaryPolicy.EXACT_LENGTH,
+        assembly_config=assembly,
+        surface_meshing=meshing,
+        include_bolts=True,
+        production_config=config,
+        seed=5812,
+    )
+    assert plan.source_build.scene.objects == ()
+    assert plan.source_build.ring_packages == ()
+    assert plan.metadata["productionGeometry"]["chunkFirstGeneration"] is True
+
+    expected = tuple(
+        production_module.iter_chunk_scene_packages(
+            full,
+            chunk_length_m=2.35,
+            boundary_policy=ChunkBoundaryPolicy.EXACT_LENGTH,
+        )
+    )
+    actual = tuple(
+        iter_stage10_5_rc_modern_chunk_scene_packages(plan)
+    )
+    assert len(actual) == len(expected) == len(plan.chunks)
+
+    for got, want in zip(actual, expected):
+        assert got.name == want.name
+        assert got.label_policy == want.label_policy
+        assert got.metadata["productionChunk"] == {
+            **want.metadata["productionChunk"],
+            "chunkFirstGeneration": True,
+        }
+        assert [obj.name for obj in got.objects] == [
+            obj.name for obj in want.objects
+        ]
+        assert [obj.instance_id for obj in got.objects] == [
+            obj.instance_id for obj in want.objects
+        ]
+        for got_obj, want_obj in zip(got.objects, want.objects):
+            assert got_obj.object_type == want_obj.object_type
+            assert got_obj.ring_id == want_obj.ring_id
+            assert got_obj.faces == want_obj.faces
+            assert got_obj.collection_path == want_obj.collection_path
+            assert got_obj.extra_properties == want_obj.extra_properties
+            assert got_obj.vertices == want_obj.vertices
+
+
+def test_stage10_5_rc_chunk_first_localized_geometry_matches_materialized_chunks():
+    profile = load_stage10_initial_moscow_profile(
+        civil_archetype="rc_block_6100_5600"
+    )
+    assembly = TunnelAssemblyConfig(
+        n_rings=4,
+        ring_width_m=1.35,
+        axis_noise_sigma_m=0.0,
+        ring_rotation_strategy=RingRotationStrategy.RINGWISE_GAUSSIAN,
+    )
+    config = ProductionConfig(
+        namespace="stage10-5-rc-chunk-first-localized",
+        moscow_profile=profile,
+        moscow_stage="10.5",
+        moscow_civil_topology="kba",
+    )
+    full = build_production_tunnel(
+        assembly_config=assembly,
+        include_bolts=False,
+        production_config=config,
+        seed=5812,
+    )
+    plan = build_stage10_5_rc_modern_chunk_plan(
+        chunk_length_m=2.0,
+        boundary_policy=ChunkBoundaryPolicy.EXACT_LENGTH,
+        assembly_config=assembly,
+        include_bolts=False,
+        production_config=config,
+        seed=5812,
+    )
+    expected = tuple(
+        production_module.iter_chunk_scene_packages(
+            full,
+            chunk_length_m=2.0,
+            boundary_policy=ChunkBoundaryPolicy.EXACT_LENGTH,
+            localize_coordinates=True,
+        )
+    )
+    actual = tuple(
+        iter_stage10_5_rc_modern_chunk_scene_packages(
+            plan,
+            localize_coordinates=True,
+        )
+    )
+    assert len(actual) == len(expected)
+    for got, want in zip(actual, expected):
+        assert got.metadata["productionChunk"]["chunkWorldOrigin"] == (
+            want.metadata["productionChunk"]["chunkWorldOrigin"]
+        )
+        assert [obj.name for obj in got.objects] == [
+            obj.name for obj in want.objects
+        ]
+        for got_obj, want_obj in zip(got.objects, want.objects):
+            assert got_obj.faces == want_obj.faces
+            assert got_obj.vertices == want_obj.vertices
+            assert got_obj.extra_properties == want_obj.extra_properties
 
 
 def test_stage10_5_modern_objects_have_no_exact_duplicate_faces_and_stable_ids():

@@ -317,6 +317,25 @@ This is the first actual-source vertical/chainage constraint found for the Krasn
 
 S120 supplies matching construction context but not dimensions: the branch passed a powerful quicksand zone, includes a closed-method section, and the photographed section is explicitly described as having been constructed with ground freezing. Metrostroy's own historical album S093 independently corroborates the same construction class on pp.100-101: this Circle-line depot branch is cited as a difficult deep-to-shallow transition where **ground freezing** was used. S120 also says Dorman's 1971 monograph contained a construction description of this section. The Russian State Library record S123 confirms that the complete 271-page Dorman volume is in open access; the exact relevant pages have not yet been extracted, so no Dorman-specific dimensions are asserted yet.
 
+### Adjacent Krasnaya Presnya → TKL branch: actual single-track-tunnel analogue
+
+A contemporary construction source now closes one important **morphology** question for the same depot network, although not for the selected Line-5 branch itself.
+
+S126 (*Метрострой*, 1972 №6) states that, to connect the Krasnaya Presnya depot with the then-new Krasnopresnensky radius, **a single-track tunnel branch** was constructed between «Площадь 1905 года» and «Беговая». The article also states that some sections of the route/depot branches were built by open cut.
+
+S127 is a later photographic record of that actual connection and shows:
+- the crossover/divergence chamber where the service branch joins the «Беговая» — «Улица 1905 года» running line;
+- the branch viewed from the chamber;
+- a hermetic-gate event on the branch.
+
+Engineering implication:
+- an actual Krasnaya-Presnya service connection is independently documented to become an **independent one-track tunnel** after its turnout/chamber;
+- however, S126 does **not** give the tunnel diameter, lining family, chamber dimensions or switch-to-independent-shell distance;
+- therefore this is an actual topology/civil-class analogue, not a dimensional substitute for the 1954 Belorusskaya leg.
+
+Machine archetype:
+`KRASNAYA_PRESNYA_BEGOVAYA_SINGLE_TRACK_BRANCH_1972_ACTUAL_CONSTRAINT`.
+
 ## 5. Turnout geometry contract
 
 ### 5.1 Source-backed constraint

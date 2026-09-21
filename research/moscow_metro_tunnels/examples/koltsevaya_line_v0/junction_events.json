@@ -524,7 +524,8 @@
         "source_backed_constraints": [
           "air gap required in turnout/crossover zone",
           "right-side placement is permitted in turnout/crossover/special zones even though ordinary running-track placement is left in direction of travel",
-          "end-ramp slopes and gap-length limits are defined by S022"
+          "end-ramp slopes and gap-length limits are defined by S022",
+          "legacy VNiR independently requires turnout/crossover gaps per the laying plan with 1:25 ramps replacing brackets at gap ends"
         ],
         "exact_point_tip_to_contact_rail_end_m": null,
         "exact_frog_center_to_contact_rail_end_m": null,
@@ -532,7 +533,9 @@
         "exact_side_change_chainage_m": null,
         "exact_branch_feed_pickup_chainage_m": null,
         "status": "UNKNOWN_SITE_COORDINATES",
-        "rule": "Do not place the gap by a hard-coded offset from point tip or frog until a project/maintenance layout is sourced."
+        "rule": "Do not place the gap by a hard-coded offset from point tip or frog until a project/maintenance layout is sourced.",
+        "legacy_source_id": "S118",
+        "legacy_side_ramp_rule": "with frequent turnouts, some gaps may be filled with rail pieces using side ramps on the track-axis side; exact placement remains laying-plan-specific"
       },
       "historical_cast_iron_chamber_reference": {
         "archetype_id": "CAST_IRON_CROSSOVER_CHAMBER_8750_WITH_6000_ACTIVE_TUNNEL_1987_REFERENCE",
@@ -611,6 +614,23 @@
         "alternate_legacy_R50_construction_constraint": "MOSCOW_METRO_R50_1_9_VNIR_1986_LEGACY_CONSTRAINT",
         "alternate_R50_geometric_fallback": "MOSCOW_METRO_R50_1_9_PROJECT_2891_REFERENCE_FALLBACK",
         "rule": "Civil opening era does not choose the turnout rail/project. R65/2001 is the first PCG service preset for consistency with Stage 10, not an as-built Belorusskaya claim."
+      },
+      "legacy_contact_rail_turnout_contract": {
+        "era": "1986 documented Soviet metro underground-track construction practice",
+        "source_id": "S118",
+        "status": "SOURCE_BACKED_LEGACY_FAMILY_NOT_SITE_LAYING_PLAN",
+        "geometry_rules": [
+          "turnout/crossover contact-rail gaps are not arbitrary: their locations are defined by the project laying plan",
+          "each documented legacy gap end uses a 1:25 ramp instead of a normal support bracket at that end",
+          "contact rail and ramp use two joint bars with four bolts at the installation joint",
+          "when turnouts occur in frequent succession, the norm allows some gaps to be filled by contact-rail pieces with side ramps placed on the track-axis side",
+          "the protective box continues as a dedicated protective-box-over-ramp assembly"
+        ],
+        "exact_laying_plan_gap_chainages_m": null,
+        "exact_point_tip_to_gap_m": null,
+        "exact_frog_to_gap_m": null,
+        "exact_side_ramp_dimensions": null,
+        "use_rule": "For a legacy service preset, instantiate explicit GAP/RAMP/SIDE_RAMP events from a junction-specific laying plan if available. Until then, preserve the event topology but do not hard-code point/frog offsets."
       }
     },
     {

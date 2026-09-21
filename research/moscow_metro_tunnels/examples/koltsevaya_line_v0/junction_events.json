@@ -332,6 +332,20 @@
           "independent_tunnel_outer_diameter_m": 5.64,
           "status": "GENERIC_REFERENCE_NOT_BELORUSSKAYA_AS_BUILT"
         }
+      },
+      "contact_rail_relative_to_turnout_geometry": {
+        "source_backed_constraints": [
+          "air gap required in turnout/crossover zone",
+          "right-side placement is permitted in turnout/crossover/special zones even though ordinary running-track placement is left in direction of travel",
+          "end-ramp slopes and gap-length limits are defined by S022"
+        ],
+        "exact_point_tip_to_contact_rail_end_m": null,
+        "exact_frog_center_to_contact_rail_end_m": null,
+        "exact_guard_rail_zone_exclusion_m": null,
+        "exact_side_change_chainage_m": null,
+        "exact_branch_feed_pickup_chainage_m": null,
+        "status": "UNKNOWN_SITE_COORDINATES",
+        "rule": "Do not place the gap by a hard-coded offset from point tip or frog until a project/maintenance layout is sourced."
       }
     }
   ],

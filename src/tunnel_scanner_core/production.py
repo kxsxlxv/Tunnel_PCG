@@ -3423,21 +3423,47 @@ def build_production_scene(
         )
         objects.extend(stage10_5_water_supports)
 
-    stage10_4_civil_rings: tuple[SceneObject, ...] = ()
-    stage10_4_civil_details: tuple[SceneObject, ...] = ()
+    stage10_4_civil_objects: tuple[SceneObject, ...] = ()
+    stage10_4_civil_ring_count = 0
     if (
         config.moscow_profile is not None
         and config.moscow_stage in {"10.4", "10.5"}
     ):
-        stage10_4_civil_rings = _build_stage10_4_civil_shell_objects(
-            profile=config.moscow_profile,
-            namespace=config.namespace,
-            assembly=source_build.assembly,
-            stations=stations,
-            label_policy=source_scene.label_policy,
+        civil_ranges = civil_ring_ranges(
+            source_build.assembly.length_by_chainage_m,
+            ring_pitch_m=config.moscow_profile.ring_pitch_m,
         )
-        stage10_4_civil_details = ()
-        objects.extend(stage10_4_civil_rings)
+        stage10_4_civil_ring_count = len(civil_ranges)
+        if (
+            config.moscow_profile.civil_family
+            == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+        ):
+            master_seed = int(
+                source_scene.metadata.get("proceduralBuild", {}).get(
+                    "masterSeed",
+                    5812,
+                )
+            )
+            stage10_4_civil_objects = (
+                _build_stage10_4_rc_stage9_architecture_objects(
+                    profile=config.moscow_profile,
+                    topology=config.resolved_moscow_civil_topology,
+                    namespace=config.namespace,
+                    assembly=source_build.assembly,
+                    stations=stations,
+                    include_bolts=config.moscow_civil_bolts_enabled,
+                    seed=master_seed,
+                )
+            )
+        else:
+            stage10_4_civil_objects = _build_stage10_4_civil_shell_objects(
+                profile=config.moscow_profile,
+                namespace=config.namespace,
+                assembly=source_build.assembly,
+                stations=stations,
+                label_policy=source_scene.label_policy,
+            )
+        objects.extend(stage10_4_civil_objects)
 
     metadata = dict(source_scene.metadata)
     metadata.update(
@@ -3604,7 +3630,10 @@ def build_production_scene(
                 ),
                 "civilShellStatus": (
                     (
-                        "implemented_stage10_4_segmented_rc_10block_shell"
+                        (
+                            "implemented_stage10_4_rc_stage9_architecture_"
+                            f"{config.resolved_moscow_civil_topology}"
+                        )
                         if config.moscow_profile.civil_family
                         == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
                         else (
@@ -3817,9 +3846,28 @@ def build_production_scene(
                 "stage9CivilGeometryRemoved": (
                     config.moscow_stage in {"10.4", "10.5"}
                 ),
+                "moscowCivilTopology": (
+                    config.resolved_moscow_civil_topology
+                    if config.moscow_stage in {"10.4", "10.5"}
+                    else None
+                ),
+                "moscowCivilTopologyEvidenceStatus": (
+                    (
+                        "S026_source_backed_10_identical_blocks"
+                        if config.resolved_moscow_civil_topology == "ten_equal"
+                        else (
+                            "user_reported_Moscow_photo_reference_"
+                            "pending_research_pinpoint"
+                            if config.resolved_moscow_civil_topology == "kba"
+                            else "cast_iron_detail_deferred"
+                        )
+                    )
+                    if config.moscow_stage in {"10.4", "10.5"}
+                    else None
+                ),
                 "moscowCivilCompositeDetailStatus": (
                     (
-                        "implemented_rc_10block_geometry_stage9_like"
+                        "stage9_segment_joint_bolt_architecture_transferred"
                         if config.moscow_profile.civil_family
                         == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
                         else "cast_iron_detail_deferred_pending_research"
@@ -3827,21 +3875,58 @@ def build_production_scene(
                     if config.moscow_stage in {"10.4", "10.5"}
                     else "deferred_to_stage10_4"
                 ),
-                "moscowCivilDetailRibObjectCount": 0,
-                "moscowCivilBoltObjectCount": 0,
-                "moscowCivilBoltHeadCount": 0,
-                "moscowCivilBoltsEnabled": False,
-                "moscowCivilRenderedBlockCount": (
-                    10 * len(stage10_4_civil_rings)
+                "moscowCivilStage9ArchitectureTransferred": (
+                    config.moscow_stage in {"10.4", "10.5"}
+                    and config.moscow_profile.civil_family
+                    == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                ),
+                "moscowCivilSegmentObjectCount": sum(
+                    1
+                    for obj in stage10_4_civil_objects
+                    if obj.object_type == "production_moscow_civil_segment"
+                ),
+                "moscowCivilPrescribedRadialJointCount": sum(
+                    1
+                    for obj in stage10_4_civil_objects
+                    if obj.object_type
+                    == "production_moscow_civil_prescribed_radial_joint"
+                ),
+                "moscowCivilPrescribedCircumferentialJointCount": sum(
+                    1
+                    for obj in stage10_4_civil_objects
+                    if obj.object_type
+                    == "production_moscow_civil_prescribed_circumferential_joint"
+                ),
+                "moscowCivilBoltPocketCount": sum(
+                    1
+                    for obj in stage10_4_civil_objects
+                    if obj.object_type == "bolt_pocket_cutter"
+                ),
+                "moscowCivilBoltHeadCount": sum(
+                    1
+                    for obj in stage10_4_civil_objects
+                    if obj.object_type == "bolt_head"
+                ),
+                "moscowCivilBoltsEnabled": (
+                    config.moscow_civil_bolts_enabled
                     if (
                         config.moscow_stage in {"10.4", "10.5"}
                         and config.moscow_profile.civil_family
                         == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
                     )
-                    else 0
+                    else False
                 ),
-                "moscowCivilRCVisualSeamWidthM": (
-                    0.008
+                "moscowCivilLegacyBoltLayout": (
+                    BoltLayoutType.TYPE1_CENTERED.value
+                    if (
+                        config.moscow_stage in {"10.4", "10.5"}
+                        and config.moscow_profile.civil_family
+                        == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                    )
+                    else None
+                ),
+                "moscowCivilLegacyBoltBooleanOverlapM": (
+                    0.005
                     if (
                         config.moscow_stage in {"10.4", "10.5"}
                         and config.moscow_profile.civil_family
@@ -3849,6 +3934,26 @@ def build_production_scene(
                     )
                     else 0.0
                 ),
+                "moscowCivilLegacyFastenerVisualTransfer": (
+                    config.moscow_stage in {"10.4", "10.5"}
+                    and config.moscow_profile.civil_family
+                    == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                ),
+                "moscowCivilRCPermanentBoltedBlockJointsSource": (
+                    False
+                    if (
+                        config.moscow_stage in {"10.4", "10.5"}
+                        and config.moscow_profile.civil_family
+                        == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                    )
+                    else None
+                ),
+                "moscowCivilRenderedBlockCount": sum(
+                    1
+                    for obj in stage10_4_civil_objects
+                    if obj.object_type == "production_moscow_civil_segment"
+                ),
+                "moscowCivilRCVisualSeamWidthM": 0.0,
                 "moscowCivilRCWorkingRebarDiameterM": (
                     0.016
                     if (
@@ -3896,16 +4001,19 @@ def build_production_scene(
                 ),
                 "moscowCivilDetailAccuracyBoundary": (
                     (
-                        "RC: principal radii, 1m pitch, ten identical blocks, "
-                        "16mm working reinforcement and 22mm erection pins are "
-                        "source-backed; visual seam width and exact edge/pin-hole "
-                        "CAD remain unresolved. Cast iron: detail deferred."
+                        "Moscow RC principal radii and ten-equal topology are "
+                        "source-backed by S026. K/B/A topology is an explicit "
+                        "user-selected photo-reference alternative pending a "
+                        "registered source. Segment/joint/bolt pocket/head "
+                        "geometry is transferred from the old Stage-9 "
+                        "architecture and is not claimed as Moscow historical "
+                        "fastener geometry."
                     )
                     if config.moscow_stage in {"10.4", "10.5"}
                     else None
                 ),
-                                "moscowCivilRingCount": (
-                    len(stage10_4_civil_rings)
+                "moscowCivilRingCount": (
+                    stage10_4_civil_ring_count
                     if config.moscow_stage in {"10.4", "10.5"}
                     else 0
                 ),

@@ -126,6 +126,17 @@ Graph workflow:
 
 `osm_track_stitch.py` still rejects graph degree >2. The separate `osm_track_graph.py` is the branch-preserving path for turnout/crossover research.
 
+### Depot-branch edge boundary
+
+The Krasnaya Presnya connection contract now distinguishes:
+- `BRANCH_KRP_BELORUSSKAYA_LEG` — single-track Line-5 depot-connection leg;
+- `BRANCH_KRP_KRASNOPRESNENSKAYA_LEG` — separate single-track Line-5 depot-connection leg;
+- a farther depot-side **local two-track section** and switch system visible in S120.
+
+For the first geometry fixture, follow only `BRANCH_KRP_BELORUSSKAYA_LEG` and terminate at an `END_NODE` before the unresolved downstream system. Track count is source-backed; civil shell cross-section, independent-round-tunnel start and Z remain unresolved.
+
+The Krasnopresnenskaya leg has a separate archival S121 crown-profile constraint. It is intentionally not reused for the Belorusskaya leg.
+
 ### First junction
 
 `JUNCTION_KOL5_BELORUSSKAYA_DEPOT_WEST`:

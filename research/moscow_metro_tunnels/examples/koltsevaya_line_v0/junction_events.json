@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "research_date": "2026-09-21",
+  "research_date": "2026-09-22",
   "purpose": "Event contract for the first real Koltsevaya junction/depot-connection implementation. Actual-site constraints are separated from generic metro geometry references.",
   "events": [
     {
@@ -1229,5 +1229,111 @@
       "DOSTOEVSKAYA_SWITCHOVER_CONSTRUCTION_2026"
     ]
   },
-  "civil_archetypes_file": "../../data/moscow_junction_civil_archetypes.json"
+  "civil_archetypes_file": "../../data/moscow_junction_civil_archetypes.json",
+  "geometry_agent_handoff": {
+    "selected_event_id": "JUNCTION_KOL5_BELORUSSKAYA_DEPOT_WEST",
+    "readiness": {
+      "A_two_independent_main_tracks": {
+        "status": "ROUTE_IDENTITIES_READY_PHYSICAL_WAY_GEOMETRY_PENDING",
+        "track_A": "I / inner / clockwise / OSM route 300607",
+        "track_B": "II / outer / counterclockwise / OSM route 1462011",
+        "rule": "Extract each physical centerline independently. Never create one by offsetting the other.",
+        "additional_local_evidence": "S054 gives independent right/left project-chainage ranges in the Dostoevskaya zone, but right/left -> A/B mapping is unresolved."
+      },
+      "B_real_branch_location": {
+        "status": "READY_TOPOLOGY_GEOMETRY_COORDINATES_PENDING",
+        "fact": "At Belorusskaya on the Krasnopresnenskaya side, Track B/II continues straight and the depot/turnback route diverges left.",
+        "branch_edge_id": "BRANCH_KRP_BELORUSSKAYA_LEG",
+        "branch_track_count": 1,
+        "primary_topology_source_id": "S134",
+        "actual_chamber_visual_source_id": "S093",
+        "exact_switch_xy": null,
+        "exact_switch_chainage": null,
+        "z_ugr_m": null
+      },
+      "C_turnout_mesh": {
+        "status": "IMPLEMENTABLE_AS_EXPLICIT_METRO_SPECIFIC_FALLBACK_NOT_AS_BUILT",
+        "exact_installed_project": null,
+        "fallback_archetype_id": "MOSCOW_METRO_R65_1_9_PROJECT_2976_REFERENCE_FALLBACK",
+        "required_tags": {
+          "fallback": true,
+          "installed_model_unconfirmed": true
+        },
+        "sources": [
+          "S094",
+          "S128",
+          "S129",
+          "S131",
+          "S132"
+        ],
+        "usable_geometry": [
+          "31.035 m overall turnout",
+          "front joint -> point tip 2.765 m",
+          "point tip -> turnout center 12.458 m",
+          "turnout center -> mathematical frog center 13.722 m",
+          "R300 m point curve / R200.060 m turnout curve",
+          "8.300 m point component / 8.298 m longitudinal projection",
+          "4.590 m assembled frog component",
+          "Table-10 gauge control sections",
+          "Table-16 turnout-curve working-face ordinates through x=14 m",
+          "68-bearer A4 dimensional set",
+          "ballasted turnout foundation and no-poduklonka near-era rule"
+        ],
+        "still_unknown": [
+          "exact installed Belorusskaya turnout project",
+          "full point opening curve/pivot hardware",
+          "exact frog nose and wing-rail CAD",
+          "frog 4.590 m front/rear split around mathematical center",
+          "guard-rail exact chainages/flangeway CAD",
+          "complete bearer longitudinal order and skew",
+          "installed baseplate/fastener package",
+          "installed point-machine/rods/detectors",
+          "actual site Z"
+        ]
+      },
+      "D_civil_shell_transition": {
+        "status": "ACTUAL_SITE_CLASS_READY_DIMENSIONS_UNKNOWN_GENERIC_FALLBACK_AVAILABLE",
+        "actual_archetype_id": "BELORUSSKAYA_CAST_IRON_DEPOT_JUNCTION_ACTUAL_CONSTRAINT",
+        "actual_known": [
+          "cast-iron tubing chamber",
+          "monolithic reinforced-concrete end wall",
+          "left single-track depot branch leg from the Belorusskaya crossover system"
+        ],
+        "actual_unknown": [
+          "chamber length/width/height",
+          "tubing ring layout",
+          "track-axis offsets",
+          "transition length",
+          "independent round-branch-shell start",
+          "branch diameter/lining",
+          "relative Z"
+        ],
+        "generic_fallback_archetype_id": "METRO_STEPWISE_BRANCH_CHAMBER_TUBING_2001_REFERENCE",
+        "generic_fallback_rule": "May drive fallback transition only with actual_site_match=false/fallback=true. Chamber 6 is common-wall two-vault; fully independent tunnels start only after intertrack >6 m, exact chainage unknown.",
+        "selected_actual_branch_cut_rule": "Terminate the source-backed Belorusskaya single-track branch leg before the unresolved downstream depot-side multi-edge/two-track system."
+      }
+    },
+    "contact_rail": {
+      "selected_service_rule": "LEGACY_2005",
+      "dimensioned_reference": "S128 Appendix 6 Fig.10, R65 1/9, turnout-center-referenced ramp layout",
+      "actual_belorusskaya_laying_plan": null,
+      "rule": "Generate explicit ramp/gap/sectioning events; do not sweep ordinary Stage-10 contact rail through the turnout."
+    },
+    "trackbed": {
+      "selected_service_rule": "S128 near-2001 turnout foundation",
+      "foundation": "ballast on turnout bearers; ordinary running-track concrete stops for the turnout event",
+      "track_concrete_exclusion_each_side_m": [
+        5,
+        25
+      ],
+      "ballast_thickness_under_each_rail_min_m": 0.24
+    },
+    "branch_length_constraint": {
+      "value_m": 256,
+      "applies_to": "one of the two Line-5 depot branches only",
+      "named_leg": null,
+      "source_id": "S135",
+      "use_rule": "Do not use as selected Belorusskaya branch length until independently assigned."
+    }
+  }
 }

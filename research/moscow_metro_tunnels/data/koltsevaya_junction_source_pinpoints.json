@@ -1,0 +1,216 @@
+{
+  "schema_version": "1.0",
+  "research_date": "2026-09-21",
+  "purpose": "Exact locators for Koltsevaya topology/junction numerical and structural claims used by Stage 11/22 contracts.",
+  "sources": [
+    {
+      "id": "S058",
+      "title": "Фролов Ю.С., Голицынский Д.М., Ледяев А.П. Метрополитены, 2001",
+      "url": "https://ru.djvu.online/file/hXOquNRuMqgHC",
+      "locators": [
+        {
+          "printed_page": 146,
+          "rendered_scan_page": 147,
+          "section": "text immediately before Fig.4.33",
+          "supports": [
+            "turnout tracks consist of straight/curved sections and turnouts",
+            "no transition curves in the described low-speed turnout/crossover zone",
+            "no outer-rail superelevation in that zone",
+            "ordinary turnouts on main and turnback tracks use frog mark 1/9",
+            "separate single-track main tunnels require a special connecting tunnel / sequential widening chambers"
+          ]
+        },
+        {
+          "printed_page": 147,
+          "rendered_scan_page": 148,
+          "figure": "4.33",
+          "supports": [
+            "three generic closed-method crossover/divergence layout classes",
+            "single-track branch layout uses numbered sequential chambers"
+          ]
+        },
+        {
+          "printed_page": 148,
+          "rendered_scan_page": 149,
+          "figure": "4.34",
+          "supports": [
+            "chamber 1 length 5.0 m",
+            "chamber 2 length 10.0 m and ID 5.56 m",
+            "chamber 2 maximum inter-track parameter M1 0.70 m",
+            "chamber 3 length 15.0 m and ID 7.20 m",
+            "chamber 4 length 11.25 m and ID 7.70 m",
+            "chamber 5 length 9.75 m and ID 9.00 m",
+            "chamber 6 length 15.0 m",
+            "separate circular shells shown with ID 5.14 m and OD 5.64 m"
+          ]
+        },
+        {
+          "printed_page": 149,
+          "rendered_scan_page": 150,
+          "figure": "4.35 and adjacent text",
+          "supports": [
+            "M2 2.22 m at chamber 3",
+            "M3 3.36 m at chamber 4",
+            "M4 4.46 m at chamber 5",
+            "large circular chamber 5 can be replaced by a more economical elongated/elliptical form",
+            "elliptical tubing solution can use additional adjacent/key tubings and wedge spacers"
+          ]
+        }
+      ],
+      "confidence": "A_for_printed_dimensions_and_text"
+    },
+    {
+      "id": "S022",
+      "title": "СП 120.13330.2022 Метрополитены, consolidated current text",
+      "url": "https://base.garant.ru/406472751/",
+      "locators": [
+        {
+          "clause": "5.7.1.16",
+          "supports": [
+            "turnout must match rail type",
+            "ordinary turnout frog 1:9",
+            "crossover frog 2:9"
+          ]
+        },
+        {
+          "clause": "5.7.1.17",
+          "supports": [
+            "anti-run-over guard timbers before specified facing points and station turnout/crossover locations"
+          ]
+        },
+        {
+          "clause": "5.7.2.2",
+          "supports": [
+            "contact rail normally left in direction of travel; right-side placement permitted in turnout/crossover/special zones"
+          ]
+        },
+        {
+          "clause": "5.7.2.4",
+          "supports": [
+            "contact-rail support spacing 2.2-2.75 m for applicable turnout/crossover elastic-block construction"
+          ]
+        },
+        {
+          "clause": "5.7.2.7",
+          "supports": [
+            "air gaps at turnouts/crossovers and sectioning locations"
+          ]
+        },
+        {
+          "clause": "5.7.2.8",
+          "supports": [
+            "main-track receiving ramp 1:30",
+            "main-track trailing ramp 1:25",
+            "connecting-track ramp 1:25",
+            "bridged gap <=10 m",
+            "non-bridged gap >=14 m",
+            "equipment clearance >=0.8 m from metal ramp end"
+          ]
+        },
+        {
+          "clause": "5.7.2.9",
+          "supports": [
+            "contact rail with end ramps >=18.7 m normally and >=12.5 m in constrained conditions"
+          ]
+        },
+        {
+          "clause": "5.10.4.2",
+          "supports": [
+            "traction-network sectioning rule between main and station/connecting tracks"
+          ]
+        },
+        {
+          "clause": "5.10.4.10",
+          "supports": [
+            "depot connecting-track contact rail normally powered from corresponding main-track rail; exact local apparatus is project-specific"
+          ]
+        }
+      ],
+      "confidence": "A_current_normative"
+    },
+    {
+      "id": "S093",
+      "title": "Метрострой — Свет и тень, 2017 historical photo album",
+      "url": "https://www.metrostroy.ru/image/presentation-booklets/pdf/2017%20%D0%9C%D0%B5%D1%82%D1%80%D0%BE%D1%81%D1%82%D1%80%D0%BE%D0%B9%20-%20%D0%A1%D0%B2%D0%B5%D1%82%20%D0%B8%20%D1%82%D0%B5%D0%BD%D1%8C%20VIP.pdf",
+      "locator": {
+        "pdf_pages": "78-79",
+        "caption": "Белорусская (кольцевая) tunnel node",
+        "supports": [
+          "II main track goes straight toward Krasnopresnenskaya",
+          "turnback siding and Krasnaya Presnya depot branch go left",
+          "crossover/divergence chamber is built from cast-iron tubings",
+          "end wall is monolithic reinforced concrete",
+          "original pasted waterproofing later replaced by metal isolation"
+        ]
+      },
+      "confidence": "A/B_actual_site"
+    },
+    {
+      "id": "S094",
+      "title": "Murom Switch Plant product catalogue — metro R65 1:9 turnout project 2976.00.000",
+      "url": "https://oaomsz.ru/wp-content/uploads/2023/04/kat_prod.pdf",
+      "locator": {
+        "catalogue_page": 139,
+        "project": "2976.00.000",
+        "drawing": "geometric dimensions and laying/bearer diagram",
+        "supports": [
+          "R65; gauge 1520 mm; frog 1:9",
+          "overall length 31035 mm",
+          "point tip to mathematical frog center 26180 mm",
+          "point tip to turnout center 12458 mm",
+          "turnout center to mathematical frog center 13722 mm",
+          "mathematical frog center to rear joint 2090 mm",
+          "point initial radius R300000",
+          "turnout curve R200060",
+          "initial point angle beta_n 0°27′19.57″",
+          "wooden switch-bearer length inventory used in the fallback contract"
+        ]
+      },
+      "confidence": "A/B_product_geometry_not_installed_site_proof"
+    },
+    {
+      "id": "S095",
+      "title": "R65 1:9 metro turnout project 2976.00.000 product technical page",
+      "url": "https://atizsps.ru/catalog/strelochnoe-oborudovanie/msz/strelochnyy-perevod-tipa-r65-marki-1-9-proekt-2976-00-000/",
+      "locator": {
+        "section": "Технические характеристики / комплектность",
+        "supports": [
+          "overall length 31035 mm",
+          "radii 300000 and 200060 mm",
+          "product capability 100 km/h straight and 40 km/h diverging",
+          "stock/frame rail and point assemblies",
+          "assembled frog",
+          "rails with independent guard rails"
+        ]
+      },
+      "confidence": "B/C_secondary_product_page"
+    },
+    {
+      "id": "S084",
+      "title": "Moscow Transport — Krasnaya Presnya depot operations",
+      "url": "https://transport.mos.ru/mostrans/all_news/102930",
+      "locator": {
+        "section": "paragraph describing trains leaving depot for Koltsevaya",
+        "supports": [
+          "first track movement is clockwise",
+          "second track movement is counterclockwise",
+          "depot output serves both directions"
+        ]
+      },
+      "confidence": "A/B_official"
+    },
+    {
+      "id": "S086",
+      "title": "Белорусская, Кольцевая — track development",
+      "url": "https://www.nashtransport.ru/russia/moscow/metro/lines/line_5/belorusskaya/",
+      "locator": {
+        "section": "Путевое развитие / station technical data",
+        "supports": [
+          "three-switch turnback siding on Krasnopresnenskaya side continuing to Krasnaya Presnya depot connection",
+          "station reference PK132+72.3; this is station context, not switch chainage"
+        ]
+      },
+      "confidence": "B/C"
+    }
+  ]
+}

@@ -153,9 +153,11 @@ def test_stage10_4_production_replaces_stage9_shell_and_walkway_and_closes_gap_c
     meta = build.scene.metadata["productionGeometry"]
     assert meta["domainStage"] == "10.4"
     assert meta["stage9CivilGeometryRemoved"] is True
-    assert meta["civilShellStatus"] == "implemented_stage10_4_smooth_concentric_shell"
+    assert meta["civilShellStatus"] == (
+        "implemented_stage10_4_cast_iron_smooth_envelope_detail_deferred"
+    )
     assert meta["moscowCivilCompositeDetailStatus"] == (
-        "implemented_source_sized_visual_joint_rib_bolt_overlay"
+        "cast_iron_detail_deferred_pending_research"
     )
     assert meta["walkwayStatus"] == "implemented_stage10_4_source_backed_geometry"
     assert meta["transitionalCivilGapStatus"] == "closed_by_stage10_4_moscow_shell"
@@ -181,32 +183,25 @@ def test_stage10_4_production_replaces_stage9_shell_and_walkway_and_closes_gap_c
     assert math.isclose(meta["moscowCivilExtradosRadiusM"], 2.75, abs_tol=1e-12)
     assert civil[-1].custom_properties["partialFinalRing"] is True
 
-    details = build.scene.objects_of_type(
+    assert not build.scene.objects_of_type(
         "production_moscow_civil_detail_ribs"
     )
-    bolt_details = build.scene.objects_of_type(
+    assert not build.scene.objects_of_type(
         "production_moscow_civil_bolt_heads"
     )
-    assert len(details) == len(civil)
-    assert len(bolt_details) == len(civil)
-    assert meta["moscowCivilDetailRibObjectCount"] == len(civil)
-    assert meta["moscowCivilBoltObjectCount"] == len(civil)
-    assert meta["moscowCivilBoltHeadCount"] == 22 * len(civil)
-    assert meta["moscowCivilBoltsEnabled"] is True
-    for detail in details:
-        p = detail.custom_properties
-        assert p["visualSegmentCount"] == 11
-        assert p["visualSegmentCountIsLOD0"] is False
-        assert p["detailMode"] == "cast_iron_flange_and_stiffener_overlay"
-        assert math.isclose(p["flangeWidthM"], 0.025, abs_tol=1e-12)
-        assert p["circumferentialStiffenerIncluded"] is True
-    for bolts in bolt_details:
-        p = bolts.custom_properties
-        assert p["boltHeadCount"] == 22
-        assert p["boltRowsPerLongitudinalJoint"] == 2
-        assert math.isclose(p["nominalBoltDiameterM"], 0.027, abs_tol=1e-12)
-        assert math.isclose(p["nominalBoltLengthM"], 0.120, abs_tol=1e-12)
-        assert p["exactBoltHeadCADResolved"] is False
+    assert meta["moscowCivilDetailRibObjectCount"] == 0
+    assert meta["moscowCivilBoltObjectCount"] == 0
+    assert meta["moscowCivilBoltHeadCount"] == 0
+    assert meta["moscowCivilBoltsEnabled"] is False
+    assert meta["moscowCivilRenderedBlockCount"] == 0
+    for ring in civil:
+        p = ring.custom_properties
+        assert p["civilRenderMode"] == (
+            "source_sized_smooth_cast_iron_envelope_detail_deferred"
+        )
+        assert p["coarseSegmentCountReference"] == 11
+        assert p["coarseSegmentCountIsGeometry"] is False
+        assert p["stage9LikeCurvedSegmentConstruction"] is False
 
     concrete = build.scene.objects_of_type("production_track_concrete")[0]
     assert concrete.custom_properties["walkwayShoulderPartitioned"] is True
@@ -238,7 +233,9 @@ def test_stage10_4_has_no_exact_duplicate_production_faces_and_civil_ids_survive
         object_filter=lambda obj: obj.object_type.startswith("production_"),
     )
     assert audit.duplicate_group_count == 0
-    assert build.scene.objects_of_type("production_moscow_civil_detail_ribs")
+    assert not build.scene.objects_of_type(
+        "production_moscow_civil_detail_ribs"
+    )
     assert not build.scene.objects_of_type(
         "production_moscow_civil_bolt_heads"
     )
@@ -248,11 +245,9 @@ def test_stage10_4_has_no_exact_duplicate_production_faces_and_civil_ids_survive
 
     source = {
         obj.custom_properties["persistentKey"]: obj.instance_id
-        for obj in build.scene.objects
-        if obj.object_type in {
-            "production_moscow_civil_shell_ring",
-            "production_moscow_civil_detail_ribs",
-        }
+        for obj in build.scene.objects_of_type(
+            "production_moscow_civil_shell_ring"
+        )
     }
     for chunk_m in (1.3, 2.2):
         packages = build_chunk_scene_packages(
@@ -264,10 +259,7 @@ def test_stage10_4_has_no_exact_duplicate_production_faces_and_civil_ids_survive
         occurrences = []
         for package in packages:
             for obj in package.objects:
-                if obj.object_type not in {
-                    "production_moscow_civil_shell_ring",
-                    "production_moscow_civil_detail_ribs",
-                }:
+                if obj.object_type != "production_moscow_civil_shell_ring":
                     continue
                 key = obj.custom_properties["persistentKey"]
                 occurrences.append(key)

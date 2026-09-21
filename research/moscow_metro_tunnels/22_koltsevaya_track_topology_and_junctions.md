@@ -577,7 +577,7 @@ Therefore contact rail is an **event geometry**:
 
 ### Service-era contact-rail constraint closest to the 2001 preset
 
-S126, the 2005 `Инструкция по текущему содержанию пути и контактного рельса метрополитенов`, is the closest located operational instruction to the selected `LEGACY_R65_TIMBER_KD65_2001_REFERENCE` preset. It is kept separate from both the 1986 construction norm S118 and the current SP S022.
+S128, the 2005 `Инструкция по текущему содержанию пути и контактного рельса метрополитенов`, is the closest located operational instruction to the selected `LEGACY_R65_TIMBER_KD65_2001_REFERENCE` preset. It is kept separate from both the 1986 construction norm S118 and the current SP S022.
 
 For turnout/crossover zones it gives:
 
@@ -614,7 +614,7 @@ Therefore the following **must not** be extended blindly from periodic Stage-10 
 
 ### 8.1 Near-service-era turnout foundation: 2005 instruction
 
-S126 materially changes the first PCG turnout mesh relative to the ordinary Stage-10 running-tunnel preset:
+S128 materially changes the first PCG turnout mesh relative to the ordinary Stage-10 running-tunnel preset:
 
 - on turnouts/crossovers the rails are laid **without rail inclination / poduklonka** (§2.4.2);
 - wooden turnout/crossover bearers are governed by GOST 8816 (§2.9.1);
@@ -629,7 +629,7 @@ S126 materially changes the first PCG turnout mesh relative to the ordinary Stag
 
 This is operationally closer to the 2001 service preset than the 1986 VNiR family. For the first legacy R65 turnout event it has higher service-era relevance than continuing the Stage-10 timber-sleeper-in-track-concrete section through the switch.
 
-S127 (GOST 8816-2003) independently closes the bearer **cross-section and aggregate set** for the R65/R50/R43 1:9 A4 family:
+S129 (GOST 8816-2003) independently closes the bearer **cross-section and aggregate set** for the R65/R50/R43 1:9 A4 family:
 
 - Type II sawn bearer nominal thickness **160 mm**;
 - widened top face **220 mm**; normal top face **175 mm**;
@@ -766,7 +766,7 @@ Use current child route 300607 for the Inner candidate chain and 1462011 for the
 
 **Partially answered / constrained, with a usable tagged fallback mesh contract.**
 
-For an ordinary metro turnout the **1:9** frog is source-backed. Project 2976 gives the R65/1520 first-mesh fallback: 31.035 m overall length, R300 m point curve, R200.060 m turnout curve, point-tip → turnout center 12.458 m, turnout center → mathematical frog center 13.722 m, and the stock-rail/point/frog/independent-guard-rail component topology. S126 adds no-poduklonka, ballasted turnout foundation and frog/guard-rail clearance constraints; S127 closes the 68-bearer dimensional set.
+For an ordinary metro turnout the **1:9** frog is source-backed. Project 2976 gives the R65/1520 first-mesh fallback: 31.035 m overall length, R300 m point curve, R200.060 m turnout curve, point-tip → turnout center 12.458 m, turnout center → mathematical frog center 13.722 m, and the stock-rail/point/frog/independent-guard-rail component topology. S128 adds no-poduklonka, ballasted turnout foundation and frog/guard-rail clearance constraints; S129 closes the 68-bearer dimensional set.
 
 Exact installed project, exact point-root/opening profile, full frog/wing-rail CAD, complete bearer longitudinal order, point-machine rods and actual site Z remain unresolved. Project 2976 therefore remains `installed_model_unconfirmed=true`, not an as-built Belorusskaya claim.
 

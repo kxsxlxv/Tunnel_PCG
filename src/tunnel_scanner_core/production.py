@@ -18,7 +18,7 @@ from dataclasses import dataclass, field, replace
 from enum import Enum
 import hashlib
 import math
-from typing import Any, Callable, Mapping, Sequence
+from typing import Any, Callable, Iterator, Mapping, Sequence
 
 import numpy as np
 
@@ -4758,9 +4758,14 @@ def _translate_scene_object(
     collection_prefix: tuple[str, ...] = (),
 ) -> SceneObject:
     props = {**dict(obj.extra_properties), **dict(extra_properties or {})}
+    vertices = (
+        obj.vertices
+        if dx == 0.0 and dy == 0.0 and dz == 0.0
+        else tuple((x + dx, y + dy, z + dz) for x, y, z in obj.vertices)
+    )
     return SceneObject(
         name=obj.name,
-        vertices=tuple((x + dx, y + dy, z + dz) for x, y, z in obj.vertices),
+        vertices=vertices,
         faces=obj.faces,
         object_type=obj.object_type,
         ring_id=obj.ring_id,
@@ -4802,13 +4807,38 @@ def _event_chainage_belongs_to_chunk(
     return c < chunk.end_chainage_m - tolerance_m
 
 
-def build_chunk_scene_packages(
+def _event_chainage_chunk_index(
+    chainage_m: float,
+    chunks: Sequence[ChunkDescriptor],
+    *,
+    total_length_m: float,
+) -> int | None:
+    """Locate one event chunk in O(log chunk_count), preserving boundary rules."""
+    lo = 0
+    hi = len(chunks)
+    while lo < hi:
+        mid = (lo + hi) // 2
+        chunk = chunks[mid]
+        if _event_chainage_belongs_to_chunk(
+            chainage_m,
+            chunk,
+            total_length_m=total_length_m,
+        ):
+            return mid
+        if chainage_m < chunk.start_chainage_m:
+            hi = mid
+        else:
+            lo = mid + 1
+    return None
+
+
+def iter_chunk_scene_packages(
     production: ProductionTunnelBuild,
     *,
     chunk_length_m: float,
     boundary_policy: ChunkBoundaryPolicy | str = ChunkBoundaryPolicy.RING_ALIGNED,
     localize_coordinates: bool = False,
-) -> tuple[ScenePackage, ...]:
+) -> Iterator[ScenePackage]:
     policy = ChunkBoundaryPolicy(boundary_policy)
     chunks = plan_chunks(
         production.assembly,
@@ -4833,9 +4863,34 @@ def build_chunk_scene_packages(
         if "eventChainageM" not in obj.extra_properties
     )
 
-    packages: list[ScenePackage] = []
+    ring_chunk_by_id: dict[int, int] = {}
     for chunk in chunks:
-        ring_id_set = set(chunk.ring_ids)
+        for ring_id in chunk.ring_ids:
+            if ring_id in ring_chunk_by_id:
+                raise AssertionError("ring assigned to multiple production chunks")
+            ring_chunk_by_id[ring_id] = chunk.chunk_id
+
+    ring_objects_by_chunk: list[list[SceneObject]] = [
+        [] for _ in chunks
+    ]
+    for obj in ring_objects:
+        chunk_id = ring_chunk_by_id.get(obj.ring_id)
+        if chunk_id is not None:
+            ring_objects_by_chunk[chunk_id].append(obj)
+
+    periodic_objects_by_chunk: list[list[SceneObject]] = [
+        [] for _ in chunks
+    ]
+    for obj in periodic_objects:
+        chunk_id = _event_chainage_chunk_index(
+            float(obj.extra_properties["eventChainageM"]),
+            chunks,
+            total_length_m=total,
+        )
+        if chunk_id is not None:
+            periodic_objects_by_chunk[chunk_id].append(obj)
+
+    for chunk in chunks:
         chunk_prefix = ("Chunks", f"Chunk_{chunk.chunk_id:05d}")
         objects: list[SceneObject] = [
             _translate_scene_object(
@@ -4850,8 +4905,7 @@ def build_chunk_scene_packages(
                     "chunkEndChainageM": chunk.end_chainage_m,
                 },
             )
-            for obj in ring_objects
-            if obj.ring_id in ring_id_set
+            for obj in ring_objects_by_chunk[chunk.chunk_id]
         ]
         objects.extend(
             _translate_scene_object(
@@ -4867,12 +4921,7 @@ def build_chunk_scene_packages(
                     "chunkAssignmentRule": "event_chainage",
                 },
             )
-            for obj in periodic_objects
-            if _event_chainage_belongs_to_chunk(
-                float(obj.extra_properties["eventChainageM"]),
-                chunk,
-                total_length_m=total,
-            )
+            for obj in periodic_objects_by_chunk[chunk.chunk_id]
         )
         clipped = clipped_alignment_stations(
             production.alignment_stations,
@@ -4960,8 +5009,7 @@ def build_chunk_scene_packages(
                 for obj in objects
             ]
 
-        packages.append(
-            ScenePackage(
+        yield ScenePackage(
                 name=f"{production.scene.name}_chunk_{chunk.chunk_id:05d}",
                 mode=SceneMode.MULTI_RING_TUNNEL,
                 label_policy=production.scene.label_policy,
@@ -4986,7 +5034,24 @@ def build_chunk_scene_packages(
                 },
             )
         )
-    return tuple(packages)
+
+
+def build_chunk_scene_packages(
+    production: ProductionTunnelBuild,
+    *,
+    chunk_length_m: float,
+    boundary_policy: ChunkBoundaryPolicy | str = ChunkBoundaryPolicy.RING_ALIGNED,
+    localize_coordinates: bool = False,
+) -> tuple[ScenePackage, ...]:
+    """Compatibility wrapper that materializes the lazy chunk iterator."""
+    return tuple(
+        iter_chunk_scene_packages(
+            production,
+            chunk_length_m=chunk_length_m,
+            boundary_policy=boundary_policy,
+            localize_coordinates=localize_coordinates,
+        )
+    )
 
 
 # ---------------------------------------------------------------------------

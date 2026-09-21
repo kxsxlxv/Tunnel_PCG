@@ -352,12 +352,19 @@ class MoscowWalkwayProfile:
 @dataclass(frozen=True)
 class MoscowCableRackProfile:
     family: str
+    assembly_designation: str
+    upright_designation: str
+    horn_designation: str
     overall_arc_length_m: float
     upright_width_longitudinal_m: float
     upright_thickness_m: float
     horn_count: int
     horn_thickness_m: float
     horn_radius_m: float
+    horn_overall_length_m: float
+    horn_overall_height_m: float
+    cable_places_per_horn: int
+    occupied_places_per_horn: int
     max_cable_diameter_m: float
     horn_pitch_m: float
     repeat_pitch_m: float
@@ -377,6 +384,8 @@ class MoscowCableRackProfile:
             self.upright_thickness_m,
             self.horn_thickness_m,
             self.horn_radius_m,
+            self.horn_overall_length_m,
+            self.horn_overall_height_m,
             self.max_cable_diameter_m,
             self.horn_pitch_m,
             self.repeat_pitch_m,
@@ -390,14 +399,20 @@ class MoscowCableRackProfile:
             raise ValueError("cable-rack dimensions must be finite and positive")
         if self.horn_count <= 0 or self.cable_circle_vertices < 6:
             raise ValueError("cable-rack horn/circle counts are invalid")
+        if self.cable_places_per_horn != 2:
+            raise ValueError("R2K11 double horn must expose two cable places")
+        if not (1 <= self.occupied_places_per_horn <= self.cable_places_per_horn):
+            raise ValueError("cable-rack occupied places exceed horn capacity")
         if not (0.0 <= self.phase_m < self.repeat_pitch_m):
             raise ValueError("cable-rack phase must lie within repeat pitch")
         if self.representative_cable_diameter_m > self.max_cable_diameter_m:
             raise ValueError("representative cable exceeds rack capacity")
         if self.second_cable_center_inward_m <= self.first_cable_center_inward_m:
             raise ValueError("second cable place must lie farther inward")
-        if not self.family:
-            raise ValueError("cable-rack family must not be empty")
+        if not self.family or not self.assembly_designation:
+            raise ValueError("cable-rack family/designation must not be empty")
+        if not self.upright_designation or not self.horn_designation:
+            raise ValueError("cable-rack component designations must not be empty")
 
 
 @dataclass(frozen=True)
@@ -408,6 +423,8 @@ class MoscowWaterMainProfile:
     preview_outer_diameter_m: float
     center_profile_z_m: float
     shell_clearance_inward_m: float
+    support_max_pitch_m: float
+    support_geometry_mode: str
     placement_mode: str
     outer_diameter_mode: str
     material_family: str
@@ -433,6 +450,14 @@ class MoscowWaterMainProfile:
             raise ValueError("water-main shell clearance must be positive")
         if not math.isfinite(self.center_profile_z_m):
             raise ValueError("water-main center z must be finite")
+        if (
+            not math.isfinite(self.support_max_pitch_m)
+            or self.support_max_pitch_m <= 0.0
+            or self.support_max_pitch_m > 4.0 + 1e-12
+        ):
+            raise ValueError("water-main support pitch must be positive and <=4 m")
+        if not self.support_geometry_mode:
+            raise ValueError("water-main support geometry mode must not be empty")
         if self.center_profile_z_m <= 0.0:
             raise ValueError("water main must remain above UGR")
         if not self.normative_source:
@@ -905,6 +930,7 @@ class MoscowStage10Profile:
             modern_component_source_raw.get("source"),
             *cable_rack_raw.get("sources", ()),
             water_main_raw.get("normative_source"),
+            water_main_raw.get("support_source"),
             *contact_support_geom_raw.get("sources", ()),
             *drain_raw.get("sources", ()),
             *gauge_definition.get("sources", ()),
@@ -1459,6 +1485,9 @@ class MoscowStage10Profile:
 
         cable_rack_profile = MoscowCableRackProfile(
             family=str(cable_rack_raw["family"]),
+            assembly_designation=str(cable_rack_raw["assembly_designation"]),
+            upright_designation=str(cable_rack_raw["upright_designation"]),
+            horn_designation=str(cable_rack_raw["horn_designation"]),
             overall_arc_length_m=float(cable_rack_raw["overall_arc_length_m"]),
             upright_width_longitudinal_m=float(
                 cable_rack_raw["upright_width_longitudinal_m"]
@@ -1467,6 +1496,18 @@ class MoscowStage10Profile:
             horn_count=int(cable_rack_raw["horn_count"]),
             horn_thickness_m=float(cable_rack_raw["horn_thickness_m"]),
             horn_radius_m=float(cable_rack_raw["horn_radius_m"]),
+            horn_overall_length_m=float(
+                cable_rack_raw["horn_overall_length_m"]
+            ),
+            horn_overall_height_m=float(
+                cable_rack_raw["horn_overall_height_m"]
+            ),
+            cable_places_per_horn=int(
+                cable_rack_raw["cable_places_per_horn"]
+            ),
+            occupied_places_per_horn=int(
+                cable_preview_raw["occupied_places_per_horn"]
+            ),
             max_cable_diameter_m=float(cable_rack_raw["max_cable_diameter_m"]),
             horn_pitch_m=float(cable_rack_raw["horn_pitch_m"]["value"]),
             repeat_pitch_m=float(cable_rack_place_raw["repeat_pitch_m"]),
@@ -1515,6 +1556,12 @@ class MoscowStage10Profile:
             center_profile_z_m=float(water_main_raw["center_profile_z_m"]),
             shell_clearance_inward_m=float(
                 water_main_raw["shell_clearance_inward_m"]
+            ),
+            support_max_pitch_m=float(
+                water_main_raw["support_max_pitch_m"]
+            ),
+            support_geometry_mode=str(
+                water_main_raw["support_geometry_mode"]
             ),
             placement_mode=str(water_main_raw["placement_mode"]),
             outer_diameter_mode=str(

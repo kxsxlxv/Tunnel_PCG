@@ -20,6 +20,8 @@ import hashlib
 import math
 from typing import Any, Callable, Mapping, Sequence
 
+import numpy as np
+
 from .ancillary import (
     AncillaryConfig,
     AncillaryMesh,
@@ -30,9 +32,23 @@ from .ancillary import (
     sample_ancillary_config,
 )
 from .assembly import TunnelAssembly, TunnelAssemblyConfig
+from .angles import SegmentAngularExtent, sample_six_segment_angles
+from .bolts import (
+    BoltLayoutType,
+    BoltPerturbationConfig,
+    build_bolt_set,
+    sample_bolt_config,
+)
 from .config import RingConfig
 from .curved_mesh import SurfaceMeshingConfig
-from .mesh import Face, Vec3
+from .joints import build_prescribed_joint_set, sample_joint_config
+from .mesh import (
+    Face,
+    RingMesh,
+    Vec3,
+    build_hexahedral_segment,
+    build_ring_mesh,
+)
 from .moscow import (
     MoscowStage10Profile,
     R65ProductionProfile,
@@ -71,7 +87,13 @@ from .civil import (
     civil_ring_ranges,
     walkway_core_xz,
 )
-from .scene import LabelPolicy, SceneMode, SceneObject, ScenePackage
+from .scene import (
+    LabelPolicy,
+    SceneMode,
+    SceneObject,
+    ScenePackage,
+    build_nominal_scene_package,
+)
 from .tunnel import ProceduralTunnelBuild, build_procedural_nominal_tunnel
 
 
@@ -2863,6 +2885,7 @@ class ProductionConfig:
     moscow_profile: MoscowStage10Profile | None = None
     moscow_stage: str = "10.1"
     moscow_service_preset: str = "auto"
+    moscow_civil_topology: str = "auto"
     compact_exact_collinear_continuous_stations: bool | None = None
     keep_stage8_ring_ancillary: bool = False
     keep_prescribed_outer_joint_solids: bool = False
@@ -2887,6 +2910,22 @@ class ProductionConfig:
             raise ValueError(
                 "moscow_service_preset must be 'auto', 'legacy' or 'modern'"
             )
+        if self.moscow_civil_topology not in {"auto", "ten_equal", "kba"}:
+            raise ValueError(
+                "moscow_civil_topology must be 'auto', 'ten_equal' or 'kba'"
+            )
+        if (
+            self.moscow_civil_topology in {"ten_equal", "kba"}
+            and (
+                self.moscow_profile is None
+                or self.moscow_profile.civil_family
+                != "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+            )
+        ):
+            raise ValueError(
+                "ten_equal/kba Moscow civil topology currently requires "
+                "rc_block_6100_5600 civil archetype"
+            )
         if (
             self.moscow_stage != "10.5"
             and self.moscow_service_preset == "modern"
@@ -2894,6 +2933,19 @@ class ProductionConfig:
             raise ValueError(
                 "modern Moscow service preset is currently bounded to Stage 10.5"
             )
+
+    @property
+    def resolved_moscow_civil_topology(self) -> str:
+        if self.moscow_profile is None:
+            return "none"
+        if (
+            self.moscow_profile.civil_family
+            != "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+        ):
+            return "cast_iron_detail_deferred"
+        if self.moscow_civil_topology == "auto":
+            return "ten_equal"
+        return self.moscow_civil_topology
 
     @property
     def resolved_moscow_service_preset(self) -> str:

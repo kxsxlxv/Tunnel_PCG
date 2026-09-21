@@ -39,9 +39,10 @@
             "chamber 2 maximum inter-track parameter M1 0.70 m",
             "chamber 3 length 15.0 m and ID 7.20 m",
             "chamber 4 length 11.25 m and ID 7.70 m",
-            "chamber 5 length 9.75 m and ID 9.00 m",
+            "chamber 5 length 9.75 m and ID 9.00 m (read from the printed scan; OCR mirror misreads this value in one text extraction)",
             "chamber 6 length 15.0 m",
-            "separate circular shells shown with ID 5.14 m and OD 5.64 m"
+            "section 2-2 of chamber 6 shows two open single-track lining arches with reference radii R_in=2.57 m and R_out=2.82 m, supported at the common central wall",
+            "section 2-2 shows lining-axis to UGR vertical dimension 1.70 m for the generic two-vault reference"
           ]
         },
         {
@@ -53,7 +54,10 @@
             "M3 3.36 m at chamber 4",
             "M4 4.46 m at chamber 5",
             "large circular chamber 5 can be replaced by a more economical elongated/elliptical form",
-            "elliptical tubing solution can use additional adjacent/key tubings and wedge spacers"
+            "elliptical tubing solution can use additional adjacent/key tubings and wedge spacers",
+            "printed p.150 text: chamber 6 is a two-vault chamber made from two single-track tunnels whose open linings bear on a concrete or reinforced-concrete wall",
+            "printed p.150 text: only where inter-track spacing exceeds 6 m do the main and connecting tracks diverge into independent single-track tunnels",
+            "end gaps between chambers of different spans are filled with monolithic concrete; waterproofing is added as required"
           ]
         }
       ],
@@ -81,7 +85,8 @@
         {
           "clause": "5.7.1.17",
           "supports": [
-            "anti-run-over guard timbers before specified facing points and station turnout/crossover locations"
+            "anti-run-over guard timbers before specified facing points and station turnout/crossover locations",
+            "underground/covered/elevated sections require UGR-level areas near turnouts/crossovers for storage of metal turnout/crossover parts"
           ]
         },
         {
@@ -129,6 +134,56 @@
           "clause": "5.10.4.10",
           "supports": [
             "depot connecting-track contact rail normally powered from corresponding main-track rail; exact local apparatus is project-specific"
+          ]
+        },
+        {
+          "clause": "5.3.5",
+          "supports": [
+            "turnouts are placed on straight track",
+            "longitudinal grade at turnout <=5 per mille normally and <=10 per mille in difficult conditions",
+            "distance from beginning of plan curves and vertical curves to turnout center >=20 m",
+            "distance from turnout center to beginning of station platform >=25 m"
+          ]
+        },
+        {
+          "clause": "5.4.3.3 / current evacuation-path rules",
+          "supports": [
+            "at turnout locations and in crossover chambers evacuation may pass through rails and sleepers over the permanent way",
+            "where contact rail changes side a central passage is required",
+            "at equipment/contact-rail-transition zones the passage in the track gauge must cover the drainage channel and extend >=1 m beyond the constrained zone at each end",
+            "side passage width >=0.6 m; central passage width >=0.9 m when that solution is used",
+            "turnout and crossover-chamber transition locations require illuminated evacuation-direction signs"
+          ]
+        },
+        {
+          "clause": "5.7.2.12",
+          "supports": [
+            "track and signal signs are required along tracks",
+            "turnouts and crossovers require clearance/limit markers (предельные рейки/столбики)"
+          ]
+        },
+        {
+          "clause": "5.9.2.4",
+          "supports": [
+            "for drainage of running tunnels with ballast track and crossovers/turnouts on concrete track use two pipes Ø200 mm; in constrained conditions three pipes Ø150 mm",
+            "drainage trays are water-resistant, at least 100x50(h) mm or radius >=50 mm",
+            "tray grade >=0.003 and inspection wells spacing <=20 m",
+            "drainage in ancillary tunnel structures including transfer from one track to another is recommended by open tray"
+          ]
+        },
+        {
+          "clause": "5.10.5.5",
+          "supports": [
+            "trackside power boxes (ПЯ) with breakers and sockets are installed near turnouts",
+            "maximum interval between the platform/turnout reference locations for these boxes is 100 m"
+          ]
+        },
+        {
+          "clause": "5.10.6.19-5.10.6.20",
+          "supports": [
+            "connecting/running tunnels have dedicated power for hand tools and portable local lighting",
+            "230/12 V transformer/socket boxes are installed at ATDP devices, turnouts and gates",
+            "point blades of turnouts have a dedicated emergency-lighting group"
           ]
         }
       ],

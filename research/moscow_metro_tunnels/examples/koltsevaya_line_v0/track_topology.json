@@ -215,17 +215,17 @@
         "source_id": "S098",
         "status": "SOURCE_BACKED"
       },
-      "branch_tunnel_track_count": 2,
+      "branch_tunnel_track_count": null,
       "branch_tunnel_section": null,
       "reported_track_count_constraint": {
         "value": 2,
-        "semantics": "two tracks in the main connecting branch to Line 5",
+        "semantics": "tertiary shorthand describing the main connection/depot access as two-track",
         "source_id": "S106",
-        "status": "TERTIARY_CORROBORATION",
+        "status": "TERTIARY_CORROBORATION_ONLY_NOT_EDGE_CARDINALITY",
         "confidence": "C",
-        "limitation": "Does not resolve civil-shell arrangement. Do not infer one common two-track tunnel versus two single-track tunnels."
+        "limitation": "Must not be converted into one end-to-end two-track TRACK_EDGE or one two-track civil tunnel."
       },
-      "branch_tunnel_track_count_status": "CONSTRAINED_C_TERTIARY_CORROBORATION",
+      "branch_tunnel_track_count_status": "DO_NOT_COLLAPSE_TO_ONE_COUNT: S125 gives two distinct single-track Line-5 attachment legs; S120 proves a local two-track depot-side section; exact merge/split graph and civil-shell arrangement remain unresolved.",
       "actual_krasnopresnenskaya_side_profile_fragment": {
         "source_id": "S121",
         "source_kind": "archival plan-elevation data reproduced in 2025 Moscow historical-cultural expertise/project documentation",
@@ -931,7 +931,8 @@
       "split_semantics": "S120 photo 8: from the depot-side view, left route leads to Belorusskaya and right route to Krasnopresnenskaya",
       "exact_switch_node_count": null,
       "exact_crossover_objects": null,
-      "exact_physical_way_ids": null
+      "exact_physical_way_ids": null,
+      "edge_cardinality_rule": "Represent the Belorusskaya and Krasnopresnenskaya attachment legs as separate single-track BRANCH_EDGE objects; represent the downstream two-track section as two physical TRACK_EDGE objects after its exact switch/merge topology is resolved."
     }
   },
   "adjacent_depot_network_connections": [

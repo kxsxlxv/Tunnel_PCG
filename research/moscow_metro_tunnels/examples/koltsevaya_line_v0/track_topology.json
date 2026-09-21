@@ -152,7 +152,10 @@
         "S022",
         "S098",
         "S106",
-        "S120"
+        "S120",
+        "S121",
+        "S122",
+        "S123"
       ],
       "confirmed": [
         "depot serves Line 5",
@@ -191,7 +194,7 @@
         "exact_chainage": null,
         "note": "Photo captions prove track topology, not whether the two tracks share one civil shell throughout."
       },
-      "actual_branch_arrangement_status": "TRACK_TOPOLOGY_PARTIALLY_RESOLVED_FROM_ACTUAL_PHOTOS; civil shell and exact XY/chainage unresolved",
+      "actual_branch_arrangement_status": "Multi-edge/two-track downstream depot connection is visually source-backed; one Krasnopresnenskaya-side branch profile fragment now has source-backed local PK and crown-depth data, but shell section, UGR and exact graph-node mapping remain unresolved.",
       "station_pk_context": [
         {
           "station": "Краснопресненская",
@@ -220,7 +223,60 @@
         "confidence": "C",
         "limitation": "Does not resolve civil-shell arrangement. Do not infer one common two-track tunnel versus two single-track tunnels."
       },
-      "branch_tunnel_track_count_status": "CONSTRAINED_C_TERTIARY_CORROBORATION"
+      "branch_tunnel_track_count_status": "CONSTRAINED_C_TERTIARY_CORROBORATION",
+      "actual_krasnopresnenskaya_side_profile_fragment": {
+        "source_id": "S121",
+        "source_kind": "archival plan-elevation data reproduced in 2025 Moscow historical-cultural expertise/project documentation",
+        "branch_side": "Краснопресненская-side branch toward depot",
+        "stationing_semantics": "source-local branch PK, not Line-5 main-track chainage",
+        "crown_depth_below_conditional_datum_segments": [
+          {
+            "pk_start": "6+28",
+            "pk_end": "7+57",
+            "chainage_length_m": 129,
+            "crown_depth_start_m_approx": 19.3,
+            "crown_depth_end_m_approx": 14,
+            "crown_rise_with_increasing_pk_m_approx": 5.3,
+            "mean_crown_rise_per_mille_approx": 41.09,
+            "status": "SOURCE_BACKED_DEPTHS_DERIVED_DIFFERENCE_AND_MEAN_SLOPE"
+          },
+          {
+            "pk_start": "6+45",
+            "pk_end": "7+05",
+            "chainage_length_m": 60,
+            "crown_depth_start_m_approx": 18.5,
+            "crown_depth_end_m_approx": 16.3,
+            "crown_rise_with_increasing_pk_m_approx": 2.2,
+            "mean_crown_rise_per_mille_approx": 36.67,
+            "status": "SOURCE_BACKED_DEPTHS_DERIVED_DIFFERENCE_AND_MEAN_SLOPE"
+          },
+          {
+            "pk_start_approx": "6+65",
+            "pk_end_approx": "6+95",
+            "chainage_length_m_approx": 30,
+            "crown_depth_start_m_approx": 17.8,
+            "crown_depth_end_m_approx": 16.7,
+            "crown_rise_with_increasing_pk_m_approx": 1.1,
+            "mean_crown_rise_per_mille_approx": 36.67,
+            "status": "SOURCE_BACKED_APPROX_DEPTHS_DERIVED_DIFFERENCE_AND_MEAN_SLOPE"
+          }
+        ],
+        "site_surface_absolute_elevation_range_m": [
+          143.17,
+          145.67
+        ],
+        "z_ugr_m": null,
+        "absolute_crown_z_m": null,
+        "track_grade_per_mille": null,
+        "limitations": [
+          "source depths are to the crown part of the branch structure, not UGR",
+          "the common reference is a project-concept conditional 0.000 datum whose absolute elevation is not established in this contract",
+          "mean crown-rise values are derived only from endpoint depth differences and are not promoted to track gradient",
+          "branch civil radius/section over these PK intervals is not established by this source"
+        ],
+        "confidence": "A/B"
+      },
+      "actual_branch_vertical_trend_status": "PARTIALLY_RESOLVED_ON_KRASNOPRESNENSKAYA_SIDE_CROWN_ONLY"
     },
     {
       "id": "KOL5_PROSPEKT_MIRA_SSV_SYSTEM",
@@ -447,10 +503,10 @@
   "global_unknowns": [
     "exact current OSM way IDs and node IDs inside child routes 300607 and 1462011 until relation/full or PBF bytes are acquired",
     "as-built inter-tunnel axis spacing by chainage",
-    "local relative Z of the two running tunnels",
     "line-wide lining type assignment by physical edge",
     "exact engineering XY/Z of Line-5 switch nodes",
-    "exact installed turnout project/model at the selected Belorusskaya depot junction"
+    "exact installed turnout project/model at the selected Belorusskaya depot junction",
+    "Line-5 main-track A/B relative Z remains unresolved; S121 constrains only a Krasnopresnenskaya-side depot-branch crown profile fragment"
   ],
   "graph_entity_contracts": {
     "TRACK_EDGE": {

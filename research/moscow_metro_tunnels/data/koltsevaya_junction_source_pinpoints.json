@@ -307,6 +307,71 @@
         ]
       },
       "confidence": "A/B_for_existence"
+    },
+    {
+      "id": "S099",
+      "title": "OpenStreetMap current Koltsevaya route master 1462012",
+      "url": "https://www.openstreetmap.org/relation/1462012",
+      "locator": {
+        "sections": [
+          "Tags",
+          "Members"
+        ],
+        "observed_version": 12,
+        "supports": [
+          "type=route_master",
+          "route_master=subway",
+          "ref=5",
+          "exactly two current child route relations",
+          "member relation 300607 = Circle line (Inner)",
+          "member relation 1462011 = Circle line (Outer)"
+        ]
+      },
+      "confidence": "C_current_public_map_topology_not_engineering_survey"
+    },
+    {
+      "id": "S100",
+      "title": "OpenStreetMap current Koltsevaya Inner route 300607",
+      "url": "https://www.openstreetmap.org/relation/300607",
+      "locator": {
+        "sections": [
+          "Tags",
+          "Part of"
+        ],
+        "observed_version": 70,
+        "observed_edit_recency": "4 months before 2026-09-21 research date",
+        "supports": [
+          "name=Кольцевая линия (внутреннее кольцо)",
+          "name:en=Circle line (Inner)",
+          "type=route",
+          "route=subway",
+          "ref=5",
+          "member of route_master relation 1462012"
+        ]
+      },
+      "confidence": "C_current_public_map_topology_not_engineering_survey"
+    },
+    {
+      "id": "S101",
+      "title": "OpenStreetMap current Koltsevaya Outer route 1462011",
+      "url": "https://www.openstreetmap.org/relation/1462011",
+      "locator": {
+        "sections": [
+          "Tags",
+          "Part of"
+        ],
+        "observed_version": 62,
+        "observed_edit_recency": "4 months before 2026-09-21 research date",
+        "supports": [
+          "name=Кольцевая линия (внешнее кольцо)",
+          "name:en=Circle line (Outer)",
+          "type=route",
+          "route=subway",
+          "ref=5",
+          "member of route_master relation 1462012"
+        ]
+      },
+      "confidence": "C_current_public_map_topology_not_engineering_survey"
     }
   ]
 }

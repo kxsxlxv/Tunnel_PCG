@@ -664,10 +664,30 @@ def main() -> None:
             errors.append("Stage 10.4+ retained Stage-9 lining bolt heads")
         if any(o.object_type == "bolt_pocket_cutter" for o in package.objects):
             errors.append("Stage 10.4+ retained Stage-9 lining bolt cutters")
+
+        is_rc_10block = (
+            profile.civil_family
+            == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+        )
+        expected_civil_status = (
+            "implemented_stage10_4_segmented_rc_10block_shell"
+            if is_rc_10block
+            else (
+                "implemented_stage10_4_cast_iron_smooth_envelope_"
+                "detail_deferred"
+            )
+        )
+        if production_meta.get("civilShellStatus") != expected_civil_status:
+            errors.append("Stage 10.4+ civil shell status mismatch")
+        expected_detail_status = (
+            "implemented_rc_10block_geometry_stage9_like"
+            if is_rc_10block
+            else "cast_iron_detail_deferred_pending_research"
+        )
         if production_meta.get("moscowCivilCompositeDetailStatus") != (
-            "implemented_source_sized_visual_joint_rib_bolt_overlay"
+            expected_detail_status
         ):
-            errors.append("Stage 10.4+ civil composite detail status mismatch")
+            errors.append("Stage 10.4+ civil detail status mismatch")
         if production_meta.get("walkwayStatus") != (
             "implemented_stage10_4_source_backed_geometry"
         ):
@@ -676,6 +696,18 @@ def main() -> None:
             "closed_by_stage10_4_moscow_shell"
         ):
             errors.append("Stage 10.4+ civil-gap status is not closed")
+
+        obsolete_detail = [
+            o for o in production
+            if o.object_type in {
+                "production_moscow_civil_detail_ribs",
+                "production_moscow_civil_bolt_heads",
+            }
+        ]
+        if obsolete_detail:
+            errors.append(
+                "Stage 10.4+ generated obsolete/fabricated civil detail objects"
+            )
 
         civil = [
             o for o in production
@@ -706,60 +738,58 @@ def main() -> None:
                 errors.append(f"{ring.name}: false series-accurate civil LOD0 claim")
             if rp.get("civilFamily") != profile.civil_family:
                 errors.append(f"{ring.name}: civil-family metadata mismatch")
-            if rp.get("coarseSegmentCountIsGeometry") is not False:
-                errors.append(f"{ring.name}: coarse segment reference used as geometry")
             if rp.get("internalRingEndCaps") is not False:
                 errors.append(f"{ring.name}: internal ring end caps retained")
 
-        detail_ribs = [
-            o for o in production
-            if o.object_type == "production_moscow_civil_detail_ribs"
-        ]
-        expected_detail_count = int(
-            production_meta.get("moscowCivilDetailRibObjectCount", 0)
-        )
-        if len(detail_ribs) != expected_detail_count:
-            errors.append(
-                "Stage 10.4+ civil rib-detail count does not match metadata"
-            )
-        expected_visual_segments = (
-            10
-            if profile.civil_family
-            == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
-            else 11
-        )
-        for detail in detail_ribs:
-            dp = detail.custom_properties
-            if int(dp.get("visualSegmentCount", -1)) != expected_visual_segments:
-                errors.append(f"{detail.name}: wrong visual segment count")
-            if dp.get("visualSegmentCountIsLOD0") is not False:
-                errors.append(
-                    f"{detail.name}: visual segmentation falsely claims LOD0"
-                )
+            if is_rc_10block:
+                if rp.get("coarseSegmentCountIsGeometry") is not True:
+                    errors.append(
+                        f"{ring.name}: source-backed ten-block topology is not geometry"
+                    )
+                if int(rp.get("renderedRCBlockCount", -1)) != 10:
+                    errors.append(f"{ring.name}: wrong rendered RC block count")
+                if rp.get("stage9LikeCurvedSegmentConstruction") is not True:
+                    errors.append(
+                        f"{ring.name}: RC ring is not Stage-9-like segmented"
+                    )
+                if not _close(rp.get("renderedRCVisualSeamWidthM", -1), 0.008):
+                    errors.append(f"{ring.name}: wrong RC visual seam width")
+                if not _close(rp.get("rcWorkingRebarDiameterM", -1), 0.016):
+                    errors.append(
+                        f"{ring.name}: wrong working-reinforcement diameter"
+                    )
+                if not _close(rp.get("rcAssemblyPinDiameterM", -1), 0.022):
+                    errors.append(f"{ring.name}: wrong erection-pin diameter")
+                if rp.get("rcPermanentBoltedBlockJoints") is not False:
+                    errors.append(
+                        f"{ring.name}: RC block joints falsely marked bolted"
+                    )
+                if int(rp.get("angularSegments", -1)) != 80:
+                    errors.append(
+                        f"{ring.name}: unexpected RC surface subdivision count"
+                    )
+            else:
+                if rp.get("coarseSegmentCountIsGeometry") is not False:
+                    errors.append(
+                        f"{ring.name}: unresolved cast-iron topology became geometry"
+                    )
+                if rp.get("stage9LikeCurvedSegmentConstruction") is not False:
+                    errors.append(
+                        f"{ring.name}: cast iron incorrectly reuses RC segment geometry"
+                    )
 
-        civil_bolts = [
-            o for o in production
-            if o.object_type == "production_moscow_civil_bolt_heads"
-        ]
-        expected_bolt_objects = int(
-            production_meta.get("moscowCivilBoltObjectCount", 0)
-        )
-        if len(civil_bolts) != expected_bolt_objects:
-            errors.append(
-                "Stage 10.4+ civil bolt-object count does not match metadata"
-            )
-        for bolt_obj in civil_bolts:
-            bp = bolt_obj.custom_properties
-            if int(bp.get("boltRowsPerLongitudinalJoint", -1)) != 2:
-                errors.append(f"{bolt_obj.name}: wrong bolt-row count")
-            if not _close(bp.get("nominalBoltDiameterM", -1), 0.027):
-                errors.append(f"{bolt_obj.name}: wrong nominal bolt diameter")
-            if not _close(bp.get("nominalBoltLengthM", -1), 0.120):
-                errors.append(f"{bolt_obj.name}: wrong nominal bolt length")
-            if bp.get("exactBoltHeadCADResolved") is not False:
-                errors.append(
-                    f"{bolt_obj.name}: bolt-head CAD falsely marked exact"
-                )
+        if is_rc_10block:
+            if int(production_meta.get("moscowCivilRenderedBlockCount", -1)) != (
+                10 * len(civil)
+            ):
+                errors.append("Stage 10.4+ RC rendered-block count mismatch")
+            if not _close(
+                production_meta.get("moscowCivilRCVisualSeamWidthM", -1),
+                0.008,
+            ):
+                errors.append("Stage 10.4+ RC seam metadata mismatch")
+        elif int(production_meta.get("moscowCivilRenderedBlockCount", -1)) != 0:
+            errors.append("cast-iron mode unexpectedly reports RC blocks")
 
         walkway = [
             o for o in production
@@ -879,14 +909,14 @@ def main() -> None:
         ),
         "civilShellStatus": production_meta.get("civilShellStatus"),
         "civilArchetypeID": production_meta.get("civilArchetypeID"),
-        "civilDetailRibObjectCount": production_meta.get(
-            "moscowCivilDetailRibObjectCount"
+        "civilCompositeDetailStatus": production_meta.get(
+            "moscowCivilCompositeDetailStatus"
         ),
-        "civilBoltObjectCount": production_meta.get(
-            "moscowCivilBoltObjectCount"
+        "civilRenderedBlockCount": production_meta.get(
+            "moscowCivilRenderedBlockCount"
         ),
-        "civilBoltHeadCount": production_meta.get(
-            "moscowCivilBoltHeadCount"
+        "civilRCVisualSeamWidthM": production_meta.get(
+            "moscowCivilRCVisualSeamWidthM"
         ),
         "serviceCableCount": production_meta.get("serviceCableCount"),
         "serviceCableRackCount": production_meta.get("serviceCableRackCount"),

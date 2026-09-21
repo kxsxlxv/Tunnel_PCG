@@ -1867,6 +1867,41 @@ def _build_stage10_2_periodic_scene_objects(
     return tuple(result)
 
 
+def _periodic_mesh_prototype_properties(
+    *,
+    profile: MoscowStage10Profile,
+    family: str,
+    local_name: str,
+    station: AlignmentStation,
+    vertex_count: int,
+    face_count: int,
+) -> dict[str, Any]:
+    """Describe a pure-translation periodic mesh for exact Blender instancing.
+
+    SceneObject vertices remain fully materialized in world coordinates for
+    backward compatibility. These properties let importers recover the shared
+    local mesh exactly and place each logical instance with an object transform.
+    """
+    if not family or not local_name:
+        raise ValueError("periodic mesh prototype family/name must not be empty")
+    return {
+        "meshPrototypeKey": (
+            f"stage10.5/{profile.provenance.canonical_sha256}/"
+            f"{family}/{local_name}"
+        ),
+        "meshPrototypeMode": "translation_only_shared_mesh_v1",
+        "meshPrototypeTranslationM": (
+            float(station.offset_x_m),
+            float(station.world_y_m),
+            float(station.offset_z_m),
+        ),
+        "meshPrototypeVertexCount": int(vertex_count),
+        "meshPrototypeFaceCount": int(face_count),
+        "meshPrototypeGeometryExact": True,
+        "meshPrototypeLiDARSurfaceUnchanged": True,
+    }
+
+
 def _build_stage10_5_modern_permanent_way_scene_objects(
     *,
     profile: MoscowStage10Profile,
@@ -1963,6 +1998,14 @@ def _build_stage10_5_modern_permanent_way_scene_objects(
                         "alignmentOffsetX": station.offset_x_m,
                         "alignmentOffsetZ": station.offset_z_m,
                         "alignmentWorldY": station.world_y_m,
+                        **_periodic_mesh_prototype_properties(
+                            profile=profile,
+                            family="modern-permanent-way",
+                            local_name=local.name_suffix,
+                            station=station,
+                            vertex_count=len(local.vertices),
+                            face_count=len(local.faces),
+                        ),
                         "moscowProfileID": profile.profile_id,
                         "moscowProfileSHA256": (
                             profile.provenance.canonical_sha256
@@ -2181,6 +2224,14 @@ def _build_stage10_5_modern_contact_scene_objects(
                         "alignmentOffsetX": station.offset_x_m,
                         "alignmentOffsetZ": station.offset_z_m,
                         "alignmentWorldY": station.world_y_m,
+                        **_periodic_mesh_prototype_properties(
+                            profile=profile,
+                            family="modern-contact-support",
+                            local_name=local.name_suffix,
+                            station=station,
+                            vertex_count=len(local.vertices),
+                            face_count=len(local.faces),
+                        ),
                         "moscowProfileID": profile.profile_id,
                         "moscowProfileSHA256": (
                             profile.provenance.canonical_sha256
@@ -2356,6 +2407,14 @@ def _build_stage10_5_service_rack_scene_objects(
                         "alignmentOffsetX": station.offset_x_m,
                         "alignmentOffsetZ": station.offset_z_m,
                         "alignmentWorldY": station.world_y_m,
+                        **_periodic_mesh_prototype_properties(
+                            profile=profile,
+                            family="r2k11-cable-rack",
+                            local_name=local.name_suffix,
+                            station=station,
+                            vertex_count=len(local.vertices),
+                            face_count=len(local.faces),
+                        ),
                         "moscowProfileID": profile.profile_id,
                         "moscowProfileSHA256": (
                             profile.provenance.canonical_sha256
@@ -2432,6 +2491,14 @@ def _build_stage10_5_water_main_support_scene_objects(
                     "alignmentOffsetX": station.offset_x_m,
                     "alignmentOffsetZ": station.offset_z_m,
                     "alignmentWorldY": station.world_y_m,
+                    **_periodic_mesh_prototype_properties(
+                        profile=profile,
+                        family="water-main-support",
+                        local_name=local.name_suffix,
+                        station=station,
+                        vertex_count=len(local.vertices),
+                        face_count=len(local.faces),
+                    ),
                     "moscowProfileID": profile.profile_id,
                     "moscowProfileSHA256": profile.provenance.canonical_sha256,
                 },

@@ -1498,6 +1498,90 @@ def test_stage10_5_rc_kba_topology_reuses_stage9_fastener_pipeline():
         assert cp["removeAfterBoolean"] is True
 
 
+def test_stage10_5_periodic_assets_declare_exact_reusable_mesh_prototypes():
+    profile = load_stage10_initial_moscow_profile()
+    build = build_production_tunnel(
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=4,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.0,
+        ),
+        include_bolts=False,
+        production_config=ProductionConfig(
+            namespace="stage10-5-periodic-prototypes",
+            moscow_profile=profile,
+            moscow_stage="10.5",
+        ),
+        seed=5812,
+    )
+
+    reusable_types = {
+        "production_lvt_block",
+        "production_lvt_rubber_boot",
+        "production_apc4_rail_pad",
+        "production_apc4_fastening",
+        "production_contact_rail_support_block",
+        "production_contact_rail_base_plate",
+        "production_contact_rail_bracket",
+        "production_contact_rail_insulator",
+        "production_contact_rail_fastening_unit",
+        "production_contact_rail_clamp_bolts",
+        "production_contact_rail_attachment_dowels",
+        "production_contact_rail_support_hood",
+        "production_cable_rack_r2k11",
+        "production_water_main_support",
+    }
+    objects = [
+        obj for obj in build.scene.objects
+        if obj.object_type in reusable_types
+    ]
+    assert objects
+    assert {obj.object_type for obj in objects} == reusable_types
+
+    local_by_key = {}
+    instances_by_key = {}
+    for obj in objects:
+        props = obj.custom_properties
+        assert props["meshPrototypeMode"] == "translation_only_shared_mesh_v1"
+        assert props["meshPrototypeGeometryExact"] is True
+        assert props["meshPrototypeLiDARSurfaceUnchanged"] is True
+        assert int(props["meshPrototypeVertexCount"]) == len(obj.vertices)
+        assert int(props["meshPrototypeFaceCount"]) == len(obj.faces)
+
+        translation = tuple(float(v) for v in props["meshPrototypeTranslationM"])
+        assert translation == (
+            float(props["alignmentOffsetX"]),
+            float(props["alignmentWorldY"]),
+            float(props["alignmentOffsetZ"]),
+        )
+        local = tuple(
+            (
+                vertex[0] - translation[0],
+                vertex[1] - translation[1],
+                vertex[2] - translation[2],
+            )
+            for vertex in obj.vertices
+        )
+        key = str(props["meshPrototypeKey"])
+        if key in local_by_key:
+            reference_vertices, reference_faces = local_by_key[key]
+            assert len(reference_vertices) == len(local)
+            assert reference_faces == obj.faces
+            for actual, expected in zip(local, reference_vertices):
+                assert all(
+                    math.isclose(a, b, abs_tol=2e-12)
+                    for a, b in zip(actual, expected)
+                )
+        else:
+            local_by_key[key] = (local, obj.faces)
+        instances_by_key[key] = instances_by_key.get(key, 0) + 1
+
+    # At least the 600 mm permanent-way chain must create many logical
+    # instances from a small fixed prototype set.
+    assert any(count >= 5 for count in instances_by_key.values())
+    assert len(local_by_key) < len(objects)
+
+
 def test_stage10_5_modern_objects_have_no_exact_duplicate_faces_and_stable_ids():
     profile = load_stage10_initial_moscow_profile()
     build = build_production_tunnel(

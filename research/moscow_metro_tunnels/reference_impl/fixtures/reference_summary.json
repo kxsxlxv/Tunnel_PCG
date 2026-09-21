@@ -1,6 +1,6 @@
 {
   "stage": 5,
-  "reference_impl_version": "0.2.0",
+  "reference_impl_version": "0.2.1-research",
   "tests": {
     "stage4": {
       "count": 11,
@@ -25,6 +25,11 @@
       "count": 4,
       "status": "pass",
       "notes": "open chain, reversed way, closed loop, branch rejection/filtering"
+    },
+    "stage11_osm_track_graph": {
+      "count": 4,
+      "status": "committed_not_executed_in_current_research_runtime",
+      "notes": "simple two-track loop, single turnout branch, crossover, depot branch; runtime could not clone/run due external network restriction"
     }
   },
   "rail_reconstruction": {
@@ -45,10 +50,21 @@
     "route_alignment_schema": "schemas/route_alignment.schema.json",
     "osm_current_line5_relation": 1462012,
     "osm_acquisition_paths": [
-      "BBBike Moscow.osm.pbf + pyosmium",
-      "OSM API /api/0.6/relation/1462012/full"
+      "BBBike Moscow.osm.pbf + route-master-aware pyosmium extractor",
+      "OSM API /api/0.6/relation/1462012/full with nested child fetch",
+      "direct child acquisition: /relation/300607/full and /relation/1462011/full"
     ],
-    "track_topology_qa": "TrackMap current Moscow track map; schematic QA only, not geodetic alignment"
+    "track_topology_qa": "TrackMap current Moscow track map; schematic QA only, not geodetic alignment",
+    "osm_current_line5_route_hierarchy": {
+      "master": 1462012,
+      "inner": 300607,
+      "outer": 1462011,
+      "source_ids": [
+        "S099",
+        "S100",
+        "S101"
+      ]
+    }
   },
   "known_unresolved": [
     "complete lower Om multi-device polygon topology",
@@ -56,6 +72,6 @@
     "project-specific 10m-class finished lining diameter and track vertical placement",
     "project-specific ring taper/rotation and exact bolt-pocket patterns",
     "survey-grade absolute XYZ for the complete Moscow Metro network is not publicly available as one verified dataset",
-    "exact current Line-5 OSM member-way bytes still need acquisition outside this restricted runtime"
+    "exact current Line-5 child-route member-way/node bytes still need acquisition outside this restricted runtime; child route IDs are resolved as 300607 Inner and 1462011 Outer"
   ]
 }

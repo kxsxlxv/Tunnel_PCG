@@ -45,6 +45,9 @@ def main() -> None:
     assert meta["domainStage"] == "10.4"
     assert meta["stage9CivilGeometryRemoved"] is True
     assert meta["civilShellStatus"] == "implemented_stage10_4_smooth_concentric_shell"
+    assert meta["moscowCivilCompositeDetailStatus"] == (
+        "implemented_source_sized_visual_joint_rib_bolt_overlay"
+    )
     assert meta["walkwayStatus"] == "implemented_stage10_4_source_backed_geometry"
     assert meta["transitionalCivilGapStatus"] == "closed_by_stage10_4_moscow_shell"
 
@@ -57,6 +60,30 @@ def main() -> None:
     walkway = build.scene.objects_of_type("production_moscow_walkway")
     concrete = build.scene.objects_of_type("production_track_concrete")
     assert len(civil) == 41
+    details = build.scene.objects_of_type(
+        "production_moscow_civil_detail_ribs"
+    )
+    bolt_details = build.scene.objects_of_type(
+        "production_moscow_civil_bolt_heads"
+    )
+    assert len(details) == len(civil)
+    assert len(bolt_details) == len(civil)
+    assert int(meta["moscowCivilDetailRibObjectCount"]) == len(civil)
+    assert int(meta["moscowCivilBoltObjectCount"]) == len(civil)
+    assert int(meta["moscowCivilBoltHeadCount"]) == 22 * len(civil)
+    assert meta["moscowCivilBoltsEnabled"] is True
+    assert all(
+        int(obj.custom_properties["visualSegmentCount"]) == 11
+        for obj in details
+    )
+    assert all(
+        obj.custom_properties["visualSegmentCountIsLOD0"] is False
+        for obj in details
+    )
+    assert all(
+        int(obj.custom_properties["boltHeadCount"]) == 22
+        for obj in bolt_details
+    )
     assert len(walkway) == 1
     assert len(concrete) == 1
     assert int(meta["moscowCivilRingCount"]) == len(civil)
@@ -131,6 +158,11 @@ def main() -> None:
                 "source_stage9_rings": build.assembly.config.n_rings,
                 "length_m": build.assembly.length_by_chainage_m,
                 "moscow_civil_ring_count": len(civil),
+                "moscow_civil_detail_rib_count": len(details),
+                "moscow_civil_bolt_object_count": len(bolt_details),
+                "moscow_civil_bolt_head_count": int(
+                    meta["moscowCivilBoltHeadCount"]
+                ),
                 "moscow_civil_ring_pitch_m": 1.0,
                 "intrados_radius_m": 2.55,
                 "extrados_radius_m": 2.75,

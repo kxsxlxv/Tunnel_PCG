@@ -1392,6 +1392,35 @@
         ]
       },
       "confidence": "B/C_operational_topology_secondary"
+    },
+    {
+      "id": "S134",
+      "title": "Мы строим метро. Сборник статей, П.А. Васюков (ред.), 1983 — А.М. Горьков, «Проектирование трасс метрополитена»",
+      "url": "https://wiki.nashtransport.ru/wiki/%D0%9C%D1%8B_%D1%81%D1%82%D1%80%D0%BE%D0%B8%D0%BC_%D0%BC%D0%B5%D1%82%D1%80%D0%BE_(%D0%BA%D0%BD%D0%B8%D0%B3%D0%B0,_%D1%87%D0%B0%D1%81%D1%82%D1%8C_2)",
+      "bibliographic": {
+        "editor": "П.А. Васюков",
+        "publisher": "Московский рабочий",
+        "city": "Москва",
+        "year": 1983,
+        "pages": 320,
+        "bibliography_crosscheck": "Totalarch bibliographic record"
+      },
+      "locator": {
+        "article": "А.М. Горьков — Проектирование трасс метрополитена",
+        "exact_web_line": 116,
+        "supports": [
+          "Koltsevaya inner track runs clockwise and outer track in the opposite direction",
+          "the depot west of the ring near Krasnopresnenskaya Zastava is connected to Line 5 by two single-track branches",
+          "the two branch connections adjoin crossover tracks at Belorusskaya and Krasnopresnenskaya",
+          "the branch/crossover arrangement allows trains to enter and leave the ring without reversing maneuvers"
+        ],
+        "adjacent_web_line": 117,
+        "adjacent_supports": [
+          "train storage tracks were built at Kurskaya for outer-ring trains",
+          "train storage tracks were built at Park Kultury for inner-ring trains"
+        ]
+      },
+      "confidence": "B_primary_historical_engineering_collection_via_text_reprint"
     }
   ],
   "acquisition_targets": [

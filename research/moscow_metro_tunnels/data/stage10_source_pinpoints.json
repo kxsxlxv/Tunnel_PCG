@@ -495,6 +495,69 @@
       ],
       "confidence": "B_user_visual_reference",
       "note": "Used as an explicit production-layout constraint. It does not alter the established contact-rail 690/+160 placement."
+    },
+    {
+      "id": "P10-R2K11-KZEMI-2026",
+      "title": "АО КЗЭМИ / current product: curved horn-rack upright K1351.001-09 for 11 horns",
+      "url": "https://www.vseinstrumenti.ru/product/stojka-kronshtejna-rozhkovogo-krivolinejnogo-ao-kzemi-k1351-001-09-u3-okrashennyj-11-rozhkov-l1440-s3-0-p0000000052-15477820/",
+      "locator": {
+        "product": "K1351.001-09",
+        "current_listing_reviewed": "2026-09-21"
+      },
+      "supports": [
+        "curved upright for 11 horns",
+        "length 1440 mm",
+        "longitudinal width 48 mm",
+        "steel thickness 3 mm"
+      ],
+      "confidence": "A/B_current_manufacturer_product_dimensions"
+    },
+    {
+      "id": "P10-K1350-002-KZEMI-2026",
+      "title": "АО КЗЭМИ / current product: double horn K1350.002",
+      "url": "https://svetelektro.net/tray-metal/p0000011331-zavod-emi-kurgan.html",
+      "locator": {
+        "product": "K1350.002",
+        "current_listing_reviewed": "2026-09-21"
+      },
+      "supports": [
+        "double horn",
+        "overall length 169 mm",
+        "longitudinal width 40 mm",
+        "overall height 87 mm",
+        "steel thickness 4 mm"
+      ],
+      "confidence": "A/B_current_manufacturer_product_dimensions"
+    },
+    {
+      "id": "P10-SP-CABLE-LAYOUT",
+      "title": "СП 120.13330.2022 Метрополитены — tunnel cable placement/order clauses",
+      "url": "https://meganorm.ru/Data2/1/4293801/4293801636.htm",
+      "locator": {
+        "clauses": [
+          "5.10.7.4",
+          "5.10.7.5"
+        ]
+      },
+      "supports": [
+        "single-track tunnel power/control cables arranged on the strong-current side",
+        "ATDP/communications cables arranged on the weak-current side",
+        "cables are carried openly on tunnel cable brackets",
+        "strong-current and weak-current sides use ordered cable groups"
+      ],
+      "confidence": "A_normative_layout"
+    },
+    {
+      "id": "P10-SP-WATER-MAIN-SUPPORT",
+      "title": "СП 120.13330.2022 Метрополитены — tunnel pipeline support interval",
+      "url": "https://internet-law.ru/documents/prod/metodika/0/sp_63529.html",
+      "locator": {
+        "clause": "pipeline attachment interval requirement near 5.9/5.10"
+      },
+      "supports": [
+        "tunnel pipeline supports are installed at intervals required by SP 73.13330 but not less frequently than every 4 m"
+      ],
+      "confidence": "A_normative_support_interval"
     }
   ]
 }

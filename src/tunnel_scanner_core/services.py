@@ -215,6 +215,36 @@ def _radial_arm_polygon(
     )
 
 
+def _wall_attachment_tab_polygon(
+    *,
+    wall_x_m: float,
+    wall_z_m: float,
+    inward_x: float,
+    inward_z: float,
+    up_x: float,
+    up_z: float,
+    height_m: float,
+    radial_thickness_m: float,
+) -> tuple[tuple[float, float], ...]:
+    """Dimensioned K1350.002 wall-side tongue/envelope.
+
+    The current manufacturer fixes an 87 mm horn height and 4 mm steel
+    thickness. Exact stamped bend detail is not public, so the wall-side part
+    is represented by a rectangular tongue that preserves that envelope.
+    """
+    h = 0.5 * height_m
+    ix = inward_x * radial_thickness_m
+    iz = inward_z * radial_thickness_m
+    ux = up_x * h
+    uz = up_z * h
+    return (
+        (wall_x_m - ux, wall_z_m - uz),
+        (wall_x_m + ux, wall_z_m + uz),
+        (wall_x_m + ux + ix, wall_z_m + uz + iz),
+        (wall_x_m - ux + ix, wall_z_m - uz + iz),
+    )
+
+
 def build_r2k11_local_rack_mesh(
     profile: MoscowStage10Profile,
     *,
@@ -249,10 +279,28 @@ def build_r2k11_local_rack_mesh(
         inward = (-sin_a, -cos_a)
         up = (-side_sign * cos_a, side_sign * sin_a)
 
-        # One continuous radial seat under both cable places.
-        arm_length = (
-            rack.second_cable_center_inward_m + rack.horn_radius_m
+        # K1350.002 current product envelope: 169 x 40 x 87 mm at 4 mm
+        # steel. Preserve the exact overall radial length and longitudinal
+        # width; the stamped bend path inside the envelope remains a preview.
+        tab = _wall_attachment_tab_polygon(
+            wall_x_m=wall_x,
+            wall_z_m=wall_z,
+            inward_x=inward[0],
+            inward_z=inward[1],
+            up_x=up[0],
+            up_z=up[1],
+            height_m=rack.horn_overall_height_m,
+            radial_thickness_m=rack.horn_thickness_m,
         )
+        meshes.append(
+            _extrude_y_polygon(
+                tab,
+                half_y_m=0.5 * rack.horn_longitudinal_width_m,
+            )
+        )
+
+        # One continuous radial seat under both cable places.
+        arm_length = rack.horn_overall_length_m
         arm_poly = _radial_arm_polygon(
             wall_x_m=wall_x,
             wall_z_m=wall_z,
@@ -303,15 +351,21 @@ def build_r2k11_local_rack_mesh(
         faces=faces,
         properties={
             "family": rack.family,
+            "assemblyDesignation": rack.assembly_designation,
+            "uprightDesignation": rack.upright_designation,
+            "hornDesignation": rack.horn_designation,
             "sideProfileXSign": side_sign,
             "hornCount": rack.horn_count,
-            "cablePlacesPerHorn": 2,
+            "cablePlacesPerHorn": rack.cable_places_per_horn,
             "overallArcLengthM": rack.overall_arc_length_m,
             "uprightWidthLongitudinalM": rack.upright_width_longitudinal_m,
             "uprightThicknessM": rack.upright_thickness_m,
             "hornPitchM": rack.horn_pitch_m,
             "hornRadiusM": rack.horn_radius_m,
             "hornThicknessM": rack.horn_thickness_m,
+            "hornOverallLengthM": rack.horn_overall_length_m,
+            "hornOverallHeightM": rack.horn_overall_height_m,
+            "hornLongitudinalWidthM": rack.horn_longitudinal_width_m,
             "maxCableDiameterM": rack.max_cable_diameter_m,
             "placementMode": "intrados_following_photo_constrained_elevation",
             "centerProfileZM": rack.center_profile_z_m,
@@ -323,48 +377,87 @@ def build_r2k11_local_rack_mesh(
 def modern_cable_sections_core(
     profile: MoscowStage10Profile,
 ) -> tuple[tuple[str, tuple[tuple[float, float], ...], Mapping[str, Any]], ...]:
-    """One representative longitudinal cable per R2K11 horn level per side."""
+    """Populate the dimensioned R2K11 cable places for the visual preset.
+
+    R2K11/K1350.002 provides two cable places at each of 11 levels. Stage
+    10.5 v2 fills both places on both walls to match the observed dense tunnel
+    service appearance. This is a capacity/density preview, not a project
+    cable schedule.
+    """
     rack = profile.cable_rack
     radius = 0.5 * rack.representative_cable_diameter_m
     rack_radius = profile.intrados_radius_m - rack.shell_clearance_inward_m
     result = []
+    slot_offsets = (
+        rack.first_cable_center_inward_m,
+        rack.second_cable_center_inward_m,
+    )[: rack.occupied_places_per_horn]
     for side_sign in (-1, 1):
+        side_class = (
+            "strong_current_side_contact_rail_side"
+            if side_sign < 0
+            else "weak_current_side_walkway_side"
+        )
         for level in range(rack.horn_count):
             a = _horn_angle(profile, side_sign, level)
             sin_a = math.sin(a)
             cos_a = math.cos(a)
-            cable_center_r = rack_radius - rack.first_cable_center_inward_m
-            cx = cable_center_r * sin_a
-            cz = cable_center_r * cos_a
-            points = tuple(
-                (
-                    cx + radius * math.cos(2.0 * math.pi * i / rack.cable_circle_vertices),
-                    cz + radius * math.sin(2.0 * math.pi * i / rack.cable_circle_vertices),
-                )
-                for i in range(rack.cable_circle_vertices)
-            )
-            name = (
-                f"cable_{'neg' if side_sign < 0 else 'pos'}_"
-                f"{level:02d}"
-            )
-            result.append(
-                (
-                    name,
-                    points,
-                    {
-                        "serviceFamily": "R2K11_supported_longitudinal_cable",
-                        "sideProfileXSign": side_sign,
-                        "rackLevel": level,
-                        "representativeCableDiameterM": (
-                            rack.representative_cable_diameter_m
+            for place_index, slot_offset in enumerate(slot_offsets):
+                cable_center_r = rack_radius - slot_offset
+                cx = cable_center_r * sin_a
+                cz = cable_center_r * cos_a
+                points = tuple(
+                    (
+                        cx
+                        + radius
+                        * math.cos(
+                            2.0 * math.pi * i / rack.cable_circle_vertices
                         ),
-                        "maxRackCableDiameterM": rack.max_cable_diameter_m,
-                        "exactCableScheduleResolved": False,
-                        "occupiedCablePlaceIndex": 0,
-                        "availableCablePlacesPerHorn": 2,
-                    },
+                        cz
+                        + radius
+                        * math.sin(
+                            2.0 * math.pi * i / rack.cable_circle_vertices
+                        ),
+                    )
+                    for i in range(rack.cable_circle_vertices)
                 )
-            )
+                name = (
+                    f"cable_{'neg' if side_sign < 0 else 'pos'}_"
+                    f"{level:02d}_{place_index}"
+                )
+                result.append(
+                    (
+                        name,
+                        points,
+                        {
+                            "serviceFamily": (
+                                "R2K11_supported_longitudinal_cable"
+                            ),
+                            "sideProfileXSign": side_sign,
+                            "serviceSideClass": side_class,
+                            "rackLevel": level,
+                            "representativeCableDiameterM": (
+                                rack.representative_cable_diameter_m
+                            ),
+                            "maxRackCableDiameterM": (
+                                rack.max_cable_diameter_m
+                            ),
+                            "exactCableScheduleResolved": False,
+                            "occupiedCablePlaceIndex": place_index,
+                            "availableCablePlacesPerHorn": (
+                                rack.cable_places_per_horn
+                            ),
+                            "occupiedCablePlacesPerHorn": (
+                                rack.occupied_places_per_horn
+                            ),
+                            "cablePlaceCenterInwardM": slot_offset,
+                            "layoutRuleSource": "P10-SP-CABLE-LAYOUT",
+                            "occupancyMode": (
+                                "full_capacity_visual_density_preview"
+                            ),
+                        },
+                    )
+                )
     return tuple(result)
 
 
@@ -419,6 +512,8 @@ def modern_water_main_section_core(
         "previewOuterDiameterM": water.preview_outer_diameter_m,
         "outerDiameterMode": water.outer_diameter_mode,
         "shellClearanceInwardM": water.shell_clearance_inward_m,
+        "supportMaxPitchM": water.support_max_pitch_m,
+        "supportGeometryMode": water.support_geometry_mode,
         "placementMode": water.placement_mode,
         "materialFamily": water.material_family,
         "normativeSource": water.normative_source,

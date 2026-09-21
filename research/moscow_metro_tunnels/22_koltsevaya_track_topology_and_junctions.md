@@ -499,6 +499,47 @@ Still unknown for a true turnout LOD0:
 - exact installed plate/fastening package;
 - site-specific point-machine rods and detector geometry.
 
+### 5.5 Metro-specific R65/1:9 rail-control geometry from the 2005 instruction
+
+S128 contains more direct rail geometry than the first contract used.
+
+**Table 10, printed p.35** gives the maintained gauge for the R65 / 1520 / curved-secant-point / 1:9 family at named sections:
+
+| Control section | Gauge |
+|---|---:|
+| frame-rail joints | 1520 mm |
+| point tip | 1524 mm |
+| point root, diverging route | 1520 mm |
+| point root, straight route | 1521 mm |
+| middle of turnout curve | 1524 mm |
+| frog / end of turnout curve | 1520 mm |
+
+Therefore a mesh must not keep a naive constant 1520 mm working-face spacing through every part of the switch.
+
+**Table 16, printed pp.44–45** is even more useful. It defines the turnout-curve ordinate as the distance from the **working face of the outer rail of the straight direction** to the **working face of the outer/bearing rail of the turnout curve**. The abscissa is measured from the **point root**. For the R65 1:9 normal turnout with 8300 mm point, the 1520-mm-gauge denominator values are:
+
+| x from point root | ordinate |
+|---:|---:|
+| 0 | 181 mm |
+| 2.000 m | 259 mm |
+| 4.000 m | 350 mm |
+| 6.000 m | 460 mm |
+| 8.000 m | 590 mm |
+| 10.000 m | 740 mm |
+| 12.000 m | 910 mm |
+| 14.000 m | 1100 mm |
+
+This table is a direct **working-face validation polyline** for the diverging rail. Combined with the project-2976 point-root longitudinal station at 11063 mm from the front joint, it gives a much stronger rail-plan validator than radius alone. The geometry agent should preserve the source definition: these are rail **working-face ordinates**, not centerline y coordinates.
+
+The same instruction also gives:
+- point throw at the first connecting-rod axis: **152 +8/-2 mm** (§2.12.11);
+- ordinary rail-joint gap: **8±2 mm**;
+- point-root gap: **5±2 mm**;
+- frog front and tail joints: **0 mm** nominal gap (§2.12.6);
+- at least **12 pairs** of wedge anti-creepers for a tunnel turnout (§2.12.15).
+
+Terminal Table-16 rows after x=14 m have intentionally not been promoted to the machine contract until their 1524/1520 numerator/denominator endpoint semantics are rechecked. The source remains authoritative; the omission is conservative transcription, not a geometry fallback.
+
 ## 6. Civil shell around turnout
 
 ### 6.1 Actual Belorusskaya

@@ -400,7 +400,192 @@
       "confidence": "A",
       "exact_project_id": null,
       "exact_geometry": null
+    },
+    {
+      "id": "MOSCOW_METRO_R50_1_9_PROJECT_2891_REFERENCE_FALLBACK",
+      "status": "FALLBACK_NOT_PROVEN_AT_KOLTSEVAYA_SELECTED_JUNCTION",
+      "purpose": "metro-specific R50 1:9 alternate service-era mesh family when a legacy/R50 preset is explicitly selected; not an assertion about Belorusskaya installation",
+      "source_id": "S107",
+      "manufacturer_context": "Murom switch-product catalogue; project documented by at least the 2005 catalogue mirror",
+      "service_era_note": "The public catalogue establishes that project 2891 existed by 2005. It does not prove use in 1954, at Belorusskaya, or at any specific Line-5 junction.",
+      "project_id": "2891.00.000",
+      "turnout_kind": "ordinary",
+      "rail_type": "R50",
+      "gauge_mm": 1520,
+      "frog_mark": "1:9",
+      "total_length_mm": 31057,
+      "geometry": {
+        "front_joint_to_point_tip_mm": {
+          "value": 4323,
+          "source_id": "S107",
+          "locator": "catalogue p.111 geometric-dimensions drawing",
+          "confidence": "B",
+          "status": "SOURCE_BACKED_DRAWING"
+        },
+        "point_tip_to_turnout_center_mm": {
+          "value": 11132,
+          "source_id": "S107",
+          "locator": "catalogue p.111 geometric-dimensions drawing",
+          "confidence": "B",
+          "status": "SOURCE_BACKED_DRAWING"
+        },
+        "turnout_center_to_mathematical_frog_center_mm": {
+          "value": 13722,
+          "source_id": "S107",
+          "locator": "catalogue p.111 geometric-dimensions drawing",
+          "confidence": "B",
+          "status": "SOURCE_BACKED_DRAWING"
+        },
+        "point_tip_to_mathematical_frog_center_mm": {
+          "value": 24854,
+          "derivation_check": "11132 + 13722 = 24854",
+          "source_id": "S107",
+          "locator": "catalogue p.111 geometric-dimensions drawing",
+          "confidence": "B",
+          "status": "SOURCE_BACKED_DRAWING"
+        },
+        "mathematical_frog_center_to_rear_joint_mm": {
+          "value": 1880,
+          "derivation_check": "4323 + 24854 + 1880 = 31057",
+          "source_id": "S107",
+          "locator": "catalogue p.111 geometric-dimensions drawing",
+          "confidence": "B",
+          "status": "SOURCE_BACKED_DRAWING"
+        },
+        "point_radius_mm": 297259,
+        "turnout_curve_radius_mm": 200000,
+        "point_initial_angle": "0°40′51.50″",
+        "frog_angle": "6°20′25″",
+        "source_id": "S107"
+      },
+      "rail_components": {
+        "frog": "assembled; cast core joined to rail wing rails",
+        "guard_rails": "independent of the running rail",
+        "fastening": "elastic rail clips; high-flange plate morphology in product family",
+        "rail_lengths_mm": [
+          5936,
+          6049,
+          7622,
+          7684,
+          8619,
+          8619
+        ],
+        "source_id": "S107",
+        "confidence": "B"
+      },
+      "bearer_layout": {
+        "foundation": "wooden switch bearers",
+        "length_groups_m": [
+          {
+            "count": 7,
+            "length_m": 3
+          },
+          {
+            "count": 7,
+            "length_m": 3.25
+          },
+          {
+            "count": 7,
+            "length_m": 3.5
+          },
+          {
+            "count": 5,
+            "length_m": 3.75
+          },
+          {
+            "count": 3,
+            "length_m": 4
+          },
+          {
+            "count": 4,
+            "length_m": 4.25
+          },
+          {
+            "count": 7,
+            "length_m": 4.5
+          },
+          {
+            "count": 4,
+            "length_m": 4.75
+          },
+          {
+            "count": 5,
+            "length_m": 5
+          },
+          {
+            "count": 4,
+            "length_m": 5.25
+          }
+        ],
+        "total_bearers_derived": 53,
+        "pitch_groups_mm": [
+          {
+            "count": 7,
+            "pitch": 520,
+            "total": 3640
+          },
+          {
+            "count": 5,
+            "pitch": 565,
+            "total": 2825,
+            "transcription_note": "one OCR extraction shows 2625; the visual drawing/product 5×565 arithmetic supports 2825"
+          },
+          {
+            "count": 9,
+            "pitch": 570,
+            "total": 5130
+          },
+          {
+            "count": 13,
+            "pitch": 585,
+            "total": 7605
+          },
+          {
+            "count": 5,
+            "pitch": 580,
+            "total": 2900
+          },
+          {
+            "count": 18,
+            "pitch": 545,
+            "total": 9810
+          },
+          {
+            "count": 8,
+            "pitch": 560,
+            "total": 4480
+          }
+        ],
+        "exact_order_mapping_of_all_pitch_groups": null,
+        "source_id": "S107",
+        "status": "PARTIAL_SOURCE_BACKED"
+      },
+      "product_package_reference": {
+        "baseplates_or_single_plates_count": 121,
+        "track_screws_24x170_count": 976,
+        "insulating_joints_count": 2,
+        "point_machine_family": "SP-6 compatible / separately supplied",
+        "source_id": "S107",
+        "status": "PRODUCT_PACKAGE_NOT_INSTALLED_SITE_PROOF"
+      },
+      "speeds_kmh": {
+        "straight": 100,
+        "diverging": 40,
+        "status": "SOURCE_BACKED_PRODUCT_CAPABILITY",
+        "source_id": "S107"
+      },
+      "exact_installed_line5_site": null,
+      "exact_point_root_and_opening_profile": null,
+      "exact_frog_nose_and_wing_CAD": null,
+      "exact_guard_rail_chainages": null,
+      "exact_point_machine_rods_geometry": null,
+      "mesh_use_rule": "Use only under an explicitly selected R50 fallback/service-era preset. Keep fallback=true and installed_model_unconfirmed=true."
     }
   ],
-  "source_pinpoints_file": "koltsevaya_junction_source_pinpoints.json"
+  "source_pinpoints_file": "koltsevaya_junction_source_pinpoints.json",
+  "service_era_selection": {
+    "selected_koltsevaya_first_mesh": "R65 reference path remains the current first-mesh choice because the existing Stage-10 service preset is R65/KD65/2001-reference; this does not prove the Belorusskaya installed turnout.",
+    "alternate_legacy_r50": "MOSCOW_METRO_R50_1_9_PROJECT_2891_REFERENCE_FALLBACK",
+    "rule": "Civil opening era does not select turnout rail type. The geometry agent must choose R50/R65 from an explicit service-era preset or site evidence."
+  }
 }

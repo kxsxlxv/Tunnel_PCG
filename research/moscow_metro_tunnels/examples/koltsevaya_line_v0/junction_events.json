@@ -160,7 +160,31 @@
         "first_mesh_fallback_archetype_id": "MOSCOW_METRO_R65_1_9_PROJECT_2976_REFERENCE_FALLBACK",
         "fallback_rule": "Project 2976 is metro-specific and dimensioned, but is NOT proven to be the installed Belorusskaya turnout. Tag all generated objects as fallback.",
         "exact_local_speed_limit_kmh": null,
-        "exact_point_machine_model": null
+        "exact_point_machine_model": null,
+        "plan_profile_constraints": {
+          "straight_track_required": true,
+          "grade_per_mille_max_normal": 5,
+          "grade_per_mille_max_difficult": 10,
+          "turnout_center_to_plan_or_vertical_curve_start_min_m": 20,
+          "turnout_center_to_station_platform_start_min_m": 25,
+          "source_id": "S022",
+          "locator": "SP 120.13330.2022 §5.3.5",
+          "status": "SOURCE_BACKED_CURRENT_RULE"
+        },
+        "rail_inclination": {
+          "value": "no poduklonka",
+          "source_id": "S102",
+          "locator": "2005 Instruction §2.4.2",
+          "status": "SOURCE_BACKED_NEAR_SERVICE_ERA"
+        },
+        "frog_guardrail_mesh_constraints": {
+          "counterrail_to_frog_core_working_faces_min_mm": 1472,
+          "counterrail_to_wing_rail_working_faces_max_mm": 1435,
+          "exact_flangeway_profile": null,
+          "source_id": "S102",
+          "locator": "§2.12.2 / Fig.25 context",
+          "status": "SOURCE_BACKED_CONSTRAINT"
+        }
       },
       "civil_geometry_fallback_reference": {
         "archetype_id": "METRO_STEPWISE_BRANCH_CHAMBER_RC_TUBING_2001_REFERENCE",
@@ -246,11 +270,11 @@
           },
           {
             "chamber": 6,
-            "function": "two-vault common-wall transition chamber",
+            "function": "two-vault transition chamber before fully independent tunnels",
             "length_m": 15,
-            "status": "SOURCE_BACKED_GENERIC_TWO_VAULT_REFERENCE",
+            "status": "SOURCE_BACKED",
             "source_id": "S058",
-            "locator": "Frolov 2001 printed pp.148-149, Fig.4.34 and adjacent text",
+            "locator": "Frolov 2001 printed p.150 text after Fig.4.35; Fig.4.34 section 2-2",
             "era": "2001 engineering reference",
             "applicability": "generic closed-method metro branch-chamber reference; not Belorusskaya as-built",
             "confidence": "A_for_printed_dimensions_B_for_transfer_to_generic_PCG",
@@ -265,7 +289,7 @@
               "exact_wall_thickness_m": null,
               "exact_track_axis_separation_m": null
             },
-            "note": "Printed p.150 explicitly states that chamber 6 consists of two single-track tunnels whose open linings bear on a concrete/RC wall. Independent single-track tunnels occur only after inter-track spacing exceeds 6 m.",
+            "note": "Do not instantiate two fully separated circular shells inside chamber 6. The two open linings bear on the central wall.",
             "section_2_2_horizontal_callouts": {
               "raw_axis_to_central_wall_zone_m": [
                 2.05,
@@ -273,7 +297,11 @@
               ],
               "exact_track_axis_separation_m": null,
               "status": "RAW_SOURCE_CALLOUTS_DATUM_AMBIGUOUS"
-            }
+            },
+            "civil_form": "two open single-track circular linings supported on a concrete/reinforced-concrete central wall",
+            "each_open_lining_inner_diameter_m": 5.14,
+            "each_open_lining_outer_diameter_m": 5.64,
+            "independent_tunnels": false
           }
         ],
         "derived_landmarks": {
@@ -281,7 +309,7 @@
             "value": 61,
             "derivation": "10 + 15 + 11.25 + 9.75 + 15",
             "source_id": "S058",
-            "locator": "Frolov 2001 printed pp.148-150, Fig.4.34 + text",
+            "locator": "derived from chamber lengths in Fig.4.34",
             "status": "RECONSTRUCTED_FROM_SOURCE_LENGTHS",
             "confidence": "A/B"
           },
@@ -291,7 +319,7 @@
             "value": 46,
             "derivation": "10 + 15 + 11.25 + 9.75",
             "source_id": "S058",
-            "locator": "Frolov 2001 printed pp.148-150, Fig.4.34 + text",
+            "locator": "derived from chamber lengths in printed pp.148-149 / Fig.4.34",
             "status": "RECONSTRUCTED_FROM_SOURCE_LENGTHS",
             "confidence": "A/B"
           },
@@ -300,6 +328,20 @@
             "value_constraint": ">=61.0",
             "reason": "chamber 6 itself is still a two-vault common-wall structure; source states independent single-track tunnels only once inter-track spacing exceeds 6 m. Exact post-chamber-6 transition chainage is not dimensioned.",
             "status": "CONSTRAINED_NOT_EXACT"
+          },
+          "independent_tunnel_condition": {
+            "intertrack_axis_separation_gt_m": 6,
+            "source_id": "S058",
+            "locator": "printed p.150, text after Fig.4.35",
+            "status": "SOURCE_BACKED_CONDITION",
+            "exact_chainage": null
+          },
+          "generic_pcq_cutover_convention": {
+            "value": "end_of_chamber_6",
+            "chainage_from_chamber2_start_m": 61,
+            "status": "FALLBACK_CONVENTION",
+            "confidence": "C",
+            "reason": "The source states independent one-track tunnels begin where intertrack exceeds 6 m but does not dimension the exact crossing point within/after chamber 6. End-of-chamber-6 is a deterministic PCG convention, not a source fact."
           }
         },
         "z_rule": "Do not infer a numerical relative Z from the schematic sections; actual-site Z remains null.",
@@ -337,6 +379,13 @@
           ],
           "caution": "Fig.4.33b is a generic closed-method single-track-branch layout. It is not the Belorusskaya depot junction, and its marked longitudinal reference-line semantics must not be re-labelled as point-tip chainage without a project legend.",
           "status": "GENERIC_DIMENSIONED_PLAN_REFERENCE"
+        },
+        "end_transition_details": {
+          "end_gaps_between_different_span_chambers": "fill with monolithic concrete",
+          "waterproofing": "provide as required by groundwater/water saturation",
+          "source_id": "S058",
+          "locator": "printed p.150",
+          "status": "SOURCE_BACKED"
         }
       },
       "contact_rail_events": [
@@ -460,6 +509,49 @@
             "value": "required before facing points on main tracks in the stated operating condition; also before station turnouts/crossovers",
             "source_id": "S022",
             "locator": "SP 120.13330.2022 §5.7.1.17",
+            "status": "SOURCE_BACKED_CURRENT_RULE"
+          },
+          {
+            "field": "service-era turnout trackbed",
+            "value": "ballast; ordinary track concrete omitted under turnout/crossover",
+            "source_id": "S102",
+            "locator": "2005 Instruction §2.9.1 and §2.10.1",
+            "era": "2005 near the selected 2001-reference service era",
+            "status": "SOURCE_BACKED_NEAR_SERVICE_ERA"
+          },
+          {
+            "field": "track-concrete exclusion length",
+            "value_m_each_side": [
+              5,
+              25
+            ],
+            "source_id": "S102",
+            "locator": "2005 Instruction §2.10.1, printed p.32",
+            "note": "track concrete omitted on adjacent sections on each side of turnout/crossover",
+            "status": "SOURCE_BACKED_NEAR_SERVICE_ERA"
+          },
+          {
+            "field": "minimum ballast thickness under each rail at turnout/crossover in tunnel",
+            "value_m": 0.24,
+            "source_id": "S102",
+            "locator": "2005 Instruction §2.10.2, printed p.32",
+            "status": "SOURCE_BACKED_NEAR_SERVICE_ERA"
+          },
+          {
+            "field": "limit rail",
+            "trigger_axis_separation_m": 3.4,
+            "mounting": "fixed to sleepers/bearers in the intertrack",
+            "top_elevation_rule": "must not project above UGR",
+            "source_id": "S102",
+            "locator": "2005 Instruction §2.11.2, printed pp.33-34",
+            "status": "SOURCE_BACKED_NEAR_SERVICE_ERA"
+          },
+          {
+            "field": "turnout-parts storage platform",
+            "value": "UGR-level platform near underground turnout/crossover for stored metal parts",
+            "source_id": "S022",
+            "locator": "SP 120.13330.2022 §5.7.1.17",
+            "era": "current",
             "status": "SOURCE_BACKED_CURRENT_RULE"
           }
         ],
@@ -658,20 +750,13 @@
         },
         "first_geometry_fallback": {
           "source_archetype": "METRO_STEPWISE_BRANCH_CHAMBER_RC_TUBING_2001_REFERENCE",
-          "chamber2_start_to_two_vault_chamber6_start_m": 46,
-          "chamber6_length_m": 15,
-          "chamber6_type": "two-vault common-wall chamber using open single-track lining arcs on a concrete/RC wall",
-          "chamber6_lining_arc_reference": {
-            "inner_radius_m": 2.57,
-            "outer_radius_m": 2.82,
-            "lining_axis_above_ugr_m": 1.7
-          },
-          "independent_single_track_tunnel_rule": "only after inter-track spacing exceeds 6 m",
-          "independent_single_track_tunnel_start_from_chamber2_m": null,
-          "lower_bound_from_chamber2_m": 61,
-          "exact_independent_tunnel_internal_diameter_m": null,
-          "exact_independent_tunnel_outer_diameter_m": null,
-          "status": "GENERIC_REFERENCE_NOT_BELORUSSKAYA_AS_BUILT"
+          "source_backed_independent_tunnel_condition": "intertrack axis separation > 6.0 m",
+          "exact_condition_chainage_m": null,
+          "deterministic_pcg_convention": "instantiate independent round branch/main tunnels after chamber 6 if an exact project split is unavailable",
+          "convention_chainage_from_chamber2_start_m": 61,
+          "ordinary_independent_tunnel_inner_diameter_m": 5.14,
+          "ordinary_independent_tunnel_outer_diameter_m": 5.64,
+          "status": "GENERIC_REFERENCE_PLUS_EXPLICIT_FALLBACK_CONVENTION_NOT_BELORUSSKAYA_AS_BUILT"
         }
       },
       "contact_rail_relative_to_turnout_geometry": {
@@ -850,6 +935,45 @@
           "absolute_geodetic_use": false,
           "note": "These are internally consistent concept-frame crown marks. They are not UGR and are not promoted to absolute Moscow elevation until the 133.05/129.05 datum is explicitly tied to a geodetic system."
         }
+      },
+      "contact_rail_service_era_2005": {
+        "applicability": "preferred historical/near-era constraint set for the legacy 2001-reference service preset; exact Belorusskaya local layout still unknown",
+        "turnout_or_crossover_air_gap": {
+          "mode": "overlapping",
+          "max_length_m": 7.7,
+          "source_id": "S102",
+          "locator": "§3.10, printed p.61",
+          "status": "SOURCE_BACKED_NEAR_SERVICE_ERA"
+        },
+        "non_main_exception_max_gap_m": {
+          "value": 10,
+          "condition": "exceptional, with metro chief permission",
+          "source_id": "S102",
+          "locator": "§3.10"
+        },
+        "equipment_clearance_from_metal_ramp_end_min_m": 0.8,
+        "main_track_ramps": {
+          "receiving": "1:30",
+          "trailing": "1:25",
+          "existing_line_legacy_allowed": "1:25 until reconstruction"
+        },
+        "station_and_connecting_track_ramps": "1:25 both ends",
+        "ramp_cover": "protective box over full ramp length",
+        "ramp_end_tip_materials": [
+          "beech",
+          "polyethylene"
+        ],
+        "contact_rail_segment_with_ramps_min_m": {
+          "normal": 18.7,
+          "exceptional_main_station_connecting": 12.5
+        },
+        "source_id": "S102",
+        "locators": [
+          "§3.10",
+          "§3.12",
+          "§3.14"
+        ],
+        "status": "SOURCE_BACKED_NEAR_SERVICE_ERA"
       }
     },
     {

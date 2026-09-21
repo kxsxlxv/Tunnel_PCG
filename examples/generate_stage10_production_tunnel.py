@@ -306,9 +306,11 @@ def _validate_stage10_build(
             raise AssertionError("modern preset generated no contact supports")
         for obj_type in (
             "production_contact_rail_support_block",
+            "production_contact_rail_base_plate",
             "production_contact_rail_bracket",
             "production_contact_rail_insulator",
             "production_contact_rail_fastening_unit",
+            "production_contact_rail_clamp_bolts",
             "production_contact_rail_attachment_dowels",
             "production_contact_rail_support_hood",
         ):
@@ -316,6 +318,36 @@ def _validate_stage10_build(
                 raise AssertionError(
                     f"{obj_type}: count does not match modern contact support count"
                 )
+        bracket = build.scene.objects_of_type(
+            "production_contact_rail_bracket"
+        )[0]
+        bp = bracket.custom_properties
+        if bp.get("geometryMode") != "dimensioned_hook_channel_873x373_v3":
+            raise AssertionError("modern bracket did not use dimensioned v3 geometry")
+        for key, expected in (
+            ("drawingReferenceToAxisM", 0.683),
+            ("drawingReferenceToOuterEnvelopeM", 0.873),
+            ("drawingUpperReturnM", 0.180),
+            ("drawingTopAboveUGRM", 0.373),
+            ("outerEnvelopeProfileAbsXM", 1.633),
+        ):
+            if not math.isclose(float(bp.get(key, -1)), expected, abs_tol=2e-9):
+                raise AssertionError(f"modern bracket {key} mismatch")
+        clamp = build.scene.objects_of_type(
+            "production_contact_rail_fastening_unit"
+        )[0]
+        if clamp.custom_properties.get("geometryMode") != (
+            "upper_flange_saddle_insulated_two_bolt_v3"
+        ):
+            raise AssertionError("modern contact clamp topology mismatch")
+        if int(clamp.custom_properties.get("boltCount", -1)) != 2:
+            raise AssertionError("modern contact clamp requires two bolts")
+        dowels = build.scene.objects_of_type(
+            "production_contact_rail_attachment_dowels"
+        )[0]
+        if int(dowels.custom_properties.get("quantity", -1)) != 4:
+            raise AssertionError("modern contact base requires four anchors")
+
         if meta.get("contactRailSupportSeparateFromRunningSupport") is not True:
             raise AssertionError("contact supports must remain separate from running supports")
         if bool(meta.get("contactRailCoverEraMismatch", True)):

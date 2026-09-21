@@ -968,6 +968,88 @@ def test_stage10_5_replaced_stage7_source_skeleton_is_geometry_equivalent():
     assert fast_meta == legacy_meta
 
 
+def test_stage10_5_rc_hidden_outer_joint_solids_are_omitted_by_default():
+    profile = load_stage10_initial_moscow_profile(
+        civil_archetype="rc_block_6100_5600"
+    )
+    build = build_production_tunnel(
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=2,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.0,
+        ),
+        include_bolts=False,
+        production_config=ProductionConfig(
+            namespace="stage10-5-rc-no-hidden-joints",
+            moscow_profile=profile,
+            moscow_stage="10.5",
+            moscow_civil_topology="kba",
+        ),
+        seed=5812,
+    )
+    assert build.scene.objects_of_type("lining_segment")
+    assert build.scene.objects_of_type("prescribed_radial_joint") == ()
+    assert build.scene.objects_of_type("prescribed_circumferential_joint") == ()
+    assert build.scene.metadata["productionGeometry"][
+        "prescribedOuterJointSolidsRemoved"
+    ] is True
+
+
+def test_stage10_5_rc_hidden_outer_joint_solids_can_be_kept_for_debug():
+    profile = load_stage10_initial_moscow_profile(
+        civil_archetype="rc_block_6100_5600"
+    )
+    build = build_production_tunnel(
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=2,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.0,
+        ),
+        include_bolts=False,
+        production_config=ProductionConfig(
+            namespace="stage10-5-rc-debug-hidden-joints",
+            moscow_profile=profile,
+            moscow_stage="10.5",
+            moscow_civil_topology="kba",
+            keep_prescribed_outer_joint_solids=True,
+        ),
+        seed=5812,
+    )
+    assert build.scene.objects_of_type("prescribed_radial_joint")
+    assert build.scene.objects_of_type("prescribed_circumferential_joint")
+    assert build.scene.metadata["productionGeometry"][
+        "prescribedOuterJointSolidsRemoved"
+    ] is False
+
+
+def test_stage10_5_rc_chunk_first_omits_hidden_outer_joint_solids():
+    profile = load_stage10_initial_moscow_profile(
+        civil_archetype="rc_block_6100_5600"
+    )
+    plan = build_stage10_5_rc_modern_chunk_plan(
+        chunk_length_m=2.0,
+        boundary_policy=ChunkBoundaryPolicy.EXACT_LENGTH,
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=4,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.0,
+            ring_rotation_strategy=RingRotationStrategy.RINGWISE_GAUSSIAN,
+        ),
+        include_bolts=False,
+        production_config=ProductionConfig(
+            namespace="stage10-5-rc-chunk-no-hidden-joints",
+            moscow_profile=profile,
+            moscow_stage="10.5",
+            moscow_civil_topology="kba",
+        ),
+        seed=5812,
+    )
+    first = next(iter_stage10_5_rc_modern_chunk_scene_packages(plan))
+    assert first.objects_of_type("lining_segment")
+    assert first.objects_of_type("prescribed_radial_joint") == ()
+    assert first.objects_of_type("prescribed_circumferential_joint") == ()
+
+
 def test_stage10_5_rc_transfer_uses_requested_surface_meshing_tolerance():
     profile = load_stage10_initial_moscow_profile(
         civil_archetype="rc_block_6100_5600"

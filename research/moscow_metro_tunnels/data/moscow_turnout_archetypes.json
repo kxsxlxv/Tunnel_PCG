@@ -125,7 +125,7 @@
       },
       "rail_inclination_in_turnout": {
         "value": "no rail cant / no poduklonka",
-        "source_id": "S102",
+        "source_id": "S126",
         "locator": "2005 Instruction §2.4.2, printed p.15",
         "era": "2005 service rule",
         "applicability": "turnouts, crossovers and single crossovers",
@@ -135,14 +135,14 @@
       "frog_guardrail_clearance_constraints": {
         "counterrail_to_frog_core_working_faces_min_mm": {
           "value": 1472,
-          "source_id": "S102",
+          "source_id": "S126",
           "locator": "§2.12.2, printed p.36 / Fig.25 context",
           "confidence": "A/B",
           "status": "SOURCE_BACKED"
         },
         "counterrail_to_wing_rail_working_faces_max_mm": {
           "value": 1435,
-          "source_id": "S102",
+          "source_id": "S126",
           "locator": "§2.12.2, printed p.36 / Fig.25 context",
           "confidence": "A/B",
           "status": "SOURCE_BACKED"
@@ -151,7 +151,7 @@
       },
       "turnout_trackbed_service_era_2005": {
         "foundation": "ballast, not ordinary track-concrete embedment",
-        "source_id": "S102",
+        "source_id": "S126",
         "locator": "§2.9.1 and §2.10.1-2.10.2, printed pp.29-32",
         "track_concrete_omitted_under_turnout": true,
         "track_concrete_omitted_adjacent_each_side_m": [
@@ -358,8 +358,8 @@
         "total_bearers_status": "DERIVED_FROM_SOURCE_GROUP_COUNTS",
         "independent_era_confirmation": {
           "source_ids": [
-            "S102",
-            "S103"
+            "S126",
+            "S127"
           ],
           "instruction_2005": {
             "single_turnout_length_range_m": [
@@ -367,7 +367,7 @@
               5.25
             ],
             "r65_upper_face_family": "widened/wide family wording in instruction",
-            "locator": "S102 §2.9.6, printed p.31"
+            "locator": "S126 §2.9.6, printed p.31"
           },
           "gost_8816_2003_A4": {
             "rail_and_frog": "R65/R50/R43, 1:9",
@@ -427,7 +427,7 @@
               "sawn_side_height_h1_min": 120
             },
             "exact_width_class_by_longitudinal_position": null,
-            "locator": "S103 §4.3 Table 1 and §4.8 Table 2 A4"
+            "locator": "S127 §4.3 Table 1 and §4.8 Table 2 A4"
           },
           "note": "The aggregate length-count distribution exactly matches the 68-piece manufacturer/project-2976 bearer inventory; this is independent dimensional confirmation. It still does not prove project 2976 was installed at Belorusskaya.",
           "confidence": "A_for_standard_set_B_for_project_match"
@@ -595,21 +595,21 @@
       "plan_profile_placement_constraints_ref": "MOSCOW_METRO_MAIN_TURNOUT_1_9_CONSTRAINT.plan_profile_placement",
       "rail_inclination": {
         "value": "no rail cant / no poduklonka",
-        "source_id": "S102",
+        "source_id": "S126",
         "locator": "2005 Instruction §2.4.2",
         "status": "SOURCE_BACKED_NEAR_SERVICE_ERA"
       },
       "frog_guardrail_constraints": {
         "counterrail_to_frog_core_working_faces_min_mm": {
           "value": 1472,
-          "source_id": "S102",
+          "source_id": "S126",
           "locator": "§2.12.2, printed p.36 / Fig.25 context",
           "confidence": "A/B",
           "status": "SOURCE_BACKED"
         },
         "counterrail_to_wing_rail_working_faces_max_mm": {
           "value": 1435,
-          "source_id": "S102",
+          "source_id": "S126",
           "locator": "§2.12.2, printed p.36 / Fig.25 context",
           "confidence": "A/B",
           "status": "SOURCE_BACKED"

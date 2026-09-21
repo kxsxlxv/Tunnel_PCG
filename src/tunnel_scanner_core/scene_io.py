@@ -11,7 +11,35 @@ from .scene import LabelPolicy, SceneMode, SceneObject, ScenePackage
 SCENE_SCHEMA_VERSION = 1
 
 
-def scene_package_to_dict(package: ScenePackage) -> dict[str, Any]:
+def scene_package_to_dict(
+    package: ScenePackage,
+    *,
+    include_custom_properties: bool = True,
+) -> dict[str, Any]:
+    def object_dict(obj: SceneObject) -> dict[str, Any]:
+        data = {
+            "name": obj.name,
+            "vertices": obj.vertices,
+            "faces": obj.faces,
+            "objectType": obj.object_type,
+            "ringID": obj.ring_id,
+            "labelID": obj.label_id,
+            "instanceID": obj.instance_id,
+            "semanticClass": obj.semantic_class,
+            "segmentID": obj.segment_id,
+            "segmentName": obj.segment_name,
+            "segmentKind": obj.segment_kind,
+            "reconstruction": obj.reconstruction,
+            "collectionPath": obj.collection_path,
+            "extraProperties": dict(obj.extra_properties),
+        }
+        if include_custom_properties:
+            # Retained by default for schema/backward compatibility. The field
+            # is derivable from canonical fields + extraProperties, so compact
+            # production exports may omit it without information loss.
+            data["customProperties"] = obj.custom_properties
+        return data
+
     return {
         "schema": "tunnel_scanner_scene",
         "schemaVersion": SCENE_SCHEMA_VERSION,
@@ -19,32 +47,33 @@ def scene_package_to_dict(package: ScenePackage) -> dict[str, Any]:
         "mode": package.mode.value,
         "labelPolicy": package.label_policy.value,
         "metadata": dict(package.metadata),
-        "objects": [
-            {
-                "name": obj.name,
-                "vertices": obj.vertices,
-                "faces": obj.faces,
-                "objectType": obj.object_type,
-                "ringID": obj.ring_id,
-                "labelID": obj.label_id,
-                "instanceID": obj.instance_id,
-                "semanticClass": obj.semantic_class,
-                "segmentID": obj.segment_id,
-                "segmentName": obj.segment_name,
-                "segmentKind": obj.segment_kind,
-                "reconstruction": obj.reconstruction,
-                "collectionPath": obj.collection_path,
-                "extraProperties": dict(obj.extra_properties),
-                "customProperties": obj.custom_properties,
-            }
-            for obj in package.objects
-        ],
+        "objects": [object_dict(obj) for obj in package.objects],
     }
 
 
-def write_scene_package_json(package: ScenePackage, path: str | Path) -> Path:
+def write_scene_package_json(
+    package: ScenePackage,
+    path: str | Path,
+    *,
+    compact: bool = False,
+) -> Path:
+    """Write a scene without constructing the final JSON string in memory.
+
+    Compact mode also omits redundant customProperties because the reader
+    reconstructs them losslessly from canonical fields and extraProperties.
+    """
     path = Path(path)
-    path.write_text(json.dumps(scene_package_to_dict(package), indent=2), encoding="utf-8")
+    data = scene_package_to_dict(
+        package,
+        include_custom_properties=not compact,
+    )
+    with path.open("w", encoding="utf-8") as stream:
+        json.dump(
+            data,
+            stream,
+            indent=None if compact else 2,
+            separators=(",", ":") if compact else None,
+        )
     return path
 
 

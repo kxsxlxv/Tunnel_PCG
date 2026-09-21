@@ -388,8 +388,13 @@
     "exact_switch_chainage": null,
     "turnout_archetype_id": "MOSCOW_METRO_R65_1_9_PROJECT_2976_REFERENCE_FALLBACK",
     "installed_turnout_project_confirmed": false,
-    "civil_chamber_archetype_id": "BELORUSSKAYA_CAST_IRON_DEPOT_JUNCTION_ACTUAL_CONSTRAINT_PLUS_FROLOV_STEPWISE_REFERENCE",
-    "branch_end_model": "cut before depot; exact cut XY unresolved"
+    "civil_chamber_archetype_id": "BELORUSSKAYA_CAST_IRON_DEPOT_JUNCTION_ACTUAL_CONSTRAINT",
+    "branch_end_model": "cut before depot; exact cut XY unresolved",
+    "civil_fallback_reference_ids": [
+      "METRO_STEPWISE_BRANCH_CHAMBER_TUBING_2001_REFERENCE",
+      "CAST_IRON_CROSSOVER_CHAMBER_8750_1987_REFERENCE",
+      "MOSCOW_CAST_IRON_CROWN_MONOLITHIC_WALL_INVERT_REFERENCE"
+    ]
   },
   "global_unknowns": [
     "exact current OSM way IDs and node IDs inside child routes 300607 and 1462011 until relation/full or PBF bytes are acquired",
@@ -500,5 +505,6 @@
       ],
       "recommended_use": "topology/visual validation; exact track number and geometry remain unresolved"
     }
-  ]
+  ],
+  "civil_archetype_registry": "../../data/moscow_junction_civil_archetypes.json"
 }

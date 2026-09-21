@@ -345,14 +345,15 @@ Stress/integration gate:
 
 Profile schema is now **2.2** because the dimensioned support drawing is part of the typed machine contract.
 
-Latest fully green baseline before the v3 support-drawing update:
+Current fully green v3 baseline:
 
-    192 tests passed
+    193 tests passed
     Stage 10.1 CLI compatibility smoke       PASS
     Stage 10.2 CLI compatibility smoke       PASS
     Stage 10.3 CLI compatibility smoke       PASS
     Stage 10.4 CLI compatibility smoke       PASS
     Stage 10.5 modern CLI smoke              PASS
+    Stage 10.5 6.1/5.6 RC CLI smoke          PASS
     Stage 10.5 legacy CLI smoke              PASS
     Stage 8/9 stress/topology gates          PASS
     Stage 10.1-10.5 verifiers                PASS

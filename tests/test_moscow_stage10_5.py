@@ -172,8 +172,8 @@ def test_stage10_5_profile_contains_modern_default_and_legacy_alternative():
         abs_tol=1e-12,
     )
     assert math.isclose(rack.horn_pitch_m, 0.125, abs_tol=1e-12)
-    assert math.isclose(rack.first_cable_center_inward_m, 0.070, abs_tol=1e-12)
-    assert math.isclose(rack.second_cable_center_inward_m, 0.125, abs_tol=1e-12)
+    assert math.isclose(rack.first_cable_center_inward_m, 0.0375, abs_tol=1e-12)
+    assert math.isclose(rack.second_cable_center_inward_m, 0.1165, abs_tol=1e-12)
     assert math.isclose(rack.max_cable_diameter_m, 0.065, abs_tol=1e-12)
 
 
@@ -195,10 +195,34 @@ def test_stage10_5_r2k11_racks_repeat_on_both_walls_and_stay_inside_shell():
         assert rack.properties["commonHorizontalUnderbar"] is False
         assert rack.properties["separateWallTab"] is False
         assert rack.properties["separateHorizontalNeck"] is False
-        assert rack.properties["hornGeometryMode"] == (
-            "single_continuous_omega_ribbon_v5_smoother"
+        assert rack.properties["centralOmegaCrest"] is False
+        assert rack.properties["hornGeometryMode"] == "double_u_cradle_pair_v6"
+        assert rack.properties["hornUCradleCount"] == 2
+        assert math.isclose(
+            rack.properties["hornUVisualPairSpanM"],
+            0.154,
+            abs_tol=1e-12,
         )
-        assert rack.properties["hornRibbonSamplesPerSpan"] == 4
+        assert math.isclose(
+            rack.properties["hornUCentralGapM"],
+            0.004,
+            abs_tol=1e-12,
+        )
+        assert math.isclose(
+            rack.properties["hornUInnerClearDiameterM"],
+            0.067,
+            abs_tol=1e-12,
+        )
+        assert tuple(rack.properties["hornUCableCenterOffsetsM"]) == (
+            0.0375,
+            0.1165,
+        )
+        assert math.isclose(
+            rack.properties["hornUMaxCableRadialClearanceM"],
+            0.001,
+            abs_tol=1e-12,
+        )
+        assert rack.properties["hornUArcSegments"] == 8
         if side < 0:
             assert math.isclose(
                 rack.properties["centerProfileZM"],
@@ -222,6 +246,12 @@ def test_stage10_5_r2k11_racks_repeat_on_both_walls_and_stay_inside_shell():
         props["occupiedCablePlaceIndex"]
         for _name, _section, props in cables
     } == {0, 1}
+    cable_centers = {
+        props["occupiedCablePlaceIndex"]: props["cablePlaceCenterInwardM"]
+        for _name, _section, props in cables
+    }
+    assert math.isclose(cable_centers[0], 0.0375, abs_tol=1e-12)
+    assert math.isclose(cable_centers[1], 0.1165, abs_tol=1e-12)
     assert all(
         props["occupiedCablePlacesPerHorn"] == 1
         for _name, _section, props in cables

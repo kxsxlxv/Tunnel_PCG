@@ -1830,7 +1830,7 @@ def _apply_stage10_civil_archetype(
     )
     civil["family"] = "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
     civil["shape"] = (
-        "concentric circular smooth envelope for 6.1/5.6 m Moscow RC block family"
+        "circular 6.1/5.6 m Moscow RC lining with ten identical curved blocks"
     )
     civil["intrados"].update(
         {
@@ -1845,7 +1845,8 @@ def _apply_stage10_civil_archetype(
             "diameter_m": 2.0 * extrados_radius,
             "basis": (
                 "S026 documented Moscow 6.1/5.6 m ten-block RC lining; "
-                "smooth concentric envelope used until block-edge CAD is implemented"
+                "principal radii and equal ten-block topology are rendered directly, "
+                "while detailed radial-end hole/pin CAD remains unresolved"
             ),
             "confidence": "C",
         }
@@ -1868,24 +1869,25 @@ def _apply_stage10_civil_archetype(
         "source": "S026",
         "confidence": "C",
         "warning": (
-            "S026 fixes the ten-block family and principal dimensions. "
-            "Stage-10 currently renders a smooth envelope rather than fabricated "
-            "block joints/pins."
+            "S026 fixes the ten identical blocks and principal dimensions. "
+            "Stage-10 renders the equal curved block sectors directly; exact "
+            "radial-end holes, pin seating and edge chamfers remain unresolved."
         ),
     }
     civil["initial_geometry"].update(
         {
-            "mode": "smooth_concentric_rc_6100_5600_ringwise_shell_v1",
+            "mode": "segmented_rc_6100_5600_10block_stage9_like_v1",
             "ring_pitch_m": 1.0,
             "circumferential_segment_surface_mode": (
-                "disabled_source_backed_10_block_topology_geometry_deferred"
+                "source_backed_equal_10block_curved_segments_v1"
             ),
             "coarse_segment_count_reference": 10,
-            "coarse_segment_count_is_geometry": False,
-            "confidence": "C_source_family_dimensions",
+            "coarse_segment_count_is_geometry": True,
+            "confidence": "C_source_family_dimensions_and_topology",
             "reason": (
-                "Expose the researched 6.1/5.6 m Moscow RC family without "
-                "inventing detailed block-edge/pin CAD."
+                "Render the researched ten identical Moscow RC blocks as separate "
+                "curved annular sectors, using Stage-9-like segment construction "
+                "without inventing exact radial-end holes, pin seats or chamfers."
             ),
         }
     )

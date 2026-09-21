@@ -11,7 +11,7 @@
       "rail_type": {
         "value": null,
         "constraint": "must match the rail type laid at the site",
-        "source_id": "S081",
+        "source_id": "S022",
         "locator": "SP 120.13330.2022 §5.7.1.16",
         "era": "current",
         "applicability": "Moscow/Russian metro design rule; exact site rail type must be sourced separately",
@@ -30,8 +30,8 @@
       "frog_mark": {
         "value": "1:9",
         "source_ids": [
-          "S080",
-          "S081"
+          "S058",
+          "S022"
         ],
         "locators": [
           "Frolov 2001 printed p.146, text before Fig.4.33",
@@ -44,7 +44,7 @@
       },
       "superelevation_in_turnout_zone": {
         "value_mm": 0,
-        "source_id": "S080",
+        "source_id": "S058",
         "locator": "Frolov 2001 printed p.146, text preceding Fig.4.33",
         "era": "2001",
         "applicability": "crossover/turnout zone described in the textbook",
@@ -53,7 +53,7 @@
       },
       "transition_curve_in_turnout_zone": {
         "value": false,
-        "source_id": "S080",
+        "source_id": "S058",
         "locator": "Frolov 2001 printed p.146, text preceding Fig.4.33",
         "era": "2001",
         "applicability": "crossover/turnout zone described in the textbook",
@@ -75,7 +75,7 @@
       "manufacturer_context": "Murom Switch Plant product catalogue",
       "project_id": "2976.00.000",
       "turnout_kind": "ordinary",
-      "handedness": "mirrorable left/right; chosen junction is left-diverging by S073, but installed project remains unconfirmed",
+      "handedness": "mirrorable left/right; chosen junction is left-diverging by S093, but installed project remains unconfirmed",
       "rail_type": "R65",
       "gauge_mm": 1520,
       "frog_mark": "1:9",
@@ -83,7 +83,7 @@
         "degrees_decimal": 6.3401917459,
         "dms": "6°20′24.69″",
         "derivation": "atan(1/9)",
-        "source_id": "S082",
+        "source_id": "S094",
         "locator": "project 2976.00.000 product identification + frog mark 1:9",
         "era": "catalogue product",
         "applicability": "geometry reconstruction only",
@@ -92,7 +92,7 @@
       },
       "total_length_mm": {
         "value": 31035,
-        "source_id": "S082",
+        "source_id": "S094",
         "locator": "project 2976.00.000 technical characteristics / geometric-dimensions drawing",
         "era": "catalogue product",
         "applicability": "project 2976 only",
@@ -103,42 +103,42 @@
         "point_tip_from_front_joint_mm": {
           "value": 2765,
           "derivation": "31035 - 26180 - 2090",
-          "source_id": "S082",
+          "source_id": "S094",
           "locator": "geometric-dimensions drawing",
           "confidence": "A/B",
           "status": "RECONSTRUCTED_FROM_DRAWING_DIMENSIONS"
         },
         "point_tip_to_turnout_center_mm": {
           "value": 12458,
-          "source_id": "S082",
+          "source_id": "S094",
           "locator": "geometric-dimensions drawing",
           "confidence": "A/B",
           "status": "SOURCE_BACKED"
         },
         "turnout_center_to_mathematical_frog_center_mm": {
           "value": 13722,
-          "source_id": "S082",
+          "source_id": "S094",
           "locator": "geometric-dimensions drawing",
           "confidence": "A/B",
           "status": "SOURCE_BACKED"
         },
         "point_tip_to_mathematical_frog_center_mm": {
           "value": 26180,
-          "source_id": "S082",
+          "source_id": "S094",
           "locator": "geometric-dimensions drawing",
           "confidence": "A/B",
           "status": "SOURCE_BACKED"
         },
         "mathematical_frog_center_to_rear_joint_mm": {
           "value": 2090,
-          "source_id": "S082",
+          "source_id": "S094",
           "locator": "geometric-dimensions drawing",
           "confidence": "A/B",
           "status": "SOURCE_BACKED"
         },
         "point_initial_radius_mm": {
           "value": 300000,
-          "source_id": "S082",
+          "source_id": "S094",
           "locator": "geometric-dimensions drawing / technical characteristics",
           "confidence": "A/B",
           "status": "SOURCE_BACKED"
@@ -146,8 +146,8 @@
         "turnout_curve_radius_mm": {
           "value": 200060,
           "source_ids": [
-            "S082",
-            "S083"
+            "S094",
+            "S095"
           ],
           "locators": [
             "geometric-dimensions drawing",
@@ -158,7 +158,7 @@
         },
         "point_initial_angle": {
           "value": "0°27′19.57″",
-          "source_id": "S082",
+          "source_id": "S094",
           "locator": "geometric-dimensions drawing, βn",
           "confidence": "A/B",
           "status": "SOURCE_BACKED"
@@ -181,8 +181,8 @@
           7994
         ],
         "source_ids": [
-          "S082",
-          "S083"
+          "S094",
+          "S095"
         ],
         "confidence": "B",
         "status": "SOURCE_BACKED"
@@ -238,7 +238,7 @@
           5775
         ],
         "complete_longitudinal_spacing_sequence": null,
-        "source_id": "S082",
+        "source_id": "S094",
         "locator": "project 2976.00.000 laying diagram",
         "confidence": "B for bearer length inventory; C for partial spacing transcription",
         "status": "PARTIAL_SOURCE_BACKED"
@@ -248,8 +248,8 @@
         "exact_plate_sku": null,
         "conflict": "public product lists differ between SK65/117-piece and SKL65/208-piece package descriptions; do not encode either as the installed Belorusskaya set",
         "source_ids": [
-          "S082",
-          "S083"
+          "S094",
+          "S095"
         ],
         "confidence": "B for topology, UNKNOWN for exact package variant",
         "status": "CONSTRAINED"
@@ -258,8 +258,8 @@
         "straight": 100,
         "diverging": 40,
         "source_ids": [
-          "S082",
-          "S083"
+          "S094",
+          "S095"
         ],
         "applicability": "product capability, not an assertion of actual operating speed at Belorusskaya",
         "confidence": "B",
@@ -274,7 +274,7 @@
       "id": "MOSCOW_METRO_CROSSOVER_2_9_CONSTRAINT",
       "status": "CONSTRAINED",
       "frog_mark": "2:9",
-      "source_id": "S081",
+      "source_id": "S022",
       "locator": "SP 120.13330.2022 §5.7.1.16",
       "era": "current",
       "applicability": "crossovers",

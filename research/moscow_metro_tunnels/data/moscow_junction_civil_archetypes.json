@@ -548,6 +548,30 @@
       "applicability": "actual Moscow/Krasnaya-Presnya analog proving that a service branch can settle into an independent single-track tunnel; not a dimensional substitute for the 1954 Belorusskaya branch",
       "pcg_rule": "Use only to support topology/event semantics: branch may become an independent one-track tunnel and may contain a hermetic-gate event. Keep cross-section and split distance null.",
       "confidence": "A/B_topology_C_visual"
+    },
+    {
+      "id": "KRASNAYA_PRESNYA_DEPOT_NETWORK_SINGLE_TRACK_CIRCULAR_TRANSITION_VISUAL",
+      "status": "ACTUAL_NETWORK_VISUAL_CONSTRAINT_BRANCH_IDENTITY_UNRESOLVED",
+      "source_id": "S120",
+      "locator": "photos 9-10 and captions",
+      "site": "Krasnaya Presnya Line-5 depot-connection network, downstream of the photographed local two-track/switch system",
+      "morphology": [
+        "wider concrete/open-cut or transition structure",
+        "start of closed-method construction",
+        "one physical track",
+        "circular/near-circular flanged-tubing tunnel beyond a concrete transition"
+      ],
+      "geometry": {
+        "transition_length_m": null,
+        "inner_diameter_m": null,
+        "outer_diameter_m": null,
+        "ring_pitch_m": null,
+        "lining_series": null,
+        "z_ugr_m": null,
+        "branch_leg_id": null
+      },
+      "confidence": "C_actual_site_visual_no_scale",
+      "pcg_rule": "May validate the required branch-exit morphology at network level. Do not assign the transition to BRANCH_KRP_BELORUSSKAYA_LEG or copy a diameter/chainage until an independent source maps the photographed leg."
     }
   ]
 }

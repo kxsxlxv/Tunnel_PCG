@@ -1933,6 +1933,7 @@ def _build_stage10_5_modern_permanent_way_scene_objects(
     label_policy: LabelPolicy,
     start_chainage_m: float | None = None,
     end_chainage_m: float | None = None,
+    indexed_chainages: Sequence[tuple[int, float]] | None = None,
 ) -> tuple[SceneObject, ...]:
     r65 = R65ProductionProfile()
     rail_centers = r65_rail_center_offsets_for_gauge(
@@ -1946,9 +1947,17 @@ def _build_stage10_5_modern_permanent_way_scene_objects(
         profile,
         rail_centers_profile_x=rail_centers,
     )
-    chainages = modern_lvt_chainages(
-        assembly.length_by_chainage_m,
-        profile,
+    chainage_events = (
+        tuple(indexed_chainages)
+        if indexed_chainages is not None
+        else tuple(
+            enumerate(
+                modern_lvt_chainages(
+                    assembly.length_by_chainage_m,
+                    profile,
+                )
+            )
+        )
     )
     label_id, semantic = _ancillary_semantics(label_policy, "rail")
     result: list[SceneObject] = []
@@ -1962,8 +1971,8 @@ def _build_stage10_5_modern_permanent_way_scene_objects(
         "apc4_fastening": "APC4Fastenings",
     }
 
-    for event_index, chainage in enumerate(chainages):
-        if not _chainage_selected_for_window(
+    for event_index, chainage in chainage_events:
+        if indexed_chainages is None and not _chainage_selected_for_window(
             chainage,
             total_length_m=assembly.length_by_chainage_m,
             start_chainage_m=start_chainage_m,
@@ -2380,22 +2389,31 @@ def _build_stage10_5_service_rack_scene_objects(
     label_policy: LabelPolicy,
     start_chainage_m: float | None = None,
     end_chainage_m: float | None = None,
+    indexed_chainages: Sequence[tuple[int, float]] | None = None,
 ) -> tuple[SceneObject, ...]:
     local_by_side = {
         side: build_r2k11_local_rack_mesh(profile, side_sign=side)
         for side in (-1, 1)
     }
-    chainages = cable_rack_chainages(
-        assembly.length_by_chainage_m,
-        profile,
+    chainage_events = (
+        tuple(indexed_chainages)
+        if indexed_chainages is not None
+        else tuple(
+            enumerate(
+                cable_rack_chainages(
+                    assembly.length_by_chainage_m,
+                    profile,
+                )
+            )
+        )
     )
     label_id, semantic = _ancillary_semantics(label_policy, "tube")
     result: list[SceneObject] = []
     source_ring_width = assembly.config.ring_width_m
     rack = profile.cable_rack
 
-    for event_index, chainage in enumerate(chainages):
-        if not _chainage_selected_for_window(
+    for event_index, chainage in chainage_events:
+        if indexed_chainages is None and not _chainage_selected_for_window(
             chainage,
             total_length_m=assembly.length_by_chainage_m,
             start_chainage_m=start_chainage_m,
@@ -2490,18 +2508,27 @@ def _build_stage10_5_water_main_support_scene_objects(
     label_policy: LabelPolicy,
     start_chainage_m: float | None = None,
     end_chainage_m: float | None = None,
+    indexed_chainages: Sequence[tuple[int, float]] | None = None,
 ) -> tuple[SceneObject, ...]:
     local = build_water_main_support_local_mesh(profile)
-    chainages = water_main_support_chainages(
-        assembly.length_by_chainage_m,
-        profile,
+    chainage_events = (
+        tuple(indexed_chainages)
+        if indexed_chainages is not None
+        else tuple(
+            enumerate(
+                water_main_support_chainages(
+                    assembly.length_by_chainage_m,
+                    profile,
+                )
+            )
+        )
     )
     label_id, semantic = _ancillary_semantics(label_policy, "tube")
     result: list[SceneObject] = []
     source_ring_width = assembly.config.ring_width_m
 
-    for event_index, chainage in enumerate(chainages):
-        if not _chainage_selected_for_window(
+    for event_index, chainage in chainage_events:
+        if indexed_chainages is None and not _chainage_selected_for_window(
             chainage,
             total_length_m=assembly.length_by_chainage_m,
             start_chainage_m=start_chainage_m,

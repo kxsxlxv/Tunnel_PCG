@@ -6,6 +6,7 @@ import math
 from tunnel_scanner_core import (
     ChunkBoundaryPolicy,
     ProductionConfig,
+    RingRotationStrategy,
     TunnelAssemblyConfig,
     audit_exact_coincident_faces,
     build_chunk_scene_packages,
@@ -387,6 +388,7 @@ def main() -> None:
             n_rings=8,
             ring_width_m=1.35,
             axis_noise_sigma_m=0.0,
+            ring_rotation_strategy=RingRotationStrategy.RINGWISE_GAUSSIAN,
         ),
         include_bolts=True,
         production_config=ProductionConfig(
@@ -419,6 +421,28 @@ def main() -> None:
     assert [obj.segment_name for obj in sorted(first_kba, key=lambda o: o.segment_id)] == [
         "K", "B1", "A1", "A2", "A3", "B2"
     ]
+    assert km["moscowCivilRotationStrategy"] == "ringwise_gaussian"
+    assert km["moscowCivilRotationModel"] == (
+        "stage7_ring_pose_on_independent_moscow_civil_rhythm"
+    )
+    assert km["moscowCivilRotationAppliedOnlyToLining"] is True
+    rotations_by_ring = {}
+    for segment in kba_segments:
+        p = segment.custom_properties
+        ring_index = int(p["moscowCivilRingIndex"])
+        rotations_by_ring.setdefault(ring_index, set()).add(
+            round(float(p["ringRotationDeg"]), 12)
+        )
+        assert p["stage7RingAxialStaggerTransferred"] is True
+        assert p["moscowCivilIndependentRingPoseStream"] is True
+        assert p["moscowCivilRotationStrategy"] == "ringwise_gaussian"
+    assert all(len(values) == 1 for values in rotations_by_ring.values())
+    kba_rotations = [
+        next(iter(rotations_by_ring[index]))
+        for index in sorted(rotations_by_ring)
+    ]
+    assert any(abs(value) > 1e-9 for value in kba_rotations)
+    assert len(set(kba_rotations)) > 1
     heads = [
         obj
         for obj in kba_build.scene.objects_of_type("bolt_head")

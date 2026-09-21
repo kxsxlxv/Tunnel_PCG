@@ -208,8 +208,9 @@ contract, but replaces the legacy service-era hardware with:
     low rounded segmented contact-rail cover
     dedicated contact-rail support blocks / brackets / local support hoods
     R2K11/K1351.001-09 cable racks on both walls, one per side per 1.0 m civil ring
-    K1350.002 double horns, 11 levels x 2 cable places
-    44 representative continuous service cables in the full-capacity visual preset
+    K1350.002 open double cradles, without the former continuous underbar
+    16 representative service cables: 8 occupied levels per wall, one cable per level
+    restrained 25 mm midspan cable sag between 1.0 m rack supports
     one current tunnel water main, minimum DN80, weak-current side above UGR
     periodic water-main supports at <=4.0 m spacing
 
@@ -225,14 +226,20 @@ Stage 10.5 also enables zero-error alignment compaction for continuous sweeps.
 It removes only mathematically redundant collinear ring-boundary samples; the
 118-vertex R65 section and rail surface are unchanged.
 
-The selected civil family remains:
+Two researched civil envelopes are now selectable from the Stage-10 generator:
 
-    intrados radius                2.550 m
-    internal diameter              5.100 m
-    extrados radius                2.750 m
-    civil ring pitch               1.000 m
+    --civil-archetype cast_iron_5500_5100   5.5 / 5.1 m cast-iron family
+    --civil-archetype rc_block_6100_5600    6.1 / 5.6 m Moscow ten-block RC family
 
-Exact N/C/K tubing detail is still deliberately unresolved rather than guessed.
+The first remains the default. For the 6.1/5.6 m family the documented
+diameters, 1.0 m ring pitch and ten-block topology are preserved, while the
+current mesh remains a smooth envelope until exact block-edge/pin CAD is
+implemented. Because the inspected 6.1/5.6 source does not publish a separate
+UGR-to-lining-axis datum, Stage 10 explicitly transfers the existing track/UGR
+datum and recomputes shell-contact geometry from the selected radius.
+
+Exact N/C/K tubing detail and exact RC block-edge/pin CAD remain deliberately
+unresolved rather than guessed.
 
 See STAGE10_5_REPORT.md.
 

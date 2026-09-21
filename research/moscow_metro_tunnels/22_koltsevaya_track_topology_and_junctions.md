@@ -49,20 +49,30 @@ S096 — учебный материал по пути метрополитен�
 
 ### Physical centerline status
 
-Текущий relation seed — `r1462012` (S049), но в исследовательском runtime не удалось получить актуальные relation/full bytes. Поэтому **не внесены вымышленные OSM way IDs, child route relation IDs или switch node IDs**.
+Текущая OSM hierarchy теперь разрешена непосредственно по OpenStreetMap:
 
-Поля `osm_route_relation_ids`, `osm_way_ids`, `physical_centerline_file` сейчас `null`.
+- `r1462012` — `type=route_master`, `route_master=subway`, Line 5 (S099);
+- `r300607` — текущая `route=subway` **Circle line (Inner)** (S100);
+- `r1462011` — текущая `route=subway` **Circle line (Outer)** (S101).
+
+Поэтому:
+- `KOLTSEVAYA_TRACK_A.osm_route_relation_ids = [300607]`;
+- `KOLTSEVAYA_TRACK_B.osm_route_relation_ids = [1462011]`.
+
+Это исправляет прежнее pilot-предположение, что relation 300607 является только устаревшим ID. В текущем OSM это действующий child route внутреннего кольца.
+
+При этом в исследовательском runtime всё ещё не удалось получить `relation/full` bytes, поэтому **не внесены вымышленные OSM way IDs, switch node IDs или physical centerline vertices**. Поля `osm_way_ids` и `physical_centerline_file` остаются `null`.
 
 Правильный upgrade path:
 
-1. получить актуальный `relation/1462012/full` либо вырезку из Moscow PBF;
-2. сохранить все `railway=subway` ways с исходными OSM node IDs;
+1. получить `relation/300607/full` и `relation/1462011/full` либо эквивалентные объекты из Moscow PBF;
+2. сохранить физические `railway=subway` ways и исходные OSM node IDs отдельно для каждого child route;
 3. построить физический граф без выбора ветви;
-4. идентифицировать две замкнутые главные физические цепи;
-5. сопоставить направление каждой цепи с source-backed clockwise/counterclockwise station order;
+4. проверить непрерывность каждой главной цепи;
+5. сопоставить Inner с source-backed I/clockwise и Outer с II/counterclockwise;
 6. сохранить две centerline независимо.
 
-OSM-модель общественного транспорта сама предполагает отдельные route relations по направлениям и допускает несколько вариантов; это ещё одна причина не сводить Line 5 к одной оси.
+Наличие двух отдельных текущих route relations является ещё одним независимым основанием не сводить Line 5 к одной оси.
 
 ### Межосевое расстояние, взаимный Z и обделка
 
@@ -402,9 +412,9 @@ Again: these values are not assigned to the actual Belorusskaya depot branch.
 
 ### A. Как построить две независимые physical centerline Кольцевой?
 
-**Contract is defined, exact OSM IDs are still unresolved.**
+**Route-level contract is resolved; physical way/node centerline extraction is still pending.**
 
-Build `KOLTSEVAYA_TRACK_A` and `KOLTSEVAYA_TRACK_B` independently from the physical subway-way graph. Match them to source-backed clockwise/inner/I and counterclockwise/outer/II station sequences. Never use a constant offset.
+Use current child route 300607 for the Inner candidate chain and 1462011 for the Outer candidate chain, then extract/verify their physical subway-way graphs independently. Map Inner to source-backed clockwise/I and Outer to counterclockwise/II. Never use a constant offset.
 
 ### B. Где хотя бы один реальный путь Кольцевой ответвляется от главного тоннеля?
 

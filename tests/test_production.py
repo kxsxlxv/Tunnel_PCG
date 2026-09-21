@@ -14,6 +14,7 @@ from tunnel_scanner_core import (
     audit_exact_coincident_faces,
     build_chunk_scene_packages,
     build_production_tunnel,
+    iter_chunk_scene_packages,
     clipped_alignment_stations,
     build_procedural_nominal_tunnel,
     finalize_production_render_scene,
@@ -271,6 +272,29 @@ def test_chunk_plan_is_optional_and_global_coordinates_are_preserved():
         assert meta["internalLongitudinalCaps"] is False
         assert meta["startChainageM"] == chunk.start_chainage_m
         assert meta["endChainageM"] == chunk.end_chainage_m
+
+
+def test_lazy_chunk_iterator_matches_materialized_wrapper_exactly():
+    prod = _production(12)
+    for policy, localize in (
+        (ChunkBoundaryPolicy.EXACT_LENGTH, False),
+        (ChunkBoundaryPolicy.RING_ALIGNED, True),
+    ):
+        lazy = tuple(
+            iter_chunk_scene_packages(
+                prod,
+                chunk_length_m=5.0,
+                boundary_policy=policy,
+                localize_coordinates=localize,
+            )
+        )
+        materialized = build_chunk_scene_packages(
+            prod,
+            chunk_length_m=5.0,
+            boundary_policy=policy,
+            localize_coordinates=localize,
+        )
+        assert lazy == materialized
 
 
 def test_internal_chunk_boundaries_have_no_coincident_end_caps():

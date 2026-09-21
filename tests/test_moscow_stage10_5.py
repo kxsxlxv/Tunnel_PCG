@@ -55,8 +55,6 @@ MODERN_TYPES = {
     "production_water_main_support",
     "production_moscow_walkway",
     "production_moscow_civil_shell_ring",
-    "production_moscow_civil_detail_ribs",
-    "production_moscow_civil_bolt_heads",
 }
 
 
@@ -198,9 +196,9 @@ def test_stage10_5_r2k11_racks_repeat_on_both_walls_and_stay_inside_shell():
         assert rack.properties["separateWallTab"] is False
         assert rack.properties["separateHorizontalNeck"] is False
         assert rack.properties["hornGeometryMode"] == (
-            "single_continuous_omega_ribbon_v4"
+            "single_continuous_omega_ribbon_v5_smoother"
         )
-        assert rack.properties["hornRibbonSamplesPerSpan"] == 2
+        assert rack.properties["hornRibbonSamplesPerSpan"] == 4
         if side < 0:
             assert math.isclose(
                 rack.properties["centerProfileZM"],
@@ -727,6 +725,12 @@ def test_stage10_5_rc_6100_5600_civil_archetype_adapts_geometry():
     assert math.isclose(profile.intrados_radius_m, 2.800, abs_tol=1e-12)
     assert math.isclose(profile.extrados_radius_m, 3.050, abs_tol=1e-12)
     assert math.isclose(profile.ring_pitch_m, 1.0, abs_tol=1e-12)
+    assert profile.civil_geometry_mode == (
+        "segmented_rc_6100_5600_10block_stage9_like_v1"
+    )
+    assert profile.civil_segment_surface_mode == (
+        "source_backed_equal_10block_curved_segments_v1"
+    )
 
     expected_walkway_outer = math.sqrt(
         profile.intrados_radius_m**2
@@ -757,35 +761,61 @@ def test_stage10_5_rc_6100_5600_civil_archetype_adapts_geometry():
     )
     meta = build.scene.metadata["productionGeometry"]
     assert meta["civilArchetypeID"] == profile.civil_family
+    assert meta["civilShellStatus"] == (
+        "implemented_stage10_4_segmented_rc_10block_shell"
+    )
+    assert meta["moscowCivilCompositeDetailStatus"] == (
+        "implemented_rc_10block_geometry_stage9_like"
+    )
     civil = build.scene.objects_of_type("production_moscow_civil_shell_ring")
     assert civil
-    details = build.scene.objects_of_type(
+    assert not build.scene.objects_of_type(
         "production_moscow_civil_detail_ribs"
-    )
-    assert len(details) == len(civil)
-    assert all(
-        obj.custom_properties["visualSegmentCount"] == 10
-        for obj in details
-    )
-    assert all(
-        obj.custom_properties["visualSegmentCountIsLOD0"] is False
-        for obj in details
     )
     assert not build.scene.objects_of_type(
         "production_moscow_civil_bolt_heads"
     )
-    assert all(
-        math.isclose(
-            obj.custom_properties["intradosRadiusM"],
-            2.800,
+    assert meta["moscowCivilRenderedBlockCount"] == 10 * len(civil)
+    assert math.isclose(
+        meta["moscowCivilRCVisualSeamWidthM"],
+        0.008,
+        abs_tol=1e-12,
+    )
+    assert math.isclose(
+        meta["moscowCivilRCWorkingRebarDiameterM"],
+        0.016,
+        abs_tol=1e-12,
+    )
+    assert math.isclose(
+        meta["moscowCivilRCAssemblyPinDiameterM"],
+        0.022,
+        abs_tol=1e-12,
+    )
+    for obj in civil:
+        p = obj.custom_properties
+        assert math.isclose(p["intradosRadiusM"], 2.800, abs_tol=1e-12)
+        assert math.isclose(p["extradosRadiusM"], 3.050, abs_tol=1e-12)
+        assert p["coarseSegmentCountReference"] == 10
+        assert p["coarseSegmentCountIsGeometry"] is True
+        assert p["stage9LikeCurvedSegmentConstruction"] is True
+        assert p["renderedRCBlockCount"] == 10
+        assert math.isclose(
+            p["renderedRCVisualSeamWidthM"],
+            0.008,
             abs_tol=1e-12,
         )
-        for obj in civil
-    )
-    assert all(
-        obj.custom_properties["coarseSegmentCountReference"] == 10
-        for obj in civil
-    )
+        assert math.isclose(
+            p["renderedRCBlockNominalAngularSpanDeg"],
+            36.0,
+            abs_tol=1e-12,
+        )
+        assert p["rcBlocksIdenticalBySource"] is True
+        assert p["rcPermanentBoltedBlockJoints"] is False
+        assert math.isclose(p["rcWorkingRebarDiameterM"], 0.016, abs_tol=1e-12)
+        assert math.isclose(p["rcAssemblyPinDiameterM"], 0.022, abs_tol=1e-12)
+        assert p["rcAssemblyPinGeometryResolved"] is False
+        assert p["rcExactBlockEdgeChamferResolved"] is False
+        assert p["angularSegments"] == 80
     concrete = build.scene.objects_of_type("production_track_concrete")
     assert len(concrete) == 1
     assert concrete[0].custom_properties["physicalBottomSurface"] == (

@@ -363,8 +363,10 @@ Target PCG sequence:
 → `independent single-track branch tunnel`
 → `END_NODE / cut marker`.
 
-For actual Belorusskaya:
+For actual Belorusskaya / Krasnaya Presnya depot connection:
+- **existence of a tunnel-branch is source-backed**: S098 is an official infrastructure-list reference quoting a Moscow Metro letter and explicitly names the tunnel-branch to depot «Красная Пресня»;
 - independent branch shell start = `null`;
+- whether the relevant modeled continuation is one single-track shell, two single-track shells, or another combined arrangement = `null`;
 - diameter = `null`;
 - lining family = `null`;
 - Z = `null`;

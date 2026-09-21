@@ -1,6 +1,6 @@
 # Koltsevaya Line pilot findings
 
-Research date: 2026-09-19.
+Research date: 2026-09-21.
 
 ## Identity
 
@@ -9,8 +9,11 @@ Line: Moscow Metro Line 5, Koltsevaya.
 Current public line facts:
 - 12 stations;
 - published line length: 19.4 km;
-- current Wikidata OSM relation identifier: **1462012**;
-- old OSM Wiki page still lists **300607**, so it must not be blindly used as the current route relation.
+- current OSM hierarchy is now resolved directly from OpenStreetMap:
+  - **1462012** = Line 5 `route_master`;
+  - **300607** = current child `route=subway` relation **Circle line (Inner)**;
+  - **1462011** = current child `route=subway` relation **Circle line (Outer)**.
+- The earlier pilot warning that 300607 was merely a legacy relation was incorrect: it is currently the Inner child route of route_master 1462012 (S099-S101).
 
 Sources:
 - https://www.wikidata.org/wiki/Q831673
@@ -97,8 +100,10 @@ These radii describe the **fallback spline**, not the as-built Koltsevaya track.
 
 ## Exact OSM upgrade
 
-Use current relation:
-`r1462012`.
+Current relation hierarchy:
+- route master: `r1462012`;
+- Inner route: `r300607`;
+- Outer route: `r1462011`.
 
 Recommended acquisition:
 
@@ -106,19 +111,20 @@ Recommended acquisition:
 # Download/update current Moscow PBF
 wget https://download.bbbike.org/osm/bbbike/Moscow/Moscow.osm.pbf
 
-# If osmium CLI is installed, extract relation plus referenced objects.
-osmium getid -r Moscow.osm.pbf r1462012 -o koltsevaya_relation.osm.pbf
+# Extract the two physical-direction route relations separately.
+osmium getid -r Moscow.osm.pbf r300607 -o koltsevaya_inner_relation.osm.pbf
+osmium getid -r Moscow.osm.pbf r1462011 -o koltsevaya_outer_relation.osm.pbf
 ```
 
-The supplied `tools_extract_relation.py` can instead read relation 1462012 directly from the full Moscow PBF with pyosmium and export ordered member-way GeoJSON.
+The supplied acquisition tools are route-master aware: `tools_fetch_relation_full.py` starts from 1462012 and keeps the two child route relations separate; the PBF extractor is being kept consistent with the same rule.
 
-Do not automatically merge all relation member ways into one line:
-- inner and outer directions/tracks may be separate ways;
+Do not merge Inner and Outer into one line:
+- each child route has its own physical member-way chain;
 - station/platform members may occur;
-- way orientation may need correction;
-- switches/depot/connecting structures may appear depending on relation structure.
+- way orientation must be checked against physical node connectivity;
+- switches/depot/connecting structures require explicit graph semantics.
 
-The final alignment builder should classify and stitch **one physical track at a time**.
+The final alignment builder must classify and stitch **one physical track at a time**.
 
 ## Vertical pilot status
 
@@ -202,7 +208,7 @@ New contract:
 - `KOLTSEVAYA_TRACK_A` = I main track, inner ring, clockwise;
 - `KOLTSEVAYA_TRACK_B` = II main track, outer ring, counterclockwise;
 - both must be reconstructed independently from physical `railway=subway` ways/project alignments;
-- current exact OSM way IDs remain unresolved because relation/full bytes were not obtainable in the research runtime. No IDs were guessed.
+- current direction-route IDs are resolved as Inner=300607 and Outer=1462011; exact member way/node IDs remain unresolved because relation/full bytes were not obtainable in the research runtime. No way/node IDs were guessed.
 
 New files:
 - `22_koltsevaya_track_topology_and_junctions.md`;

@@ -1013,7 +1013,56 @@
           "§3.12",
           "§3.14"
         ],
-        "status": "SOURCE_BACKED_NEAR_SERVICE_ERA"
+        "status": "SOURCE_BACKED_NEAR_SERVICE_ERA",
+        "r65_1_9_dimensioned_ramp_layout": {
+          "source_id": "S128",
+          "locator": "Appendix 6, printed pp.157-158, Fig.10; notes to Figs.7-12 on printed p.157",
+          "rail_type": "R65",
+          "frog_mark": "1:9",
+          "center_datum": "ЦСП / turnout center",
+          "dimension_endpoint_rule": "dimensions are measured from metallic ends of contact-rail ramps",
+          "starred_dimension_rule": "* = reference dimension",
+          "figure_variants": [
+            {
+              "variant": "upper",
+              "raw_callouts": [
+                "11750 min",
+                "2750 max",
+                "29000 min"
+              ],
+              "exact_local_contact_rail_side_mapping": null
+            },
+            {
+              "variant": "lower",
+              "raw_callouts": [
+                "12500 *",
+                "2750 max",
+                "29000 min",
+                "11750 min"
+              ],
+              "exact_local_contact_rail_side_mapping": null
+            }
+          ],
+          "status": "SOURCE_BACKED_RAW_LAYOUT_VARIANTS_LOCAL_MAPPING_UNRESOLVED",
+          "pcg_rule": "Use Fig.10 as the geometry source once traffic direction and contact-rail side are bound. Do not replace it with one continuous Stage-10 contact rail or convert the raw dimensions into point-tip/frog offsets by assumption."
+        },
+        "r65_2_9_crossover_reference": {
+          "source_id": "S128",
+          "locator": "Appendix 6, printed p.159, Fig.12",
+          "rail_type": "R65",
+          "frog_mark": "2:9",
+          "raw_callouts_visible_mm": [
+            "11300 min",
+            "1400 max",
+            "9400 *",
+            "9100 min",
+            "13400 *",
+            "11300 *",
+            "10750 min"
+          ],
+          "status": "SOURCE_BACKED_CROSSOVER_REFERENCE_RAW_CALLOUTS",
+          "pcg_rule": "Keep leg-by-leg figure geometry; do not force symmetry."
+        }
       }
     },
     {

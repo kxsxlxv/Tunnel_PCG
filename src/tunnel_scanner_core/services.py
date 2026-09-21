@@ -222,37 +222,7 @@ def _radial_arm_polygon(
     )
 
 
-def _smooth_anchor_polyline(
-    anchors: Sequence[tuple[float, float]],
-    *,
-    samples_per_span: int = 2,
-) -> tuple[tuple[float, float], ...]:
-    """Low-poly cosine interpolation through H/V anchors.
-
-    Each anchor is reached exactly with a zero vertical derivative. This gives
-    the formed-steel horn a rounded silhouette without a dense curve/spline.
-    """
-    if len(anchors) < 2:
-        raise ValueError("formed-ribbon anchors require at least two points")
-    if samples_per_span < 1:
-        raise ValueError("samples_per_span must be >=1")
-    result: list[tuple[float, float]] = [anchors[0]]
-    for (h0, v0), (h1, v1) in zip(anchors, anchors[1:]):
-        if h1 <= h0:
-            raise ValueError("formed-ribbon anchors must advance inward")
-        for i in range(1, samples_per_span + 1):
-            t = i / samples_per_span
-            ease = 0.5 * (1.0 - math.cos(math.pi * t))
-            result.append(
-                (
-                    h0 + (h1 - h0) * t,
-                    v0 + (v1 - v0) * ease,
-                )
-            )
-    return tuple(result)
-
-
-def _continuous_omega_horn_polygon(
+def _u_ribbon_polygon(
     *,
     wall_x_m: float,
     wall_z_m: float,
@@ -260,94 +230,63 @@ def _continuous_omega_horn_polygon(
     inward_z: float,
     up_x: float,
     up_z: float,
-    overall_length_m: float,
-    overall_height_m: float,
-    first_center_inward_m: float,
-    second_center_inward_m: float,
-    cradle_radius_m: float,
+    center_inward_m: float,
+    inner_radius_m: float,
     thickness_m: float,
+    stem_height_m: float,
+    arc_segments: int = 8,
 ) -> tuple[tuple[float, float], ...]:
-    """Build one continuous rounded-W / omega K1350.002 ribbon.
+    """Build one literal U-shaped formed-steel cradle ribbon.
 
-    The user-supplied product drawing and 3D reference show that the two cable
-    cradles are one formed strip. There is no separate wall tab, horizontal
-    neck or shelf: the ribbon starts on the R2K11 upright, descends into the
-    first cradle, rises through the central crest, descends into the second
-    cradle and turns up at the free end.
+    The U has two straight side stems and a semicircular lower seat. The
+    supplied inner radius is the cable-clear radius; strip thickness grows
+    outward from it. This intentionally avoids the previous W/omega centre
+    crest entirely.
     """
-    if not (
-        0.0 < first_center_inward_m
-        < second_center_inward_m
-        < overall_length_m
-    ):
-        raise ValueError("omega-horn cable centers must lie inside its envelope")
-    if min(overall_height_m, cradle_radius_m, thickness_m) <= 0.0:
-        raise ValueError("omega-horn dimensions must be positive")
+    if min(center_inward_m, inner_radius_m, thickness_m, stem_height_m) <= 0.0:
+        raise ValueError("U-cradle dimensions must be positive")
+    if arc_segments < 4:
+        raise ValueError("U-cradle arc_segments must be >=4")
 
-    midpoint = 0.5 * (
-        first_center_inward_m + second_center_inward_m
-    )
-    half_center_pitch = 0.5 * (
-        second_center_inward_m - first_center_inward_m
-    )
-    left_shoulder = max(
-        0.25 * thickness_m,
-        first_center_inward_m - half_center_pitch,
-    )
-    right_shoulder = min(
-        overall_length_m - 0.25 * thickness_m,
-        second_center_inward_m + half_center_pitch,
-    )
-    end_height = min(
-        0.5 * overall_height_m,
-        1.35 * cradle_radius_m,
-    )
-    central_crest = min(
-        0.45 * cradle_radius_m,
-        0.25 * overall_height_m,
-    )
-    anchors = (
-        (0.0, end_height),
-        (left_shoulder, 0.0),
-        (first_center_inward_m, -cradle_radius_m),
-        (midpoint, central_crest),
-        (second_center_inward_m, -cradle_radius_m),
-        (right_shoulder, 0.0),
-        (overall_length_m, end_height),
-    )
-    centerline = _smooth_anchor_polyline(
-        anchors,
-        samples_per_span=4,
-    )
+    inner_r = inner_radius_m
+    outer_r = inner_radius_m + thickness_m
+    if center_inward_m < outer_r - 1e-12:
+        raise ValueError("U-cradle extends behind the rack upright")
 
-    half_t = 0.5 * thickness_m
-    side_a: list[tuple[float, float]] = []
-    side_b: list[tuple[float, float]] = []
-    for i, (h, v) in enumerate(centerline):
-        if i == 0:
-            dh = centerline[1][0] - h
-            dv = centerline[1][1] - v
-        elif i == len(centerline) - 1:
-            dh = h - centerline[i - 1][0]
-            dv = v - centerline[i - 1][1]
-        else:
-            dh = centerline[i + 1][0] - centerline[i - 1][0]
-            dv = centerline[i + 1][1] - centerline[i - 1][1]
-        norm = math.hypot(dh, dv)
-        if norm <= 1e-12:
-            raise ValueError("degenerate omega-horn centerline tangent")
-        nh = -dv / norm
-        nv = dh / norm
-        side_a.append((h + half_t * nh, v + half_t * nv))
-        side_b.append((h - half_t * nh, v - half_t * nv))
+    local: list[tuple[float, float]] = []
 
-    local_polygon = tuple((*side_a, *reversed(side_b)))
+    # Outer boundary: left stem -> lower semicircle -> right stem.
+    local.append((center_inward_m - outer_r, stem_height_m))
+    local.append((center_inward_m - outer_r, 0.0))
+    for i in range(arc_segments + 1):
+        theta = math.pi + math.pi * i / arc_segments
+        local.append(
+            (
+                center_inward_m + outer_r * math.cos(theta),
+                outer_r * math.sin(theta),
+            )
+        )
+    local.append((center_inward_m + outer_r, stem_height_m))
+
+    # Inner boundary in reverse, closing the strip at the two open U tips.
+    local.append((center_inward_m + inner_r, stem_height_m))
+    local.append((center_inward_m + inner_r, 0.0))
+    for i in range(arc_segments + 1):
+        theta = 2.0 * math.pi - math.pi * i / arc_segments
+        local.append(
+            (
+                center_inward_m + inner_r * math.cos(theta),
+                inner_r * math.sin(theta),
+            )
+        )
+    local.append((center_inward_m - inner_r, stem_height_m))
+
     polygon = tuple(
         (
             wall_x_m + inward_x * h + up_x * v,
             wall_z_m + inward_z * h + up_z * v,
         )
-        for h, v in local_polygon
+        for h, v in local
     )
     area = 0.5 * sum(
         x0 * z1 - x1 * z0
@@ -357,6 +296,69 @@ def _continuous_omega_horn_polygon(
         )
     )
     return polygon if area > 0.0 else tuple(reversed(polygon))
+
+
+def _double_u_horn_polygons(
+    *,
+    wall_x_m: float,
+    wall_z_m: float,
+    inward_x: float,
+    inward_z: float,
+    up_x: float,
+    up_z: float,
+    inner_radius_m: float,
+    thickness_m: float,
+    pair_span_m: float = 0.154,
+    central_gap_m: float = 0.008,
+    stem_height_m: float = 0.035,
+    arc_segments: int = 8,
+) -> tuple[
+    tuple[tuple[float, float], ...],
+    tuple[tuple[float, float], ...],
+]:
+    """Build the R2K11 horn as two simple adjacent U cradles: UU.
+
+    The user-supplied drawing gives a 154 mm double-cradle span and R32.5 mm
+    seats. Two U strips with 4 mm steel occupy 73 mm each, leaving an 8 mm
+    clear gap between them. The first U begins directly at the rack upright;
+    there is no horizontal shelf, neck or central W/omega crest.
+    """
+    outer_r = inner_radius_m + thickness_m
+    expected_span = 4.0 * outer_r + central_gap_m
+    if not math.isclose(pair_span_m, expected_span, abs_tol=1e-12):
+        raise ValueError(
+            "double-U span must equal two cradle outer diameters plus gap"
+        )
+
+    first_center = outer_r
+    second_center = 3.0 * outer_r + central_gap_m
+    first = _u_ribbon_polygon(
+        wall_x_m=wall_x_m,
+        wall_z_m=wall_z_m,
+        inward_x=inward_x,
+        inward_z=inward_z,
+        up_x=up_x,
+        up_z=up_z,
+        center_inward_m=first_center,
+        inner_radius_m=inner_radius_m,
+        thickness_m=thickness_m,
+        stem_height_m=stem_height_m,
+        arc_segments=arc_segments,
+    )
+    second = _u_ribbon_polygon(
+        wall_x_m=wall_x_m,
+        wall_z_m=wall_z_m,
+        inward_x=inward_x,
+        inward_z=inward_z,
+        up_x=up_x,
+        up_z=up_z,
+        center_inward_m=second_center,
+        inner_radius_m=inner_radius_m,
+        thickness_m=thickness_m,
+        stem_height_m=stem_height_m,
+        arc_segments=arc_segments,
+    )
+    return first, second
 
 
 def build_r2k11_local_rack_mesh(
@@ -393,28 +395,25 @@ def build_r2k11_local_rack_mesh(
         inward = (-sin_a, -cos_a)
         up = (-side_sign * cos_a, side_sign * sin_a)
 
-        # K1350.002 is represented as one continuous formed-steel ribbon.
-        # The ribbon starts directly on the upright: no separate horizontal
-        # neck/shelf and no detached wall-side mounting tab are generated.
-        horn = _continuous_omega_horn_polygon(
+        # User visual correction: K1350.002 reads as two simple U cradles,
+        # not a rounded W/omega ribbon. The first U touches the upright
+        # directly; there is no horizontal neck/shelf before it.
+        horns = _double_u_horn_polygons(
             wall_x_m=wall_x,
             wall_z_m=wall_z,
             inward_x=inward[0],
             inward_z=inward[1],
             up_x=up[0],
             up_z=up[1],
-            overall_length_m=rack.horn_overall_length_m,
-            overall_height_m=rack.horn_overall_height_m,
-            first_center_inward_m=rack.first_cable_center_inward_m,
-            second_center_inward_m=rack.second_cable_center_inward_m,
-            cradle_radius_m=rack.horn_radius_m,
+            inner_radius_m=rack.horn_radius_m,
             thickness_m=rack.horn_thickness_m,
         )
-        meshes.append(
+        meshes.extend(
             _extrude_y_polygon(
                 horn,
                 half_y_m=0.5 * rack.horn_longitudinal_width_m,
             )
+            for horn in horns
         )
 
     vertices, faces = _combine(meshes)
@@ -451,8 +450,15 @@ def build_r2k11_local_rack_mesh(
             "commonHorizontalUnderbar": False,
             "separateWallTab": False,
             "separateHorizontalNeck": False,
-            "hornGeometryMode": "single_continuous_omega_ribbon_v5_smoother",
-            "hornRibbonSamplesPerSpan": 4,
+            "centralOmegaCrest": False,
+            "hornGeometryMode": "double_u_cradle_pair_v6",
+            "hornUCradleCount": 2,
+            "hornUVisualPairSpanM": 0.154,
+            "hornUCentralGapM": 0.008,
+            "hornUInnerClearRadiusM": rack.horn_radius_m,
+            "hornUInnerClearDiameterM": 2.0 * rack.horn_radius_m,
+            "hornUStemHeightM": 0.035,
+            "hornUArcSegments": 8,
             "shellClearanceInwardM": rack.shell_clearance_inward_m,
         },
     )

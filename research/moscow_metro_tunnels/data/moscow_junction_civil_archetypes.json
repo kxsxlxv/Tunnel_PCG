@@ -15,11 +15,23 @@
         "source_id": "S093",
         "status": "SOURCE_BACKED",
         "selected_branch_track_count": 1,
-        "selected_branch_track_count_source_id": "S125",
+        "selected_branch_track_count_source_id": "S134",
         "downstream_local_two_track_section_source_id": "S120",
         "topology_note": "The Belorusskaya attachment leg is a single-track service connection. Farther depot-side, S120 shows a local two-track section and a switch separating directions to Belorusskaya/Krasnopresnenskaya. Civil-shell sharing in that downstream section is unresolved.",
         "first_implementation_edge_id": "BRANCH_KRP_BELORUSSKAYA_LEG",
-        "first_implementation_cut_rule": "Model the source-backed single-track Belorusskaya attachment leg only; terminate before the unresolved downstream local two-track/switch system unless physical graph evidence is acquired."
+        "first_implementation_cut_rule": "Model the source-backed single-track Belorusskaya attachment leg only; terminate before the unresolved downstream local two-track/switch system unless physical graph evidence is acquired.",
+        "selected_branch_track_count_corroboration_source_id": "S125",
+        "historical_design_topology": {
+          "line5_depot_branch_count": 2,
+          "each_branch_track_count": 1,
+          "attachments": [
+            "Белорусская crossover-track system",
+            "Краснопресненская crossover-track system"
+          ],
+          "source_id": "S134",
+          "locator": "1983 engineering collection, A.M. Gorkov article, web line 116",
+          "status": "SOURCE_BACKED"
+        }
       },
       "civil": {
         "primary_lining_material": "cast-iron tubings",
@@ -477,7 +489,7 @@
         "exact_internal_width_or_diameter_m": null,
         "exact_crown_to_ugr_m": null,
         "exact_two_track_axis_spacing_m": null,
-        "track_topology_note": "S125 describes separate single-track Belorusskaya and Krasnopresnenskaya connection legs; this does not define whether this local Krasnopresnenskaya-side section uses an independent circular shell, a shared multi-track shell, or a transition chamber."
+        "track_topology_note": "S134 explicitly documents two single-track depot branches at the Line-5 attachment level; S125 provides later secondary corroboration. This does not define whether the local Krasnopresnenskaya-side profile fragment uses an independent circular shell, a shared multi-track shell, or a transition chamber."
       },
       "pcg_rule": "This profile fragment is stronger than a generic branch fallback. Once the correct physical branch edge is identified, constrain the civil crown to the archival PK/depth observations, but keep UGR/rail grade and cross-section unresolved until a section/datum source is found. The selected Belorusskaya first-implementation branch can terminate before this downstream profile fragment; do not force the S121 crown profile onto the Belorusskaya leg.",
       "confidence": "A/B_profile_C_construction_context"

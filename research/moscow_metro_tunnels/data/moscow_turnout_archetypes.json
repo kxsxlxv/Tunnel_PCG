@@ -548,6 +548,19 @@
             "status": "SOURCE_BACKED_MANUFACTURER_FAMILY",
             "exact_front_rear_chainage_from_math_center": null,
             "note": "Overall assembled frog length is known; exact split around mathematical center is not given by S131."
+          },
+          "rail_joint_gaps_mm": {
+            "ordinary": {
+              "nominal": 8,
+              "tolerance_plus_minus": 2
+            },
+            "point_root": {
+              "nominal": 5,
+              "tolerance_plus_minus": 2
+            },
+            "frog_front": 0,
+            "frog_tail": 0,
+            "locator": "§2.12.6, printed p.41"
           }
         },
         "guard_rails": {
@@ -594,6 +607,13 @@
             "confidence": "C_visual_transcription_secondary_mirror",
             "status": "SOURCE_BACKED_DRAWING_CALLOUT",
             "semantic_note": "Treat as local point/stock-rail opening callout, not as track-centerline offset."
+          },
+          "point_throw_mm": {
+            "nominal": 152,
+            "tolerance_plus": 8,
+            "tolerance_minus": 2,
+            "measurement": "at first connecting-rod axis",
+            "locator": "§2.12.11, printed pp.43-44"
           }
         },
         "drive": {
@@ -624,7 +644,8 @@
         "exact turnout plate/baseplate SKU variant",
         "exact point-machine and rods geometry at Belorusskaya",
         "exact point root pivot hardware geometry despite source-backed 8.3 m point component length and 8298 mm longitudinal projection",
-        "exact frog front/rear extent relative to mathematical center despite known 4.59 m assembled length"
+        "exact frog front/rear extent relative to mathematical center despite known 4.59 m assembled length",
+        "terminal R65 1/9 Table-16 ordinate rows beyond x=14 m are intentionally not transcribed until numerator/denominator endpoint semantics are rechecked"
       ],
       "straight_insert_note": "No main-line source found that gives a universal distance from the project-2976 stock-rail front joint or frog tail to the next curve. Current SP instead constrains curve/vertical-curve starts to be >=20 m from turnout center (§5.3.5). The 2.9 m value in SP Table 5.30 is for depot park tracks and is not transferred to this tunnel junction.",
       "current_metro_placement_validator": {
@@ -727,6 +748,100 @@
         "confidence": "B",
         "status": "SOURCE_BACKED_MANUFACTURER_CROSSCHECK_NOT_SITE_PROOF",
         "note": "These component lengths close visible labels in the project-2976 drawing family but do not identify the installed Belorusskaya project."
+      },
+      "metro_2005_track_geometry_validator": {
+        "source_id": "S128",
+        "applicability": "R65 1/9 normal single-turnout family with 8300 mm point; near the selected 2001-reference service era; not proof of project number at Belorusskaya",
+        "gauge_control_points_mm": {
+          "frame_rail_joints": 1520,
+          "point_tip": 1524,
+          "point_root_diverging_route": 1520,
+          "point_root_straight_route": 1521,
+          "turnout_curve_middle": 1524,
+          "frog_and_turnout_curve_end": 1520,
+          "locator": "Table 10, printed p.35"
+        },
+        "turnout_curve_ordinate_definition": {
+          "x": "distance from point root",
+          "y": "working-face distance from outer straight-route rail to outer/bearing turnout-curve rail",
+          "units": "mm"
+        },
+        "turnout_curve_ordinates_gauge_1520_mm": [
+          {
+            "x": 0,
+            "y": 181
+          },
+          {
+            "x": 2000,
+            "y": 259
+          },
+          {
+            "x": 4000,
+            "y": 350
+          },
+          {
+            "x": 6000,
+            "y": 460
+          },
+          {
+            "x": 8000,
+            "y": 590
+          },
+          {
+            "x": 10000,
+            "y": 740
+          },
+          {
+            "x": 12000,
+            "y": 910
+          },
+          {
+            "x": 14000,
+            "y": 1100
+          }
+        ],
+        "turnout_curve_ordinates_locator": "Table 16, printed pp.44-45; R65 1/9 normal single, point length 8300 mm; denominator values = gauge 1520",
+        "point_throw_mm": {
+          "nominal": 152,
+          "tolerance_plus": 8,
+          "tolerance_minus": 2,
+          "measurement": "at first connecting-rod axis",
+          "locator": "§2.12.11, printed pp.43-44"
+        },
+        "rail_joint_gaps_mm": {
+          "ordinary": {
+            "nominal": 8,
+            "tolerance_plus_minus": 2
+          },
+          "point_root": {
+            "nominal": 5,
+            "tolerance_plus_minus": 2
+          },
+          "frog_front": 0,
+          "frog_tail": 0,
+          "locator": "§2.12.6, printed p.41"
+        },
+        "tunnel_anti_creepers": {
+          "minimum_pairs": 12,
+          "type": "wedge anti-creepers",
+          "locator": "§2.12.15, printed p.45"
+        },
+        "frog_guardrail_raw_groove_row_mm": {
+          "table": "Table 12, printed pp.36-37",
+          "values": [
+            108,
+            108,
+            64,
+            null,
+            null,
+            46,
+            44,
+            64,
+            86
+          ],
+          "rule": "consume only with the original table-column semantics; 1472/1435 working-face constraints remain the stronger direct validator"
+        },
+        "status": "SOURCE_BACKED_NEAR_SERVICE_ERA_VALIDATOR"
       }
     },
     {

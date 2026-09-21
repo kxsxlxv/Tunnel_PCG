@@ -249,6 +249,19 @@ and circumferential joint solids, Stage-6 bolt pockets/Boolean cutters and
 visible bolt heads. Legacy object types are intentionally preserved so Blender
 runs the same interface cleanup and Boolean code as Stage 9.
 
+The old Stage-7/9 **ring-wise axial stagger** is also restored for the Moscow
+civil stream. Moscow civil rings have their own 1.0 m pose sequence, independent
+of the source 1.35 m assembly rhythm. With the CLI default
+
+    --rotation-strategy ringwise_gaussian
+
+each complete civil ring -- segments, prescribed joints, bolt pockets/cutters
+and heads -- receives its own seeded rotation about local +Y before the Stage-10
+alignment warp. Track, walkway, contact rail, R2K11 racks, cables and pipes stay
+in the gravity/alignment frame and do not roll with the lining. Therefore the
+K segment in `kba` is not fixed at the crown. `continuous` remains available
+when zero civil-ring roll is desired.
+
 For `ten_equal`, S026 supports 10 identical blocks, 0.46 m3/block,
 1.15 t/block, historical grade-400 concrete, 16 mm working reinforcement,
 22 mm erection pins and **no permanent bolted block connection**. Therefore the

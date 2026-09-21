@@ -48,13 +48,23 @@ Stage 10.5 now supports two researched circular Moscow civil envelopes through
         D_in 5.600 m / D_out 6.100 m / ring pitch 1.000 m
         source-backed topology: 10 identical RC blocks
 
-The classic 5.5/5.1 family remains the default. For the 6.1/5.6 family, source
-S026 fixes the diameters, pitch and ten-block topology but does not provide a
-separate UGR-to-lining-axis datum. The generator therefore explicitly transfers
-the established Stage-10 track/UGR datum and recomputes shell closure, walkway
-width and intrados-following service placement from the selected radius. Exact
-RC block-edge/pin CAD is not fabricated; the current rendering remains a
-smooth source-sized envelope with the ten-block topology carried as metadata.
+The classic 5.5/5.1 family remains the default. The physical envelope is still
+the source-sized smooth Stage-10 shell, but Stage 10.4+ now adds a separate
+open-backed visual detail layer so the lining again reads as composite rather
+than as a featureless cylinder. The cast-iron family gets an 11-piece visual
+joint/flange rhythm, ring-boundary bands, a circumferential stiffener and
+low-poly M27 x 120 bolt heads in two rows per visual longitudinal joint.
+P10-FROLOV-RING supports the 25 mm flange, typical M27 x 120 bolts and two
+working bolt rows; exact N/C/K angles and bolt drilling coordinates remain
+unresolved, so the visual segmentation is explicitly not series-accurate LOD0.
+
+For the 6.1/5.6 family, source S026 fixes the diameters, pitch and ten-block
+topology but does not provide a separate UGR-to-lining-axis datum. The
+generator explicitly transfers the established Stage-10 track/UGR datum and
+recomputes shell closure, walkway width and intrados-following service
+placement from the selected radius. Its ten-block rhythm is now visible as
+shallow joint relief; cast-iron M27 bolt heads/stiffener bands are not applied.
+Exact RC block-edge/pin CAD remains unresolved.
 
 ## Modern permanent way
 
@@ -215,27 +225,29 @@ The wall-rack assembly is now tied to current component designations:
     horn pitch                     0.125 m
     max cable diameter             0.065 m
 
-The former generic semicircular-horn preview is replaced by a
-K1350.002-envelope-constrained double-cradle mesh. The 169 x 40 x 87 mm
-component envelope is exact to the current product data; the detailed stamped
-bend path is still a replaceable preview.
+The former detached double-cradle preview is replaced by one continuous
+K1350.002 formed-ribbon mesh. The 169 x 40 x 87 mm component envelope is tied
+to current product data; exact factory neutral-axis bend radii remain
+unresolved.
 
 One R2K11 rack is generated on each wall at the midpoint of every 1.0 m Moscow
 civil ring.
 
-Stage-10.5 v3 follows the supplied product drawing/3D references more closely:
-the two K1350.002 open cradle seats no longer sit on a continuous horizontal
-underbar. Only a short wall-side neck remains between the upright and first
-cradle.
+Stage-10.5 v4 follows the supplied drawing, 3D reference and Blender feedback:
+each horn leaves the upright directly and follows one rounded-W / omega-like
+strip through both cable cradles and the central crest. There is no separate
+horizontal shelf, wall-side tab or short neck between the upright and cradle.
 
 The visual cable preset occupies eight distributed levels per wall and one
 cable place on each occupied level:
 
     8 levels x 1 cable x 2 sides = 16 representative cable routes
 
-The routes use a restrained 0.025 m midspan sag between the 1.0 m rack
-supports. The sweep inserts one sag midpoint per support span rather than a
-dense spline tessellation.
+The routes use a restrained nominal 0.025 m sag between the 1.0 m rack
+supports. The sag is no longer repeated identically: each cable/span gets a
+stable hashed amplitude variation of +/-35% and its lowest point moves by up to
++/-0.12 of a span. Only one interior control station is added per span, so the
+irregularity does not create a dense spline mesh.
 
 The negative-X/contact-rail wall is tagged as the strong-current side and its
 rack midpoint is raised to the lining-axis height to match the supplied visual
@@ -345,9 +357,9 @@ Stress/integration gate:
 
 Profile schema is now **2.2** because the dimensioned support drawing is part of the typed machine contract.
 
-Current fully green v3 baseline:
+Current fully green v4 code baseline:
 
-    193 tests passed
+    194 tests passed
     Stage 10.1 CLI compatibility smoke       PASS
     Stage 10.2 CLI compatibility smoke       PASS
     Stage 10.3 CLI compatibility smoke       PASS
@@ -414,7 +426,7 @@ Blender verification:
 The selected archetype is now suitable for another visual/runtime review, but
 these questions remain intentionally open:
 
-- exact series-specific cast-iron N/C/K ribs, bolts, rebates and grout plugs;
+- exact series-specific cast-iron N/C/K angles, rib coordinates, bolt drilling, rebates and grout plugs;
 - project-specific modern cable route occupancy and cable diameters;
 - exact R2K11 elevation/offset for a named tunnel project;
 - exact current contact-support hood CAD;

@@ -1584,6 +1584,69 @@ def test_stage10_5_periodic_assets_declare_exact_reusable_mesh_prototypes():
     assert len(local_by_key) < len(objects)
 
 
+def test_stage10_5_rc_chunk_first_3000_ring_first_chunk_is_local(monkeypatch):
+    profile = load_stage10_initial_moscow_profile(
+        civil_archetype="rc_block_6100_5600"
+    )
+    assembly = TunnelAssemblyConfig(
+        n_rings=3000,
+        ring_width_m=1.35,
+        axis_noise_sigma_m=0.0,
+        ring_rotation_strategy=RingRotationStrategy.RINGWISE_GAUSSIAN,
+    )
+    config = ProductionConfig(
+        namespace="stage10-5-rc-chunk-first-3000",
+        moscow_profile=profile,
+        moscow_stage="10.5",
+        moscow_civil_topology="kba",
+    )
+    original = production_module._moscow_rc_legacy_ring_mesh
+    built_civil_rings = 0
+
+    def counted_ring(*args, **kwargs):
+        nonlocal built_civil_rings
+        built_civil_rings += 1
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(
+        production_module,
+        "_moscow_rc_legacy_ring_mesh",
+        counted_ring,
+    )
+    plan = build_stage10_5_rc_modern_chunk_plan(
+        chunk_length_m=10.0,
+        boundary_policy=ChunkBoundaryPolicy.EXACT_LENGTH,
+        assembly_config=assembly,
+        include_bolts=False,
+        production_config=config,
+        seed=5812,
+    )
+    assert math.isclose(
+        plan.assembly.length_by_chainage_m,
+        4050.0,
+        abs_tol=1e-12,
+    )
+    assert int(
+        plan.metadata["productionGeometry"]["moscowCivilRingCount"]
+    ) == 4050
+    assert built_civil_rings == 0
+
+    first = next(
+        iter_stage10_5_rc_modern_chunk_scene_packages(plan)
+    )
+    # A 10 m chunk owns only the ten 1 m Moscow civil rings whose midpoints
+    # lie inside it. Most importantly, consuming the first lazy chunk must not
+    # materialize the remaining 4040 civil rings.
+    assert built_civil_rings == 10
+    assert first.metadata["productionChunk"]["startChainageM"] == 0.0
+    assert first.metadata["productionChunk"]["endChainageM"] == 10.0
+    assert all(
+        float(obj.extra_properties.get("eventChainageM", 0.0)) < 10.0
+        for obj in first.objects
+        if "eventChainageM" in obj.extra_properties
+    )
+
+
 def test_stage10_5_rc_chunk_first_matches_materialized_chunk_geometry():
     profile = load_stage10_initial_moscow_profile(
         civil_archetype="rc_block_6100_5600"

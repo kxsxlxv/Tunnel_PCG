@@ -187,7 +187,7 @@
         }
       },
       "civil_geometry_fallback_reference": {
-        "archetype_id": "METRO_STEPWISE_BRANCH_CHAMBER_RC_TUBING_2001_REFERENCE",
+        "archetype_id": "METRO_STEPWISE_BRANCH_CHAMBER_TUBING_2001_REFERENCE",
         "actual_site_match": false,
         "source_id": "S058",
         "locator": "Frolov et al. 2001, printed pp.146-149, Figs.4.33-4.35",
@@ -386,7 +386,8 @@
           "source_id": "S058",
           "locator": "printed p.150",
           "status": "SOURCE_BACKED"
-        }
+        },
+        "registry_file": "../../data/moscow_junction_civil_archetypes.json"
       },
       "contact_rail_events": [
         {
@@ -749,7 +750,7 @@
           "first_implementation_cut_rule": "END_NODE must be placed on the Belorusskaya single-track branch leg before the unresolved downstream switch/two-track depot-side section; exact cut XY/chainage remains null."
         },
         "first_geometry_fallback": {
-          "source_archetype": "METRO_STEPWISE_BRANCH_CHAMBER_RC_TUBING_2001_REFERENCE",
+          "source_archetype": "METRO_STEPWISE_BRANCH_CHAMBER_TUBING_2001_REFERENCE",
           "source_backed_independent_tunnel_condition": "intertrack axis separation > 6.0 m",
           "exact_condition_chainage_m": null,
           "deterministic_pcg_convention": "instantiate independent round branch/main tunnels after chamber 6 if an exact project split is unavailable",
@@ -1110,5 +1111,6 @@
     "temporal_construction_events": [
       "DOSTOEVSKAYA_SWITCHOVER_CONSTRUCTION_2026"
     ]
-  }
+  },
+  "civil_archetypes_file": "../../data/moscow_junction_civil_archetypes.json"
 }

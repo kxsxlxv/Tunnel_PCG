@@ -25,9 +25,13 @@
           "rendered_scan_page": 148,
           "figure": "4.33",
           "supports": [
-            "three generic closed-method crossover/divergence layout classes",
-            "single-track branch layout uses numbered sequential chambers"
-          ]
+            "Fig.4.33a generic main-track crossover plan: 22.000 m axis spacing at one end, 20.000 m at the other, marked longitudinal dimension 120.811 m",
+            "Fig.4.33b generic single-track-branch plan: 22.000 m main-track spacing at one end; 10.500 + 10.500 m vertical axis spacings at the three-track end; marked longitudinal dimensions 83.148 m and 104.701 m",
+            "Fig.4.33b visibly carries raw chamber/section callouts 6.0, 7.5, 8.5, 9.5 m; exact chamber mapping is not relied on without a cleaner original",
+            "Fig.4.33c generic crossover to double-track dead-end: 22.000 m main-track spacing at one end; 9.000 + 4.000 + 9.000 m track spacings at the four-track end; marked longitudinal dimensions 81.000 m and 36.000 m",
+            "Fig.4.33 uses sequential numbered chambers and shows closed-method geometry classes; these are generic references, not Koltsevaya site plans"
+          ],
+          "confidence": "A_raw_printed_dimensions_B_layout_semantics"
         },
         {
           "printed_page": 148,

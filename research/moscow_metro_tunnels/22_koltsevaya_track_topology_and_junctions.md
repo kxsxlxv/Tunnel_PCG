@@ -272,6 +272,35 @@ This means the complete Krasnaya Presnya depot connection is a **multi-edge grap
 
 ---
 
+### Actual archival vertical fragment on the Krasnopresnenskaya-side depot branch
+
+A substantially stronger source has now been found for the **other downstream arm of the same Krasnaya Presnya depot-connection system**.
+
+S121 is a 2025 Moscow state historical-cultural expertise/project document. It states that, based on **archival plan-and-elevation data of Moscow Metro structures**, the crown part of the depot branch from the Krasnopresnenskaya side has the following local branch-PK/depth observations:
+
+| Branch-local PK interval | Length | Crown depth below the document's conditional 0.000 datum | Derived crown rise with increasing PK | Derived mean crown rise |
+|---|---:|---:|---:|---:|
+| ПК6+28 → ПК7+57 | 129 m | ~19.3 → ~14.0 m | ~5.3 m | ~41.09‰ |
+| ПК6+45 → ПК7+05 | 60 m | ~18.5 → ~16.3 m | ~2.2 m | ~36.67‰ |
+| ~ПК6+65 → ~ПК6+95 | ~30 m | ~17.8 → ~16.7 m | ~1.1 m | ~36.67‰ |
+
+The same document gives site ground-surface absolute elevations **143.17–145.67 m**.
+
+These numbers are useful, but the datum semantics are deliberately kept narrow:
+
+- the quoted depth is to the **crown part of the structure**, not to UGR;
+- `0.000` is the project concept's conditional datum; its absolute elevation is not resolved here;
+- the PK values are **local chainage of the depot branch**, not Line-5 main-track chainage;
+- therefore the derived 36–41‰ values are **crown-elevation trends only**, not asserted rail gradients;
+- the branch cross-section/radius over these intervals is not given by this paragraph.
+
+Machine contract:
+`KRASNOPRESNENSKAYA_DEPOT_BRANCH_PROFILE_FRAGMENT_ACTUAL`.
+
+This is the first actual-source vertical/chainage constraint found for the Krasnaya Presnya depot-connection network and should supersede any generic vertical interpolation once the corresponding physical graph edge is identified.
+
+S120 supplies matching construction context but not dimensions: the branch passed a powerful quicksand zone, includes a closed-method section, and the photographed section is explicitly described as having been constructed with ground freezing. S120 also says Dorman's 1971 monograph contained a construction description of this section. The Russian State Library record S123 confirms that the complete 271-page Dorman volume is in open access; the exact relevant pages have not yet been extracted, so no Dorman-specific dimensions are asserted yet.
+
 ## 5. Turnout geometry contract
 
 ### 5.1 Source-backed constraint
@@ -502,6 +531,8 @@ The legacy construction source S118 is more specific about **how** the turnout e
 
 This is important for PCG: a legacy switch-zone contact rail is not simply a shortened ordinary periodic rail. It has explicit `GAP`, `END_RAMP`, possible `SIDE_RAMP`, and `PROTECTIVE_BOX_RAMP` events.
 
+A useful historical cross-check is now available from **SNiP II-Д.3-62**, printed p.21 (S122). Clause 5.19 already required contact-rail breaks at turnouts and crossovers, with **1:25** end ramps and equipment at least **0.8 m** from the metal end of the ramp. Clause 5.20 allowed a special exception only on **depot park tracks at speeds ≤25 km/h**: side ramps could be used and the rail break could be omitted. This exception must not be transferred to the selected underground main/depot-connection turnout.
+
 Exact Belorusskaya contact-rail gap positions, feeder cables, disconnectors, point-tip/frog-relative offsets and support coordinates are **UNKNOWN**, because the required local laying plan has not been found.
 
 Therefore contact rail is an **event geometry**:
@@ -606,7 +637,7 @@ Again: none of these generic dimensions are assigned to the actual Belorusskaya 
 | generic chamber progression | Frolov 5.56→7.20→7.70→9.00 m widening, then 15 m two-vault common-wall chamber 6 | independent tunnels only after inter-track >6 m; can drive fallback algorithm only | exact post-chamber-6 split chainage and correspondence to Belorusskaya |
 | contact rail | must be event-based with gaps/ramps/sectioning | normative ranges known | exact local positions |
 | track foundation / drainage / walkway / services | turnout cannot inherit ordinary periodic track concrete; legacy ballasted-trough family and current passage/drainage/power/sign rules are known | event-based legacy/current presets are constrained separately | historical/as-built Belorusskaya foundation plan, drainage levels and service products |
-| vertical geometry | no invented Z | future profile/survey solver | actual switch and branch UGR |
+| vertical geometry | no invented Z; S121 now gives actual Krasnopresnenskaya-side depot-branch crown depths at local PK6+28–PK7+57 | crown trend can constrain the downstream branch after graph-edge binding | actual UGR/rail grade, absolute crown Z, Belorusskaya switch Z |
 | branch exit | tunnel-branch existence to Krasnaya Presnya is source-backed | generic reference says independent tunnels only after inter-track >6 m and after two-vault chamber 6 | actual split distance/track count/diameter/lining |
 
 ---

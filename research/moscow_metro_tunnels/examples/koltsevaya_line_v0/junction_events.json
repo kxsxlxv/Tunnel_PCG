@@ -22,17 +22,17 @@
         "exact_switch_chainage_m": null,
         "z_ugr_m": null,
         "source_ids": [
-          "S071",
-          "S072",
-          "S073",
-          "S074"
+          "S084",
+          "S085",
+          "S086",
+          "S093"
         ],
         "civil_shell": {
           "known": [
             {
               "field": "lining_material",
               "value": "cast-iron tubings",
-              "source_id": "S073",
+              "source_id": "S093",
               "locator": "Metrostroy 2017 photo album, pp.78-79 caption to the Belorusskaya tunnel node",
               "era": "construction/retrospective",
               "confidence": "A/B",
@@ -41,7 +41,7 @@
             {
               "field": "end_wall",
               "value": "monolithic reinforced concrete; original pasted waterproofing later replaced by metal isolation",
-              "source_id": "S073",
+              "source_id": "S093",
               "locator": "same caption",
               "era": "construction/retrospective",
               "confidence": "A/B",
@@ -73,8 +73,8 @@
       "turnout_geometry": {
         "required_frog_mark": "1:9",
         "required_frog_mark_source_ids": [
-          "S080",
-          "S081"
+          "S058",
+          "S022"
         ],
         "installed_project_id": null,
         "first_mesh_fallback_archetype_id": "MOSCOW_METRO_R65_1_9_PROJECT_2976_REFERENCE_FALLBACK",
@@ -85,7 +85,7 @@
       "civil_geometry_fallback_reference": {
         "archetype_id": "METRO_STEPWISE_BRANCH_CHAMBER_RC_TUBING_2001_REFERENCE",
         "actual_site_match": false,
-        "source_id": "S080",
+        "source_id": "S058",
         "locator": "Frolov et al. 2001, printed pp.146-149, Figs.4.33-4.35",
         "purpose": "generic dimensioned geometry reference for PCG transition logic only; it must not be labelled as the Belorusskaya as-built shell",
         "sequence": [
@@ -162,7 +162,7 @@
           "event_type": "CONTACT_RAIL_SIDE_RULE",
           "ordinary_rule": "left side in direction of travel",
           "turnout_exception": "may be placed on the right within turnouts, single/double crossovers and special cases",
-          "source_id": "S084",
+          "source_id": "S022",
           "locator": "SP 120.13330.2022 §5.7.2.2",
           "status": "SOURCE_BACKED"
         },
@@ -170,7 +170,7 @@
           "event_type": "CONTACT_RAIL_AIR_GAP",
           "required": true,
           "trigger": "turnout/crossover zone",
-          "source_id": "S084",
+          "source_id": "S022",
           "locator": "SP 120.13330.2022 §5.7.2.7",
           "status": "SOURCE_BACKED"
         },
@@ -180,7 +180,7 @@
           "current_main_track_trailing_slope": "1:25",
           "connecting_track_slope": "1:25",
           "historical_legacy_rule": "1:25 ramps are also documented in legacy installation rules; select by service-era preset",
-          "source_id": "S084",
+          "source_id": "S022",
           "locator": "SP 120.13330.2022 §5.7.2.8",
           "status": "SOURCE_BACKED"
         },
@@ -189,7 +189,7 @@
           "bridged_by_one_car_collectors_max_m": 10,
           "non_bridged_min_m": 14,
           "equipment_clearance_from_metal_ramp_end_min_m": 0.8,
-          "source_id": "S084",
+          "source_id": "S022",
           "locator": "SP 120.13330.2022 §5.7.2.8",
           "status": "SOURCE_BACKED"
         },
@@ -197,7 +197,7 @@
           "event_type": "CONTACT_RAIL_MIN_SEGMENT_WITH_RAMPS",
           "normal_min_m": 18.7,
           "constrained_min_m": 12.5,
-          "source_id": "S084",
+          "source_id": "S022",
           "locator": "SP 120.13330.2022 §5.7.2.9",
           "status": "SOURCE_BACKED"
         },
@@ -208,7 +208,7 @@
             2.75
           ],
           "applicability": "track/turnout/crossover with elastic elements in cases in track concrete",
-          "source_id": "S084",
+          "source_id": "S022",
           "locator": "SP 120.13330.2022 §5.7.2.4",
           "status": "SOURCE_BACKED_CURRENT_RULE"
         },
@@ -220,7 +220,7 @@
             "overlapping air gaps are used at turnouts under the traction-network rule"
           ],
           "branch_power_rule": "depot-branch contact rails receive normal power from the corresponding main-track contact rails; exact local feeder/isolator positions are site-specific",
-          "source_id": "S084",
+          "source_id": "S022",
           "locator": "SP 120.13330.2022 §5.10.4.2 and §5.10.4.10",
           "status": "SOURCE_BACKED_RULE_EXACT_SITE_POSITIONS_UNKNOWN"
         }
@@ -232,27 +232,27 @@
           {
             "field": "turnout_foundation",
             "value": "wooden switch bearers for project-2976 fallback",
-            "source_id": "S082",
+            "source_id": "S094",
             "status": "FALLBACK_PRODUCT_GEOMETRY"
           },
           {
             "field": "superelevation",
             "value_mm": 0,
-            "source_id": "S080",
+            "source_id": "S058",
             "locator": "Frolov printed p.146",
             "status": "SOURCE_BACKED_GENERIC_TURNOUT_ZONE"
           },
           {
             "field": "transition_curve",
             "value": false,
-            "source_id": "S080",
+            "source_id": "S058",
             "locator": "Frolov printed p.146",
             "status": "SOURCE_BACKED_GENERIC_TURNOUT_ZONE"
           },
           {
             "field": "anti-run-over_guard_timbers",
             "value": "required before facing points on main tracks in the stated operating condition; also before station turnouts/crossovers",
-            "source_id": "S081",
+            "source_id": "S022",
             "locator": "SP 120.13330.2022 §5.7.1.17",
             "status": "SOURCE_BACKED_CURRENT_RULE"
           }

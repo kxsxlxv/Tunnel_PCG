@@ -211,7 +211,7 @@ The modern service-era hardware includes:
     low rounded segmented contact-rail cover
     dedicated contact-rail support blocks / brackets / local support hoods
     R2K11/K1351.001-09 cable racks on both walls, one per side per 1.0 m civil ring
-    K1350.002 smoother continuous rounded-W / omega ribbons, directly on the upright
+    K1350.002 literal double-U cradles (UU), first U directly on the upright
     16 representative service cables: 8 occupied levels per wall, one cable per level
     nominal 25 mm cable sag with deterministic per-span amplitude/peak variation
     one current tunnel water main, minimum DN80, weak-current side above UGR
@@ -368,10 +368,10 @@ Detailed 5.5/5.1 cast-iron tubing remains intentionally deferred.
 Stage 10.5 is the current default production preset. It adds modern LVT-M
 half-sleeper blocks, APC-4 fastening preview, a low rounded segmented
 contact-rail cover, dedicated contact supports, dimensioned R2K11/K1351.001-09
-racks with continuous rounded-W / omega K1350.002 ribbons, 16 representative
-moderate-density cable routes with deterministic irregular sag, one
-DN80-minimum tunnel water main with periodic supports and zero-error
-continuous-sweep alignment compaction.
+racks with literal double-U K1350.002 cradles, 16 representative moderate-
+density cable routes with deterministic irregular sag, one DN80-minimum tunnel
+water main with periodic supports and zero-error continuous-sweep alignment
+compaction.
 
 The modern preset is default, but the complete timber/KD-65 implementation is
 still selectable with `--service-preset legacy`.

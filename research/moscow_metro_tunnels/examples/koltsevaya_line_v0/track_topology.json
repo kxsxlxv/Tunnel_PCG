@@ -160,7 +160,8 @@
         "S123",
         "S124",
         "S125",
-        "S134"
+        "S134",
+        "S135"
       ],
       "confirmed": [
         "depot serves Line 5",
@@ -365,6 +366,24 @@
         ],
         "operation": "branches/crossovers allow depot trains to populate and clear the ring without reversing maneuvers",
         "status": "SOURCE_BACKED_HISTORICAL_DESIGN_ACCOUNT"
+      },
+      "historical_branch_length_constraint": {
+        "value_m": 256,
+        "applies_to": "one of the two Line-5-to-depot branches",
+        "named_leg_assignment": null,
+        "source_id": "S135",
+        "locator": "Ya.A. Dorman article, web lines 313-314",
+        "status": "SOURCE_BACKED_LENGTH_UNASSIGNED_TO_SPECIFIC_LEG",
+        "rule": "Do not set BRANCH_KRP_BELORUSSKAYA_LEG.length_m or BRANCH_KRP_KRASNOPRESNENSKAYA_LEG.length_m to 256 until an independent plan/chainage source identifies which branch Dorman describes."
+      },
+      "historical_construction_constraints": {
+        "frozen_exit_tunnel_section": true,
+        "frozen_crossover_chambers_count_on_koltsevaya": 2,
+        "fan_arranged_freezing_holes_on_one_depot_branch": true,
+        "freezing_hole_total_length_m_approx": 18000,
+        "source_id": "S135",
+        "status": "SOURCE_BACKED_HISTORICAL_CONSTRUCTION",
+        "exact_mapping_to_selected_belorusskaya_chamber": null
       }
     },
     {

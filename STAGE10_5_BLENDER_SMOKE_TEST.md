@@ -112,28 +112,39 @@ Expected:
 - each rack has 11 K1350.002 double horns;
 - upright envelope is 1440 x 48 x 3 mm;
 - each horn envelope is 169 x 40 x 87 mm at 4 mm steel;
-- each horn provides two cable places;
-- the visual-density preset fills both places, producing 44 continuous cable routes;
+- each horn provides two physical cable places, but only one is occupied on a used level;
+- eight of eleven levels are populated per wall, producing 16 continuous cable routes total;
+- the long common horizontal underbar is absent; the double cradles remain open;
+- cables show a restrained sag of about 25 mm at midspan between 1.0 m supports;
 - cables remain visibly inside the tunnel intrados;
-- negative-X/contact-rail wall is tagged strong-current;
+- negative-X/contact-rail wall is tagged strong-current and its rack midpoint is at tunnel/lining mid-height;
 - positive-X/walkway wall is tagged weak-current;
 - one DN80-class water main is present on the weak-current side above UGR;
 - its preview center is profile z=+0.600 m;
 - periodic water-main wall supports are visible at no more than 4.0 m spacing.
 
-The 44-cable population is intentionally a full-capacity visual-density preset,
-not a project-specific cable schedule. Exact pipe OD/wall thickness and support
+The 16-cable population is intentionally a moderate-density visual preset, not
+a project-specific cable schedule. Exact pipe OD/wall thickness and support
 hardware remain explicit fallbacks.
 
 ### Civil geometry
 
-The Stage-10.4 civil contract is unchanged:
+The default civil envelope remains:
 
+    cast_iron_5500_5100
     intrados radius     2.550 m
     extrados radius     2.750 m
     ring pitch          1.000 m
 
-The internal diameter should therefore remain approximately 5.10 m.
+With `--civil-archetype rc_block_6100_5600`, expect:
+
+    intrados radius     2.800 m
+    extrados radius     3.050 m
+    ring pitch          1.000 m
+    topology metadata   10 RC blocks
+
+The RC variant is currently rendered as a smooth source-sized envelope; exact
+block-edge/pin CAD remains deferred.
 
 ## 4. Polygon-count expectation
 

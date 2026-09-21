@@ -433,6 +433,34 @@ def _validate_stage10_build(
             raise AssertionError("R2K11 double horn must expose two cable places")
         if int(meta.get("serviceCableOccupiedPlacesPerHorn", -1)) != 1:
             raise AssertionError("modern visual preset must occupy one cable place per used level")
+        racks = build.scene.objects_of_type("production_cable_rack_r2k11")
+        for rack_obj in racks:
+            rp = rack_obj.custom_properties
+            if rp.get("hornGeometryMode") != "double_u_cradle_pair_v6":
+                raise AssertionError(f"{rack_obj.name}: wrong R2K11 horn mode")
+            if rp.get("centralOmegaCrest") is not False:
+                raise AssertionError(f"{rack_obj.name}: omega crest was not removed")
+            if int(rp.get("hornUCradleCount", -1)) != 2:
+                raise AssertionError(f"{rack_obj.name}: expected two U cradles")
+            if not math.isclose(
+                float(rp.get("hornUVisualPairSpanM", -1)),
+                0.154,
+                abs_tol=1e-12,
+            ):
+                raise AssertionError(f"{rack_obj.name}: wrong U-pair span")
+            if not math.isclose(
+                float(rp.get("hornUInnerClearDiameterM", -1)),
+                0.067,
+                abs_tol=1e-12,
+            ):
+                raise AssertionError(f"{rack_obj.name}: wrong U clear diameter")
+            centers = tuple(float(x) for x in rp.get("hornUCableCenterOffsetsM", ()))
+            if len(centers) != 2:
+                raise AssertionError(f"{rack_obj.name}: missing U cable centres")
+            if not math.isclose(centers[0], 0.0375, abs_tol=1e-12):
+                raise AssertionError(f"{rack_obj.name}: wrong first U centre")
+            if not math.isclose(centers[1], 0.1165, abs_tol=1e-12):
+                raise AssertionError(f"{rack_obj.name}: wrong second U centre")
 
     if domain_stage in {"10.4", "10.5"}:
         is_rc = (

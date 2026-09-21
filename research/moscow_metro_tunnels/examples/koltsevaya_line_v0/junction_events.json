@@ -1,0 +1,318 @@
+{
+  "schema_version": "1.0",
+  "research_date": "2026-09-21",
+  "purpose": "Event contract for the first real Koltsevaya junction/depot-connection implementation. Actual-site constraints are separated from generic metro geometry references.",
+  "events": [
+    {
+      "event_id": "JUNCTION_KOL5_BELORUSSKAYA_DEPOT_WEST",
+      "event_type": "TURNOUT_DIVERGENCE_CHAMBER",
+      "topology_ref": "track_topology.json#/selected_first_junction",
+      "actual_site": {
+        "status": "CONSTRAINED_ACTUAL",
+        "main_track": "KOLTSEVAYA_TRACK_B",
+        "operational_track_number": "II",
+        "direction": "counterclockwise",
+        "station_side": "Белорусская, со стороны Краснопресненской",
+        "straight_route": "II главный путь toward Краснопресненская",
+        "diverging_route": "left toward reversing siding and Krasnaya Presnya depot branch system",
+        "handedness": "left",
+        "multi_switch_system": true,
+        "exact_switch_xy_wgs84": null,
+        "exact_switch_xy_engineering": null,
+        "exact_switch_chainage_m": null,
+        "z_ugr_m": null,
+        "source_ids": [
+          "S071",
+          "S072",
+          "S073",
+          "S074"
+        ],
+        "civil_shell": {
+          "known": [
+            {
+              "field": "lining_material",
+              "value": "cast-iron tubings",
+              "source_id": "S073",
+              "locator": "Metrostroy 2017 photo album, pp.78-79 caption to the Belorusskaya tunnel node",
+              "era": "construction/retrospective",
+              "confidence": "A/B",
+              "status": "SOURCE_BACKED"
+            },
+            {
+              "field": "end_wall",
+              "value": "monolithic reinforced concrete; original pasted waterproofing later replaced by metal isolation",
+              "source_id": "S073",
+              "locator": "same caption",
+              "era": "construction/retrospective",
+              "confidence": "A/B",
+              "status": "SOURCE_BACKED"
+            }
+          ],
+          "constrained": [
+            "ordinary circular running tunnel must locally expand to contain main and diverging track",
+            "the published photo/caption confirms the correct visual class but supplies no scale dimensions"
+          ],
+          "unknown": {
+            "chamber_length_m": null,
+            "maximum_internal_width_m": null,
+            "internal_height_m": null,
+            "track_axis_offsets_m": null,
+            "axis_separation_at_chamber_end_m": null,
+            "roof_profile": null,
+            "wall_profile": null,
+            "invert_profile": null,
+            "ribs_frames_tubing_layout": null,
+            "transition_length_from_running_circle_m": null,
+            "independent_branch_tunnel_start_chainage_m": null,
+            "branch_tunnel_internal_diameter_m": null,
+            "branch_tunnel_lining_type": null,
+            "relative_track_z_m": null
+          }
+        }
+      },
+      "turnout_geometry": {
+        "required_frog_mark": "1:9",
+        "required_frog_mark_source_ids": [
+          "S080",
+          "S081"
+        ],
+        "installed_project_id": null,
+        "first_mesh_fallback_archetype_id": "MOSCOW_METRO_R65_1_9_PROJECT_2976_REFERENCE_FALLBACK",
+        "fallback_rule": "Project 2976 is metro-specific and dimensioned, but is NOT proven to be the installed Belorusskaya turnout. Tag all generated objects as fallback.",
+        "exact_local_speed_limit_kmh": null,
+        "exact_point_machine_model": null
+      },
+      "civil_geometry_fallback_reference": {
+        "archetype_id": "METRO_STEPWISE_BRANCH_CHAMBER_RC_TUBING_2001_REFERENCE",
+        "actual_site_match": false,
+        "source_id": "S080",
+        "locator": "Frolov et al. 2001, printed pp.146-149, Figs.4.33-4.35",
+        "purpose": "generic dimensioned geometry reference for PCG transition logic only; it must not be labelled as the Belorusskaya as-built shell",
+        "sequence": [
+          {
+            "chamber": 1,
+            "function": "approach/reference chamber",
+            "length_m": 5,
+            "internal_diameter_m": null,
+            "track_axis_separation_m": null,
+            "status": "SOURCE_BACKED_FROM_FIGURE"
+          },
+          {
+            "chamber": 2,
+            "function": "contains turnout",
+            "length_m": 10,
+            "internal_diameter_m": 5.56,
+            "maximum_track_axis_separation_m": 0.7,
+            "status": "SOURCE_BACKED"
+          },
+          {
+            "chamber": 3,
+            "function": "widening after turnout",
+            "length_m": 15,
+            "internal_diameter_m": 7.2,
+            "track_axis_separation_m": 2.22,
+            "status": "SOURCE_BACKED"
+          },
+          {
+            "chamber": 4,
+            "function": "further widening",
+            "length_m": 11.25,
+            "internal_diameter_m": 7.7,
+            "track_axis_separation_m": 3.36,
+            "status": "SOURCE_BACKED"
+          },
+          {
+            "chamber": 5,
+            "function": "maximum single-shell widening",
+            "length_m": 9.75,
+            "internal_diameter_m": 9,
+            "track_axis_separation_m": 4.46,
+            "status": "SOURCE_BACKED",
+            "note": "Text states a circular chamber of this size is uneconomical and an elliptical form can be obtained with additional adjacent/key tubings and wedge spacers."
+          },
+          {
+            "chamber": 6,
+            "function": "two separated single-track circular shells",
+            "length_m": 15,
+            "each_tunnel_internal_diameter_m": 5.14,
+            "each_tunnel_outer_diameter_m": 5.64,
+            "status": "SOURCE_BACKED_FROM_FIG4.34_SECTION"
+          }
+        ],
+        "derived_landmarks": {
+          "chamber2_start_to_start_of_separate_circular_shells_m": {
+            "value": 46,
+            "derivation": "10 + 15 + 11.25 + 9.75",
+            "status": "RECONSTRUCTED_FROM_SOURCE_LENGTHS",
+            "confidence": "A/B"
+          },
+          "chamber2_start_to_end_of_chamber6_m": {
+            "value": 61,
+            "derivation": "10 + 15 + 11.25 + 9.75 + 15",
+            "status": "RECONSTRUCTED_FROM_SOURCE_LENGTHS",
+            "confidence": "A/B"
+          },
+          "point_tip_to_separate_shell_start_m": null,
+          "reason_for_null": "The source does not dimension the point-tip position within chamber 2."
+        },
+        "z_rule": "Do not infer a numerical relative Z from the schematic sections; actual-site Z remains null."
+      },
+      "contact_rail_events": [
+        {
+          "event_type": "CONTACT_RAIL_SIDE_RULE",
+          "ordinary_rule": "left side in direction of travel",
+          "turnout_exception": "may be placed on the right within turnouts, single/double crossovers and special cases",
+          "source_id": "S084",
+          "locator": "SP 120.13330.2022 §5.7.2.2",
+          "status": "SOURCE_BACKED"
+        },
+        {
+          "event_type": "CONTACT_RAIL_AIR_GAP",
+          "required": true,
+          "trigger": "turnout/crossover zone",
+          "source_id": "S084",
+          "locator": "SP 120.13330.2022 §5.7.2.7",
+          "status": "SOURCE_BACKED"
+        },
+        {
+          "event_type": "CONTACT_RAIL_END_RAMP",
+          "current_main_track_receiving_slope": "1:30",
+          "current_main_track_trailing_slope": "1:25",
+          "connecting_track_slope": "1:25",
+          "historical_legacy_rule": "1:25 ramps are also documented in legacy installation rules; select by service-era preset",
+          "source_id": "S084",
+          "locator": "SP 120.13330.2022 §5.7.2.8",
+          "status": "SOURCE_BACKED"
+        },
+        {
+          "event_type": "CONTACT_RAIL_GAP_LENGTH_CONSTRAINT",
+          "bridged_by_one_car_collectors_max_m": 10,
+          "non_bridged_min_m": 14,
+          "equipment_clearance_from_metal_ramp_end_min_m": 0.8,
+          "source_id": "S084",
+          "locator": "SP 120.13330.2022 §5.7.2.8",
+          "status": "SOURCE_BACKED"
+        },
+        {
+          "event_type": "CONTACT_RAIL_MIN_SEGMENT_WITH_RAMPS",
+          "normal_min_m": 18.7,
+          "constrained_min_m": 12.5,
+          "source_id": "S084",
+          "locator": "SP 120.13330.2022 §5.7.2.9",
+          "status": "SOURCE_BACKED"
+        },
+        {
+          "event_type": "CONTACT_RAIL_SUPPORT_SPACING_TURNOUT",
+          "range_m": [
+            2.2,
+            2.75
+          ],
+          "applicability": "track/turnout/crossover with elastic elements in cases in track concrete",
+          "source_id": "S084",
+          "locator": "SP 120.13330.2022 §5.7.2.4",
+          "status": "SOURCE_BACKED_CURRENT_RULE"
+        },
+        {
+          "event_type": "TRACTION_SECTIONING",
+          "constraints": [
+            "non-overlapping sectioning between main and connecting tracks",
+            "non-overlapping sectioning between connecting and depot yard tracks near tunnel portal",
+            "overlapping air gaps are used at turnouts under the traction-network rule"
+          ],
+          "branch_power_rule": "depot-branch contact rails receive normal power from the corresponding main-track contact rails; exact local feeder/isolator positions are site-specific",
+          "source_id": "S084",
+          "locator": "SP 120.13330.2022 §5.10.4.2 and §5.10.4.10",
+          "status": "SOURCE_BACKED_RULE_EXACT_SITE_POSITIONS_UNKNOWN"
+        }
+      ],
+      "track_concrete_drainage_walkway_services": {
+        "generation_mode": "EVENT_BASED_OVERRIDE_REQUIRED",
+        "ordinary_stage10_preset_may_continue_through_event": false,
+        "known": [
+          {
+            "field": "turnout_foundation",
+            "value": "wooden switch bearers for project-2976 fallback",
+            "source_id": "S082",
+            "status": "FALLBACK_PRODUCT_GEOMETRY"
+          },
+          {
+            "field": "superelevation",
+            "value_mm": 0,
+            "source_id": "S080",
+            "locator": "Frolov printed p.146",
+            "status": "SOURCE_BACKED_GENERIC_TURNOUT_ZONE"
+          },
+          {
+            "field": "transition_curve",
+            "value": false,
+            "source_id": "S080",
+            "locator": "Frolov printed p.146",
+            "status": "SOURCE_BACKED_GENERIC_TURNOUT_ZONE"
+          },
+          {
+            "field": "anti-run-over_guard_timbers",
+            "value": "required before facing points on main tracks in the stated operating condition; also before station turnouts/crossovers",
+            "source_id": "S081",
+            "locator": "SP 120.13330.2022 §5.7.1.17",
+            "status": "SOURCE_BACKED_CURRENT_RULE"
+          }
+        ],
+        "unknown_actual_site": {
+          "track_concrete_surface_mesh": null,
+          "drainage_channel_route": null,
+          "local_sumps_cross_drains": null,
+          "walkway_route": null,
+          "refuge_safe_zones": null,
+          "cable_rack_reroute": null,
+          "cable_crossings": null,
+          "tunnel_water_pipe_route": null,
+          "lighting_positions": null,
+          "equipment_cabinets": null,
+          "point_machine_geometry": null,
+          "signals_autostop_sensor_positions": null
+        },
+        "pcg_rule": "Spawn these as explicit junction events only after a site plan or dimensioned chamber drawing resolves them. Do not continue ordinary periodic tunnel assets through the switch zone."
+      },
+      "branch_exit": {
+        "actual_belorusskaya_branch": {
+          "independent_single_track_shell_start_distance_from_points_m": null,
+          "internal_diameter_m": null,
+          "outer_diameter_m": null,
+          "lining_type": null,
+          "z_ugr_m": null,
+          "cut_marker_xy": null,
+          "status": "UNKNOWN_PUBLICLY"
+        },
+        "first_geometry_fallback": {
+          "source_archetype": "METRO_STEPWISE_BRANCH_CHAMBER_RC_TUBING_2001_REFERENCE",
+          "instantiate_separate_round_shells_at": "start of generic chamber 6",
+          "chamber2_start_to_shell_start_m": 46,
+          "independent_tunnel_internal_diameter_m": 5.14,
+          "independent_tunnel_outer_diameter_m": 5.64,
+          "status": "GENERIC_REFERENCE_NOT_BELORUSSKAYA_AS_BUILT"
+        }
+      }
+    }
+  ],
+  "known_constrained_unknown_summary": {
+    "KNOWN": [
+      "Track B/II continues straight from Belorusskaya toward Krasnopresnenskaya; the turnback/depot route diverges left.",
+      "The actual Belorusskaya crossover/divergence chamber is cast-iron tubing with an RC end wall.",
+      "Moscow metro turnout rule uses 1:9 frogs for ordinary turnouts; project 2976 provides a fully dimensioned metro-specific R65 1:9 fallback.",
+      "Contact rail must be interrupted/sectioned as an event at the turnout rather than swept continuously."
+    ],
+    "CONSTRAINED": [
+      "The depot/turnback area is a multi-switch system shown by a published Line-5 track-development schematic.",
+      "Generic stepwise chamber geometry can drive a fallback transition algorithm, but is not site-identical evidence.",
+      "Contact-rail ramp/gap/support ranges are source-backed standards, while exact local positions are unresolved."
+    ],
+    "UNKNOWN": [
+      "exact Belorusskaya switch OSM/project XY and chainage",
+      "exact installed turnout project/model",
+      "actual chamber dimensions",
+      "actual branch tunnel diameter/lining and exact split point",
+      "all local Z values",
+      "site-specific drainage/walkway/cable/lighting/signalling placement"
+    ]
+  }
+}

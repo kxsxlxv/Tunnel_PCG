@@ -298,6 +298,27 @@ def _u_ribbon_polygon(
     return polygon if area > 0.0 else tuple(reversed(polygon))
 
 
+def _r2k11_double_u_layout(
+    *,
+    max_cable_diameter_m: float,
+    thickness_m: float,
+    pair_span_m: float = 0.154,
+    radial_clearance_m: float = 0.001,
+) -> tuple[float, float, tuple[float, float]]:
+    """Resolve two adjacent U seats and their cable-centre offsets."""
+    if min(max_cable_diameter_m, thickness_m, pair_span_m) <= 0.0:
+        raise ValueError("double-U layout dimensions must be positive")
+    if radial_clearance_m < 0.0:
+        raise ValueError("double-U cable clearance cannot be negative")
+    inner_r = 0.5 * max_cable_diameter_m + radial_clearance_m
+    outer_r = inner_r + thickness_m
+    gap = pair_span_m - 4.0 * outer_r
+    if gap < -1e-12:
+        raise ValueError("double-U pair span is too small for cable clearance")
+    gap = max(0.0, gap)
+    centers = (outer_r, 3.0 * outer_r + gap)
+    return inner_r, gap, centers
+
 def _double_u_horn_polygons(
     *,
     wall_x_m: float,
@@ -309,7 +330,7 @@ def _double_u_horn_polygons(
     inner_radius_m: float,
     thickness_m: float,
     pair_span_m: float = 0.154,
-    central_gap_m: float = 0.008,
+    central_gap_m: float = 0.004,
     stem_height_m: float = 0.035,
     arc_segments: int = 8,
 ) -> tuple[
@@ -318,9 +339,11 @@ def _double_u_horn_polygons(
 ]:
     """Build the R2K11 horn as two simple adjacent U cradles: UU.
 
-    The user-supplied drawing gives a 154 mm double-cradle span and R32.5 mm
-    seats. Two U strips with 4 mm steel occupy 73 mm each, leaving an 8 mm
-    clear gap between them. The first U begins directly at the rack upright;
+    The user-supplied drawing gives a 154 mm double-cradle span. The visual
+    U-seat clear radius is made 1 mm larger than the published 65 mm maximum
+    cable radius requirement, so each cradle has 67 mm internal clear diameter.
+    With 4 mm strip this leaves a 4 mm gap between the two U shapes. The first
+    U begins directly at the rack upright;
     there is no horizontal shelf, neck or central W/omega crest.
     """
     outer_r = inner_radius_m + thickness_m
@@ -398,6 +421,10 @@ def build_r2k11_local_rack_mesh(
         # User visual correction: K1350.002 reads as two simple U cradles,
         # not a rounded W/omega ribbon. The first U touches the upright
         # directly; there is no horizontal neck/shelf before it.
+        u_inner_r, u_gap, u_centers = _r2k11_double_u_layout(
+            max_cable_diameter_m=rack.max_cable_diameter_m,
+            thickness_m=rack.horn_thickness_m,
+        )
         horns = _double_u_horn_polygons(
             wall_x_m=wall_x,
             wall_z_m=wall_z,
@@ -405,8 +432,9 @@ def build_r2k11_local_rack_mesh(
             inward_z=inward[1],
             up_x=up[0],
             up_z=up[1],
-            inner_radius_m=rack.horn_radius_m,
+            inner_radius_m=u_inner_r,
             thickness_m=rack.horn_thickness_m,
+            central_gap_m=u_gap,
         )
         meshes.extend(
             _extrude_y_polygon(
@@ -454,9 +482,13 @@ def build_r2k11_local_rack_mesh(
             "hornGeometryMode": "double_u_cradle_pair_v6",
             "hornUCradleCount": 2,
             "hornUVisualPairSpanM": 0.154,
-            "hornUCentralGapM": 0.008,
-            "hornUInnerClearRadiusM": rack.horn_radius_m,
-            "hornUInnerClearDiameterM": 2.0 * rack.horn_radius_m,
+            "hornUCentralGapM": u_gap,
+            "hornUInnerClearRadiusM": u_inner_r,
+            "hornUInnerClearDiameterM": 2.0 * u_inner_r,
+            "hornUCableCenterOffsetsM": u_centers,
+            "hornUMaxCableRadialClearanceM": (
+                u_inner_r - 0.5 * rack.max_cable_diameter_m
+            ),
             "hornUStemHeightM": 0.035,
             "hornUArcSegments": 8,
             "shellClearanceInwardM": rack.shell_clearance_inward_m,
@@ -478,9 +510,9 @@ def modern_cable_sections_core(
     rack = profile.cable_rack
     radius = 0.5 * rack.representative_cable_diameter_m
     rack_radius = profile.intrados_radius_m - rack.shell_clearance_inward_m
-    slot_offsets = (
-        rack.first_cable_center_inward_m,
-        rack.second_cable_center_inward_m,
+    _u_inner_r, _u_gap, slot_offsets = _r2k11_double_u_layout(
+        max_cable_diameter_m=rack.max_cable_diameter_m,
+        thickness_m=rack.horn_thickness_m,
     )
     result = []
     for side_sign in (-1, 1):

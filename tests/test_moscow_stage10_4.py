@@ -189,11 +189,14 @@ def test_stage10_4_production_replaces_stage9_shell_and_walkway_and_closes_gap_c
     assert not build.scene.objects_of_type(
         "production_moscow_civil_bolt_heads"
     )
-    assert meta["moscowCivilDetailRibObjectCount"] == 0
-    assert meta["moscowCivilBoltObjectCount"] == 0
+    assert meta["moscowCivilSegmentObjectCount"] == 0
+    assert meta["moscowCivilPrescribedRadialJointCount"] == 0
+    assert meta["moscowCivilPrescribedCircumferentialJointCount"] == 0
+    assert meta["moscowCivilBoltPocketCount"] == 0
     assert meta["moscowCivilBoltHeadCount"] == 0
     assert meta["moscowCivilBoltsEnabled"] is False
     assert meta["moscowCivilRenderedBlockCount"] == 0
+    assert meta["moscowCivilTopology"] == "cast_iron_detail_deferred"
     for ring in civil:
         p = ring.custom_properties
         assert p["civilRenderMode"] == (

@@ -64,6 +64,22 @@ do not interpret the clamp/regulator solids as factory CAD.
 
 Expected:
 
+- support bracket uses the new dimensioned hook-channel silhouette;
+- measurable drawing targets are approximately:
+  - running-reference -> contact axis: 683 mm drawing callout (690 mm normative datum retained);
+  - running-reference -> outer bracket envelope: 873 mm;
+  - upper return/top-plate callout: 180 mm;
+  - bracket top: +373 mm above UGR/reference;
+  - lower/upper bend callouts: 155 / 90 mm;
+- the generated bracket outer envelope should reach |x| ~= 1.633 m;
+- the contact rail is visibly clamped, not floating:
+  - two side jaws around the upper flange;
+  - bridge plate above the rail;
+  - short vertical insulator stack;
+  - two visible through-bolts;
+- the support base has a distinct steel plate and four anchors/dowels;
+- the local support hood encloses clamp and bolt heads.
+
 - RK contact rail remains on the negative profile-X side;
 - working-surface position remains unchanged;
 - the protective cover is a low smooth wrap, not the old tall rectangular box;

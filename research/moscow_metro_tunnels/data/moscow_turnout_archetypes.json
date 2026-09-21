@@ -178,6 +178,22 @@
           "locator": "geometric-dimensions drawing, βn",
           "confidence": "A/B",
           "status": "SOURCE_BACKED"
+        },
+        "unassigned_drawing_callouts_mm": {
+          "values": [
+            8298,
+            4451,
+            4477,
+            2000,
+            2135,
+            2500,
+            2210,
+            1757.5
+          ],
+          "source_id": "S094",
+          "locator": "project 2976 drawing image",
+          "status": "SOURCE_BACKED_VISIBLE_CALLOUTS_SEMANTICS_NOT_LOCKED",
+          "rule": "Do not consume in mesh generation until each callout is mapped to an identified rail/component endpoint."
         }
       },
       "rail_components": {
@@ -387,6 +403,39 @@
         "source_id": "S022",
         "locator": "§5.3.5",
         "status": "SOURCE_BACKED_CURRENT_VALIDATOR"
+      },
+      "local_longitudinal_reference": {
+        "frame": "x=0 at front joint on the straight-route reference axis; +x toward frog/rear joint. These are scalar stations only, not a complete rail-centerline reconstruction.",
+        "stations_mm": [
+          {
+            "name": "front_joint",
+            "x": 0,
+            "status": "SOURCE_BACKED_DATUM"
+          },
+          {
+            "name": "point_tip",
+            "x": 2765,
+            "status": "SOURCE_BACKED_DRAWING"
+          },
+          {
+            "name": "turnout_center",
+            "x": 15223,
+            "derivation": "2765+12458",
+            "status": "RECONSTRUCTED_FROM_SOURCE_DIMENSION_CHAIN"
+          },
+          {
+            "name": "mathematical_frog_center",
+            "x": 28945,
+            "derivation": "2765+26180 = 2765+12458+13722",
+            "status": "RECONSTRUCTED_FROM_SOURCE_DIMENSION_CHAIN"
+          },
+          {
+            "name": "rear_joint",
+            "x": 31035,
+            "status": "SOURCE_BACKED_OVERALL_LENGTH"
+          }
+        ],
+        "note": "Do not infer y offsets, point-root coordinates, frog nose coordinates or guard-rail extents from these scalar x stations."
       }
     },
     {
@@ -579,7 +628,40 @@
       "exact_frog_nose_and_wing_CAD": null,
       "exact_guard_rail_chainages": null,
       "exact_point_machine_rods_geometry": null,
-      "mesh_use_rule": "Use only under an explicitly selected R50 fallback/service-era preset. Keep fallback=true and installed_model_unconfirmed=true."
+      "mesh_use_rule": "Use only under an explicitly selected R50 fallback/service-era preset. Keep fallback=true and installed_model_unconfirmed=true.",
+      "local_longitudinal_reference": {
+        "frame": "x=0 at front joint on the straight-route reference axis; +x toward frog/rear joint. Scalar stations only.",
+        "stations_mm": [
+          {
+            "name": "front_joint",
+            "x": 0,
+            "status": "SOURCE_BACKED_DATUM"
+          },
+          {
+            "name": "point_tip",
+            "x": 4323,
+            "status": "SOURCE_BACKED_DRAWING"
+          },
+          {
+            "name": "turnout_center",
+            "x": 15455,
+            "derivation": "4323+11132",
+            "status": "RECONSTRUCTED_FROM_SOURCE_DIMENSION_CHAIN"
+          },
+          {
+            "name": "mathematical_frog_center",
+            "x": 29177,
+            "derivation": "4323+24854 = 4323+11132+13722",
+            "status": "RECONSTRUCTED_FROM_SOURCE_DIMENSION_CHAIN"
+          },
+          {
+            "name": "rear_joint",
+            "x": 31057,
+            "status": "SOURCE_BACKED_OVERALL_LENGTH"
+          }
+        ],
+        "note": "No y-coordinate or full rail path is implied by these stations."
+      }
     }
   ],
   "source_pinpoints_file": "koltsevaya_junction_source_pinpoints.json",

@@ -499,6 +499,21 @@
         "limitation": "photo caption does not by itself resolve main-track number, engineering XY, chainage, or dimensions"
       },
       "confidence": "C_visual_actual_site"
+    },
+    {
+      "id": "S106",
+      "title": "Красная Пресня (электродепо) — current track-development description",
+      "url": "https://ru.wikipedia.org/wiki/%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D0%B0%D1%8F_%D0%9F%D1%80%D0%B5%D1%81%D0%BD%D1%8F_(%D1%8D%D0%BB%D0%B5%D0%BA%D1%82%D1%80%D0%BE%D0%B4%D0%B5%D0%BF%D0%BE)",
+      "locator": {
+        "section": "Путевое развитие",
+        "supports": [
+          "describes the main connection with the Koltsevaya line as a two-track connecting branch",
+          "separately describes a single-track service connection from the opposite side toward the Tagansko-Krasnopresnenskaya line"
+        ],
+        "underlying_reference": "TrackMap schematic"
+      },
+      "limitation": "Tertiary source. Use only as corroboration that the connection has two tracks. It does not establish whether those tracks share one civil tunnel shell, occupy two single-track shells, or where that topology transition occurs underground.",
+      "confidence": "C"
     }
   ]
 }

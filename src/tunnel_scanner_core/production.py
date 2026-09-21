@@ -2270,6 +2270,408 @@ def _build_stage10_5_water_main_support_scene_objects(
     return tuple(result)
 
 
+def _combine_geometry_parts(
+    parts: Sequence[tuple[Sequence[Vec3], Sequence[Face]]],
+) -> tuple[tuple[Vec3, ...], tuple[Face, ...]]:
+    vertices: list[Vec3] = []
+    faces: list[Face] = []
+    for part_vertices, part_faces in parts:
+        base = len(vertices)
+        vertices.extend(tuple(map(float, vertex)) for vertex in part_vertices)
+        faces.extend(
+            tuple(base + index for index in face)
+            for face in part_faces
+        )
+    return tuple(vertices), tuple(faces)
+
+
+def _civil_visual_segment_count(profile: MoscowStage10Profile) -> int:
+    return (
+        10
+        if profile.civil_family
+        == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+        else 11
+    )
+
+
+def _civil_segment_boundary_angles(segment_count: int) -> tuple[float, ...]:
+    if segment_count < 3:
+        raise ValueError("civil visual segmentation requires >=3 pieces")
+    # Keep a segment centred at crown instead of putting a joint on crown.
+    return tuple(
+        (2 * index + 1) * math.pi / segment_count
+        for index in range(segment_count)
+    )
+
+
+def _build_civil_angular_rib_mesh(
+    profile: MoscowStage10Profile,
+    stations_xyz: Sequence[Vec3],
+    *,
+    segment_count: int,
+    flange_arc_width_m: float,
+    inward_relief_m: float,
+) -> tuple[tuple[Vec3, ...], tuple[Face, ...]]:
+    """Build open-backed longitudinal joint flanges on the intrados."""
+    if len(stations_xyz) < 2:
+        raise ValueError("civil angular ribs require at least two stations")
+    rin = profile.intrados_radius_m
+    if not (0.0 < inward_relief_m < rin):
+        raise ValueError("invalid civil rib inward relief")
+    half_angle = 0.5 * flange_arc_width_m / rin
+    parts: list[tuple[tuple[Vec3, ...], tuple[Face, ...]]] = []
+    for angle in _civil_segment_boundary_angles(segment_count):
+        sections: list[tuple[Vec3, Vec3, Vec3, Vec3]] = []
+        for ox, oy, oz in stations_xyz:
+            a0 = angle - half_angle
+            a1 = angle + half_angle
+            ro = rin
+            ri = rin - inward_relief_m
+            sections.append(
+                (
+                    (ox + ro * math.sin(a0), oy, oz + ro * math.cos(a0)),
+                    (ox + ro * math.sin(a1), oy, oz + ro * math.cos(a1)),
+                    (ox + ri * math.sin(a1), oy, oz + ri * math.cos(a1)),
+                    (ox + ri * math.sin(a0), oy, oz + ri * math.cos(a0)),
+                )
+            )
+        vv = tuple(vertex for section in sections for vertex in section)
+        ff: list[Face] = []
+        for section_index in range(len(sections) - 1):
+            a = 4 * section_index
+            b = 4 * (section_index + 1)
+            # Omit edge 0 (the face lying on the smooth intrados).
+            for edge_index in (1, 2, 3):
+                nxt = (edge_index + 1) % 4
+                ff.append(
+                    (
+                        a + edge_index,
+                        a + nxt,
+                        b + nxt,
+                        b + edge_index,
+                    )
+                )
+        parts.append((vv, tuple(ff)))
+    return _combine_geometry_parts(parts)
+
+
+def _build_civil_circumferential_band_mesh(
+    profile: MoscowStage10Profile,
+    stations_xyz: Sequence[Vec3],
+    *,
+    inward_relief_m: float,
+    angular_segments: int = 64,
+) -> tuple[tuple[Vec3, ...], tuple[Face, ...]]:
+    """Build one open-backed intrados flange/stiffener band."""
+    if len(stations_xyz) < 2:
+        raise ValueError("civil band requires at least two stations")
+    if angular_segments < 24:
+        raise ValueError("civil detail band needs >=24 angular segments")
+    rin = profile.intrados_radius_m
+    ri = rin - inward_relief_m
+    n = angular_segments
+    vertices: list[Vec3] = []
+    for ox, oy, oz in stations_xyz:
+        for radius in (rin, ri):
+            for index in range(n):
+                angle = 2.0 * math.pi * index / n
+                vertices.append(
+                    (
+                        ox + radius * math.sin(angle),
+                        oy,
+                        oz + radius * math.cos(angle),
+                    )
+                )
+    faces: list[Face] = []
+    stride = 2 * n
+    for station_index in range(len(stations_xyz) - 1):
+        a = station_index * stride
+        b = (station_index + 1) * stride
+        # Only the inward-facing cylindrical surface is longitudinal.
+        for index in range(n):
+            nxt = (index + 1) % n
+            faces.append(
+                (
+                    a + n + index,
+                    b + n + index,
+                    b + n + nxt,
+                    a + n + nxt,
+                )
+            )
+    # Exposed annular faces at both axial edges. The outer cylindrical face is
+    # omitted because it lies directly on the base Stage-10 shell intrados.
+    for base, reverse in (
+        (0, True),
+        ((len(stations_xyz) - 1) * stride, False),
+    ):
+        for index in range(n):
+            nxt = (index + 1) % n
+            face = (
+                base + index,
+                base + nxt,
+                base + n + nxt,
+                base + n + index,
+            )
+            faces.append(tuple(reversed(face)) if reverse else face)
+    return tuple(vertices), tuple(faces)
+
+
+def _build_civil_bolt_head_mesh(
+    profile: MoscowStage10Profile,
+    placements: Sequence[tuple[float, float, float, float]],
+    *,
+    seat_relief_m: float,
+    head_radius_m: float = 0.023,
+    head_protrusion_m: float = 0.014,
+    sides: int = 6,
+) -> tuple[tuple[Vec3, ...], tuple[Face, ...]]:
+    """Build low-poly visible bolt heads on the visual joint flanges."""
+    if sides < 6:
+        raise ValueError("civil bolt head requires at least six sides")
+    rin = profile.intrados_radius_m
+    parts: list[tuple[tuple[Vec3, ...], tuple[Face, ...]]] = []
+    for ox, oy, oz, angle in placements:
+        radial = (math.sin(angle), 0.0, math.cos(angle))
+        tangent = (math.cos(angle), 0.0, -math.sin(angle))
+        base_radius = rin - seat_relief_m
+        top_radius = base_radius - head_protrusion_m
+        vv: list[Vec3] = []
+        for axis_radius in (base_radius, top_radius):
+            cx = ox + axis_radius * radial[0]
+            cy = oy
+            cz = oz + axis_radius * radial[2]
+            for index in range(sides):
+                theta = 2.0 * math.pi * index / sides
+                ct = math.cos(theta)
+                sy = math.sin(theta)
+                vv.append(
+                    (
+                        cx + head_radius_m * ct * tangent[0],
+                        cy + head_radius_m * sy,
+                        cz + head_radius_m * ct * tangent[2],
+                    )
+                )
+        ff: list[Face] = []
+        for index in range(sides):
+            nxt = (index + 1) % sides
+            ff.append((index, nxt, sides + nxt, sides + index))
+        # The seating face is intentionally omitted where it touches the rib.
+        ff.append(tuple(reversed(tuple(range(sides, 2 * sides)))))
+        parts.append((tuple(vv), tuple(ff)))
+    return _combine_geometry_parts(parts)
+
+
+def _build_stage10_4_civil_detail_objects(
+    *,
+    profile: MoscowStage10Profile,
+    namespace: str,
+    assembly: TunnelAssembly,
+    stations: Sequence[AlignmentStation],
+    label_policy: LabelPolicy,
+    include_bolts: bool,
+) -> tuple[SceneObject, ...]:
+    """Restore Stage-9-like visible composition on the source-sized shell.
+
+    The smooth Stage-10 physical envelope remains authoritative. This overlay
+    restores visible joint/flange rhythm and bolt clutter without reverting to
+    the wrong 6.7/6.0 m Stage-9 research ring dimensions.
+    """
+    total = assembly.length_by_chainage_m
+    label_id, semantic = _civil_semantics(label_policy)
+    source_ring_width = assembly.config.ring_width_m
+    is_cast_iron = profile.civil_family == "CAST_IRON_5500_R1000"
+    segment_count = _civil_visual_segment_count(profile)
+    flange_width = 0.025 if is_cast_iron else 0.018
+    longitudinal_relief = 0.035 if is_cast_iron else 0.012
+    boundary_band_width = 0.025 if is_cast_iron else 0.018
+    boundary_band_relief = 0.035 if is_cast_iron else 0.010
+    center_band_width = 0.020
+    center_band_relief = 0.025
+    result: list[SceneObject] = []
+
+    for ring_index, start_chainage, end_chainage in civil_ring_ranges(
+        total,
+        ring_pitch_m=profile.ring_pitch_m,
+    ):
+        midpoint = 0.5 * (start_chainage + end_chainage)
+        representative_ring_id = min(
+            assembly.config.n_rings - 1,
+            max(0, int(math.floor(midpoint / source_ring_width))),
+        )
+        clipped = clipped_alignment_stations(
+            stations,
+            start_chainage_m=start_chainage,
+            end_chainage_m=end_chainage,
+        )
+        xyz = tuple(
+            (station.offset_x_m, station.world_y_m, station.offset_z_m)
+            for station in clipped
+        )
+        rib_parts: list[tuple[Sequence[Vec3], Sequence[Face]]] = []
+        rib_parts.append(
+            _build_civil_angular_rib_mesh(
+                profile,
+                xyz,
+                segment_count=segment_count,
+                flange_arc_width_m=flange_width,
+                inward_relief_m=longitudinal_relief,
+            )
+        )
+
+        start_band_end = min(
+            end_chainage,
+            start_chainage + boundary_band_width,
+        )
+        if start_band_end > start_chainage + 1e-9:
+            band = clipped_alignment_stations(
+                stations,
+                start_chainage_m=start_chainage,
+                end_chainage_m=start_band_end,
+            )
+            rib_parts.append(
+                _build_civil_circumferential_band_mesh(
+                    profile,
+                    tuple(
+                        (s.offset_x_m, s.world_y_m, s.offset_z_m)
+                        for s in band
+                    ),
+                    inward_relief_m=boundary_band_relief,
+                )
+            )
+
+        if is_cast_iron and end_chainage - start_chainage > center_band_width:
+            half = 0.5 * center_band_width
+            band = clipped_alignment_stations(
+                stations,
+                start_chainage_m=midpoint - half,
+                end_chainage_m=midpoint + half,
+            )
+            rib_parts.append(
+                _build_civil_circumferential_band_mesh(
+                    profile,
+                    tuple(
+                        (s.offset_x_m, s.world_y_m, s.offset_z_m)
+                        for s in band
+                    ),
+                    inward_relief_m=center_band_relief,
+                )
+            )
+
+        rib_vertices, rib_faces = _combine_geometry_parts(rib_parts)
+        rib_key = f"{namespace}/civil-detail/ribs/{ring_index:06d}"
+        rib_iid = stable_instance_id(rib_key)
+        result.append(
+            SceneObject(
+                name=f"PROD_MOSCOW_CIVIL_RIBS_{ring_index:06d}",
+                vertices=rib_vertices,
+                faces=rib_faces,
+                object_type="production_moscow_civil_detail_ribs",
+                ring_id=representative_ring_id,
+                label_id=label_id,
+                instance_id=rib_iid,
+                semantic_class=semantic,
+                reconstruction="stage10_5_moscow_civil_composite_visual_detail_v1",
+                collection_path=(
+                    "Tunnel", namespace, "CivilShell", "Details", "Ribs"
+                ),
+                extra_properties={
+                    "persistentKey": rib_key,
+                    "persistentInstanceID": rib_iid,
+                    "tunnelInstanceID": stable_instance_id(
+                        f"{namespace}/tunnel"
+                    ),
+                    "identityScope": "periodic_moscow_civil_detail",
+                    "domainGeometryStage": "10.5",
+                    "eventChainageM": midpoint,
+                    "moscowCivilRingIndex": ring_index,
+                    "civilFamily": profile.civil_family,
+                    "visualSegmentCount": segment_count,
+                    "visualSegmentCountIsLOD0": False,
+                    "detailMode": (
+                        "cast_iron_flange_and_stiffener_overlay"
+                        if is_cast_iron
+                        else "rc_block_joint_relief_overlay"
+                    ),
+                    "flangeWidthM": flange_width,
+                    "longitudinalJointReliefM": longitudinal_relief,
+                    "ringBoundaryBandWidthM": boundary_band_width,
+                    "ringBoundaryBandReliefM": boundary_band_relief,
+                    "circumferentialStiffenerIncluded": is_cast_iron,
+                    "source": (
+                        "P10-FROLOV-RING"
+                        if is_cast_iron
+                        else "S026"
+                    ),
+                    "accuracyBoundary": (
+                        "source_backed_anatomy_and_principal_dimensions_"
+                        "visual_rib_positions_not_series_CAD"
+                    ),
+                },
+            )
+        )
+
+        if is_cast_iron and include_bolts:
+            placements: list[tuple[float, float, float, float]] = []
+            row_fractions = (0.28, 0.72)
+            for angle in _civil_segment_boundary_angles(segment_count):
+                for fraction in row_fractions:
+                    chainage = start_chainage + fraction * (
+                        end_chainage - start_chainage
+                    )
+                    station = sample_alignment_station(stations, chainage)
+                    placements.append(
+                        (
+                            station.offset_x_m,
+                            station.world_y_m,
+                            station.offset_z_m,
+                            angle,
+                        )
+                    )
+            bolt_vertices, bolt_faces = _build_civil_bolt_head_mesh(
+                profile,
+                placements,
+                seat_relief_m=longitudinal_relief,
+            )
+            bolt_key = f"{namespace}/civil-detail/bolts/{ring_index:06d}"
+            bolt_iid = stable_instance_id(bolt_key)
+            result.append(
+                SceneObject(
+                    name=f"PROD_MOSCOW_CIVIL_BOLTS_{ring_index:06d}",
+                    vertices=bolt_vertices,
+                    faces=bolt_faces,
+                    object_type="production_moscow_civil_bolt_heads",
+                    ring_id=representative_ring_id,
+                    label_id=0,
+                    instance_id=bolt_iid,
+                    semantic_class="clutter",
+                    reconstruction="stage10_5_cast_iron_M27_bolt_visual_v1",
+                    collection_path=(
+                        "Tunnel", namespace, "CivilShell", "Details", "Bolts"
+                    ),
+                    extra_properties={
+                        "persistentKey": bolt_key,
+                        "persistentInstanceID": bolt_iid,
+                        "tunnelInstanceID": stable_instance_id(
+                            f"{namespace}/tunnel"
+                        ),
+                        "identityScope": "periodic_moscow_civil_detail",
+                        "domainGeometryStage": "10.5",
+                        "eventChainageM": midpoint,
+                        "moscowCivilRingIndex": ring_index,
+                        "civilFamily": profile.civil_family,
+                        "boltHeadCount": len(placements),
+                        "boltRowsPerLongitudinalJoint": 2,
+                        "nominalBoltDiameterM": 0.027,
+                        "nominalBoltLengthM": 0.120,
+                        "visualHeadRadiusM": 0.023,
+                        "visualHeadProtrusionM": 0.014,
+                        "exactBoltHeadCADResolved": False,
+                        "source": "P10-FROLOV-RING",
+                    },
+                )
+            )
+    return tuple(result)
+
 def _build_stage10_4_civil_shell_objects(
     *,
     profile: MoscowStage10Profile,

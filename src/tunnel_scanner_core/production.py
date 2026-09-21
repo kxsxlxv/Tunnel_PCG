@@ -413,6 +413,69 @@ def compact_exact_collinear_alignment_stations(
     return tuple(kept)
 
 
+def _periodic_cable_sag_alignment_stations(
+    stations: Sequence[AlignmentStation],
+    *,
+    support_pitch_m: float,
+    support_phase_m: float,
+    midspan_sag_m: float,
+) -> tuple[AlignmentStation, ...]:
+    """Add one low-poly sag control point between periodic cable supports.
+
+    Sag is gravity-fixed in core Z. Existing alignment breakpoints are retained,
+    while rack supports and span midpoints are inserted only where necessary.
+    The parabola is sampled at those sparse stations, keeping cable polygon
+    growth bounded.
+    """
+    base = tuple(stations)
+    if len(base) < 2:
+        raise ValueError("cable sag requires at least two alignment stations")
+    if (
+        not math.isfinite(support_pitch_m)
+        or support_pitch_m <= 0.0
+        or not math.isfinite(support_phase_m)
+        or not math.isfinite(midspan_sag_m)
+        or midspan_sag_m < 0.0
+    ):
+        raise ValueError("invalid periodic cable-sag parameters")
+    if midspan_sag_m <= 0.0:
+        return base
+
+    start = base[0].chainage_m
+    end = base[-1].chainage_m
+    chainages = {float(s.chainage_m) for s in base}
+
+    k0 = int(math.floor((start - support_phase_m) / support_pitch_m)) - 1
+    k1 = int(math.ceil((end - support_phase_m) / support_pitch_m)) + 1
+    for k in range(k0, k1 + 1):
+        support = support_phase_m + k * support_pitch_m
+        midpoint = support + 0.5 * support_pitch_m
+        if start + 1e-12 < support < end - 1e-12:
+            chainages.add(float(support))
+        if start + 1e-12 < midpoint < end - 1e-12:
+            chainages.add(float(midpoint))
+
+    result: list[AlignmentStation] = []
+    for chainage in sorted(chainages):
+        base_station = sample_alignment_station(base, chainage)
+        phase = (chainage - support_phase_m) / support_pitch_m
+        fraction = phase - math.floor(phase)
+        sag_factor = 4.0 * fraction * (1.0 - fraction)
+        result.append(
+            AlignmentStation(
+                chainage_m=base_station.chainage_m,
+                world_y_m=base_station.world_y_m,
+                offset_x_m=base_station.offset_x_m,
+                offset_z_m=(
+                    base_station.offset_z_m
+                    - midspan_sag_m * sag_factor
+                ),
+                source=f"{base_station.source}|cable_sag",
+            )
+        )
+    return tuple(result)
+
+
 # ---------------------------------------------------------------------------
 # Continuous asset specs and sweep meshing
 # ---------------------------------------------------------------------------
@@ -877,9 +940,11 @@ def build_continuous_asset_specs(
                         moscow_profile.track_concrete.surface_reference_mode
                     ),
                     "physicalBottomSurface": (
-                        "moscow_5100_intrados"
+                        f"moscow_{int(round(2000.0 * moscow_profile.intrados_radius_m))}_intrados"
                         if moscow_stage in {"10.4", "10.5"}
-                        else "future_moscow_5100_intrados_not_clearance_envelope"
+                        else (
+                            "future_moscow_intrados_not_clearance_envelope"
+                        )
                     ),
                     "walkwayShoulderPartitioned": moscow_stage in {"10.4", "10.5"},
                     "liningContactFacesOmitted": moscow_stage in {"10.4", "10.5"},
@@ -1279,11 +1344,21 @@ def scene_object_from_continuous_asset(
     compact_exact_collinear_stations: bool = False,
 ) -> SceneObject:
     source_station_count = len(stations)
-    sweep_stations = (
+    base_sweep_stations = (
         compact_exact_collinear_alignment_stations(stations)
         if compact_exact_collinear_stations
         else tuple(stations)
     )
+    sag_m = float(spec.properties.get("longitudinalSagM", 0.0))
+    if spec.category == "cable" and sag_m > 0.0:
+        sweep_stations = _periodic_cable_sag_alignment_stations(
+            base_sweep_stations,
+            support_pitch_m=float(spec.properties["supportPitchM"]),
+            support_phase_m=float(spec.properties["supportPhaseM"]),
+            midspan_sag_m=sag_m,
+        )
+    else:
+        sweep_stations = base_sweep_stations
     mesh = build_sweep_mesh(
         spec.cross_section_xz,
         sweep_stations,
@@ -1304,7 +1379,14 @@ def scene_object_from_continuous_asset(
         "sourceAlignmentStationCount": source_station_count,
         "sweepAlignmentStationCount": len(sweep_stations),
         "exactCollinearAlignmentStationsRemoved": (
-            source_station_count - len(sweep_stations)
+            source_station_count - len(base_sweep_stations)
+        ),
+        "cableSagApplied": spec.category == "cable" and sag_m > 0.0,
+        "cableSagMidspanM": sag_m if spec.category == "cable" else 0.0,
+        "cableSagControlStationsAdded": (
+            len(sweep_stations) - len(base_sweep_stations)
+            if spec.category == "cable"
+            else 0
         ),
         "alignmentCompactionMode": (
             "exact_zero_error_collinear"
@@ -2199,9 +2281,15 @@ def _build_stage10_4_civil_shell_objects(
                     "circumferentialSegmentSurfaceMode": (
                         profile.civil_segment_surface_mode
                     ),
-                    "coarseSegmentCountReference": 11,
+                    "coarseSegmentCountReference": (
+                        10
+                        if profile.civil_family
+                        == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                        else 11
+                    ),
                     "coarseSegmentCountIsGeometry": False,
                     "seriesAccurateTubingLOD0": False,
+                    "seriesAccurateCivilLOD0": False,
                     "intradosRadiusM": profile.intrados_radius_m,
                     "intradosDiameterM": 2.0 * profile.intrados_radius_m,
                     "extradosRadiusM": profile.extrados_radius_m,
@@ -2660,6 +2748,7 @@ def build_production_scene(
                     if config.moscow_stage in {"10.4", "10.5"}
                     else "deferred_to_stage10_4"
                 ),
+                "civilArchetypeID": config.moscow_profile.civil_family,
                 "walkwayStatus": (
                     "implemented_stage10_4_source_backed_geometry"
                     if config.moscow_stage in {"10.4", "10.5"}

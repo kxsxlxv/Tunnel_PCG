@@ -15,6 +15,7 @@ from tunnel_scanner_core import (
     audit_exact_coincident_faces,
     build_chunk_scene_packages,
     build_stage10_5_rc_modern_chunk_plan,
+    build_stage10_5_rc_modern_chunk_scene_package,
     compact_exact_collinear_alignment_stations,
     build_modern_contact_support_meshes,
     build_modern_lvt_local_event_meshes,
@@ -1645,6 +1646,40 @@ def test_stage10_5_rc_chunk_first_3000_ring_first_chunk_is_local(monkeypatch):
         for obj in first.objects
         if "eventChainageM" in obj.extra_properties
     )
+
+
+def test_stage10_5_rc_single_chunk_builder_matches_lazy_iterator():
+    profile = load_stage10_initial_moscow_profile(
+        civil_archetype="rc_block_6100_5600"
+    )
+    plan = build_stage10_5_rc_modern_chunk_plan(
+        chunk_length_m=2.35,
+        boundary_policy=ChunkBoundaryPolicy.EXACT_LENGTH,
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=6,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.0,
+            ring_rotation_strategy=RingRotationStrategy.RINGWISE_GAUSSIAN,
+        ),
+        surface_meshing=SurfaceMeshingConfig(max_sagitta_m=0.002),
+        include_bolts=True,
+        production_config=ProductionConfig(
+            namespace="stage10-5-rc-single-chunk-equivalence",
+            moscow_profile=profile,
+            moscow_stage="10.5",
+            moscow_civil_topology="kba",
+        ),
+        seed=5812,
+    )
+    lazy = tuple(iter_stage10_5_rc_modern_chunk_scene_packages(plan))
+    direct = tuple(
+        build_stage10_5_rc_modern_chunk_scene_package(
+            plan,
+            chunk.chunk_id,
+        )
+        for chunk in plan.chunks
+    )
+    assert direct == lazy
 
 
 def test_stage10_5_rc_chunk_first_matches_materialized_chunk_geometry():

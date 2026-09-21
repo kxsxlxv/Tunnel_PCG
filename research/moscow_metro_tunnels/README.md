@@ -2,7 +2,7 @@
 
 Research workspace for high-fidelity procedural geometry of Moscow Metro running tunnels in Blender / synthetic LiDAR.
 
-Research snapshot: **2026-09-19**.
+Research snapshot: **2026-09-21**.
 
 ## Status
 
@@ -140,3 +140,22 @@ Files:
 The civil XZ section, legacy R65/timber/KD65 permanent way, raised walkway and contact-rail initial geometry are implementation-ready with explicit fallback metadata where needed.
 
 The generic 5.5/5.1 cast-iron family is **not yet series-accurate ring LOD0-ready** because exact N/C/K angles, rib pattern, bolt-hole coordinates, grout-plug coordinate and rebate profile have not been located for one unambiguously identified factory series.
+
+
+## Stage 11/22 — Koltsevaya physical topology
+
+The Line-5 pilot now separates the two physical main tracks and treats turnouts/depot/service connections as a graph rather than a single polyline.
+
+Files:
+- `22_koltsevaya_track_topology_and_junctions.md`;
+- `examples/koltsevaya_line_v0/track_topology.json`;
+- `examples/koltsevaya_line_v0/junction_events.json`;
+- `data/moscow_turnout_archetypes.json`;
+- `data/koltsevaya_junction_source_pinpoints.json`;
+- `reference_impl/tunnel_pcg_ref/osm_track_graph.py`.
+
+The sourced identity is:
+- `KOLTSEVAYA_TRACK_A` = I main / inner / clockwise;
+- `KOLTSEVAYA_TRACK_B` = II main / outer / counterclockwise.
+
+The selected first real junction is the Belorusskaya/Krasnaya-Presnya depot-side divergence. Exact current OSM way/node IDs, site Z, installed turnout project and actual chamber dimensions remain deliberately unresolved where no source was obtained. No second tunnel is produced by lateral offset.

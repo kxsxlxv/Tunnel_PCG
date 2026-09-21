@@ -25,6 +25,7 @@ from tunnel_scanner_core import (
     modern_water_main_section_core,
     water_main_support_chainages,
     r65_rail_center_offsets_for_gauge,
+    strip_internal_lining_cap_faces,
 )
 
 from tunnel_scanner_core.production import (
@@ -883,6 +884,68 @@ def test_stage10_5_rc_6100_5600_civil_archetype_adapts_geometry():
             math.hypot(x, z)
             for x, _y, z in local_rack.vertices
         ) < profile.intrados_radius_m
+
+
+def test_stage10_5_rc_kba_cap_strip_uses_moscow_civil_ring_datums():
+    profile = load_stage10_initial_moscow_profile(
+        civil_archetype="rc_block_6100_5600"
+    )
+    build = build_production_tunnel(
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=4,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.0,
+        ),
+        include_bolts=False,
+        production_config=ProductionConfig(
+            namespace="stage10-5-rc-kba-cap-strip",
+            moscow_profile=profile,
+            moscow_stage="10.5",
+            moscow_civil_topology="kba",
+        ),
+        seed=5812,
+    )
+    civil_count = int(
+        build.scene.metadata["productionGeometry"]["moscowCivilRingCount"]
+    )
+    assert civil_count > 1
+
+    cleaned = strip_internal_lining_cap_faces(build.scene)
+    strip_meta = cleaned.metadata["productionLiningCapStrip"]
+    assert int(strip_meta["removedFaces"]) > 0
+
+    segments = cleaned.objects_of_type("lining_segment")
+    assert segments
+    assert all(
+        obj.custom_properties["liningCapCleanupPlaneMode"]
+        == "mesh_extrema_with_metadata_guard"
+        for obj in segments
+    )
+
+    # Outer tunnel ends remain capped; only interfaces between the independent
+    # 1.0 m Moscow civil rings are opened. This deliberately uses the Moscow
+    # civil-ring metadata rather than representative source Stage-9 ring IDs.
+    first = [
+        obj for obj in segments
+        if int(obj.custom_properties["liningRingIndex"]) == 0
+    ]
+    last = [
+        obj for obj in segments
+        if int(obj.custom_properties["liningRingIndex"]) == civil_count - 1
+    ]
+    assert first and last
+    front_y = float(first[0].custom_properties["liningRingFrontWorldYM"])
+    back_y = float(last[0].custom_properties["liningRingBackWorldYM"])
+    assert any(
+        all(abs(obj.vertices[i][1] - front_y) < 1e-9 for i in face)
+        for obj in first
+        for face in obj.faces
+    )
+    assert any(
+        all(abs(obj.vertices[i][1] - back_y) < 1e-9 for i in face)
+        for obj in last
+        for face in obj.faces
+    )
 
 
 def test_stage10_5_rc_ten_equal_topology_reuses_stage9_fastener_pipeline():

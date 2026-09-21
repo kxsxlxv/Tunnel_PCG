@@ -1,5 +1,5 @@
 {
-  "schema_version": "2.0",
+  "schema_version": "2.1",
   "profile_id": "stage10_initial_profile_CAST_IRON_5500_R1000_R65_TIMBER_LEGACY",
   "purpose": "first deterministic XZ profile for Blender/LiDAR implementation",
   "readiness": {
@@ -638,7 +638,11 @@
             0.1
           ],
           "base_plate_anchor_count": 4,
-          "note": "873/683/180/373/155/90 mm are readable on the supplied drawing. The 683 mm horizontal and 155 mm vertical callouts closely cross-check the normative 690/+160 mm rail placement and are not used to override it."
+          "note": "873/683/180/373/155/90 mm are readable on the supplied drawing. The 683 mm horizontal and 155 mm vertical callouts closely cross-check the normative 690/+160 mm rail placement and are not used to override it.",
+          "minimum_clearance_to_lvt_block_m": 0.035,
+          "clearance_rule": "nearest inboard edge of contact-support concrete/base/bracket lower leg must be at least 35 mm outboard of the contact-side LVT block outer X envelope",
+          "clearance_source": "P10-USER-CONTACT-SUPPORT-CLEARANCE-35",
+          "clearance_confidence": "B_user_visual_reference"
         },
         "insulator": {
           "orientation": "vertical_between_contact_clamp_and_upper_hook_arm",

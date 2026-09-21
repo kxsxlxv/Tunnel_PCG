@@ -268,7 +268,76 @@
       "minimum_straight_insert_before_m": null,
       "minimum_straight_insert_after_m": null,
       "point_machine_model": null,
-      "mesh_use_rule": "May be mirrored to the left for a first visual fallback at the chosen junction, but every mesh/object must carry fallback=true and installed_model_unconfirmed=true."
+      "mesh_use_rule": "May be mirrored to the left for a first visual fallback at the chosen junction, but every mesh/object must carry fallback=true and installed_model_unconfirmed=true.",
+      "point_and_frog_detail": {
+        "point_type": {
+          "value": "поворотные остряки",
+          "source_ids": [
+            "S094",
+            "S095"
+          ],
+          "confidence": "B",
+          "status": "SOURCE_BACKED_PRODUCT"
+        },
+        "stock_rail_and_point_pairs": [
+          "straight stock/frame rail + curved point",
+          "curved stock/frame rail + straight point"
+        ],
+        "stock_rail_fastening": {
+          "value": "elastic clips / separate fastening on high-flange plates",
+          "source_ids": [
+            "S094",
+            "S095"
+          ],
+          "confidence": "B",
+          "status": "SOURCE_BACKED_PRODUCT"
+        },
+        "frog": {
+          "type": "assembled",
+          "construction_constraint": "improved interface between cast and rail parts; public product descriptions also identify an oblique front joint/cut",
+          "source_ids": [
+            "S094",
+            "S095"
+          ],
+          "exact_wing_rail_geometry": null,
+          "exact_frog_nose_profile": null,
+          "exact_frog_start_end_chainage": null,
+          "confidence": "B_for_type_UNKNOWN_for_mesh_detail"
+        },
+        "guard_rails": {
+          "value": "two crossing-rail assemblies with independent guard rails; guard rail not tied to running rail",
+          "source_ids": [
+            "S094",
+            "S095"
+          ],
+          "exact_guard_rail_start_end_chainage": null,
+          "exact_flangeway_profile": null,
+          "confidence": "B_for_topology_UNKNOWN_for_mesh_coordinates"
+        },
+        "point_positions": {
+          "point_tip_chainage_from_front_joint_mm": 2765,
+          "exact_point_root_chainage_mm": null,
+          "exact_stock_rail_joint_chainages_mm": null,
+          "exact_switch_opening_profile_mm": null,
+          "note": "Only the point-tip station can currently be reconstructed from the published overall/frog dimensions. Do not infer point root/opening dimensions."
+        },
+        "drive": {
+          "supplier_page_lists_optional": "SP-6 electric point machine with fitting set 16737-00-00",
+          "installed_at_selected_junction": null,
+          "source_id": "S095",
+          "status": "PRODUCT_COMPATIBILITY_ONLY"
+        }
+      },
+      "mesh_unknowns": [
+        "exact point length and root pivot geometry",
+        "exact point opening/gauge-face offsets along chainage",
+        "exact stock-rail joint coordinates",
+        "exact frog nose and wing-rail CAD",
+        "exact guard-rail start/end chainages and flangeway",
+        "complete bearer longitudinal spacing sequence",
+        "exact turnout plate/baseplate SKU variant",
+        "exact point-machine and rods geometry at Belorusskaya"
+      ]
     },
     {
       "id": "MOSCOW_METRO_CROSSOVER_2_9_CONSTRAINT",
@@ -282,5 +351,6 @@
       "exact_project_id": null,
       "exact_geometry": null
     }
-  ]
+  ],
+  "source_pinpoints_file": "koltsevaya_junction_source_pinpoints.json"
 }

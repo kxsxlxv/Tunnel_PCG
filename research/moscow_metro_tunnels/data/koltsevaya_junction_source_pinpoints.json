@@ -724,7 +724,20 @@
           "crushed-stone ballasting is performed in four lifting/tamping stages",
           "documented total compacted crushed-stone quantity: 55 m3 per turnout and 208 m3 per crossover",
           "each lifting stage is approximately 0.32-0.35 m including settlement"
-        ]
+        ],
+        "contact_rail": {
+          "chapter": "Глава 6. Монтаж контактного рельса",
+          "printed_page_context": "technical part p.44; §В3-5-44 p.46; §В3-5-45 p.47; protective ramp box §В3-5-48 p.49",
+          "web_lines": "1338-1355",
+          "supports": [
+            "contact-rail gaps at turnouts and crossovers are set by the laying plan",
+            "at a gap, a 1:25 end ramp is attached instead of installing a bracket at the rail end",
+            "contact rail and 1:25 ramp are joined by two joint bars on four bolts during installation",
+            "with frequent sequences of turnouts, some gaps may be filled by contact-rail pieces using side ramps on the track-axis side",
+            "protective boxes are explicitly installed over the 1:25 ramp as a distinct work item"
+          ],
+          "limitation": "The norm does not provide point-tip/frog-relative longitudinal coordinates for each gap; those remain project laying-plan data."
+        }
       },
       "era": "1986",
       "applicability": "source-backed legacy metro turnout construction family; does not identify the exact Belorusskaya installed turnout",

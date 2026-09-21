@@ -87,49 +87,77 @@ unverified tubing series as factual geometry.
 
 ### Moscow 6.1 / 5.6 m precast RC blocks
 
-The researched RC family is now the detailed/composite civil option:
+The RC envelope is:
 
     civil family              RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000
     intrados diameter         5.600 m
     extrados diameter         6.100 m
     structural depth          0.250 m
     ring pitch                1.000 m
-    blocks per ring           10
-    block form                10 identical curved blocks
-    block volume              0.46 m3
-    block mass                1.15 t
-    historical concrete       grade 400
-    working reinforcement     16 mm
-    erection steel pins       22 mm
-    permanent block bolts     none
 
-Source S026 fixes those principal dimensions and construction facts.
+The civil topology is selected independently:
 
-Unlike the earlier smooth-shell/detail-overlay preview, each generated RC ring
-is now actually composed of ten disconnected full-depth curved annular block
-meshes. The construction follows the useful visual/topological principle of
-Stage 9 -- separate curved lining pieces with explicit radial end faces -- but
-uses the Moscow 2.800 / 3.050 m radii, 1.000 m ring pitch and ten equal blocks.
+    --civil-topology auto
+        resolves to ten_equal
 
-A narrow 8 mm inter-block gap is currently used only as a visual seam so that
-the separate blocks remain legible in Blender/LiDAR. That seam width is **not**
-claimed as a source dimension. Exact radial-end chamfers, pin holes, pin seats
-and reinforcement mesh are still unresolved and are not fabricated.
+    --civil-topology ten_equal
+        10 equal analytical segments, RC01..RC10
+        S026 source-backed topology
 
-Current RC contract:
+    --civil-topology kba
+        K, B1, A1, A2, A3, B2
+        old Stage-9 K/B/A topology
+        user/photo-reference Moscow alternative pending a pinned source
 
-    civilGeometryMode = segmented_rc_6100_5600_10block_stage9_like_v1
-    circumferentialSegmentSurfaceMode =
-        source_backed_equal_10block_curved_segments_v1
-    coarseSegmentCountReference = 10
-    coarseSegmentCountIsGeometry = true
-    stage9LikeCurvedSegmentConstruction = true
-    renderedRCBlockCount = 10 per full ring
-    renderedRCVisualSeamWidthM = 0.008  # visual fallback
+The earlier purpose-built ten-sector sweep has been removed. Both topology
+modes now use the original Stage-9 civil architecture directly:
 
-The annulus volume implied by the researched 6.1/5.6 m radii and 1.0 m pitch is
-approximately 4.60 m3 per ring, or 0.46 m3 per one of ten equal blocks, matching
-the S026 block-volume datum and providing an independent geometry cross-check.
+    SegmentAngularExtent
+        -> build_hexahedral_segment
+        -> RingMesh
+        -> build_curved_segment_mesh / build_curved_ring_mesh
+        -> prescribed radial joints
+        -> prescribed circumferential joints
+        -> Stage-6 bolt pockets
+        -> 5 mm-overlap Boolean cutters
+        -> visible bolt heads
+
+Legacy object types are retained intentionally:
+
+    lining_segment
+    prescribed_radial_joint
+    prescribed_circumferential_joint
+    bolt_pocket_cutter
+    bolt_head
+
+This allows the existing Blender Stage-9 interface-strip and Boolean pipeline
+to run unchanged. Moscow-specific 1.0 m ring-width/start/centre/end datums are
+provided as per-object overrides so the legacy cleanup is not tied to the
+original production ring pitch.
+
+For `ten_equal`, S026 additionally supports:
+
+    blocks per ring                10 identical
+    block volume                   0.46 m3
+    block mass                     1.15 t
+    historical concrete            grade 400
+    working reinforcement          16 mm
+    erection steel pins            22 mm
+    permanent bolted block joints  none
+
+That last line is important: the Stage-9 pocket/head hardware is generated in
+both topology modes because it is an explicitly requested visual transfer of
+the old architecture. It is **not** presented as evidence that the documented
+S026 ten-block Moscow family used permanent bolts.
+
+For `kba`, the segment geometry itself is the old Stage-9 implementation:
+front/back angular extents, adaptive curved tessellation and the cyclic
+`K -> B1 -> A1 -> A2 -> A3 -> B2` topology. The repository currently tags its
+Moscow applicability as user/photo-reference constrained until a concrete
+historical/project source is added to the research register.
+
+Exact RC end-face chamfers, Ø22 pin-hole/seating geometry and reinforcement
+cage CAD remain unresolved.
 
 ## Ring construction
 

@@ -13,7 +13,11 @@
         "straight_route": "II главный путь toward Краснопресненская",
         "diverging_route": "left toward turnback/depot system",
         "source_id": "S093",
-        "status": "SOURCE_BACKED"
+        "status": "SOURCE_BACKED",
+        "selected_branch_track_count": 1,
+        "selected_branch_track_count_source_id": "S125",
+        "downstream_local_two_track_section_source_id": "S120",
+        "topology_note": "The Belorusskaya attachment leg is a single-track service connection. Farther depot-side, S120 shows a local two-track section and a switch separating directions to Belorusskaya/Krasnopresnenskaya. Civil-shell sharing in that downstream section is unresolved."
       },
       "civil": {
         "primary_lining_material": "cast-iron tubings",
@@ -357,7 +361,8 @@
         "source_backed": [
           "S121 reproduces archival Moscow Metro plan-elevation data for the branch crown over local PK intervals",
           "S120 identifies the relevant depot connection as having a two-track section, a later split toward Belorusskaya/Krasnopresnenskaya, a closed-method segment, and a section constructed with ground freezing",
-          "S120 states that Dorman 1971 described construction of this section; S123 confirms the full Dorman volume is publicly viewable at RSL, but exact pages are not yet extracted"
+          "S120 states that Dorman 1971 described construction of this section; S123 confirms the full Dorman volume is publicly viewable at RSL, but exact pages are not yet extracted",
+          "Metrostroy historical album S093 independently states that ground freezing was used on the difficult Circle-line depot-branch deep-to-shallow transition"
         ],
         "geology_and_construction": {
           "powerful_quicksand_context": "SOURCE_BACKED_BY_S120_PHOTO_ESSAY_TEXT_C_CONFIDENCE",
@@ -365,7 +370,9 @@
           "closed_method_segment_present": true,
           "exact_freezing_scheme": null,
           "exact_ice_wall_thickness_m": null,
-          "caisson_use": null
+          "caisson_use": null,
+          "ground_freezing_primary_corroboration_source_id": "S093",
+          "ground_freezing_confidence": "A/B"
         }
       },
       "local_profile": {
@@ -407,16 +414,38 @@
         ],
         "crown_absolute_z_m": null,
         "ugr_z_m": null,
-        "track_grade_per_mille": null
+        "track_grade_per_mille": null,
+        "concept_vertical_frame_crown_marks_m": [
+          {
+            "object_axes": "А-Г/5",
+            "value": 125.15,
+            "derivation_checks": [
+              "pit-bottom mark 133.05 - crown clearance 7.90",
+              "SVG-bottom mark 129.05 - crown clearance 3.90"
+            ],
+            "status": "RECONSTRUCTED_TWICE_FROM_SOURCE_VALUES"
+          },
+          {
+            "object_axes": "А/2-3",
+            "value": 126.25,
+            "derivation_checks": [
+              "pit-bottom mark 133.05 - crown clearance 6.80",
+              "SVG-bottom mark 129.05 - crown clearance 2.80"
+            ],
+            "status": "RECONSTRUCTED_TWICE_FROM_SOURCE_VALUES"
+          }
+        ],
+        "concept_frame_vertical_datum_status": "UNRESOLVED; internally consistent project marks but not tied here to an explicit geodetic datum"
       },
       "shell_geometry": {
         "exact_cross_section": null,
         "exact_lining_family": null,
         "exact_internal_width_or_diameter_m": null,
         "exact_crown_to_ugr_m": null,
-        "exact_two_track_axis_spacing_m": null
+        "exact_two_track_axis_spacing_m": null,
+        "track_topology_note": "S125 describes separate single-track Belorusskaya and Krasnopresnenskaya connection legs; this does not define whether this local Krasnopresnenskaya-side section uses an independent circular shell, a shared multi-track shell, or a transition chamber."
       },
-      "pcg_rule": "This profile fragment is stronger than a generic branch fallback. Once the correct physical branch edge is identified, constrain the civil crown to the archival PK/depth observations, but keep UGR/rail grade and cross-section unresolved until a section/datum source is found.",
+      "pcg_rule": "This profile fragment is stronger than a generic branch fallback. Once the correct physical branch edge is identified, constrain the civil crown to the archival PK/depth observations, but keep UGR/rail grade and cross-section unresolved until a section/datum source is found. The selected Belorusskaya first-implementation branch can terminate before this downstream profile fragment; do not force the S121 crown profile onto the Belorusskaya leg.",
       "confidence": "A/B_profile_C_construction_context"
     }
   ]

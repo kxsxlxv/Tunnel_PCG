@@ -2782,16 +2782,9 @@ def _warp_civil_local_object_to_alignment(
             )
         )
 
-    type_map = {
-        "lining_segment": "production_moscow_civil_segment",
-        "prescribed_radial_joint": (
-            "production_moscow_civil_prescribed_radial_joint"
-        ),
-        "prescribed_circumferential_joint": (
-            "production_moscow_civil_prescribed_circumferential_joint"
-        ),
-    }
-    object_type = type_map.get(obj.object_type, obj.object_type)
+    # Preserve the legacy Stage-9 object types literally so the Blender
+    # adapter applies the same lining-interface cleanup and bolt Boolean plan.
+    object_type = obj.object_type
     key = (
         f"{namespace}/civil-stage9-transfer/{topology}/"
         f"ring/{ring_index:06d}/{obj.name}"
@@ -3883,19 +3876,19 @@ def build_production_scene(
                 "moscowCivilSegmentObjectCount": sum(
                     1
                     for obj in stage10_4_civil_objects
-                    if obj.object_type == "production_moscow_civil_segment"
+                    if obj.object_type == "lining_segment"
                 ),
                 "moscowCivilPrescribedRadialJointCount": sum(
                     1
                     for obj in stage10_4_civil_objects
                     if obj.object_type
-                    == "production_moscow_civil_prescribed_radial_joint"
+                    == "prescribed_radial_joint"
                 ),
                 "moscowCivilPrescribedCircumferentialJointCount": sum(
                     1
                     for obj in stage10_4_civil_objects
                     if obj.object_type
-                    == "production_moscow_civil_prescribed_circumferential_joint"
+                    == "prescribed_circumferential_joint"
                 ),
                 "moscowCivilBoltPocketCount": sum(
                     1
@@ -3939,6 +3932,16 @@ def build_production_scene(
                     and config.moscow_profile.civil_family
                     == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
                 ),
+                "moscowCivilLegacyObjectTypesPreserved": (
+                    config.moscow_stage in {"10.4", "10.5"}
+                    and config.moscow_profile.civil_family
+                    == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                ),
+                "moscowCivilLegacyPrescribedJointSolidsIncluded": (
+                    config.moscow_stage in {"10.4", "10.5"}
+                    and config.moscow_profile.civil_family
+                    == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                ),
                 "moscowCivilRCPermanentBoltedBlockJointsSource": (
                     False
                     if (
@@ -3951,7 +3954,7 @@ def build_production_scene(
                 "moscowCivilRenderedBlockCount": sum(
                     1
                     for obj in stage10_4_civil_objects
-                    if obj.object_type == "production_moscow_civil_segment"
+                    if obj.object_type == "lining_segment"
                 ),
                 "moscowCivilRCVisualSeamWidthM": 0.0,
                 "moscowCivilRCWorkingRebarDiameterM": (

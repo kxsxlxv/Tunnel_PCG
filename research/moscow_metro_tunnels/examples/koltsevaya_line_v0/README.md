@@ -137,6 +137,17 @@ For the first geometry fixture, follow only `BRANCH_KRP_BELORUSSKAYA_LEG` and te
 
 The Krasnopresnenskaya leg has a separate archival S121 crown-profile constraint. It is intentionally not reused for the Belorusskaya leg.
 
+### Geometry-agent handoff status
+
+`junction_events.json#/geometry_agent_handoff` now gives an explicit A/B/C/D implementation boundary.
+
+For the first Belorusskaya fixture:
+- actual branch topology is source-backed as one single-track Line-5 depot leg (S134);
+- project-2976 R65 1:9 is a metro-specific **fallback turnout mesh**, not the installed-site claim;
+- the 2005 metro instruction supplies gauge-control sections, turnout-curve working-face ordinates, ballasted turnout foundation and the R65/1:9 contact-rail ramp layout;
+- actual Belorusskaya chamber dimensions remain unknown;
+- generic Frolov chambers are allowed only as tagged civil fallback geometry.
+
 ### First junction
 
 `JUNCTION_KOL5_BELORUSSKAYA_DEPOT_WEST`:

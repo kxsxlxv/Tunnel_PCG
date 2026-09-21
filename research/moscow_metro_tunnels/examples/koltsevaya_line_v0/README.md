@@ -173,3 +173,19 @@ The same depot also has an actual service branch to the TKL between `Улица 
 
 This object is outside the direct Line-5 main-track graph, but it is retained as a useful actual Moscow/Krasnaya-Presnya analogue for the morphology `turnout chamber -> independent one-track branch tunnel`. Its diameter and transition length remain unknown.
 
+
+## Turnout event geometry refinement
+
+The R65/1:9 first-mesh fallback is now more than a centerline skeleton:
+
+- project-2976 point component: **8.300 m**;
+- stock/frame rail component: **12.500 m**;
+- assembled frog component: **4.590 m**;
+- point longitudinal projection visible in the project drawing: **8298 mm**;
+- point-root opening callout: **68.4 mm**;
+- 68-bearer A4 set cross-checked against GOST 8816-2003;
+- turnout zone uses a **ballasted bearer foundation**, not the ordinary Stage-10 sleeper-in-track-concrete mesh, for the near-2001 service rule;
+- Appendix 6 Fig.10 of the 2005 metro instruction provides a dedicated **R65 1/9 contact-rail end-ramp layout referenced to ЦСП**.
+
+These values still describe a tagged project-2976/service-era fallback. They do not identify the historical Belorusskaya installed turnout.
+

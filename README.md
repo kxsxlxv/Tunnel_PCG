@@ -209,9 +209,9 @@ The modern service-era hardware includes:
     low rounded segmented contact-rail cover
     dedicated contact-rail support blocks / brackets / local support hoods
     R2K11/K1351.001-09 cable racks on both walls, one per side per 1.0 m civil ring
-    K1350.002 open double cradles, without the former continuous underbar
+    K1350.002 single continuous rounded-W / omega formed ribbons, directly on the upright
     16 representative service cables: 8 occupied levels per wall, one cable per level
-    restrained 25 mm midspan cable sag between 1.0 m rack supports
+    nominal 25 mm cable sag with deterministic per-span amplitude/peak variation
     one current tunnel water main, minimum DN80, weak-current side above UGR
     periodic water-main supports at <=4.0 m spacing
 
@@ -232,15 +232,19 @@ Two researched civil envelopes are now selectable from the Stage-10 generator:
     --civil-archetype cast_iron_5500_5100   5.5 / 5.1 m cast-iron family
     --civil-archetype rc_block_6100_5600    6.1 / 5.6 m Moscow ten-block RC family
 
-The first remains the default. For the 6.1/5.6 m family the documented
-diameters, 1.0 m ring pitch and ten-block topology are preserved, while the
-current mesh remains a smooth envelope until exact block-edge/pin CAD is
-implemented. Because the inspected 6.1/5.6 source does not publish a separate
-UGR-to-lining-axis datum, Stage 10 explicitly transfers the existing track/UGR
-datum and recomputes shell-contact geometry from the selected radius.
+The first remains the default. Both variants keep their source-sized smooth
+physical envelope and now carry a separate low-poly composite-detail overlay.
+For the cast-iron family this restores visible joint/flange relief,
+ring-boundary/stiffener bands and simplified M27 x 120 bolt heads; the
+source-backed 25 mm flange and two bolt rows are retained while exact N/C/K
+angles and drilling coordinates remain explicitly unresolved. The 6.1/5.6 m
+family shows its documented ten-block rhythm as shallow joint relief without
+cast-iron bolt hardware. Because its source does not publish a separate
+UGR-to-lining-axis datum, Stage 10 transfers the existing track/UGR datum and
+recomputes shell-contact geometry from the selected radius.
 
-Exact N/C/K tubing detail and exact RC block-edge/pin CAD remain deliberately
-unresolved rather than guessed.
+Exact series-specific N/C/K geometry and exact RC block-edge/pin CAD remain
+deliberately unresolved rather than guessed.
 
 See STAGE10_5_REPORT.md.
 
@@ -294,7 +298,7 @@ Run:
 
 Current automated baseline:
 
-    193 tests passed
+    194 tests passed
 
 CI also runs:
 
@@ -350,14 +354,14 @@ still selectable with `--service-preset legacy`.
 
 Current integration baseline:
 
-    193 tests passed
+    194 tests passed
     Stage 10.1-10.5 CLI / verifier gates      PASS
     Stage 10.5 modern / RC6100 / legacy gates PASS
     duplicate modern face groups               0
     stable Stage-10.5 IDs across chunk sizes  PASS
 
 Remaining source boundaries are explicit: exact cast-iron N/C/K
-ribs/bolts/rebates, exact APC-4 small hardware solids, exact modern contact
+angles/rib coordinates/bolt drilling/rebates, exact APC-4 small hardware solids, exact modern contact
 support-hood CAD, project-specific cable schedules/rack elevation, exact current
 water-main pipe schedule/mounts and final UNIGINE instancing/export policy.
 

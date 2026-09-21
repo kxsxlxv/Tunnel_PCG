@@ -164,6 +164,46 @@
             "source_id": "S135",
             "status": "SOURCE_BACKED_BUT_UNASSIGNED"
           }
+        },
+        "visual_trackbed_and_services": {
+          "source_id": "S120",
+          "status": "ACTUAL_SITE_VISUAL_CONSTRAINT_NO_ABSOLUTE_DIMENSIONS",
+          "photo_pinpoints": [
+            16,
+            20
+          ],
+          "permanent_way": {
+            "discrete_transverse_turnout_supports_visible": true,
+            "exposed_ballast_or_aggregate_zones_visible": true,
+            "continuous_stage10_track_concrete_through_switch_visually_supported": false,
+            "exact_bearer_material": null,
+            "exact_bearer_pitch": null,
+            "exact_ballast_depth_m": null,
+            "rule": "For an actual-site-looking fallback, visually prefer an exposed ballasted/bearer turnout bed. Numeric foundation geometry still comes from the tagged service-era turnout fallback, not from photo scaling."
+          },
+          "contact_rail": {
+            "protective_box_runs_visible": true,
+            "ordinary_periodic_uninterrupted_sweep_through_switch_visually_supported": false,
+            "exact_gap_endpoints": null,
+            "exact_side_change": null,
+            "exact_ramp_geometry_from_photo": null,
+            "rule": "Use the source-backed S128 turnout ramp/gap event geometry; S120 only validates that the chamber does not look like an uninterrupted ordinary running-tunnel contact rail."
+          },
+          "cable_infrastructure": {
+            "dense_open_sidewall_racks_visible": true,
+            "both_sidewalls_used": true,
+            "exact_rack_pitch_m": null,
+            "exact_cable_count": null
+          },
+          "equipment": {
+            "electrical_or_control_cabinets_adjacent_to_turnout_visible": true,
+            "trackside_signal_visible": true,
+            "local_luminaires_visible": true,
+            "service_access_steps_or_platform_elements_visible": true,
+            "exact_models": null,
+            "exact_xy_z": null
+          },
+          "generation_rule": "Spawn these as junction-local event assets. Presence/morphology may follow the photos; dimensions/coordinates must come from separate sources or remain parameterized."
         }
       },
       "turnout_geometry": {
@@ -782,6 +822,24 @@
             "status": "SOURCE_BACKED"
           },
           "pcg_rule": "Treat stock rails/spare turnout parts as explicit storage events. Do not scatter them periodically through the chamber and do not occupy the frog-end-to-limit-rail zone."
+        },
+        "actual_site_visual_presence": {
+          "source_id": "S120",
+          "photos": [
+            16,
+            20
+          ],
+          "known_present": [
+            "dense open cable racks on chamber walls",
+            "local electrical/control cabinets adjacent to turnout",
+            "trackside signal",
+            "local tunnel/chamber lighting",
+            "contact-rail protective-box runs",
+            "service-access steps/platform elements",
+            "discrete turnout supports with exposed ballast/aggregate zones"
+          ],
+          "exact_geometry": null,
+          "status": "ACTUAL_SITE_VISUAL_PRESENCE_ONLY"
         }
       },
       "branch_exit": {

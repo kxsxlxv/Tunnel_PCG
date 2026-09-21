@@ -98,6 +98,20 @@ jobs:
           --civil-topology kba
           --axis-noise-sigma 0
           --output /tmp/stage10_5_rc_kba_scene.json
+      - name: Stage 10.5 RC KBA chunk-first export smoke
+        run: >-
+          python examples/generate_stage10_production_tunnel.py
+          --rings 6
+          --namespace stage10-5-rc-kba-chunk-first-ci
+          --civil-archetype rc_block_6100_5600
+          --civil-topology kba
+          --axis-noise-sigma 0
+          --chunk-m 2.35
+          --chunk-policy exact_length
+          --chunks-only
+          --compact-json
+          --prototype-json
+          --output /tmp/stage10_5_rc_kba_chunk_first_scene.json
       - name: Stage 10.5 CLI legacy-service compatibility smoke
         run: >-
           python examples/generate_stage10_production_tunnel.py

@@ -21,7 +21,9 @@ from tunnel_scanner_core import (
     SurfaceMeshingConfig,
     TunnelAssemblyConfig,
     build_production_tunnel,
+    build_stage10_5_rc_modern_chunk_plan,
     iter_chunk_scene_packages,
+    iter_stage10_5_rc_modern_chunk_scene_packages,
     load_stage10_initial_moscow_profile,
 )
 from tunnel_scanner_core.scene_io import write_scene_package_json
@@ -105,8 +107,9 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help=(
             "When --chunk-m is set, skip writing the monolithic full-scene JSON. "
-            "The geometry is still generated in global coordinates internally; only "
-            "the serialized output is partitioned."
+            "Stage 10.5 modern RC uses true chunk-first generation and never "
+            "materializes the full scene; other compatibility modes retain the "
+            "legacy partitioning path."
         ),
     )
     parser.add_argument(
@@ -698,6 +701,148 @@ def _validate_stage10_build(
     return gauge, working_faces
 
 
+def _write_chunk_first_rc_outputs(
+    *,
+    args: argparse.Namespace,
+    profile,
+    ring_cfg: RingConfig,
+    assembly_cfg: TunnelAssemblyConfig,
+    production_config: ProductionConfig,
+    surface_meshing: SurfaceMeshingConfig,
+) -> None:
+    output = args.output.resolve()
+    output.parent.mkdir(parents=True, exist_ok=True)
+    plan = build_stage10_5_rc_modern_chunk_plan(
+        chunk_length_m=args.chunk_m,
+        boundary_policy=ChunkBoundaryPolicy(args.chunk_policy),
+        ring_config=ring_cfg,
+        assembly_config=assembly_cfg,
+        surface_meshing=surface_meshing,
+        include_bolts=not args.no_bolts,
+        label_policy=LabelPolicy(args.label_policy),
+        production_config=production_config,
+        seed=args.seed,
+    )
+    production_meta = plan.metadata["productionGeometry"]
+    chunk_dir = output.with_name(output.stem + "_chunks")
+    chunk_dir.mkdir(parents=True, exist_ok=True)
+    manifest = []
+    chunk_object_total = 0
+    for package in iter_stage10_5_rc_modern_chunk_scene_packages(
+        plan,
+        localize_coordinates=args.localize_chunks_for_blender,
+    ):
+        chunk_meta = package.metadata["productionChunk"]
+        chunk_id = int(chunk_meta["chunkID"])
+        chunk_path = chunk_dir / f"chunk_{chunk_id:05d}.json"
+        write_scene_package_json(
+            package,
+            chunk_path,
+            compact=args.compact_json,
+            prototype_instances=args.prototype_json,
+        )
+        chunk_object_total += len(package.objects)
+        manifest.append(
+            {
+                "chunkID": chunk_id,
+                "path": chunk_path.name,
+                "startChainageM": chunk_meta["startChainageM"],
+                "endChainageM": chunk_meta["endChainageM"],
+                "ringIDs": chunk_meta["ringIDs"],
+                "objectCount": len(package.objects),
+                "vertexCoordinatesLocalized": chunk_meta[
+                    "vertexCoordinatesLocalized"
+                ],
+                "chunkWorldOrigin": chunk_meta["chunkWorldOrigin"],
+            }
+        )
+
+    manifest_path = chunk_dir / "manifest.json"
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "stage": "10.5",
+                "namespace": args.namespace,
+                "moscowProfileID": profile.profile_id,
+                "moscowProfileSHA256": profile.provenance.canonical_sha256,
+                "tunnelInstanceID": production_meta["tunnelInstanceID"],
+                "chunkLengthRequestedM": args.chunk_m,
+                "boundaryPolicy": args.chunk_policy,
+                "chunkFirstGeneration": True,
+                "fullSceneMaterialized": False,
+                "localizedForBlender": args.localize_chunks_for_blender,
+                "prototypeSceneJson": bool(args.prototype_json),
+                "globalCoordinatesAreCanonical": True,
+                "infrastructureAssets": [
+                    {
+                        "persistentKey": spec.persistent_key,
+                        "instanceID": spec.instance_id,
+                        "objectType": spec.object_type,
+                        "category": spec.category,
+                    }
+                    for spec in plan.asset_specs
+                ],
+                "chunks": manifest,
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    summary = {
+        "stage": "10.5",
+        "seed": args.seed,
+        "namespace": args.namespace,
+        "ringCount": assembly_cfg.n_rings,
+        "requestedLengthM": args.length_m,
+        "generatedLengthM": plan.assembly.length_by_chainage_m,
+        "sourceRingWidthM": ring_cfg.width_m,
+        "servicePreset": "modern",
+        "civilArchetype": args.civil_archetype,
+        "civilTopology": production_meta["moscowCivilTopology"],
+        "includeBolts": not args.no_bolts,
+        "chunkFirstGeneration": True,
+        "fullSceneMaterialized": False,
+        "fullSceneSerialized": False,
+        "globalSceneObjectCount": 0,
+        "serializedChunkObjectCount": chunk_object_total,
+        "alignmentStations": len(plan.alignment_stations),
+        "moscowCivilRingCount": production_meta["moscowCivilRingCount"],
+        "productionMoscowCivilRenderedBlocks": production_meta[
+            "moscowCivilRenderedBlockCount"
+        ],
+        "civilBoltHeadCount": production_meta["moscowCivilBoltHeadCount"],
+        "modernLVTSupportCount": production_meta["modernLVTSupportCount"],
+        "contactRailSupportCount": production_meta["contactRailSupportCount"],
+        "contactRailCoverSpanCount": production_meta[
+            "contactRailCoverSpanCount"
+        ],
+        "serviceCableCount": production_meta["serviceCableCount"],
+        "serviceCableRackCount": production_meta["serviceCableRackCount"],
+        "serviceWaterMainSupportCount": production_meta[
+            "serviceWaterMainSupportCount"
+        ],
+        "compactSceneJson": bool(args.compact_json),
+        "prototypeSceneJson": bool(args.prototype_json),
+        "chunkCount": len(manifest),
+        "chunkLengthRequestedM": args.chunk_m,
+        "chunkPolicy": args.chunk_policy,
+        "chunksLocalizedForBlender": args.localize_chunks_for_blender,
+        "chunkManifest": str(manifest_path.relative_to(output.parent)),
+        "sceneJson": None,
+        "moscowProfileID": profile.profile_id,
+        "moscowProfileSHA256": profile.provenance.canonical_sha256,
+        "tunnelInstanceID": production_meta["tunnelInstanceID"],
+    }
+    summary_path = output.with_name(output.stem + "_summary.json")
+    summary_path.write_text(
+        json.dumps(summary, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    print(json.dumps(summary, indent=2))
+
+
 def main() -> None:
     args = parse_args()
     profile = load_stage10_initial_moscow_profile(
@@ -723,24 +868,47 @@ def main() -> None:
         axis_noise_sigma_m=args.axis_noise_sigma,
         ring_rotation_strategy=RingRotationStrategy(args.rotation_strategy),
     )
+    surface_meshing = SurfaceMeshingConfig(
+        max_sagitta_m=args.sagitta_mm / 1000.0
+    )
+    production_config = ProductionConfig(
+        namespace=args.namespace,
+        moscow_profile=profile,
+        moscow_stage=args.domain_stage,
+        moscow_service_preset=args.service_preset,
+        moscow_civil_topology=args.civil_topology,
+        compact_exact_collinear_continuous_stations=(
+            False if args.dense_continuous_sweeps else None
+        ),
+    )
+    if args.chunks_only and args.chunk_m is None:
+        raise ValueError("--chunks-only requires --chunk-m")
+    chunk_first_rc = (
+        args.chunks_only
+        and args.chunk_m is not None
+        and args.domain_stage == "10.5"
+        and production_config.resolved_moscow_service_preset == "modern"
+        and profile.civil_family
+        == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+    )
+    if chunk_first_rc:
+        _write_chunk_first_rc_outputs(
+            args=args,
+            profile=profile,
+            ring_cfg=ring_cfg,
+            assembly_cfg=assembly_cfg,
+            production_config=production_config,
+            surface_meshing=surface_meshing,
+        )
+        return
+
     build = build_production_tunnel(
         ring_config=ring_cfg,
         assembly_config=assembly_cfg,
-        surface_meshing=SurfaceMeshingConfig(
-            max_sagitta_m=args.sagitta_mm / 1000.0
-        ),
+        surface_meshing=surface_meshing,
         include_bolts=not args.no_bolts,
         label_policy=LabelPolicy(args.label_policy),
-        production_config=ProductionConfig(
-            namespace=args.namespace,
-            moscow_profile=profile,
-            moscow_stage=args.domain_stage,
-            moscow_service_preset=args.service_preset,
-            moscow_civil_topology=args.civil_topology,
-            compact_exact_collinear_continuous_stations=(
-                False if args.dense_continuous_sweeps else None
-            ),
-        ),
+        production_config=production_config,
         seed=args.seed,
     )
     working_face_gauge, working_faces = _validate_stage10_build(
@@ -752,8 +920,6 @@ def main() -> None:
 
     output = args.output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
-    if args.chunks_only and args.chunk_m is None:
-        raise ValueError("--chunks-only requires --chunk-m")
     if not args.chunks_only:
         write_scene_package_json(
             build.scene,

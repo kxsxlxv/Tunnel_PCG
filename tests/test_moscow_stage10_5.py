@@ -812,10 +812,43 @@ def test_stage10_5_rc_6100_5600_civil_archetype_adapts_geometry():
         assert p["rcBlocksIdenticalBySource"] is True
         assert p["rcPermanentBoltedBlockJoints"] is False
         assert math.isclose(p["rcWorkingRebarDiameterM"], 0.016, abs_tol=1e-12)
+        assert math.isclose(p["rcBlockVolumeSourceM3"], 0.46, abs_tol=1e-12)
+        assert math.isclose(p["rcBlockMassSourceT"], 1.15, abs_tol=1e-12)
+        assert p["rcConcreteGradeHistorical"] == "400"
         assert math.isclose(p["rcAssemblyPinDiameterM"], 0.022, abs_tol=1e-12)
         assert p["rcAssemblyPinGeometryResolved"] is False
         assert p["rcExactBlockEdgeChamferResolved"] is False
         assert p["angularSegments"] == 80
+
+    # The rendered ring is genuinely composite: ten disconnected curved
+    # annular block components, not a smooth shell with metadata-only seams.
+    first_ring = civil[0]
+    adjacency = {i: set() for i in range(len(first_ring.vertices))}
+    used = set()
+    for face in first_ring.faces:
+        used.update(face)
+        for ia, ib in zip(face, (*face[1:], face[0])):
+            adjacency[ia].add(ib)
+            adjacency[ib].add(ia)
+    components = 0
+    unseen = set(used)
+    while unseen:
+        components += 1
+        stack = [unseen.pop()]
+        while stack:
+            current = stack.pop()
+            neighbours = adjacency[current] & unseen
+            unseen.difference_update(neighbours)
+            stack.extend(neighbours)
+    assert components == 10
+
+    nominal_block_volume = (
+        math.pi
+        * (profile.extrados_radius_m**2 - profile.intrados_radius_m**2)
+        * profile.ring_pitch_m
+        / 10.0
+    )
+    assert math.isclose(nominal_block_volume, 0.46, abs_tol=7e-4)
     concrete = build.scene.objects_of_type("production_track_concrete")
     assert len(concrete) == 1
     assert concrete[0].custom_properties["physicalBottomSurface"] == (

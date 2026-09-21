@@ -176,6 +176,12 @@ def main() -> None:
                 production_meta.get("serviceCableRackCount", 0)
             ),
             "production_moscow_civil_shell_ring": civil_count,
+            "production_moscow_civil_detail_ribs": int(
+                production_meta.get("moscowCivilDetailRibObjectCount", 0)
+            ),
+            "production_moscow_civil_bolt_heads": int(
+                production_meta.get("moscowCivilBoltObjectCount", 0)
+            ),
         }
     elif domain_stage in {"10.2", "10.3", "10.4"} or legacy_10_5:
         sleeper_count = int(production_meta.get("sleeperCount", 0))
@@ -210,6 +216,12 @@ def main() -> None:
         if domain_stage in {"10.4", "10.5"}:
             expected_counts["production_moscow_civil_shell_ring"] = int(
                 production_meta.get("moscowCivilRingCount", 0)
+            )
+            expected_counts["production_moscow_civil_detail_ribs"] = int(
+                production_meta.get("moscowCivilDetailRibObjectCount", 0)
+            )
+            expected_counts["production_moscow_civil_bolt_heads"] = int(
+                production_meta.get("moscowCivilBoltObjectCount", 0)
             )
     else:
         expected_counts = {
@@ -486,6 +498,13 @@ def main() -> None:
                 errors.append(f"{cable.name}: cable sag marker missing")
             if not _close(cp.get("cableSagMidspanM", -1), 0.025):
                 errors.append(f"{cable.name}: wrong cable sag amount")
+            if not _close(cp.get("cableSagVariationFraction", -1), 0.35):
+                errors.append(f"{cable.name}: wrong cable sag variation")
+            if not _close(
+                cp.get("cableSagPeakPhaseJitterFraction", -1),
+                0.12,
+            ):
+                errors.append(f"{cable.name}: wrong cable sag peak jitter")
         if production_meta.get("servicePipeStatus") != (
             "implemented_normative_DN80_with_explicit_placement_fallback"
         ):
@@ -645,6 +664,10 @@ def main() -> None:
             errors.append("Stage 10.4+ retained Stage-9 lining bolt heads")
         if any(o.object_type == "bolt_pocket_cutter" for o in package.objects):
             errors.append("Stage 10.4+ retained Stage-9 lining bolt cutters")
+        if production_meta.get("moscowCivilCompositeDetailStatus") != (
+            "implemented_source_sized_visual_joint_rib_bolt_overlay"
+        ):
+            errors.append("Stage 10.4+ civil composite detail status mismatch")
         if production_meta.get("walkwayStatus") != (
             "implemented_stage10_4_source_backed_geometry"
         ):
@@ -687,6 +710,56 @@ def main() -> None:
                 errors.append(f"{ring.name}: coarse segment reference used as geometry")
             if rp.get("internalRingEndCaps") is not False:
                 errors.append(f"{ring.name}: internal ring end caps retained")
+
+        detail_ribs = [
+            o for o in production
+            if o.object_type == "production_moscow_civil_detail_ribs"
+        ]
+        expected_detail_count = int(
+            production_meta.get("moscowCivilDetailRibObjectCount", 0)
+        )
+        if len(detail_ribs) != expected_detail_count:
+            errors.append(
+                "Stage 10.4+ civil rib-detail count does not match metadata"
+            )
+        expected_visual_segments = (
+            10
+            if profile.civil_family
+            == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+            else 11
+        )
+        for detail in detail_ribs:
+            dp = detail.custom_properties
+            if int(dp.get("visualSegmentCount", -1)) != expected_visual_segments:
+                errors.append(f"{detail.name}: wrong visual segment count")
+            if dp.get("visualSegmentCountIsLOD0") is not False:
+                errors.append(
+                    f"{detail.name}: visual segmentation falsely claims LOD0"
+                )
+
+        civil_bolts = [
+            o for o in production
+            if o.object_type == "production_moscow_civil_bolt_heads"
+        ]
+        expected_bolt_objects = int(
+            production_meta.get("moscowCivilBoltObjectCount", 0)
+        )
+        if len(civil_bolts) != expected_bolt_objects:
+            errors.append(
+                "Stage 10.4+ civil bolt-object count does not match metadata"
+            )
+        for bolt_obj in civil_bolts:
+            bp = bolt_obj.custom_properties
+            if int(bp.get("boltRowsPerLongitudinalJoint", -1)) != 2:
+                errors.append(f"{bolt_obj.name}: wrong bolt-row count")
+            if not _close(bp.get("nominalBoltDiameterM", -1), 0.027):
+                errors.append(f"{bolt_obj.name}: wrong nominal bolt diameter")
+            if not _close(bp.get("nominalBoltLengthM", -1), 0.120):
+                errors.append(f"{bolt_obj.name}: wrong nominal bolt length")
+            if bp.get("exactBoltHeadCADResolved") is not False:
+                errors.append(
+                    f"{bolt_obj.name}: bolt-head CAD falsely marked exact"
+                )
 
         walkway = [
             o for o in production
@@ -806,6 +879,15 @@ def main() -> None:
         ),
         "civilShellStatus": production_meta.get("civilShellStatus"),
         "civilArchetypeID": production_meta.get("civilArchetypeID"),
+        "civilDetailRibObjectCount": production_meta.get(
+            "moscowCivilDetailRibObjectCount"
+        ),
+        "civilBoltObjectCount": production_meta.get(
+            "moscowCivilBoltObjectCount"
+        ),
+        "civilBoltHeadCount": production_meta.get(
+            "moscowCivilBoltHeadCount"
+        ),
         "serviceCableCount": production_meta.get("serviceCableCount"),
         "serviceCableRackCount": production_meta.get("serviceCableRackCount"),
         "serviceCableRackFamily": production_meta.get("serviceCableRackFamily"),

@@ -1170,6 +1170,107 @@
             "the drawing explicitly constrains multiple ramp ends around the crossover centers"
           ],
           "limitation": "Use the scanned figure itself to bind each callout to its exact leg; do not collapse these raw dimensions into one symmetric generic crossover."
+        },
+        {
+          "printed_page": 35,
+          "pdf_page": "19 of 82",
+          "table": "Table 10",
+          "title": "Нормы содержания стрелочных переводов по ширине колеи",
+          "row": "R65, gauge 1520, curved secant point, frog 1/9",
+          "supports": [
+            "gauge at frame-rail joints = 1520 mm",
+            "gauge at point tip = 1524 mm",
+            "gauge at point roots: diverging/side route = 1520 mm; straight route = 1521 mm",
+            "gauge at middle of turnout curve = 1524 mm",
+            "gauge at frog and end of turnout curve = 1520 mm"
+          ],
+          "confidence": "A/B_near_service_era_metro_maintenance_geometry"
+        },
+        {
+          "printed_pages": "36-37",
+          "pdf_page": "20 of 82",
+          "table": "Table 12",
+          "title": "Нормы ширины желобов в стрелочных переводах",
+          "row": "R65, gauge 1520, curved secant point, frog 1/9",
+          "raw_row_values_mm": [
+            108,
+            108,
+            64,
+            null,
+            null,
+            46,
+            44,
+            64,
+            86
+          ],
+          "supports": [
+            "root flangeway/groove widths on straight and side routes are both 108 mm",
+            "frog throat groove = 64 mm",
+            "middle frog/guard-rail control callout = 46 mm",
+            "guard-rail/wing-rail lead-out callouts include 44 / 64 / 86 mm",
+            "Fig.25 separately constrains counterrail-to-core >=1472 mm and counterrail-to-wing <=1435 mm"
+          ],
+          "limitation": "The row is stored alongside the table header/figure because several later 46/44/64/86 values belong to different frog/guard-rail control sections. Do not reorder or reinterpret them without the table header."
+        },
+        {
+          "printed_pages": "44-45",
+          "pdf_page": "24 of 82",
+          "table": "Table 16",
+          "title": "Ординаты переводной кривой для стрелочных переводов R65/R50/R43",
+          "row": "R65 1/9 normal single turnout, point length 8300 mm",
+          "ordinate_definition": "measured from working face of outer straight-route rail to working face of outer/bearing rail of turnout curve",
+          "abscissa_definition": "distance from point root, mm",
+          "gauge_1520_control_points_mm": [
+            {
+              "x_from_point_root": 0,
+              "ordinate": 181
+            },
+            {
+              "x_from_point_root": 2000,
+              "ordinate": 259
+            },
+            {
+              "x_from_point_root": 4000,
+              "ordinate": 350
+            },
+            {
+              "x_from_point_root": 6000,
+              "ordinate": 460
+            },
+            {
+              "x_from_point_root": 8000,
+              "ordinate": 590
+            },
+            {
+              "x_from_point_root": 10000,
+              "ordinate": 740
+            },
+            {
+              "x_from_point_root": 12000,
+              "ordinate": 910
+            },
+            {
+              "x_from_point_root": 14000,
+              "ordinate": 1100
+            }
+          ],
+          "supports": [
+            "the 2005 metro instruction supplies direct turnout-curve working-face ordinates for the R65 1/9 8300-mm-point family",
+            "the denominator values in the table are the 1520-mm-gauge ordinates"
+          ],
+          "limitation": "Terminal rows beyond x=14000 are not transcribed into the machine contract until their numerator/denominator endpoint semantics are rechecked at higher legibility."
+        },
+        {
+          "printed_pages": "41, 43-45",
+          "pdf_pages": "22-24 of 82",
+          "clause": "2.12.6 / 2.12.11 / 2.12.15",
+          "supports": [
+            "normal turnout rail-joint gaps = 8 +/-2 mm",
+            "point-root gap = 5 +/-2 mm",
+            "front and tail frog joints use zero gap",
+            "point throw at first connecting rod axis = 152 mm with +8/-2 mm tolerance",
+            "tunnel turnout uses at least 12 pairs of wedge anti-creepers"
+          ]
         }
       ],
       "confidence": "A/B_historical_operational_instruction"

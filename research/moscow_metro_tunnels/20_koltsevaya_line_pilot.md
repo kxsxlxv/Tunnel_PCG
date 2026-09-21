@@ -200,6 +200,12 @@ A 2026 construction statement confirms that the existing Line-5 tunnels in the r
 
 These are stronger than interpolating generic station depths, so they are encoded separately as project/local profile constraints with unresolved exact chainage limits.
 
+### Route relations versus the physical connected network
+
+The two current OSM child routes are sufficient to seed the two main-track candidates, but they are not guaranteed to contain depot/service/crossover branch ways. The example now includes `tools_extract_connected_subway_graph.py`, which starts from route 300607 + 1462011 and preserves nearby connected `railway=subway` ways from a local PBF without classifying them automatically.
+
+This is the required acquisition path for switch topology: route membership identifies the two main-route candidates; shared-node expansion exposes physical off-route branch candidates; `track_topology.json` supplies the semantic annotation.
+
 ## Stage 11/22 — physical two-track topology and junctions
 
 The pilot is no longer allowed to treat Line 5 as one centerline plus an offset.

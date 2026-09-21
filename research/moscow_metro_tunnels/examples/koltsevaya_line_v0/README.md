@@ -86,6 +86,19 @@ It refuses null Z, verifies route closure, then uses the tested `closed_parallel
 
 See `ALIGNMENT_3D_CONTRACT.md`.
 
+### Connected physical-network extraction
+
+Passenger route relations alone do not necessarily contain depot/service/crossover branches. For a local Moscow PBF, `tools_extract_connected_subway_graph.py` therefore:
+
+- seeds from the current Inner route 300607 and Outer route 1462011;
+- scans physical `railway=subway` ways;
+- expands by shared OSM nodes for a configurable number of graph hops;
+- preserves route-member vs off-route-candidate membership;
+- passes the result to the branch-preserving `osm_track_graph.py`;
+- does **not** call an off-route way a depot branch/crossover merely because it is connected.
+
+The hop limit is an acquisition scope only. Branch semantics still come from the researched topology contract.
+
 ## Physical topology and junction events
 
 This example now has an explicit two-track/topology layer.

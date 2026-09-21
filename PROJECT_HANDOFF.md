@@ -1930,11 +1930,11 @@ Placement:
 one rack per side per 1.0 m Moscow civil ring
 ```
 
-The v1 preview uses one representative cable on each of the 11 rack levels per
-side, so the scene has 22 continuous representative service cables.
+The current v2 preview uses both cable places on each of the 11 rack levels per
+side, so the scene has 44 continuous representative service cables.
 
-The rack has two cable places per level, but exact project cable occupancy and
-route schedules remain unresolved.
+This is a full-capacity visual-density preset. Exact project cable occupancy,
+cable types/diameters and route schedules remain unresolved.
 
 ### Current water main
 
@@ -1951,8 +1951,9 @@ Preview-only placement values:
 
 ```text
 visual OD proxy               0.089 m
-profile center z              +0.700 m
+profile center z              +0.600 m
 shell clearance inward        0.040 m
+support maximum pitch          4.000 m
 ```
 
 The exact project pipe schedule, wall thickness and mounting coordinates remain

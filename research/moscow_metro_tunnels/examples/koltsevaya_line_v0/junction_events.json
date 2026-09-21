@@ -433,7 +433,16 @@
             "locator": "official OTI list quoting Moscow Metro letter dated 20.08.2013",
             "status": "SOURCE_BACKED"
           },
-          "track_count_or_single_shell_arrangement": null
+          "track_count_or_single_shell_arrangement": null,
+          "connection_track_count": {
+            "value": 2,
+            "semantics": "the main Krasnaya Presnya depot connection is reported as a two-track connecting branch",
+            "source_id": "S106",
+            "status": "TERTIARY_CORROBORATION",
+            "confidence": "C",
+            "limitation": "Track count does not define the underground civil-shell arrangement or the selected single branch edge's independent-tunnel start."
+          },
+          "shell_arrangement_unknown": true
         },
         "first_geometry_fallback": {
           "source_archetype": "METRO_STEPWISE_BRANCH_CHAMBER_RC_TUBING_2001_REFERENCE",

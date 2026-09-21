@@ -4,14 +4,15 @@ Stage 10.5 is the current default Moscow production mode.
 
 It combines:
 
-- 5.5 / 5.1 m Moscow civil shell;
+- selectable 5.5 / 5.1 m cast-iron or 6.1 / 5.6 m ten-block RC civil envelope;
 - R65 running rails;
 - modern LVT-M half-sleeper supports;
 - APC-4 fastening preview;
 - segmented modern contact-rail cover;
 - dedicated contact-rail supports;
-- R2K11/K1351.001-09 cable racks with K1350.002 double horns;
-- 44 representative full-capacity service-cable routes;
+- R2K11/K1351.001-09 cable racks with open K1350.002 double cradles and no continuous underbar;
+- 16 representative service-cable routes using 8/11 levels per wall;
+- restrained 25 mm cable sag between 1.0 m rack supports;
 - one DN80-minimum current tunnel water main with periodic supports;
 - raised Moscow walkway.
 
@@ -32,6 +33,13 @@ Stage 10.5 + modern is the default. The explicit equivalent is:
       --service-preset modern \
       --rings 20 \
       --namespace stage10-5-modern
+
+The researched larger family can be generated with:
+
+    python examples/generate_stage10_production_tunnel.py \
+      --rings 20 \
+      --namespace stage10-5-rc6100 \
+      --civil-archetype rc_block_6100_5600
 
 ## 2. Verify in Blender 5.2.2 LTS
 

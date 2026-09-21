@@ -30,8 +30,9 @@ LiDAR synthesis is intentionally not the current priority.
     Stage 10.3 RK contact rail, legacy sleeper-mounted support chain,
                insulator envelope and explicitly tagged protective-cover fallback
     Stage 10.4 source-sized Moscow civil system: smooth 5.5/5.1 cast-iron
-               envelope with detail deferred, plus true 6.1/5.6 ten-block RC
-               rings; raised +0.200 m walkway and closed concrete/lining interface
+               envelope with detail deferred, plus selectable 6.1/5.6 RC
+               ten_equal / KBA topology using the literal Stage-9 segment,
+               joint, pocket and bolt-head pipeline
     Stage 10.5 default modern LVT-M/APC-4 permanent way, rounded segmented
                contact-rail cover, dedicated contact supports, R2K11 wall
                cable racks, representative cables, DN80 water main and
@@ -228,23 +229,37 @@ Stage 10.5 also enables zero-error alignment compaction for continuous sweeps.
 It removes only mathematically redundant collinear ring-boundary samples; the
 118-vertex R65 section and rail surface are unchanged.
 
-Two researched civil envelopes are now selectable from the Stage-10 generator:
+Two civil envelopes are selectable from the Stage-10 generator:
 
-    --civil-archetype cast_iron_5500_5100   5.5 / 5.1 m cast-iron family
-    --civil-archetype rc_block_6100_5600    6.1 / 5.6 m Moscow ten-block RC family
+    --civil-archetype cast_iron_5500_5100
+        5.5 / 5.1 m cast-iron family; detailed tubing CAD remains deferred
 
-The first remains the compatibility default, but only its researched 5.5/5.1 m
-envelope is rendered: exact N/C/K cast-iron segment, rib, rebate and fastening
-geometry is deliberately deferred rather than approximated.
+    --civil-archetype rc_block_6100_5600
+        6.1 / 5.6 m Moscow RC envelope; 1.0 m civil-ring pitch
 
-The 6.1/5.6 m RC family is the detailed composite option. Each 1.0 m ring is
-generated as ten disconnected full-depth curved annular blocks, following the
-Stage-9 segment-construction style but using the Moscow 2.800/3.050 m radii and
-ten identical blocks documented by S026. Source metadata also carries
-0.46 m3/block, 1.15 t/block, historical grade 400 concrete, 16 mm working
-reinforcement and 22 mm erection pins; permanent bolted block joints are not
-claimed. The current 8 mm visible inter-block seam is a procedural visibility
-fallback, while exact edge chamfers and pin-hole/seat CAD remain unresolved.
+For the RC envelope the topology is an independent CLI choice:
+
+    --civil-topology auto        -> ten_equal
+    --civil-topology ten_equal   -> ten identical blocks, source-backed by S026
+    --civil-topology kba         -> K/B/A Stage-9 topology, explicit user/photo-reference alternative
+
+Both RC topology modes now reuse the **literal old Stage-9 civil pipeline**:
+analytical `SegmentMesh` -> adaptive `CurvedSegmentMesh`, prescribed radial
+and circumferential joint solids, Stage-6 bolt pockets/Boolean cutters and
+visible bolt heads. Legacy object types are intentionally preserved so Blender
+runs the same interface cleanup and Boolean code as Stage 9.
+
+For `ten_equal`, S026 supports 10 identical blocks, 0.46 m3/block,
+1.15 t/block, historical grade-400 concrete, 16 mm working reinforcement,
+22 mm erection pins and **no permanent bolted block connection**. Therefore the
+transferred Stage-9 bolt/pocket hardware is a user-requested visual architecture
+preset, not a historical fastening claim for that S026 family. The `kba`
+topology is likewise explicitly tagged as a user/photo-reference alternative
+until a specific Moscow source is registered in research.
+
+The previous simplified ten-sector/8-mm-gap RC implementation has been removed.
+Exact RC end-face chamfers, erection-pin holes/seats and reinforcement-cage CAD
+remain unresolved.
 
 Because the RC source does not publish a separate UGR-to-lining-axis datum,
 Stage 10 transfers the existing track/UGR datum and recomputes shell-contact
@@ -316,7 +331,7 @@ CI also runs:
     scripts/verify_stage10_3.py
     scripts/verify_stage10_4.py
     scripts/verify_stage10_5.py
-    examples/generate_stage10_production_tunnel.py  (10.1 + 10.2 + 10.3 + 10.4 + 10.5 modern + 10.5 RC6100 + 10.5 legacy CLI smoke)
+    examples/generate_stage10_production_tunnel.py  (10.1 + 10.2 + 10.3 + 10.4 + 10.5 modern + RC ten_equal + RC KBA + 10.5 legacy CLI smoke)
 
 Latest Stage-9 production verification:
 
@@ -345,8 +360,10 @@ fallback.
 
 Stage 10.4 is closed at the current source boundary: source-sized Moscow civil
 envelopes, independent 1.0 m civil-ring rhythm and source-backed +0.200 m
-raised walkway. The 6.1/5.6 m RC family is rendered as ten actual curved
-blocks; detailed 5.5/5.1 cast-iron tubing remains intentionally deferred.
+raised walkway. The 6.1/5.6 m RC family can be generated either as the
+source-backed ten-identical-block topology or as the user/photo-reference K/B/A
+alternative; both use the original Stage-9 segment/joint/bolt architecture.
+Detailed 5.5/5.1 cast-iron tubing remains intentionally deferred.
 
 Stage 10.5 is the current default production preset. It adds modern LVT-M
 half-sleeper blocks, APC-4 fastening preview, a low rounded segmented

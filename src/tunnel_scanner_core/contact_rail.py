@@ -884,6 +884,7 @@ def build_modern_contact_support_meshes(
             properties={
                 "geometryMode": "dimensioned_hook_channel_873x373_v3",
                 "resourceEnvelopeM": cr.support_resource_envelope_m,
+                "legacyResourceEnvelopeNotGeometryAuthority": True,
                 "drawingReferenceToAxisM": modern.drawing_reference_to_axis_m,
                 "drawingReferenceToOuterEnvelopeM": modern.drawing_reference_to_outer_envelope_m,
                 "drawingUpperReturnM": modern.drawing_upper_return_m,

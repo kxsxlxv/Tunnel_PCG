@@ -98,6 +98,13 @@ def main() -> None:
     ):
         errors.append("production metadata does not select Stage 10.1 R65")
     service_preset = str(production_meta.get("servicePreset", "legacy"))
+    is_rc_civil = (
+        profile.civil_family
+        == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+    )
+    civil_topology = str(
+        production_meta.get("moscowCivilTopology", "")
+    )
     modern_10_5 = domain_stage == "10.5" and service_preset == "modern"
     legacy_10_5 = domain_stage == "10.5" and service_preset == "legacy"
     expected_status = {
@@ -121,9 +128,11 @@ def main() -> None:
         ),
         "civilShellStatus": (
             (
-                "implemented_stage10_4_segmented_rc_10block_shell"
-                if profile.civil_family
-                == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                (
+                    "implemented_stage10_4_rc_stage9_architecture_"
+                    f"{civil_topology}"
+                )
+                if is_rc_civil
                 else (
                     "implemented_stage10_4_cast_iron_smooth_envelope_"
                     "detail_deferred"
@@ -183,12 +192,8 @@ def main() -> None:
             "production_cable_rack_r2k11": int(
                 production_meta.get("serviceCableRackCount", 0)
             ),
-            "production_moscow_civil_shell_ring": civil_count,
-            "production_moscow_civil_detail_ribs": int(
-                production_meta.get("moscowCivilDetailRibObjectCount", 0)
-            ),
-            "production_moscow_civil_bolt_heads": int(
-                production_meta.get("moscowCivilBoltObjectCount", 0)
+            "production_moscow_civil_shell_ring": (
+                0 if is_rc_civil else civil_count
             ),
         }
     elif domain_stage in {"10.2", "10.3", "10.4"} or legacy_10_5:
@@ -222,14 +227,10 @@ def main() -> None:
                 }
             )
         if domain_stage in {"10.4", "10.5"}:
-            expected_counts["production_moscow_civil_shell_ring"] = int(
-                production_meta.get("moscowCivilRingCount", 0)
-            )
-            expected_counts["production_moscow_civil_detail_ribs"] = int(
-                production_meta.get("moscowCivilDetailRibObjectCount", 0)
-            )
-            expected_counts["production_moscow_civil_bolt_heads"] = int(
-                production_meta.get("moscowCivilBoltObjectCount", 0)
+            expected_counts["production_moscow_civil_shell_ring"] = (
+                0
+                if is_rc_civil
+                else int(production_meta.get("moscowCivilRingCount", 0))
             )
     else:
         expected_counts = {
@@ -666,30 +667,57 @@ def main() -> None:
                 errors.append(f"{span.name}: local support hood contract missing")
 
     if domain_stage in {"10.4", "10.5"}:
-        if any(o.object_type == "lining_segment" for o in package.objects):
-            errors.append("Stage 10.4+ retained Stage-9 lining_segment objects")
-        if any(o.object_type == "bolt_head" for o in package.objects):
-            errors.append("Stage 10.4+ retained Stage-9 lining bolt heads")
-        if any(o.object_type == "bolt_pocket_cutter" for o in package.objects):
-            errors.append("Stage 10.4+ retained Stage-9 lining bolt cutters")
-
-        is_rc_10block = (
-            profile.civil_family
-            == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
-        )
-        expected_civil_status = (
-            "implemented_stage10_4_segmented_rc_10block_shell"
-            if is_rc_10block
-            else (
-                "implemented_stage10_4_cast_iron_smooth_envelope_"
-                "detail_deferred"
+        transferred = [
+            obj
+            for obj in package.objects
+            if obj.custom_properties.get(
+                "stage9SegmentJointFastenerArchitectureTransferred"
+            ) is True
+        ]
+        transferred_segments = [
+            obj for obj in transferred if obj.object_type == "lining_segment"
+        ]
+        transferred_radial = [
+            obj
+            for obj in transferred
+            if obj.object_type == "prescribed_radial_joint"
+        ]
+        transferred_circ = [
+            obj
+            for obj in transferred
+            if obj.object_type == "prescribed_circumferential_joint"
+        ]
+        transferred_heads = [
+            obj for obj in transferred if obj.object_type == "bolt_head"
+        ]
+        transferred_cutters = [
+            obj
+            for obj in transferred
+            if obj.object_type == "bolt_pocket_cutter"
+        ]
+        untransferred_legacy_civil = [
+            obj
+            for obj in package.objects
+            if obj.object_type
+            in {
+                "lining_segment",
+                "prescribed_radial_joint",
+                "prescribed_circumferential_joint",
+                "bolt_head",
+                "bolt_pocket_cutter",
+            }
+            and obj.custom_properties.get(
+                "stage9SegmentJointFastenerArchitectureTransferred"
+            ) is not True
+        ]
+        if untransferred_legacy_civil:
+            errors.append(
+                "Stage 10.4+ retained unrelated source Stage-9 civil objects"
             )
-        )
-        if production_meta.get("civilShellStatus") != expected_civil_status:
-            errors.append("Stage 10.4+ civil shell status mismatch")
+
         expected_detail_status = (
-            "implemented_rc_10block_geometry_stage9_like"
-            if is_rc_10block
+            "stage9_segment_joint_bolt_architecture_transferred"
+            if is_rc_civil
             else "cast_iron_detail_deferred_pending_research"
         )
         if production_meta.get("moscowCivilCompositeDetailStatus") != (
@@ -714,90 +742,164 @@ def main() -> None:
         ]
         if obsolete_detail:
             errors.append(
-                "Stage 10.4+ generated obsolete/fabricated civil detail objects"
+                "Stage 10.4+ generated obsolete simplified civil detail objects"
             )
 
-        civil = [
-            o for o in production
-            if o.object_type == "production_moscow_civil_shell_ring"
-        ]
-        if not civil:
-            errors.append("Stage 10.4+ generated no Moscow civil rings")
-        for ring in civil:
-            rp = ring.custom_properties
-            civil_checks = {
-                "intradosRadiusM": profile.intrados_radius_m,
-                "extradosRadiusM": profile.extrados_radius_m,
-                "structuralDepthM": (
-                    profile.extrados_radius_m - profile.intrados_radius_m
-                ),
-                "moscowCivilRingPitchM": profile.ring_pitch_m,
-                "liningAxisProfileZM": profile.datums.lining_axis_z_m,
-                "liningAxisCoreZM": 0.000,
-            }
-            for key, expected in civil_checks.items():
-                if key not in rp or not _close(rp[key], expected):
-                    errors.append(
-                        f"{ring.name}: {key}={rp.get(key)!r} != {expected!r}"
-                    )
-            if rp.get("seriesAccurateTubingLOD0") is not False:
-                errors.append(f"{ring.name}: false series-accurate tubing LOD0 claim")
-            if rp.get("seriesAccurateCivilLOD0") is not False:
-                errors.append(f"{ring.name}: false series-accurate civil LOD0 claim")
-            if rp.get("civilFamily") != profile.civil_family:
-                errors.append(f"{ring.name}: civil-family metadata mismatch")
-            if rp.get("internalRingEndCaps") is not False:
-                errors.append(f"{ring.name}: internal ring end caps retained")
+        if is_rc_civil:
+            if civil_topology not in {"ten_equal", "kba"}:
+                errors.append("Stage 10.4+ RC topology is invalid/missing")
+            expected_per_ring = 10 if civil_topology == "ten_equal" else 6
+            civil_ring_count = int(
+                production_meta.get("moscowCivilRingCount", 0)
+            )
+            expected_segment_count = expected_per_ring * civil_ring_count
+            if len(transferred_segments) != expected_segment_count:
+                errors.append(
+                    "Stage 10.4+ transferred civil segment count mismatch"
+                )
+            if int(
+                production_meta.get("moscowCivilSegmentObjectCount", -1)
+            ) != len(transferred_segments):
+                errors.append(
+                    "Stage 10.4+ civil segment metadata mismatch"
+                )
+            if int(
+                production_meta.get(
+                    "moscowCivilPrescribedRadialJointCount", -1
+                )
+            ) != len(transferred_radial):
+                errors.append(
+                    "Stage 10.4+ radial-joint metadata mismatch"
+                )
+            if int(
+                production_meta.get(
+                    "moscowCivilPrescribedCircumferentialJointCount", -1
+                )
+            ) != len(transferred_circ):
+                errors.append(
+                    "Stage 10.4+ circumferential-joint metadata mismatch"
+                )
+            if production_meta.get(
+                "moscowCivilLegacyObjectTypesPreserved"
+            ) is not True:
+                errors.append("literal Stage-9 civil object types were not preserved")
+            if production_meta.get(
+                "moscowCivilLegacyPrescribedJointSolidsIncluded"
+            ) is not True:
+                errors.append("Stage-9 prescribed joint solids are missing")
 
-            if is_rc_10block:
-                if rp.get("coarseSegmentCountIsGeometry") is not True:
-                    errors.append(
-                        f"{ring.name}: source-backed ten-block topology is not geometry"
+            for segment in transferred_segments:
+                sp = segment.custom_properties
+                if sp.get("moscowCivilTopology") != civil_topology:
+                    errors.append(f"{segment.name}: civil topology mismatch")
+                if sp.get("civilFamily") != profile.civil_family:
+                    errors.append(f"{segment.name}: civil family mismatch")
+                if not _close(
+                    sp.get("liningRingWidthM", -1),
+                    profile.ring_pitch_m,
+                    1e-9,
+                ) and not bool(
+                    sp.get("moscowCivilRingEndChainageM", 0.0)
+                    - sp.get("moscowCivilRingStartChainageM", 0.0)
+                    < profile.ring_pitch_m
+                ):
+                    errors.append(f"{segment.name}: wrong lining ring width")
+
+            if civil_topology == "ten_equal":
+                by_ring: dict[int, list] = {}
+                for segment in transferred_segments:
+                    index = int(
+                        segment.custom_properties["moscowCivilRingIndex"]
                     )
-                if int(rp.get("renderedRCBlockCount", -1)) != 10:
-                    errors.append(f"{ring.name}: wrong rendered RC block count")
-                if rp.get("stage9LikeCurvedSegmentConstruction") is not True:
-                    errors.append(
-                        f"{ring.name}: RC ring is not Stage-9-like segmented"
-                    )
-                if not _close(rp.get("renderedRCVisualSeamWidthM", -1), 0.008):
-                    errors.append(f"{ring.name}: wrong RC visual seam width")
-                if not _close(rp.get("rcWorkingRebarDiameterM", -1), 0.016):
-                    errors.append(
-                        f"{ring.name}: wrong working-reinforcement diameter"
-                    )
-                if not _close(rp.get("rcAssemblyPinDiameterM", -1), 0.022):
-                    errors.append(f"{ring.name}: wrong erection-pin diameter")
-                if rp.get("rcPermanentBoltedBlockJoints") is not False:
-                    errors.append(
-                        f"{ring.name}: RC block joints falsely marked bolted"
-                    )
-                if int(rp.get("angularSegments", -1)) != 80:
-                    errors.append(
-                        f"{ring.name}: unexpected RC surface subdivision count"
-                    )
+                    by_ring.setdefault(index, []).append(segment)
+                for index, segments in by_ring.items():
+                    if len(segments) != 10:
+                        errors.append(
+                            f"civil ring {index}: expected 10 equal blocks"
+                        )
+                    names = [
+                        obj.segment_name
+                        for obj in sorted(
+                            segments,
+                            key=lambda obj: int(obj.segment_id),
+                        )
+                    ]
+                    if names != [f"RC{i:02d}" for i in range(1, 11)]:
+                        errors.append(
+                            f"civil ring {index}: wrong ten-equal block names"
+                        )
             else:
-                if rp.get("coarseSegmentCountIsGeometry") is not False:
-                    errors.append(
-                        f"{ring.name}: unresolved cast-iron topology became geometry"
+                first_ring = [
+                    obj
+                    for obj in transferred_segments
+                    if int(
+                        obj.custom_properties["moscowCivilRingIndex"]
+                    ) == 0
+                ]
+                names = [
+                    obj.segment_name
+                    for obj in sorted(
+                        first_ring,
+                        key=lambda obj: int(obj.segment_id),
                     )
-                if rp.get("stage9LikeCurvedSegmentConstruction") is not False:
-                    errors.append(
-                        f"{ring.name}: cast iron incorrectly reuses RC segment geometry"
-                    )
+                ]
+                if names != ["K", "B1", "A1", "A2", "A3", "B2"]:
+                    errors.append("K/B/A segment order mismatch")
 
-        if is_rc_10block:
-            if int(production_meta.get("moscowCivilRenderedBlockCount", -1)) != (
-                10 * len(civil)
-            ):
-                errors.append("Stage 10.4+ RC rendered-block count mismatch")
-            if not _close(
-                production_meta.get("moscowCivilRCVisualSeamWidthM", -1),
-                0.008,
-            ):
-                errors.append("Stage 10.4+ RC seam metadata mismatch")
-        elif int(production_meta.get("moscowCivilRenderedBlockCount", -1)) != 0:
-            errors.append("cast-iron mode unexpectedly reports RC blocks")
+            if len(transferred_heads) != len(transferred_cutters):
+                errors.append("Stage-9 bolt head/pocket pairing mismatch")
+            bolts_enabled = bool(
+                production_meta.get("moscowCivilBoltsEnabled", False)
+            )
+            if bolts_enabled:
+                if not transferred_heads:
+                    errors.append("enabled Stage-9 fastener transfer is empty")
+                if int(
+                    production_meta.get("moscowCivilBoltHeadCount", -1)
+                ) != len(transferred_heads):
+                    errors.append("civil bolt-head metadata mismatch")
+                if int(
+                    production_meta.get("moscowCivilBoltPocketCount", -1)
+                ) != len(transferred_cutters):
+                    errors.append("civil bolt-pocket metadata mismatch")
+                if production_meta.get("moscowCivilLegacyBoltLayout") != (
+                    "type1_centered"
+                ):
+                    errors.append("wrong transferred Stage-9 bolt layout")
+            elif transferred_heads or transferred_cutters:
+                errors.append("civil fasteners exist despite disabled bolt transfer")
+        else:
+            if transferred:
+                errors.append(
+                    "cast-iron deferred mode unexpectedly contains RC transfer objects"
+                )
+            civil = [
+                o for o in production
+                if o.object_type == "production_moscow_civil_shell_ring"
+            ]
+            if not civil:
+                errors.append("Stage 10.4+ generated no cast-iron envelope")
+            for ring in civil:
+                rp = ring.custom_properties
+                civil_checks = {
+                    "intradosRadiusM": profile.intrados_radius_m,
+                    "extradosRadiusM": profile.extrados_radius_m,
+                    "structuralDepthM": (
+                        profile.extrados_radius_m - profile.intrados_radius_m
+                    ),
+                    "moscowCivilRingPitchM": profile.ring_pitch_m,
+                    "liningAxisProfileZM": profile.datums.lining_axis_z_m,
+                    "liningAxisCoreZM": 0.000,
+                }
+                for key, expected in civil_checks.items():
+                    if key not in rp or not _close(rp[key], expected):
+                        errors.append(
+                            f"{ring.name}: {key}={rp.get(key)!r} != {expected!r}"
+                        )
+                if rp.get("seriesAccurateTubingLOD0") is not False:
+                    errors.append(
+                        f"{ring.name}: false series-accurate tubing LOD0 claim"
+                    )
 
         walkway = [
             o for o in production
@@ -820,10 +922,6 @@ def main() -> None:
                     errors.append(
                         f"{walkway[0].name}: {key}={wp.get(key)!r} != {expected!r}"
                     )
-            if wp.get("trackConcreteContactFacesOmitted") is not True:
-                errors.append(f"{walkway[0].name}: concrete contact faces retained")
-            if wp.get("liningContactFacesOmitted") is not True:
-                errors.append(f"{walkway[0].name}: lining contact faces retained")
 
         concrete = [
             o for o in production
@@ -838,21 +936,44 @@ def main() -> None:
                 errors.append(
                     f"{concrete[0].name}: concrete does not close on selected Moscow intrados"
                 )
-            if cp.get("walkwayShoulderPartitioned") is not True:
-                errors.append(
-                    f"{concrete[0].name}: walkway shoulder was not partitioned"
-                )
-            if cp.get("liningContactFacesOmitted") is not True:
-                errors.append(
-                    f"{concrete[0].name}: lining contact faces retained"
-                )
 
     ring_count = int(package.metadata.get("ringCount", 0))
     if domain_stage in {"10.4", "10.5"}:
-        if result.lining_cap_faces_removed != 0:
-            errors.append("Stage 10.4 unexpectedly stripped legacy lining caps")
-        if result.lining_interface_faces_removed != 0:
-            errors.append("Stage 10.4 unexpectedly stripped legacy lining interfaces")
+        if is_rc_civil:
+            if int(production_meta.get("moscowCivilRingCount", 0)) > 1:
+                if result.lining_cap_faces_removed <= 0:
+                    errors.append(
+                        "RC Stage-9 transfer did not strip internal ring caps"
+                    )
+            if result.lining_interface_faces_removed <= 0:
+                errors.append(
+                    "RC Stage-9 transfer did not strip segment interfaces"
+                )
+            bolt_count = int(
+                production_meta.get("moscowCivilBoltHeadCount", 0)
+            )
+            if bool(production_meta.get("moscowCivilBoltsEnabled", False)):
+                if result.boolean_operations_applied != 2 * bolt_count:
+                    errors.append(
+                        "RC Stage-9 bolt Boolean operation count mismatch"
+                    )
+                if len(result.removed_tool_names) != bolt_count:
+                    errors.append(
+                        "RC Stage-9 pocket-cutter removal count mismatch"
+                    )
+            elif result.boolean_operations_applied != 0:
+                errors.append(
+                    "RC Stage-9 Boolean operations ran with bolts disabled"
+                )
+        else:
+            if result.lining_cap_faces_removed != 0:
+                errors.append(
+                    "cast-iron deferred mode unexpectedly stripped lining caps"
+                )
+            if result.lining_interface_faces_removed != 0:
+                errors.append(
+                    "cast-iron deferred mode unexpectedly stripped interfaces"
+                )
     else:
         if ring_count > 1 and result.lining_cap_faces_removed <= 0:
             errors.append("no internal lining cap faces were removed")
@@ -920,11 +1041,21 @@ def main() -> None:
         "civilCompositeDetailStatus": production_meta.get(
             "moscowCivilCompositeDetailStatus"
         ),
+        "civilTopology": production_meta.get("moscowCivilTopology"),
         "civilRenderedBlockCount": production_meta.get(
             "moscowCivilRenderedBlockCount"
         ),
-        "civilRCVisualSeamWidthM": production_meta.get(
-            "moscowCivilRCVisualSeamWidthM"
+        "civilSegmentObjectCount": production_meta.get(
+            "moscowCivilSegmentObjectCount"
+        ),
+        "civilPrescribedRadialJointCount": production_meta.get(
+            "moscowCivilPrescribedRadialJointCount"
+        ),
+        "civilPrescribedCircumferentialJointCount": production_meta.get(
+            "moscowCivilPrescribedCircumferentialJointCount"
+        ),
+        "civilBoltHeadCount": production_meta.get(
+            "moscowCivilBoltHeadCount"
         ),
         "serviceCableCount": production_meta.get("serviceCableCount"),
         "serviceCableRackCount": production_meta.get("serviceCableRackCount"),

@@ -54,6 +54,26 @@ MODERN_TYPES = {
 }
 
 
+def _point_segment_distance_xz(
+    px: float,
+    pz: float,
+    ax: float,
+    az: float,
+    bx: float,
+    bz: float,
+) -> float:
+    dx = bx - ax
+    dz = bz - az
+    denom = dx * dx + dz * dz
+    if denom <= 1e-24:
+        return math.hypot(px - ax, pz - az)
+    t = ((px - ax) * dx + (pz - az) * dz) / denom
+    t = max(0.0, min(1.0, t))
+    qx = ax + t * dx
+    qz = az + t * dz
+    return math.hypot(px - qx, pz - qz)
+
+
 def _rail_centers(profile):
     r65 = R65ProductionProfile()
     return r65_rail_center_offsets_for_gauge(
@@ -171,6 +191,33 @@ def test_stage10_5_r2k11_racks_repeat_on_both_walls_and_stay_inside_shell():
         "strong_current_side_contact_rail_side",
         "weak_current_side_walkway_side",
     }
+
+    # The continuous DN80 preview must not intersect the positive-X R2K11
+    # rack at its periodic stations. This specifically protects the visual
+    # service-layout bug where pipes/cables could overlap or escape the shell.
+    water_section, _water_props = modern_water_main_section_core(profile)
+    water_cx = sum(x for x, _z in water_section) / len(water_section)
+    water_cz = sum(z for _x, z in water_section) / len(water_section)
+    water_radius = 0.5 * profile.water_main.preview_outer_diameter_m
+    positive_rack = build_r2k11_local_rack_mesh(profile, side_sign=1)
+    min_rack_distance = math.inf
+    for face in positive_rack.faces:
+        for i, ia in enumerate(face):
+            ib = face[(i + 1) % len(face)]
+            ax, _ay, az = positive_rack.vertices[ia]
+            bx, _by, bz = positive_rack.vertices[ib]
+            min_rack_distance = min(
+                min_rack_distance,
+                _point_segment_distance_xz(
+                    water_cx,
+                    water_cz,
+                    ax,
+                    az,
+                    bx,
+                    bz,
+                ),
+            )
+    assert min_rack_distance > water_radius + 1e-4
 
 
 def test_stage10_5_modern_cover_is_low_rounded_wrap_not_legacy_tall_box():

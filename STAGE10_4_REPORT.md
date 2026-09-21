@@ -56,61 +56,79 @@ transitional geometry.
 
 The machine profile schema is 2.2.
 
-The physical civil envelope remains authoritative and source-sized:
+Stage 10 keeps civil geometry source-sized and separates the two supported
+families instead of forcing one visual language onto both.
 
-    smooth_concentric_ringwise_shell_v1
+### Classic 5.5 / 5.1 m cast iron
 
-For the default cast-iron family:
+The default family remains:
 
-    intrados diameter        5.100 m
-    extrados diameter        5.500 m
-    structural depth         0.200 m
-    ring pitch               1.000 m
+    civil family              CAST_IRON_5500_R1000
+    intrados diameter         5.100 m
+    extrados diameter         5.500 m
+    structural depth          0.200 m
+    ring pitch                1.000 m
 
-Stage 10.4+ now restores the close-range composite appearance that was lost
-when the old Stage-9 shell was replaced. This is implemented as a separate
-open-backed visual-detail overlay on the correct Moscow intrados, rather than
-by bringing back the old Stage-9 ring dimensions.
+Its physical envelope is implemented, but detailed cast-iron tubing geometry is
+now intentionally deferred. The previous provisional 11-piece rib/flange/bolt
+overlay has been removed because the exact N/C/K angular arrangement, rib
+layout, drilling coordinates, rebates and fastening geometry are not yet
+resolved well enough to justify a visual reconstruction.
 
-For the documented 5.5/5.1 cast-iron variant, the overlay uses:
+Current cast-iron contract:
 
-    visual tubing rhythm                  11
-    source-backed flange width            0.025 m
-    ring-boundary flange/band              visible
-    one circumferential stiffener/ring     visible
-    typical fastening                     M27 x 120
-    working bolt rows / longitudinal joint 2
-    visible bolt heads / full ring         22
-
-The 25 mm flange thickness, M27 x 120 fastening and two working bolt rows are
-source-backed by P10-FROLOV-RING. The precise inward relief and bolt-head solid
-are visual meshes, not factory CAD.
-
-The distinction is important:
-
-    coarseSegmentCountReference = 11
+    civilRenderMode = source_sized_smooth_cast_iron_envelope_detail_deferred
     coarseSegmentCountIsGeometry = false
-    visualSegmentCountIsLOD0 = false
     seriesAccurateTubingLOD0 = false
 
-The current visual overlay uses an evenly distributed 11-piece rhythm so that
-the tunnel again reads as a composite bolted lining at Blender/LiDAR distance.
-It does **not** claim the exact N/C/K central angles or key geometry of a
-specific factory series.
+This keeps the researched 5.5/5.1 m dimensions available without presenting an
+unverified tubing series as factual geometry.
 
-Still unresolved and therefore not represented as exact series CAD:
+### Moscow 6.1 / 5.6 m precast RC blocks
 
-- exact N/C/K central angles and key-wedge geometry;
-- exact radial/circumferential stiffening-rib positions for a named tubing
-  series;
-- bolt-hole drilling coordinates and recess geometry;
-- grout-plug location;
-- detailed flange/rebate/falts section;
-- exact bolt-head/nut/washer casting geometry.
+The researched RC family is now the detailed/composite civil option:
 
-For the selectable 6.1/5.6 m ten-block RC family the same detail layer exposes
-the source-backed ten-block joint rhythm with shallow joint relief. Cast-iron
-M27 bolt heads and cast-iron stiffener bands are not applied to that RC family.
+    civil family              RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000
+    intrados diameter         5.600 m
+    extrados diameter         6.100 m
+    structural depth          0.250 m
+    ring pitch                1.000 m
+    blocks per ring           10
+    block form                10 identical curved blocks
+    block volume              0.46 m3
+    block mass                1.15 t
+    historical concrete       grade 400
+    working reinforcement     16 mm
+    erection steel pins       22 mm
+    permanent block bolts     none
+
+Source S026 fixes those principal dimensions and construction facts.
+
+Unlike the earlier smooth-shell/detail-overlay preview, each generated RC ring
+is now actually composed of ten disconnected full-depth curved annular block
+meshes. The construction follows the useful visual/topological principle of
+Stage 9 -- separate curved lining pieces with explicit radial end faces -- but
+uses the Moscow 2.800 / 3.050 m radii, 1.000 m ring pitch and ten equal blocks.
+
+A narrow 8 mm inter-block gap is currently used only as a visual seam so that
+the separate blocks remain legible in Blender/LiDAR. That seam width is **not**
+claimed as a source dimension. Exact radial-end chamfers, pin holes, pin seats
+and reinforcement mesh are still unresolved and are not fabricated.
+
+Current RC contract:
+
+    civilGeometryMode = segmented_rc_6100_5600_10block_stage9_like_v1
+    circumferentialSegmentSurfaceMode =
+        source_backed_equal_10block_curved_segments_v1
+    coarseSegmentCountReference = 10
+    coarseSegmentCountIsGeometry = true
+    stage9LikeCurvedSegmentConstruction = true
+    renderedRCBlockCount = 10 per full ring
+    renderedRCVisualSeamWidthM = 0.008  # visual fallback
+
+The annulus volume implied by the researched 6.1/5.6 m radii and 1.0 m pitch is
+approximately 4.60 m3 per ring, or 0.46 m3 per one of ten equal blocks, matching
+the S026 block-volume datum and providing an independent geometry cross-check.
 
 ## Ring construction
 
@@ -190,7 +208,13 @@ be the final Moscow cable/service arrangement.
 
 Stage 10.4 reports:
 
-    civilShellStatus = implemented_stage10_4_smooth_concentric_shell
+    civilShellStatus =
+        implemented_stage10_4_cast_iron_smooth_envelope_detail_deferred
+        # default family
+
+    RC alternative:
+        implemented_stage10_4_segmented_rc_10block_shell
+
     walkwayStatus = implemented_stage10_4_source_backed_geometry
     stage9CivilGeometryRemoved = true
     moscowCivilRingPitchM = 1.0

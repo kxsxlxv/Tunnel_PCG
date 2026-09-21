@@ -5010,29 +5010,28 @@ def iter_chunk_scene_packages(
             ]
 
         yield ScenePackage(
-                name=f"{production.scene.name}_chunk_{chunk.chunk_id:05d}",
-                mode=SceneMode.MULTI_RING_TUNNEL,
-                label_policy=production.scene.label_policy,
-                objects=tuple(objects),
-                metadata={
-                    **dict(production.scene.metadata),
-                    "productionChunk": {
-                        "chunkID": chunk.chunk_id,
-                        "startChainageM": chunk.start_chainage_m,
-                        "endChainageM": chunk.end_chainage_m,
-                        "lengthM": chunk.length_m,
-                        "ringIDs": list(chunk.ring_ids),
-                        "boundaryPolicy": policy.value,
-                        "vertexCoordinatesLocalized": bool(localize_coordinates),
-                        "globalCoordinatesPreserved": not localize_coordinates,
-                        "chunkWorldOrigin": list(chunk_world_origin),
-                        "worldTransformRestoresGlobalCoordinates": True,
-                        "internalLongitudinalCaps": False,
-                        "sourceContinuousAssetIDsStableAcrossChunking": True,
-                        "periodicAssetsAssignedByEventChainage": True,
-                    },
+            name=f"{production.scene.name}_chunk_{chunk.chunk_id:05d}",
+            mode=SceneMode.MULTI_RING_TUNNEL,
+            label_policy=production.scene.label_policy,
+            objects=tuple(objects),
+            metadata={
+                **dict(production.scene.metadata),
+                "productionChunk": {
+                    "chunkID": chunk.chunk_id,
+                    "startChainageM": chunk.start_chainage_m,
+                    "endChainageM": chunk.end_chainage_m,
+                    "lengthM": chunk.length_m,
+                    "ringIDs": list(chunk.ring_ids),
+                    "boundaryPolicy": policy.value,
+                    "vertexCoordinatesLocalized": bool(localize_coordinates),
+                    "globalCoordinatesPreserved": not localize_coordinates,
+                    "chunkWorldOrigin": list(chunk_world_origin),
+                    "worldTransformRestoresGlobalCoordinates": True,
+                    "internalLongitudinalCaps": False,
+                    "sourceContinuousAssetIDsStableAcrossChunking": True,
+                    "periodicAssetsAssignedByEventChainage": True,
                 },
-            )
+            },
         )
 
 

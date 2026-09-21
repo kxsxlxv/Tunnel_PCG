@@ -150,9 +150,11 @@ def main() -> None:
                 production_meta.get("contactRailCoverSpanCount", 0)
             ),
             "production_contact_rail_support_block": support_count,
+            "production_contact_rail_base_plate": support_count,
             "production_contact_rail_bracket": support_count,
             "production_contact_rail_insulator": support_count,
             "production_contact_rail_fastening_unit": support_count,
+            "production_contact_rail_clamp_bolts": support_count,
             "production_contact_rail_attachment_dowels": support_count,
             "production_contact_rail_support_hood": support_count,
             "production_service_cable": 22,
@@ -484,6 +486,16 @@ def main() -> None:
             pp = pad.custom_properties
             if not _close(pp.get("padThicknessM", -1), 0.014):
                 errors.append(f"{pad.name}: wrong APC-4 rail-pad thickness")
+        for base_plate in [
+            o for o in production
+            if o.object_type == "production_contact_rail_base_plate"
+        ]:
+            pp = base_plate.custom_properties
+            if int(pp.get("anchorCount", -1)) != 4:
+                errors.append(f"{base_plate.name}: expected four base anchors")
+            if not _close(pp.get("transverseM", -1), 0.220):
+                errors.append(f"{base_plate.name}: wrong base-plate transverse size")
+
         for bracket in [
             o for o in production
             if o.object_type == "production_contact_rail_bracket"
@@ -493,6 +505,50 @@ def main() -> None:
                 errors.append(f"{bracket.name}: modern bracket still marked sleeper-mounted")
             if bp.get("dedicatedConcreteSupportBlock") is not True:
                 errors.append(f"{bracket.name}: modern bracket lacks dedicated support block")
+            if bp.get("geometryMode") != "dimensioned_hook_channel_873x373_v3":
+                errors.append(f"{bracket.name}: wrong dimensioned bracket mode")
+            bracket_checks = {
+                "drawingReferenceToAxisM": 0.683,
+                "drawingReferenceToOuterEnvelopeM": 0.873,
+                "drawingUpperReturnM": 0.180,
+                "drawingTopAboveUGRM": 0.373,
+                "drawingLowerBendCalloutM": 0.155,
+                "drawingUpperBendCalloutM": 0.090,
+                "outerEnvelopeProfileAbsXM": 1.633,
+            }
+            for key, expected in bracket_checks.items():
+                if not _close(bp.get(key, -1), expected, 2e-9):
+                    errors.append(
+                        f"{bracket.name}: {key}={bp.get(key)!r} != {expected!r}"
+                    )
+
+        for clamp in [
+            o for o in production
+            if o.object_type == "production_contact_rail_fastening_unit"
+        ]:
+            cp = clamp.custom_properties
+            if cp.get("geometryMode") != (
+                "upper_flange_saddle_insulated_two_bolt_v3"
+            ):
+                errors.append(f"{clamp.name}: wrong modern clamp mode")
+            if int(cp.get("boltCount", -1)) != 2:
+                errors.append(f"{clamp.name}: expected two clamp bolts")
+
+        for bolts in [
+            o for o in production
+            if o.object_type == "production_contact_rail_clamp_bolts"
+        ]:
+            bp = bolts.custom_properties
+            if int(bp.get("quantity", -1)) != 2:
+                errors.append(f"{bolts.name}: wrong clamp-bolt count")
+
+        for dowels in [
+            o for o in production
+            if o.object_type == "production_contact_rail_attachment_dowels"
+        ]:
+            dp = dowels.custom_properties
+            if int(dp.get("quantity", -1)) != 4:
+                errors.append(f"{dowels.name}: wrong base-anchor count")
         for hood in [
             o for o in production
             if o.object_type == "production_contact_rail_support_hood"
@@ -500,6 +556,12 @@ def main() -> None:
             hp = hood.custom_properties
             if hp.get("mainCoverInterruptedHere") is not True:
                 errors.append(f"{hood.name}: support hood does not mark cover interruption")
+            if hp.get("geometryMode") != "rounded_local_fastening_hood_v2":
+                errors.append(f"{hood.name}: wrong support-hood geometry mode")
+            if hp.get("coversClampAndBoltHeads") is not True:
+                errors.append(f"{hood.name}: hood does not cover clamp/bolt heads")
+            if not _close(hp.get("dimensionedBracketTopProfileZM", -1), 0.373):
+                errors.append(f"{hood.name}: wrong dimensioned bracket-top datum")
         cover_spans = [
             o for o in production
             if o.object_type == "production_contact_rail_cover_span"

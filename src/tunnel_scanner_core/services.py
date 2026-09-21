@@ -157,97 +157,141 @@ def _annular_strip_mesh(
     return _extrude_y_polygon(sections, half_y_m=half_y_m)
 
 
-def _ribbon_u_cup_polygon(
+def _smooth_anchor_polyline(
+    anchors: Sequence[tuple[float, float]],
     *,
-    center_x_m: float,
-    center_z_m: float,
-    inward_x: float,
-    inward_z: float,
-    up_x: float,
-    up_z: float,
-    radius_m: float,
-    thickness_m: float,
-    segments: int = 5,
+    samples_per_span: int = 2,
 ) -> tuple[tuple[float, float], ...]:
-    if segments < 3:
-        raise ValueError("horn cup segments must be >=3")
-    outer_r = radius_m + 0.5 * thickness_m
-    inner_r = radius_m - 0.5 * thickness_m
-    if inner_r <= 0.0:
-        raise ValueError("horn thickness exceeds cup radius")
+    """Low-poly cosine interpolation through H/V anchors.
 
-    def point(r: float, theta: float) -> tuple[float, float]:
-        h = r * math.cos(theta)
-        v = r * math.sin(theta)
-        return (
-            center_x_m + inward_x * h + up_x * v,
-            center_z_m + inward_z * h + up_z * v,
-        )
-
-    outer = [
-        point(outer_r, math.pi + math.pi * i / segments)
-        for i in range(segments + 1)
-    ]
-    inner = [
-        point(inner_r, 2.0 * math.pi - math.pi * i / segments)
-        for i in range(segments + 1)
-    ]
-    return tuple((*outer, *inner))
-
-
-def _radial_arm_polygon(
-    *,
-    wall_x_m: float,
-    wall_z_m: float,
-    inward_x: float,
-    inward_z: float,
-    up_x: float,
-    up_z: float,
-    length_m: float,
-    thickness_m: float,
-    vertical_offset_m: float,
-) -> tuple[tuple[float, float], ...]:
-    sx = wall_x_m + up_x * vertical_offset_m
-    sz = wall_z_m + up_z * vertical_offset_m
-    ex = sx + inward_x * length_m
-    ez = sz + inward_z * length_m
-    h = 0.5 * thickness_m
-    return (
-        (sx - up_x * h, sz - up_z * h),
-        (ex - up_x * h, ez - up_z * h),
-        (ex + up_x * h, ez + up_z * h),
-        (sx + up_x * h, sz + up_z * h),
-    )
-
-
-def _wall_attachment_tab_polygon(
-    *,
-    wall_x_m: float,
-    wall_z_m: float,
-    inward_x: float,
-    inward_z: float,
-    up_x: float,
-    up_z: float,
-    height_m: float,
-    radial_thickness_m: float,
-) -> tuple[tuple[float, float], ...]:
-    """Dimensioned K1350.002 wall-side tongue/envelope.
-
-    The current manufacturer fixes an 87 mm horn height and 4 mm steel
-    thickness. Exact stamped bend detail is not public, so the wall-side part
-    is represented by a rectangular tongue that preserves that envelope.
+    Each anchor is reached exactly with a zero vertical derivative. This gives
+    the formed-steel horn a rounded silhouette without a dense curve/spline.
     """
-    h = 0.5 * height_m
-    ix = inward_x * radial_thickness_m
-    iz = inward_z * radial_thickness_m
-    ux = up_x * h
-    uz = up_z * h
-    return (
-        (wall_x_m - ux, wall_z_m - uz),
-        (wall_x_m + ux, wall_z_m + uz),
-        (wall_x_m + ux + ix, wall_z_m + uz + iz),
-        (wall_x_m - ux + ix, wall_z_m - uz + iz),
+    if len(anchors) < 2:
+        raise ValueError("formed-ribbon anchors require at least two points")
+    if samples_per_span < 1:
+        raise ValueError("samples_per_span must be >=1")
+    result: list[tuple[float, float]] = [anchors[0]]
+    for (h0, v0), (h1, v1) in zip(anchors, anchors[1:]):
+        if h1 <= h0:
+            raise ValueError("formed-ribbon anchors must advance inward")
+        for i in range(1, samples_per_span + 1):
+            t = i / samples_per_span
+            ease = 0.5 * (1.0 - math.cos(math.pi * t))
+            result.append(
+                (
+                    h0 + (h1 - h0) * t,
+                    v0 + (v1 - v0) * ease,
+                )
+            )
+    return tuple(result)
+
+
+def _continuous_omega_horn_polygon(
+    *,
+    wall_x_m: float,
+    wall_z_m: float,
+    inward_x: float,
+    inward_z: float,
+    up_x: float,
+    up_z: float,
+    overall_length_m: float,
+    overall_height_m: float,
+    first_center_inward_m: float,
+    second_center_inward_m: float,
+    cradle_radius_m: float,
+    thickness_m: float,
+) -> tuple[tuple[float, float], ...]:
+    """Build one continuous rounded-W / omega K1350.002 ribbon.
+
+    The user-supplied product drawing and 3D reference show that the two cable
+    cradles are one formed strip. There is no separate wall tab, horizontal
+    neck or shelf: the ribbon starts on the R2K11 upright, descends into the
+    first cradle, rises through the central crest, descends into the second
+    cradle and turns up at the free end.
+    """
+    if not (
+        0.0 < first_center_inward_m
+        < second_center_inward_m
+        < overall_length_m
+    ):
+        raise ValueError("omega-horn cable centers must lie inside its envelope")
+    if min(overall_height_m, cradle_radius_m, thickness_m) <= 0.0:
+        raise ValueError("omega-horn dimensions must be positive")
+
+    midpoint = 0.5 * (
+        first_center_inward_m + second_center_inward_m
     )
+    half_center_pitch = 0.5 * (
+        second_center_inward_m - first_center_inward_m
+    )
+    left_shoulder = max(
+        0.25 * thickness_m,
+        first_center_inward_m - half_center_pitch,
+    )
+    right_shoulder = min(
+        overall_length_m - 0.25 * thickness_m,
+        second_center_inward_m + half_center_pitch,
+    )
+    end_height = min(
+        0.5 * overall_height_m,
+        1.35 * cradle_radius_m,
+    )
+    central_crest = min(
+        0.45 * cradle_radius_m,
+        0.25 * overall_height_m,
+    )
+    anchors = (
+        (0.0, end_height),
+        (left_shoulder, 0.0),
+        (first_center_inward_m, -cradle_radius_m),
+        (midpoint, central_crest),
+        (second_center_inward_m, -cradle_radius_m),
+        (right_shoulder, 0.0),
+        (overall_length_m, end_height),
+    )
+    centerline = _smooth_anchor_polyline(
+        anchors,
+        samples_per_span=2,
+    )
+
+    half_t = 0.5 * thickness_m
+    side_a: list[tuple[float, float]] = []
+    side_b: list[tuple[float, float]] = []
+    for i, (h, v) in enumerate(centerline):
+        if i == 0:
+            dh = centerline[1][0] - h
+            dv = centerline[1][1] - v
+        elif i == len(centerline) - 1:
+            dh = h - centerline[i - 1][0]
+            dv = v - centerline[i - 1][1]
+        else:
+            dh = centerline[i + 1][0] - centerline[i - 1][0]
+            dv = centerline[i + 1][1] - centerline[i - 1][1]
+        norm = math.hypot(dh, dv)
+        if norm <= 1e-12:
+            raise ValueError("degenerate omega-horn centerline tangent")
+        nh = -dv / norm
+        nv = dh / norm
+        side_a.append((h + half_t * nh, v + half_t * nv))
+        side_b.append((h - half_t * nh, v - half_t * nv))
+
+    local_polygon = tuple((*side_a, *reversed(side_b)))
+    polygon = tuple(
+        (
+            wall_x_m + inward_x * h + up_x * v,
+            wall_z_m + inward_z * h + up_z * v,
+        )
+        for h, v in local_polygon
+    )
+    area = 0.5 * sum(
+        x0 * z1 - x1 * z0
+        for (x0, z0), (x1, z1) in zip(
+            polygon,
+            (*polygon[1:], polygon[0]),
+        )
+    )
+    return polygon if area > 0.0 else tuple(reversed(polygon))
 
 
 def build_r2k11_local_rack_mesh(
@@ -284,77 +328,29 @@ def build_r2k11_local_rack_mesh(
         inward = (-sin_a, -cos_a)
         up = (-side_sign * cos_a, side_sign * sin_a)
 
-        # K1350.002 current product envelope: 169 x 40 x 87 mm at 4 mm
-        # steel. Preserve the exact overall radial length and longitudinal
-        # width; the stamped bend path inside the envelope remains a preview.
-        tab = _wall_attachment_tab_polygon(
+        # K1350.002 is represented as one continuous formed-steel ribbon.
+        # The ribbon starts directly on the upright: no separate horizontal
+        # neck/shelf and no detached wall-side mounting tab are generated.
+        horn = _continuous_omega_horn_polygon(
             wall_x_m=wall_x,
             wall_z_m=wall_z,
             inward_x=inward[0],
             inward_z=inward[1],
             up_x=up[0],
             up_z=up[1],
-            height_m=rack.horn_overall_height_m,
-            radial_thickness_m=rack.horn_thickness_m,
+            overall_length_m=rack.horn_overall_length_m,
+            overall_height_m=rack.horn_overall_height_m,
+            first_center_inward_m=rack.first_cable_center_inward_m,
+            second_center_inward_m=rack.second_cable_center_inward_m,
+            cradle_radius_m=rack.horn_radius_m,
+            thickness_m=rack.horn_thickness_m,
         )
         meshes.append(
             _extrude_y_polygon(
-                tab,
+                horn,
                 half_y_m=0.5 * rack.horn_longitudinal_width_m,
             )
         )
-
-        # The K1350.002 reference is a formed double cradle, not two
-        # semicircles sitting on a full-length horizontal shelf. Keep only a
-        # short wall-side tongue needed to join the upright to the first cup;
-        # there is deliberately no common underbar beneath both cable places.
-        neck_length = max(
-            0.0,
-            rack.first_cable_center_inward_m
-            - rack.horn_radius_m
-            - 0.5 * rack.horn_thickness_m,
-        )
-        if neck_length > 1e-9:
-            neck_poly = _radial_arm_polygon(
-                wall_x_m=wall_x,
-                wall_z_m=wall_z,
-                inward_x=inward[0],
-                inward_z=inward[1],
-                up_x=up[0],
-                up_z=up[1],
-                length_m=neck_length,
-                thickness_m=rack.horn_thickness_m,
-                vertical_offset_m=0.0,
-            )
-            meshes.append(
-                _extrude_y_polygon(
-                    neck_poly,
-                    half_y_m=0.5 * rack.horn_longitudinal_width_m,
-                )
-            )
-
-        for slot_offset in (
-            rack.first_cable_center_inward_m,
-            rack.second_cable_center_inward_m,
-        ):
-            cx = wall_x + inward[0] * slot_offset
-            cz = wall_z + inward[1] * slot_offset
-            cup = _ribbon_u_cup_polygon(
-                center_x_m=cx,
-                center_z_m=cz,
-                inward_x=inward[0],
-                inward_z=inward[1],
-                up_x=up[0],
-                up_z=up[1],
-                radius_m=rack.horn_radius_m,
-                thickness_m=rack.horn_thickness_m,
-            )
-            meshes.append(
-                _extrude_y_polygon(
-                    cup,
-                    half_y_m=0.5 * rack.horn_longitudinal_width_m,
-                )
-            )
 
     vertices, faces = _combine(meshes)
     return LocalServiceMesh(
@@ -388,7 +384,10 @@ def build_r2k11_local_rack_mesh(
                 else rack.center_profile_z_m
             ),
             "commonHorizontalUnderbar": False,
-            "hornGeometryMode": "open_double_cradle_no_common_underbar_v3",
+            "separateWallTab": False,
+            "separateHorizontalNeck": False,
+            "hornGeometryMode": "single_continuous_omega_ribbon_v4",
+            "hornRibbonSamplesPerSpan": 2,
             "shellClearanceInwardM": rack.shell_clearance_inward_m,
         },
     )
@@ -478,7 +477,15 @@ def modern_cable_sections_core(
                         "supportPitchM": rack.repeat_pitch_m,
                         "supportPhaseM": rack.phase_m,
                         "longitudinalSagM": rack.cable_sag_midspan_m,
-                        "sagShape": "piecewise_linear_support_midspan_support",
+                        "longitudinalSagVariationFraction": (
+                            rack.cable_sag_variation_fraction
+                        ),
+                        "longitudinalSagPeakPhaseJitterFraction": (
+                            rack.cable_sag_peak_phase_jitter_fraction
+                        ),
+                        "sagShape": (
+                            "deterministic_asymmetric_single_peak_per_support_span"
+                        ),
                         "layoutRuleSource": "P10-SP-CABLE-LAYOUT",
                         "occupancyMode": (
                             "eight_levels_one_cable_each_per_side_visual_preview"

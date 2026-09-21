@@ -10,10 +10,10 @@ It combines:
 - APC-4 fastening preview;
 - segmented modern contact-rail cover;
 - dedicated contact-rail supports;
-- R2K11/K1351.001-09 cable racks with single continuous rounded-W / omega K1350.002 ribbons;
+- R2K11/K1351.001-09 cable racks with smoother continuous rounded-W / omega K1350.002 ribbons;
 - 16 representative service-cable routes using 8/11 levels per wall;
 - nominal 25 mm deterministic irregular cable sag between 1.0 m rack supports;
-- source-sized civil shell with restored composite joint/rib detail and cast-iron bolt heads where applicable;
+- source-sized civil system: detailed ten-block 6.1/5.6 m RC option, while cast-iron detail remains deferred;
 - one DN80-minimum current tunnel water main with periodic supports;
 - raised Moscow walkway.
 
@@ -132,33 +132,44 @@ hardware remain explicit fallbacks.
 
 ### Civil geometry
 
-The default civil envelope remains:
+Two civil modes are available.
+
+Default compatibility envelope:
 
     cast_iron_5500_5100
     intrados radius     2.550 m
     extrados radius     2.750 m
     ring pitch          1.000 m
 
-With `--civil-archetype rc_block_6100_5600`, expect:
+This cast-iron mode should currently look deliberately simple. Detailed N/C/K
+tubing geometry, ribs, rebates and fastenings are not considered resolved and
+are not fabricated.
 
-    intrados radius     2.800 m
-    extrados radius     3.050 m
-    ring pitch          1.000 m
-    topology metadata   10 RC blocks
+The civil mode to inspect for composite lining in this iteration is:
 
-The smooth source-sized envelope remains the physical boundary, but it should no
-longer read as a featureless cylinder. A separate open-backed detail layer is
-visible:
+    --civil-archetype rc_block_6100_5600
 
-- default cast iron: 11 coarse visual tubing divisions, joint/flange relief,
-  ring-boundary bands, circumferential stiffener and simplified M27 bolt heads;
-- RC 6.1/5.6: ten visible shallow block-joint divisions, without cast-iron M27
-  bolt-head/stiffener treatment.
+Expected RC geometry:
 
-For cast iron, the 25 mm flange, M27 x 120 typical fastening and two working
-bolt rows are source-backed. Exact N/C/K angular geometry, drilling coordinates
-and factory bolt-head CAD remain unresolved, so the detail layer is not an
-exact tubing-series LOD0. Exact RC block-edge/pin CAD also remains deferred.
+    intrados radius             2.800 m
+    extrados radius             3.050 m
+    ring pitch                  1.000 m
+    actual blocks per ring      10
+    nominal angular span        36 degrees/block
+    block volume source         0.46 m3
+    block mass source           1.15 t
+    working reinforcement       16 mm
+    erection pins               22 mm
+    permanent block bolts       none
+
+Visually, one RC ring should resemble the **composite curved-segment language of
+Stage 9**, but it must use the Moscow dimensions above. It is not a smooth tube
+with ten lines drawn over it: the mesh contains ten disconnected full-depth
+curved annular block components with explicit radial end faces.
+
+The current 8 mm inter-block opening exists to make the composition readable
+and is a visual fallback, not a researched joint-width claim. Exact radial-end
+chamfers, pin holes/seats and reinforcement-mesh CAD remain deferred.
 
 ## 4. Polygon-count expectation
 
@@ -202,11 +213,12 @@ Useful screenshots:
 1. close contact-rail support + local hood;
 2. contact-cover span between two supports;
 3. LVT-M/APC-4 rail seat and central drain;
-4. close R2K11 horn view proving the continuous omega/W ribbon has no shelf;
-5. one full cast-iron civil ring showing joint relief, stiffener and bolt heads;
-6. weak-current-side water main;
-7. 50-100 m perspective view showing varied cable sag and service density;
-8. Blender statistics for a long scene.
+4. close R2K11 horn view showing the smoother omega/W ribbon and no shelf;
+5. one full 6.1/5.6 m RC ring clearly showing ten separate curved blocks;
+6. close RC block joint showing the radial end faces / visual seam;
+7. weak-current-side water main;
+8. 50-100 m perspective view showing varied cable sag and service density;
+9. Blender statistics for a long scene.
 
 Also send:
 

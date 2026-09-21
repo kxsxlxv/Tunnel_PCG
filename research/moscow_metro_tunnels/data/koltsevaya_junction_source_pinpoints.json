@@ -545,6 +545,97 @@
       },
       "limitation": "Published project geometry proves a metro R50 turnout family, not its installation at Belorusskaya. A few OCR/transcribed bearer callouts conflict; preserve them as drawing evidence rather than silently resolving them.",
       "confidence": "B"
+    },
+    {
+      "id": "S108",
+      "title": "Новослободская Line 5 — no station track development",
+      "url": "https://www.nashtransport.ru/russia/moscow/metro/lines/line_5/novoslobodskaya/page/2/",
+      "locator": {
+        "section": "Путевое развитие",
+        "supports": [
+          "station explicitly stated to have no track development"
+        ]
+      },
+      "confidence": "B/C_station_inventory"
+    },
+    {
+      "id": "S109",
+      "title": "Комсомольская Line 5 — no station track development",
+      "url": "https://www.nashtransport.ru/russia/moscow/metro/lines/line_5/komsomolskaya/",
+      "locator": {
+        "section": "Путевое развитие",
+        "supports": [
+          "station explicitly stated to have no track development",
+          "station reference PK181+74.6"
+        ]
+      },
+      "confidence": "B/C_station_inventory"
+    },
+    {
+      "id": "S110",
+      "title": "Таганская Line 5 — no station track development",
+      "url": "https://www.nashtransport.ru/russia/moscow/metro/lines/line_5/taganskaya/",
+      "locator": {
+        "section": "Техническая информация / Путевое развитие",
+        "supports": [
+          "station itself explicitly stated to have no track development",
+          "nearby Line-5 service-connection system must therefore be represented as a separate network/junction object rather than station track development"
+        ]
+      },
+      "confidence": "B/C_station_inventory"
+    },
+    {
+      "id": "S111",
+      "title": "Добрынинская Line 5 — no station track development",
+      "url": "https://www.nashtransport.ru/russia/moscow/metro/lines/line_5/dobryninskaya/",
+      "locator": {
+        "section": "Путевое развитие",
+        "supports": [
+          "station explicitly stated to have no track development"
+        ]
+      },
+      "confidence": "B/C_station_inventory"
+    },
+    {
+      "id": "S112",
+      "title": "Октябрьская Line 5 — no station track development",
+      "url": "https://www.nashtransport.ru/russia/moscow/metro/lines/line_5/oktyabrskaya/",
+      "locator": {
+        "section": "Путевое развитие",
+        "supports": [
+          "station explicitly stated to have no track development"
+        ]
+      },
+      "confidence": "B/C_station_inventory"
+    },
+    {
+      "id": "S113",
+      "title": "Киевская Line 5 — no station track development",
+      "url": "https://www.nashtransport.ru/russia/moscow/metro/lines/line_5/kievskaya/",
+      "locator": {
+        "section": "Путевое развитие",
+        "supports": [
+          "station explicitly stated to have no track development",
+          "station reference PK94+20.6"
+        ]
+      },
+      "confidence": "B/C_station_inventory"
+    },
+    {
+      "id": "S114",
+      "title": "Достоевская Line 5 — planned/future track development",
+      "url": "https://www.nashtransport.ru/russia/moscow/metro/lines/line_5/dostoyevskaya/",
+      "locator": {
+        "section": "Путевое развитие / construction status",
+        "observed_date": "2026-09-21",
+        "supports": [
+          "station is under construction and planned for opening in 2030",
+          "planned station track development: 4 turnouts and 2 station storage tracks",
+          "3 additional turnouts and one reversing/storage track leading into the KRL service connection, currently attributed to Prospekt Mira, are planned to become part of Dostoevskaya development",
+          "construction uses temporary/bypass tunnels to maintain Line-5 traffic; these are a construction-state topology, not the current normal-operating route contract"
+        ]
+      },
+      "confidence": "B/C_future_project_topology"
     }
   ]
 }

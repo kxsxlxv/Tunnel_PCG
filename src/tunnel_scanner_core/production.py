@@ -5582,6 +5582,9 @@ def iter_stage10_5_rc_modern_chunk_scene_packages(
                 label_policy=plan.source_build.scene.label_policy,
                 start_chainage_m=start,
                 end_chainage_m=end,
+                indexed_chainages=plan.lvt_events_by_chunk[
+                    chunk.chunk_id
+                ],
             )
         )
         periodic.extend(
@@ -5595,6 +5598,12 @@ def iter_stage10_5_rc_modern_chunk_scene_packages(
                 running_support_phase_m=0.5 * modern_pw.support_pitch_m,
                 start_chainage_m=start,
                 end_chainage_m=end,
+                indexed_support_chainages=(
+                    plan.contact_support_events_by_chunk[chunk.chunk_id]
+                ),
+                indexed_cover_spans=(
+                    plan.contact_cover_spans_by_chunk[chunk.chunk_id]
+                ),
             )
         )
         periodic.extend(
@@ -5606,6 +5615,9 @@ def iter_stage10_5_rc_modern_chunk_scene_packages(
                 label_policy=plan.source_build.scene.label_policy,
                 start_chainage_m=start,
                 end_chainage_m=end,
+                indexed_chainages=plan.rack_events_by_chunk[
+                    chunk.chunk_id
+                ],
             )
         )
         periodic.extend(
@@ -5617,6 +5629,9 @@ def iter_stage10_5_rc_modern_chunk_scene_packages(
                 label_policy=plan.source_build.scene.label_policy,
                 start_chainage_m=start,
                 end_chainage_m=end,
+                indexed_chainages=plan.water_support_events_by_chunk[
+                    chunk.chunk_id
+                ],
             )
         )
         periodic.extend(
@@ -5632,6 +5647,9 @@ def iter_stage10_5_rc_modern_chunk_scene_packages(
                 start_chainage_m=start,
                 end_chainage_m=end,
                 civil_roll_assembly=plan.civil_roll_assembly,
+                indexed_ranges=plan.civil_ranges_by_chunk[
+                    chunk.chunk_id
+                ],
             )
         )
 

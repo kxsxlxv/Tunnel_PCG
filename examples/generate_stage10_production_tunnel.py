@@ -20,8 +20,8 @@ from tunnel_scanner_core import (
     RingRotationStrategy,
     SurfaceMeshingConfig,
     TunnelAssemblyConfig,
-    build_chunk_scene_packages,
     build_production_tunnel,
+    iter_chunk_scene_packages,
     load_stage10_initial_moscow_profile,
 )
 from tunnel_scanner_core.scene_io import write_scene_package_json
@@ -107,6 +107,15 @@ def parse_args() -> argparse.Namespace:
             "When --chunk-m is set, skip writing the monolithic full-scene JSON. "
             "The geometry is still generated in global coordinates internally; only "
             "the serialized output is partitioned."
+        ),
+    )
+    parser.add_argument(
+        "--compact-json",
+        action="store_true",
+        help=(
+            "Write scene/chunk JSON without indentation and omit the redundant "
+            "customProperties mirror. Geometry, numeric precision and importer "
+            "round-trip are unchanged."
         ),
     )
     parser.add_argument(
@@ -736,7 +745,11 @@ def main() -> None:
     if args.chunks_only and args.chunk_m is None:
         raise ValueError("--chunks-only requires --chunk-m")
     if not args.chunks_only:
-        write_scene_package_json(build.scene, output)
+        write_scene_package_json(
+            build.scene,
+            output,
+            compact=args.compact_json,
+        )
 
     production_objects = [
         obj for obj in build.scene.objects if obj.object_type.startswith("production_")
@@ -980,6 +993,7 @@ def main() -> None:
         "alignmentStations": len(build.alignment_stations),
         "sceneJson": None if args.chunks_only else output.name,
         "fullSceneSerialized": not args.chunks_only,
+        "compactSceneJson": bool(args.compact_json),
         "tunnelInstanceID": production_meta["tunnelInstanceID"],
         "infrastructureAssets": [
             {
@@ -993,20 +1007,25 @@ def main() -> None:
     }
 
     if args.chunk_m is not None:
-        packages = build_chunk_scene_packages(
+        chunk_dir = output.with_name(output.stem + "_chunks")
+        chunk_dir.mkdir(parents=True, exist_ok=True)
+        manifest = []
+        chunk_count = 0
+        for package in iter_chunk_scene_packages(
             build,
             chunk_length_m=args.chunk_m,
             boundary_policy=ChunkBoundaryPolicy(args.chunk_policy),
             localize_coordinates=args.localize_chunks_for_blender,
-        )
-        chunk_dir = output.with_name(output.stem + "_chunks")
-        chunk_dir.mkdir(parents=True, exist_ok=True)
-        manifest = []
-        for package in packages:
+        ):
             chunk_meta = package.metadata["productionChunk"]
             chunk_id = int(chunk_meta["chunkID"])
             chunk_path = chunk_dir / f"chunk_{chunk_id:05d}.json"
-            write_scene_package_json(package, chunk_path)
+            write_scene_package_json(
+                package,
+                chunk_path,
+                compact=args.compact_json,
+            )
+            chunk_count += 1
             manifest.append(
                 {
                     "chunkID": chunk_id,
@@ -1051,7 +1070,7 @@ def main() -> None:
         )
         summary.update(
             {
-                "chunkCount": len(packages),
+                "chunkCount": chunk_count,
                 "chunkLengthRequestedM": args.chunk_m,
                 "chunkPolicy": args.chunk_policy,
                 "chunksLocalizedForBlender": args.localize_chunks_for_blender,

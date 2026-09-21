@@ -116,6 +116,23 @@ def test_scene_json_roundtrip_is_lossless(tmp_path):
     assert data["objects"][0]["customProperties"]["ringID"] == 4
 
 
+def test_compact_scene_json_roundtrip_omits_only_redundant_custom_properties(tmp_path):
+    _, _, _, _, deformed = _fixture(seed=77)
+    package = build_deformed_scene_package(deformed, ring_id=4)
+    pretty_path = tmp_path / "scene_pretty.json"
+    compact_path = tmp_path / "scene_compact.json"
+
+    write_scene_package_json(package, pretty_path)
+    write_scene_package_json(package, compact_path, compact=True)
+
+    pretty_data = json.loads(pretty_path.read_text())
+    compact_data = json.loads(compact_path.read_text())
+    assert "customProperties" in pretty_data["objects"][0]
+    assert "customProperties" not in compact_data["objects"][0]
+    assert compact_path.stat().st_size < pretty_path.stat().st_size
+    assert read_scene_package_json(compact_path) == package
+
+
 def test_scene_dict_rejects_unknown_schema_version():
     _, _, _, _, deformed = _fixture()
     package = build_deformed_scene_package(deformed)

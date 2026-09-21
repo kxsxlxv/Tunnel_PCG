@@ -29,8 +29,9 @@ LiDAR synthesis is intentionally not the current priority.
                central drain, crossfall and water-release groove
     Stage 10.3 RK contact rail, legacy sleeper-mounted support chain,
                insulator envelope and explicitly tagged protective-cover fallback
-    Stage 10.4 smooth 5.5/5.1 Moscow civil shell, 1.0 m ring rhythm,
-               raised +0.200 m walkway and closed concrete/lining interface
+    Stage 10.4 source-sized Moscow civil system: smooth 5.5/5.1 cast-iron
+               envelope with detail deferred, plus true 6.1/5.6 ten-block RC
+               rings; raised +0.200 m walkway and closed concrete/lining interface
     Stage 10.5 default modern LVT-M/APC-4 permanent way, rounded segmented
                contact-rail cover, dedicated contact supports, R2K11 wall
                cable racks, representative cables, DN80 water main and
@@ -209,7 +210,7 @@ The modern service-era hardware includes:
     low rounded segmented contact-rail cover
     dedicated contact-rail support blocks / brackets / local support hoods
     R2K11/K1351.001-09 cable racks on both walls, one per side per 1.0 m civil ring
-    K1350.002 single continuous rounded-W / omega formed ribbons, directly on the upright
+    K1350.002 smoother continuous rounded-W / omega ribbons, directly on the upright
     16 representative service cables: 8 occupied levels per wall, one cable per level
     nominal 25 mm cable sag with deterministic per-span amplitude/peak variation
     one current tunnel water main, minimum DN80, weak-current side above UGR
@@ -232,19 +233,22 @@ Two researched civil envelopes are now selectable from the Stage-10 generator:
     --civil-archetype cast_iron_5500_5100   5.5 / 5.1 m cast-iron family
     --civil-archetype rc_block_6100_5600    6.1 / 5.6 m Moscow ten-block RC family
 
-The first remains the default. Both variants keep their source-sized smooth
-physical envelope and now carry a separate low-poly composite-detail overlay.
-For the cast-iron family this restores visible joint/flange relief,
-ring-boundary/stiffener bands and simplified M27 x 120 bolt heads; the
-source-backed 25 mm flange and two bolt rows are retained while exact N/C/K
-angles and drilling coordinates remain explicitly unresolved. The 6.1/5.6 m
-family shows its documented ten-block rhythm as shallow joint relief without
-cast-iron bolt hardware. Because its source does not publish a separate
-UGR-to-lining-axis datum, Stage 10 transfers the existing track/UGR datum and
-recomputes shell-contact geometry from the selected radius.
+The first remains the compatibility default, but only its researched 5.5/5.1 m
+envelope is rendered: exact N/C/K cast-iron segment, rib, rebate and fastening
+geometry is deliberately deferred rather than approximated.
 
-Exact series-specific N/C/K geometry and exact RC block-edge/pin CAD remain
-deliberately unresolved rather than guessed.
+The 6.1/5.6 m RC family is the detailed composite option. Each 1.0 m ring is
+generated as ten disconnected full-depth curved annular blocks, following the
+Stage-9 segment-construction style but using the Moscow 2.800/3.050 m radii and
+ten identical blocks documented by S026. Source metadata also carries
+0.46 m3/block, 1.15 t/block, historical grade 400 concrete, 16 mm working
+reinforcement and 22 mm erection pins; permanent bolted block joints are not
+claimed. The current 8 mm visible inter-block seam is a procedural visibility
+fallback, while exact edge chamfers and pin-hole/seat CAD remain unresolved.
+
+Because the RC source does not publish a separate UGR-to-lining-axis datum,
+Stage 10 transfers the existing track/UGR datum and recomputes shell-contact
+geometry from the selected radius.
 
 See STAGE10_5_REPORT.md.
 
@@ -339,9 +343,10 @@ bottom-collection RK contact rail at the researched 690 mm / +160 mm placement,
 sleeper-snapped support chain and explicitly era-mismatched legacy-cover
 fallback.
 
-Stage 10.4 is closed: source-sized Moscow civil envelope, independent 1.0 m
-civil-ring rhythm, restored composite joint/rib visual detail, optional
-cast-iron M27 bolt heads and source-backed +0.200 m raised walkway.
+Stage 10.4 is closed at the current source boundary: source-sized Moscow civil
+envelopes, independent 1.0 m civil-ring rhythm and source-backed +0.200 m
+raised walkway. The 6.1/5.6 m RC family is rendered as ten actual curved
+blocks; detailed 5.5/5.1 cast-iron tubing remains intentionally deferred.
 
 Stage 10.5 is the current default production preset. It adds modern LVT-M
 half-sleeper blocks, APC-4 fastening preview, a low rounded segmented

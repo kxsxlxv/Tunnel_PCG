@@ -1114,6 +1114,62 @@
             "turnout spare parts are stored near the turnout while preserving safe personnel passage",
             "storage between frog end and limit rail is generally excluded except specially permitted cases"
           ]
+        },
+        {
+          "printed_pages": "157-158",
+          "pdf_pages": "80-81 of 82",
+          "figure": "Appendix 6 Fig.10",
+          "title": "Расположение концевых отводов на стрелочном переводе типа Р65 марки 1/9",
+          "figure_notes_from_fig7": [
+            "asterisk marks reference dimensions",
+            "dimensions are shown from the metallic ends of the contact-rail ramps"
+          ],
+          "explicit_datum": "ЦСП = центр стрелочного перевода",
+          "raw_callouts": {
+            "upper_variant": [
+              "11750 min",
+              "2750 max",
+              "29000 min"
+            ],
+            "lower_variant": [
+              "12500 *",
+              "2750 max",
+              "29000 min",
+              "11750 min"
+            ]
+          },
+          "supports": [
+            "R65 1/9 turnout has a dimensioned contact-rail end-ramp layout referenced to the turnout center",
+            "the ramp-end positions are not a generic point-tip/frog offset and must follow the figure variant",
+            "the 2750 mm dimension is explicitly marked maximum; 11750 and 29000 callouts are marked minimum where shown",
+            "the 12500 mm callout is reference-only because it carries the figure asterisk"
+          ],
+          "limitation": "The two figure variants must be mapped to the local traffic/contact-rail-side configuration before generating absolute branch-side geometry. Preserve the raw callouts rather than guessing that every left-side dimension has the same endpoint semantics."
+        },
+        {
+          "printed_page": 159,
+          "pdf_page": "81 of 82",
+          "figure": "Appendix 6 Fig.12",
+          "title": "Расположение концевых отводов на перекрестном съезде типа Р65 марки 2/9",
+          "figure_notes_from_fig7": [
+            "asterisk marks reference dimensions",
+            "dimensions are shown from the metallic ends of the contact-rail ramps"
+          ],
+          "explicit_datums": "ЦСП labels at the crossover turnout centers",
+          "raw_callouts_visible_mm": [
+            "11300 min",
+            "1400 max",
+            "9400 *",
+            "9100 min",
+            "13400 *",
+            "11300 *",
+            "10750 min"
+          ],
+          "supports": [
+            "R65 2/9 crossover has a dedicated dimensioned contact-rail end-ramp arrangement rather than a continuous rail through the crossover",
+            "the drawing explicitly constrains multiple ramp ends around the crossover centers"
+          ],
+          "limitation": "Use the scanned figure itself to bind each callout to its exact leg; do not collapse these raw dimensions into one symmetric generic crossover."
         }
       ],
       "confidence": "A/B_historical_operational_instruction"

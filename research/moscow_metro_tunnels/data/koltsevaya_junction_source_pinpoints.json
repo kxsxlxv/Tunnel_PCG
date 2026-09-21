@@ -294,6 +294,19 @@
         ]
       },
       "confidence": "B/C_station_context"
+    },
+    {
+      "id": "S098",
+      "title": "Official infrastructure-list reference to Krasnaya Presnya depot tunnel-branch",
+      "url": "https://base.garant.ru/54868511/",
+      "locator": {
+        "section": "court decision quoting Moscow Metro letter No.13-02-21/145 dated 20.08.2013; OTI list",
+        "supports": [
+          "explicit named infrastructure object: tunnel-branch to Krasnaya Presnya depot",
+          "does not state track count, internal section, lining or dimensions"
+        ]
+      },
+      "confidence": "A/B_for_existence"
     }
   ]
 }

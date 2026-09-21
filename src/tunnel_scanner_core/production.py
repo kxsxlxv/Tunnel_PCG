@@ -1699,23 +1699,6 @@ def stitch_ring_scene_object_to_alignment(
     props.update(
         {
             "productionRingAlignmentStitched": True,
-            "moscowCivilBoundaryFastenerAlignmentExtrapolated": (
-                extrapolated_vertex_count > 0
-            ),
-            "moscowCivilBoundaryFastenerExtrapolatedVertexCount": (
-                extrapolated_vertex_count
-            ),
-            "moscowCivilBoundaryFastenerMaxOverhangM": (
-                extrapolated_max_overhang_m
-            ),
-            "moscowCivilBoundaryFastenerExtrapolatedSides": tuple(
-                sorted(extrapolated_sides)
-            ),
-            "moscowCivilBoundaryFastenerExtrapolationMode": (
-                "terminal_linear_alignment_extension_preserve_stage9_mesh"
-                if extrapolated_vertex_count > 0
-                else "none"
-            ),
             "productionRingFrontOffsetX": float(front_station.offset_x_m),
             "productionRingFrontOffsetZ": float(front_station.offset_z_m),
             "productionRingCenterOffsetX": float(center_station.offset_x_m),
@@ -3100,6 +3083,23 @@ def _warp_civil_local_object_to_alignment(
             "moscowCivilIndependentRingPoseStream": True,
             "stage7RingAxialStaggerTransferred": True,
             "productionRingAlignmentStitched": True,
+            "moscowCivilBoundaryFastenerAlignmentExtrapolated": (
+                extrapolated_vertex_count > 0
+            ),
+            "moscowCivilBoundaryFastenerExtrapolatedVertexCount": (
+                extrapolated_vertex_count
+            ),
+            "moscowCivilBoundaryFastenerMaxOverhangM": (
+                extrapolated_max_overhang_m
+            ),
+            "moscowCivilBoundaryFastenerExtrapolatedSides": tuple(
+                sorted(extrapolated_sides)
+            ),
+            "moscowCivilBoundaryFastenerExtrapolationMode": (
+                "terminal_linear_alignment_extension_preserve_stage9_mesh"
+                if extrapolated_vertex_count > 0
+                else "none"
+            ),
             "productionRingFrontOffsetX": front_station.offset_x_m,
             "productionRingFrontOffsetZ": front_station.offset_z_m,
             "productionRingCenterOffsetX": center_station.offset_x_m,

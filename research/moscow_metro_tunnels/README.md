@@ -150,7 +150,9 @@ Files:
 - `22_koltsevaya_track_topology_and_junctions.md`;
 - `examples/koltsevaya_line_v0/track_topology.json`;
 - `examples/koltsevaya_line_v0/junction_events.json`;
-- `data/moscow_turnout_archetypes.json`;
+- `data/moscow_turnout_archetypes.json`
+- `data/moscow_junction_civil_archetypes.json`
+- `data/koltsevaya_junction_source_pinpoints.json`;
 - `data/koltsevaya_junction_source_pinpoints.json`;
 - `reference_impl/tunnel_pcg_ref/osm_track_graph.py`.
 

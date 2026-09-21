@@ -213,10 +213,12 @@ def test_stage10_5_r2k11_racks_repeat_on_both_walls_and_stay_inside_shell():
             0.067,
             abs_tol=1e-12,
         )
-        assert tuple(rack.properties["hornUCableCenterOffsetsM"]) == (
-            0.0375,
-            0.1165,
+        horn_centers = tuple(
+            float(x) for x in rack.properties["hornUCableCenterOffsetsM"]
         )
+        assert len(horn_centers) == 2
+        assert math.isclose(horn_centers[0], 0.0375, abs_tol=1e-12)
+        assert math.isclose(horn_centers[1], 0.1165, abs_tol=1e-12)
         assert math.isclose(
             rack.properties["hornUMaxCableRadialClearanceM"],
             0.001,

@@ -120,7 +120,15 @@ def main() -> None:
             )
         ),
         "civilShellStatus": (
-            "implemented_stage10_4_smooth_concentric_shell"
+            (
+                "implemented_stage10_4_segmented_rc_10block_shell"
+                if profile.civil_family
+                == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                else (
+                    "implemented_stage10_4_cast_iron_smooth_envelope_"
+                    "detail_deferred"
+                )
+            )
             if domain_stage in {"10.4", "10.5"}
             else "deferred_to_stage10_4"
         ),

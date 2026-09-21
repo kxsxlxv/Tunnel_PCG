@@ -2940,34 +2940,93 @@ def _moscow_rc_legacy_ring_mesh(
     )
 
 
-def _warp_civil_local_object_to_alignment(
-    obj: SceneObject,
+@dataclass
+class _CivilRingWarpContext:
+    ring_index: int
+    start_chainage_m: float
+    end_chainage_m: float
+    midpoint_m: float
+    representative_ring_id: int
+    civil_pose: RingPose
+    civil_rotation_seed: int | None
+    civil_ring_count: int
+    rotation_cos: float
+    rotation_sin: float
+    front_station: AlignmentStation
+    center_station: AlignmentStation
+    back_station: AlignmentStation
+    tunnel_instance_id: int
+    station_cache: dict[float, AlignmentStation]
+
+
+def _build_civil_ring_warp_context(
     *,
     ring_index: int,
     start_chainage_m: float,
     end_chainage_m: float,
     assembly: TunnelAssembly,
     stations: Sequence[AlignmentStation],
-    namespace: str,
-    profile: MoscowStage10Profile,
-    topology: str,
     civil_pose: RingPose,
     civil_rotation_seed: int | None,
     civil_ring_count: int,
-) -> SceneObject:
+    tunnel_instance_id: int,
+) -> _CivilRingWarpContext:
+    if civil_ring_count <= 0 or not (0 <= ring_index < civil_ring_count):
+        raise ValueError("invalid Moscow civil ring index/count")
+
     midpoint = 0.5 * (start_chainage_m + end_chainage_m)
     source_ring_width = assembly.config.ring_width_m
     representative_ring_id = min(
         assembly.config.n_rings - 1,
         max(0, int(math.floor(midpoint / source_ring_width))),
     )
-
     rotation_rad = math.radians(civil_pose.rotation_y_deg)
-    rotation_cos = math.cos(rotation_rad)
-    rotation_sin = math.sin(rotation_rad)
+    front_station = sample_alignment_station(stations, start_chainage_m)
+    center_station = sample_alignment_station(stations, midpoint)
+    back_station = sample_alignment_station(stations, end_chainage_m)
+    return _CivilRingWarpContext(
+        ring_index=ring_index,
+        start_chainage_m=start_chainage_m,
+        end_chainage_m=end_chainage_m,
+        midpoint_m=midpoint,
+        representative_ring_id=representative_ring_id,
+        civil_pose=civil_pose,
+        civil_rotation_seed=civil_rotation_seed,
+        civil_ring_count=civil_ring_count,
+        rotation_cos=math.cos(rotation_rad),
+        rotation_sin=math.sin(rotation_rad),
+        front_station=front_station,
+        center_station=center_station,
+        back_station=back_station,
+        tunnel_instance_id=tunnel_instance_id,
+        station_cache={
+            float(start_chainage_m): front_station,
+            float(midpoint): center_station,
+            float(end_chainage_m): back_station,
+        },
+    )
 
-    if civil_ring_count <= 0 or not (0 <= ring_index < civil_ring_count):
-        raise ValueError("invalid Moscow civil ring index/count")
+
+def _warp_civil_local_object_to_alignment(
+    obj: SceneObject,
+    *,
+    context: _CivilRingWarpContext,
+    assembly: TunnelAssembly,
+    stations: Sequence[AlignmentStation],
+    namespace: str,
+    profile: MoscowStage10Profile,
+    topology: str,
+) -> SceneObject:
+    ring_index = context.ring_index
+    start_chainage_m = context.start_chainage_m
+    end_chainage_m = context.end_chainage_m
+    midpoint = context.midpoint_m
+    representative_ring_id = context.representative_ring_id
+    civil_pose = context.civil_pose
+    civil_rotation_seed = context.civil_rotation_seed
+    civil_ring_count = context.civil_ring_count
+    rotation_cos = context.rotation_cos
+    rotation_sin = context.rotation_sin
 
     local_ys = tuple(float(v[1]) for v in obj.vertices)
     object_min_chainage = midpoint + min(local_ys)
@@ -3008,28 +3067,23 @@ def _warp_civil_local_object_to_alignment(
     extrapolated_max_overhang_m = 0.0
     extrapolated_sides: set[str] = set()
 
-    # Segment, joint and bolt meshes contain many vertices on the same local-Y
-    # planes. Sampling the global alignment once per unique plane preserves the
-    # exact piecewise-linear map while avoiding repeated O(log N) searches.
-    station_cache: dict[
-        float,
-        tuple[AlignmentStation, str | None, float],
-    ] = {}
-
+    # One strict alignment cache is shared by every object in the civil ring.
+    # Terminal extrapolation remains object-specific because its admissible
+    # overhang depends on the individual fastener mesh.
     vertices: list[Vec3] = []
     for x, local_y, z in obj.vertices:
         # Literal Stage-7/9 axial ring rotation is applied to the complete
         # lining object in its local XZ frame before Stage-10 alignment warp.
         xr = rotation_cos * x + rotation_sin * z
         zr = -rotation_sin * x + rotation_cos * z
-        local_y_key = float(local_y)
-        cached_station = station_cache.get(local_y_key)
-        if cached_station is None:
-            chainage = midpoint + local_y
-            extrapolated_side: str | None = None
-            overrun = 0.0
+        chainage = midpoint + local_y
+        extrapolated_side: str | None = None
+        overrun = 0.0
+        station = context.station_cache.get(float(chainage))
+        if station is None:
             try:
                 station = sample_alignment_station(stations, chainage)
+                context.station_cache[float(chainage)] = station
             except ValueError as exc:
                 before_start = chainage < alignment_start
                 after_end = chainage > alignment_end
@@ -3060,10 +3114,7 @@ def _warp_civil_local_object_to_alignment(
                         f"{obj.name}: failed bounded terminal fastener alignment "
                         f"extrapolation at chainage {chainage:.17g} m"
                     ) from extrapolation_exc
-            cached_station = (station, extrapolated_side, overrun)
-            station_cache[local_y_key] = cached_station
 
-        station, extrapolated_side, overrun = cached_station
         if extrapolated_side is not None:
             extrapolated_vertex_count += 1
             extrapolated_max_overhang_m = max(
@@ -3087,15 +3138,15 @@ def _warp_civil_local_object_to_alignment(
         f"ring/{ring_index:06d}/{obj.name}"
     )
     iid = stable_instance_id(key)
-    front_station = sample_alignment_station(stations, start_chainage_m)
-    center_station = sample_alignment_station(stations, midpoint)
-    back_station = sample_alignment_station(stations, end_chainage_m)
+    front_station = context.front_station
+    center_station = context.center_station
+    back_station = context.back_station
     props = dict(obj.extra_properties)
     props.update(
         {
             "persistentKey": key,
             "persistentInstanceID": iid,
-            "tunnelInstanceID": stable_instance_id(f"{namespace}/tunnel"),
+            "tunnelInstanceID": context.tunnel_instance_id,
             "identityScope": "moscow_civil_stage9_architecture_transfer",
             "domainGeometryStage": "10.4",
             "moscowCivilRingIndex": ring_index,
@@ -3236,6 +3287,7 @@ def _build_stage10_4_rc_stage9_architecture_objects(
         master_seed=seed,
     )
     result: list[SceneObject] = []
+    tunnel_instance_id = stable_instance_id(f"{namespace}/tunnel")
     for range_index, (
         ring_index,
         start_chainage,
@@ -3277,6 +3329,18 @@ def _build_stage10_4_rc_stage9_architecture_objects(
                 perturbation_config=BoltPerturbationConfig(),
             )
 
+        warp_context = _build_civil_ring_warp_context(
+            ring_index=ring_index,
+            start_chainage_m=start_chainage,
+            end_chainage_m=end_chainage,
+            assembly=assembly,
+            stations=stations,
+            civil_pose=civil_roll_assembly.poses[ring_index],
+            civil_rotation_seed=civil_roll_assembly.seed,
+            civil_ring_count=civil_ring_count,
+            tunnel_instance_id=tunnel_instance_id,
+        )
+
         package = build_nominal_scene_package(
             ring,
             joints,
@@ -3294,17 +3358,12 @@ def _build_stage10_4_rc_stage9_architecture_objects(
         for obj in package.objects:
             mapped = _warp_civil_local_object_to_alignment(
                 obj,
-                ring_index=ring_index,
-                start_chainage_m=start_chainage,
-                end_chainage_m=end_chainage,
+                context=warp_context,
                 assembly=assembly,
                 stations=stations,
                 namespace=namespace,
                 profile=profile,
                 topology=topology,
-                civil_pose=civil_roll_assembly.poses[ring_index],
-                civil_rotation_seed=civil_roll_assembly.seed,
-                civil_ring_count=civil_ring_count,
             )
             if (
                 obj.object_type in {"bolt_pocket_cutter", "bolt_head"}

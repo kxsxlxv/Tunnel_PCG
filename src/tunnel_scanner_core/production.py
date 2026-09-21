@@ -4508,20 +4508,60 @@ def strip_internal_lining_cap_faces(
             if obj.extra_properties.get("coordinatesLocalizedToChunk", False)
             else 0.0
         )
-        front_y = (obj.ring_id - 0.5) * ring_width_m - origin_y
-        back_y = (obj.ring_id + 0.5) * ring_width_m - origin_y
-        strip_front = obj.ring_id > 0
-        strip_back = obj.ring_id < global_max_ring_id
+        props_in = obj.extra_properties
+        if (
+            "liningRingFrontWorldYM" in props_in
+            and "liningRingBackWorldYM" in props_in
+        ):
+            front_y = float(props_in["liningRingFrontWorldYM"]) - origin_y
+            back_y = float(props_in["liningRingBackWorldYM"]) - origin_y
+            lining_ring_index = int(
+                props_in.get("liningRingIndex", obj.ring_id)
+            )
+            lining_ring_count = int(
+                props_in.get("liningGlobalRingCount", global_ring_count)
+            )
+            strip_front = lining_ring_index > 0
+            strip_back = lining_ring_index < lining_ring_count - 1
+        else:
+            front_y = (obj.ring_id - 0.5) * ring_width_m - origin_y
+            back_y = (obj.ring_id + 0.5) * ring_width_m - origin_y
+            strip_front = obj.ring_id > 0
+            strip_back = obj.ring_id < global_max_ring_id
+
+        transferred_moscow = bool(
+            props_in.get(
+                "stage9SegmentJointFastenerArchitectureTransferred",
+                False,
+            )
+        )
+        cap_tolerance_m = tolerance_m
+        target_front_y = front_y
+        target_back_y = back_y
+        if transferred_moscow and obj.vertices:
+            actual_front_y = min(vertex[1] for vertex in obj.vertices)
+            actual_back_y = max(vertex[1] for vertex in obj.vertices)
+            metadata_tolerance_m = 1e-8
+            if abs(actual_front_y - front_y) > metadata_tolerance_m:
+                raise ValueError(
+                    f"{obj.name}: Moscow lining front plane metadata mismatch"
+                )
+            if abs(actual_back_y - back_y) > metadata_tolerance_m:
+                raise ValueError(
+                    f"{obj.name}: Moscow lining back plane metadata mismatch"
+                )
+            target_front_y = actual_front_y
+            target_back_y = actual_back_y
 
         kept: list[Face] = []
         removed = 0
         for face in obj.faces:
             ys = [obj.vertices[index][1] for index in face]
             on_front = strip_front and all(
-                abs(y - front_y) <= tolerance_m for y in ys
+                abs(y - target_front_y) <= cap_tolerance_m for y in ys
             )
             on_back = strip_back and all(
-                abs(y - back_y) <= tolerance_m for y in ys
+                abs(y - target_back_y) <= cap_tolerance_m for y in ys
             )
             if on_front or on_back:
                 removed += 1
@@ -4534,6 +4574,11 @@ def strip_internal_lining_cap_faces(
                 "internalLongitudinalCapsStripped": True,
                 "longitudinalCapFacesRemoved": removed,
                 "renderSurfaceOpenAtInternalRingBoundaries": True,
+                "liningCapCleanupPlaneMode": (
+                    "mesh_extrema_with_metadata_guard"
+                    if transferred_moscow
+                    else "legacy_ring_id_plane"
+                ),
             }
         )
         removed_total += removed

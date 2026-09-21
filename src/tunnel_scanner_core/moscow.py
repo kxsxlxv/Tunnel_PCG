@@ -1876,18 +1876,20 @@ def _apply_stage10_civil_archetype(
     }
     civil["initial_geometry"].update(
         {
-            "mode": "segmented_rc_6100_5600_10block_stage9_like_v1",
+            "mode": "stage9_segment_joint_fastener_architecture_transfer_v2",
             "ring_pitch_m": 1.0,
             "circumferential_segment_surface_mode": (
-                "source_backed_equal_10block_curved_segments_v1"
+                "runtime_selectable_ten_equal_or_kba_using_legacy_segment_mesh"
             ),
             "coarse_segment_count_reference": 10,
             "coarse_segment_count_is_geometry": True,
-            "confidence": "C_source_family_dimensions_and_topology",
+            "confidence": "C_ten_equal_source_KBA_user_photo_reference",
             "reason": (
-                "Render the researched ten identical Moscow RC blocks as separate "
-                "curved annular sectors, using Stage-9-like segment construction "
-                "without inventing exact radial-end holes, pin seats or chamfers."
+                "Use the old Stage-9 analytical SegmentMesh/CurvedSegmentMesh, "
+                "prescribed-joint and bolt-pocket/head architecture on Moscow "
+                "6.1/5.6 m dimensions. ten_equal is source-backed by S026; K/B/A "
+                "is an explicit user/photo-reference alternative pending a pinned "
+                "research source."
             ),
         }
     )

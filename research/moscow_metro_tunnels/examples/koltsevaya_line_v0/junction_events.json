@@ -95,7 +95,12 @@
             "length_m": 5,
             "internal_diameter_m": null,
             "track_axis_separation_m": null,
-            "status": "SOURCE_BACKED_FROM_FIGURE"
+            "status": "SOURCE_BACKED_FROM_FIGURE",
+            "source_id": "S058",
+            "locator": "Frolov 2001 printed p.148, Fig.4.34 and adjacent text",
+            "era": "2001 engineering reference",
+            "applicability": "generic closed-method metro branch-chamber reference; not Belorusskaya as-built",
+            "confidence": "A_for_printed_dimensions_B_for_transfer_to_generic_PCG"
           },
           {
             "chamber": 2,
@@ -103,7 +108,12 @@
             "length_m": 10,
             "internal_diameter_m": 5.56,
             "maximum_track_axis_separation_m": 0.7,
-            "status": "SOURCE_BACKED"
+            "status": "SOURCE_BACKED",
+            "source_id": "S058",
+            "locator": "Frolov 2001 printed p.148, Fig.4.34 and adjacent text",
+            "era": "2001 engineering reference",
+            "applicability": "generic closed-method metro branch-chamber reference; not Belorusskaya as-built",
+            "confidence": "A_for_printed_dimensions_B_for_transfer_to_generic_PCG"
           },
           {
             "chamber": 3,
@@ -111,7 +121,12 @@
             "length_m": 15,
             "internal_diameter_m": 7.2,
             "track_axis_separation_m": 2.22,
-            "status": "SOURCE_BACKED"
+            "status": "SOURCE_BACKED",
+            "source_id": "S058",
+            "locator": "Frolov 2001 printed pp.148-149, Fig.4.34 and adjacent text",
+            "era": "2001 engineering reference",
+            "applicability": "generic closed-method metro branch-chamber reference; not Belorusskaya as-built",
+            "confidence": "A_for_printed_dimensions_B_for_transfer_to_generic_PCG"
           },
           {
             "chamber": 4,
@@ -119,7 +134,12 @@
             "length_m": 11.25,
             "internal_diameter_m": 7.7,
             "track_axis_separation_m": 3.36,
-            "status": "SOURCE_BACKED"
+            "status": "SOURCE_BACKED",
+            "source_id": "S058",
+            "locator": "Frolov 2001 printed pp.148-149, Fig.4.34 and adjacent text",
+            "era": "2001 engineering reference",
+            "applicability": "generic closed-method metro branch-chamber reference; not Belorusskaya as-built",
+            "confidence": "A_for_printed_dimensions_B_for_transfer_to_generic_PCG"
           },
           {
             "chamber": 5,
@@ -128,7 +148,12 @@
             "internal_diameter_m": 9,
             "track_axis_separation_m": 4.46,
             "status": "SOURCE_BACKED",
-            "note": "Text states a circular chamber of this size is uneconomical and an elliptical form can be obtained with additional adjacent/key tubings and wedge spacers."
+            "note": "Text states a circular chamber of this size is uneconomical and an elliptical form can be obtained with additional adjacent/key tubings and wedge spacers.",
+            "source_id": "S058",
+            "locator": "Frolov 2001 printed pp.148-149, Fig.4.34 and adjacent text",
+            "era": "2001 engineering reference",
+            "applicability": "generic closed-method metro branch-chamber reference; not Belorusskaya as-built",
+            "confidence": "A_for_printed_dimensions_B_for_transfer_to_generic_PCG"
           },
           {
             "chamber": 6,
@@ -136,7 +161,12 @@
             "length_m": 15,
             "each_tunnel_internal_diameter_m": 5.14,
             "each_tunnel_outer_diameter_m": 5.64,
-            "status": "SOURCE_BACKED_FROM_FIG4.34_SECTION"
+            "status": "SOURCE_BACKED_FROM_FIG4.34_SECTION",
+            "source_id": "S058",
+            "locator": "Frolov 2001 printed pp.148-149, Fig.4.34 and adjacent text",
+            "era": "2001 engineering reference",
+            "applicability": "generic closed-method metro branch-chamber reference; not Belorusskaya as-built",
+            "confidence": "A_for_printed_dimensions_B_for_transfer_to_generic_PCG"
           }
         ],
         "derived_landmarks": {
@@ -144,13 +174,17 @@
             "value": 46,
             "derivation": "10 + 15 + 11.25 + 9.75",
             "status": "RECONSTRUCTED_FROM_SOURCE_LENGTHS",
-            "confidence": "A/B"
+            "confidence": "A/B",
+            "source_id": "S058",
+            "locator": "derived from chamber lengths in printed pp.148-149, Fig.4.34"
           },
           "chamber2_start_to_end_of_chamber6_m": {
             "value": 61,
             "derivation": "10 + 15 + 11.25 + 9.75 + 15",
             "status": "RECONSTRUCTED_FROM_SOURCE_LENGTHS",
-            "confidence": "A/B"
+            "confidence": "A/B",
+            "source_id": "S058",
+            "locator": "derived from chamber lengths in printed pp.148-149, Fig.4.34"
           },
           "point_tip_to_separate_shell_start_m": null,
           "reason_for_null": "The source does not dimension the point-tip position within chamber 2."
@@ -314,5 +348,6 @@
       "all local Z values",
       "site-specific drainage/walkway/cable/lighting/signalling placement"
     ]
-  }
+  },
+  "source_pinpoints_file": "../../data/koltsevaya_junction_source_pinpoints.json"
 }

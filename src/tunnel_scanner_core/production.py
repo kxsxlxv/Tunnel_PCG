@@ -5065,6 +5065,7 @@ class Stage105RCModernChunkPlan:
     config: ProductionConfig
     surface_meshing: SurfaceMeshingConfig
     chunks: tuple[ChunkDescriptor, ...]
+    boundary_policy: ChunkBoundaryPolicy
     civil_roll_assembly: TunnelAssembly
     seed: int
     metadata: Mapping[str, Any]
@@ -5147,10 +5148,11 @@ def build_stage10_5_rc_modern_chunk_plan(
             production_config.resolved_moscow_service_preset
         ),
     )
+    resolved_boundary_policy = ChunkBoundaryPolicy(boundary_policy)
     chunks = plan_chunks(
         source.assembly,
         chunk_length_m=chunk_length_m,
-        boundary_policy=boundary_policy,
+        boundary_policy=resolved_boundary_policy,
     )
     civil_ranges = civil_ring_ranges(
         source.assembly.length_by_chainage_m,
@@ -5334,6 +5336,7 @@ def build_stage10_5_rc_modern_chunk_plan(
         config=production_config,
         surface_meshing=surface_meshing,
         chunks=chunks,
+        boundary_policy=resolved_boundary_policy,
         civil_roll_assembly=civil_roll_assembly,
         seed=int(seed),
         metadata=metadata,
@@ -5530,22 +5533,7 @@ def iter_stage10_5_rc_modern_chunk_scene_packages(
                     "endChainageM": end,
                     "lengthM": chunk.length_m,
                     "ringIDs": list(chunk.ring_ids),
-                    "boundaryPolicy": (
-                        ChunkBoundaryPolicy.EXACT_LENGTH.value
-                        if any(
-                            not math.isclose(
-                                ch.length_m,
-                                round(
-                                    ch.length_m
-                                    / assembly.config.ring_width_m
-                                )
-                                * assembly.config.ring_width_m,
-                                abs_tol=1e-12,
-                            )
-                            for ch in plan.chunks[:-1]
-                        )
-                        else ChunkBoundaryPolicy.RING_ALIGNED.value
-                    ),
+                    "boundaryPolicy": plan.boundary_policy.value,
                     "vertexCoordinatesLocalized": bool(
                         localize_coordinates
                     ),

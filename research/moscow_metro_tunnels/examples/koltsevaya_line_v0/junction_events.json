@@ -250,7 +250,31 @@
           "locator": "Frolov 2001 printed p.150, text after Fig.4.35",
           "status": "SOURCE_BACKED_GENERIC_RULE"
         },
-        "registry_id": "METRO_STEPWISE_BRANCH_CHAMBER_TUBING_2001_REFERENCE"
+        "registry_id": "METRO_STEPWISE_BRANCH_CHAMBER_TUBING_2001_REFERENCE",
+        "generic_plan_layout": {
+          "archetype_id": "FROLOV_CLOSED_METHOD_SINGLE_TRACK_BRANCH_PLAN_2001",
+          "source_id": "S058",
+          "locator": "Frolov 2001 printed p.147, Fig.4.33b",
+          "actual_site_match": false,
+          "raw_plan_dimensions_m": {
+            "main_track_axis_spacing_at_one_end": 22,
+            "branch_centered_between_main_tracks_at_other_end": {
+              "top_main_to_branch": 10.5,
+              "branch_to_bottom_main": 10.5,
+              "top_main_to_bottom_main": 21
+            },
+            "upper_marked_longitudinal_dimension": 83.148,
+            "lower_marked_longitudinal_dimension": 104.701
+          },
+          "raw_chamber_section_callouts_m": [
+            6,
+            7.5,
+            8.5,
+            9.5
+          ],
+          "caution": "Fig.4.33b is a generic closed-method single-track-branch layout. It is not the Belorusskaya depot junction, and its marked longitudinal reference-line semantics must not be re-labelled as point-tip chainage without a project legend.",
+          "status": "GENERIC_DIMENSIONED_PLAN_REFERENCE"
+        }
       },
       "contact_rail_events": [
         {

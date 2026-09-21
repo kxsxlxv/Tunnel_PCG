@@ -483,7 +483,17 @@ S022 current rules give:
 - support spacing for applicable turnout/crossover elastic-block construction: **2.20–2.75 m** (§5.7.2.4);
 - traction sectioning between main/connecting/depot tracks follows separate sectioning rules (§5.10.4.2, §5.10.4.10).
 
-Exact Belorusskaya contact-rail gap positions, feeder cables, disconnectors and support coordinates are **UNKNOWN**.
+The legacy construction source S118 is more specific about **how** the turnout event is built:
+
+- gap locations at turnouts/crossovers follow the project **укладочный план** rather than a universal point-tip/frog offset;
+- at each documented legacy gap end a **1:25 ramp** is attached **instead of a normal support bracket at that end**;
+- contact rail and ramp are joined by **two joint bars on four bolts** during installation;
+- when turnouts occur in frequent succession, some gaps may be filled with contact-rail pieces using **side ramps on the track-axis side**;
+- the protective box has a separate installation operation over the 1:25 ramp.
+
+This is important for PCG: a legacy switch-zone contact rail is not simply a shortened ordinary periodic rail. It has explicit `GAP`, `END_RAMP`, possible `SIDE_RAMP`, and `PROTECTIVE_BOX_RAMP` events.
+
+Exact Belorusskaya contact-rail gap positions, feeder cables, disconnectors, point-tip/frog-relative offsets and support coordinates are **UNKNOWN**, because the required local laying plan has not been found.
 
 Therefore contact rail is an **event geometry**:
 `ordinary rail → ramp → air gap/sectioning → turnout-side routing → branch rail feed → ordinary branch rail`.

@@ -166,3 +166,10 @@ The first mesh fallback remains metro-specific R65 project 2976 because the acti
 ## Secondary actual-site validation
 
 `junction_events.json` also contains `JUNCTION_KOL5_KURSKAYA_LDL_1990S` as a secondary visual/civil validation event. It preserves source-backed facts such as Track II/outer-ring switch numbering, a qualitatively descending service branch, and mixed monolithic/cast-iron chamber construction, while leaving all unsourced dimensions and Z null.
+
+### Adjacent depot-network analogue
+
+The same depot also has an actual service branch to the TKL between `Улица 1905 года` and `Беговая`. A 1972 construction source explicitly identifies it as a **single-track tunnel branch** (S126), and S127 provides actual crossover-chamber / hermetic-gate photographs.
+
+This object is outside the direct Line-5 main-track graph, but it is retained as a useful actual Moscow/Krasnaya-Presnya analogue for the morphology `turnout chamber -> independent one-track branch tunnel`. Its diameter and transition length remain unknown.
+

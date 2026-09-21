@@ -10,7 +10,7 @@ It combines:
 - APC-4 fastening preview;
 - segmented modern contact-rail cover;
 - dedicated contact-rail supports;
-- R2K11/K1351.001-09 cable racks with smoother continuous rounded-W / omega K1350.002 ribbons;
+- R2K11/K1351.001-09 cable racks with literal adjacent double-U K1350.002 cradles;
 - 16 representative service-cable routes using 8/11 levels per wall;
 - nominal 25 mm deterministic irregular cable sag between 1.0 m rack supports;
 - source-sized civil system: detailed ten-block 6.1/5.6 m RC option, while cast-iron detail remains deferred;
@@ -115,8 +115,11 @@ Expected:
 - each horn envelope is 169 x 40 x 87 mm at 4 mm steel;
 - each horn provides two physical cable places, but only one is occupied on a used level;
 - eight of eleven levels are populated per wall, producing 16 continuous cable routes total;
-- each horn is one continuous formed strip: upright -> first cradle -> central crest -> second cradle -> upturned free end;
-- there is no separate horizontal shelf/neck/tab between the upright and first cradle;
+- each horn reads as two adjacent U-shaped cradles (`UU`), not as a W/omega;
+- the first U begins directly at the upright; there is no horizontal shelf/neck before it;
+- no central omega crest is present between the two U shapes;
+- visual pair span is 154 mm, internal U clear diameter is 67 mm, central visual gap is 4 mm;
+- cable centres sit in those U seats at 37.5 mm and 116.5 mm inward from the upright;
 - cable sag is visibly non-uniform from span to span while remaining restrained around a nominal 25 mm;
 - sag amplitude varies deterministically by +/-35% and its low point can shift by +/-0.12 span;
 - cables remain visibly inside the tunnel intrados;
@@ -213,7 +216,7 @@ Useful screenshots:
 1. close contact-rail support + local hood;
 2. contact-cover span between two supports;
 3. LVT-M/APC-4 rail seat and central drain;
-4. close R2K11 horn view showing the smoother omega/W ribbon and no shelf;
+4. close R2K11 horn view showing two literal U cradles and no W/omega crest;
 5. one full 6.1/5.6 m RC ring clearly showing ten separate curved blocks;
 6. close RC block joint showing the radial end faces / visual seam;
 7. weak-current-side water main;

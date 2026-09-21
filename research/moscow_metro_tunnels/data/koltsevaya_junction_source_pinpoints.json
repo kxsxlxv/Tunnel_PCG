@@ -860,10 +860,65 @@
         "text_supports": [
           "Belorusskaya station opened in 1952; Krasnaya Presnya depot and its branch entered service in 1954",
           "branch construction crossed severe water-bearing/quicksand conditions using ground freezing"
-        ]
+        ],
+        "exact_photo_pinpoints": [
+          {
+            "photo": 2,
+            "caption": "Налево — начало ветки в депо. Прямо — перегон в сторону станции «Краснопресненская».",
+            "supports": [
+              "actual Belorusskaya-side plan topology: branch left, running tunnel straight",
+              "widened cast-iron chamber with a substantial intermediate structural pier/wall zone between openings",
+              "dense open cable routing is visually present on chamber walls"
+            ]
+          },
+          {
+            "photo": 7,
+            "caption": "Двухпутный участок ветки в депо.",
+            "supports": [
+              "actual local two-track section exists farther depot-side",
+              "surface/open portal portion has a two-cell concrete civil form with a central divider/pier"
+            ],
+            "limitation": "photo does not establish whether the underground two-track section uses one common shell or two independent shells"
+          },
+          {
+            "photo": 8,
+            "caption": "Стрелка и ветка расходится. Налево — к станции «Белорусская», а направо — «Краснопресненская».",
+            "supports": [
+              "actual downstream switch separates the two Line-5 depot legs",
+              "branch-side topology is not one end-to-end single-track edge"
+            ]
+          },
+          {
+            "photo": 16,
+            "caption": "И снова камера съездов за станцией.",
+            "supports": [
+              "actual turnout chamber uses a widened underground civil volume",
+              "turnout permanent way is visibly supported by discrete transverse bearers/ties with exposed aggregate/ballast zones rather than a visually continuous Stage-10 track-concrete slab",
+              "contact-rail protective-box runs are visible along the chamber flanks",
+              "open cable racks and local electrical cabinets/equipment are concentrated around the turnout chamber"
+            ],
+            "visual_only": true
+          },
+          {
+            "photo": 20,
+            "caption": "панорама камеры съездов",
+            "supports": [
+              "actual chamber panorama shows the switch rails, frog/guard-rail zone and long transverse turnout bearers",
+              "exposed ballast/aggregate is visible around turnout supports",
+              "contact-rail protective boxes are interrupted/routed around the switch zone rather than appearing as one ordinary periodic rail swept through the turnout",
+              "large banks of open cable racks occupy both sidewalls",
+              "multiple electrical/control cabinets are placed immediately adjacent to the switch zone",
+              "a trackside signal and local chamber lighting are present",
+              "service-access steps/platform elements are visible at chamber sides"
+            ],
+            "visual_only": true,
+            "limitation": "No absolute dimension, exact contact-rail endpoint, cabinet coordinate, bearer pitch, walkway width, or signal chainage is inferred from the photograph."
+          }
+        ],
+        "page_lines": "LiveJournal page lines 152-194; photo captions 2,7,8,16,20"
       },
       "limitation": "Actual-site photographic topology/visual evidence. No absolute dimensions, grades, radii or engineering coordinates may be inferred without independent scale.",
-      "confidence": "C_actual_site_visual"
+      "confidence": "C_actual_site_visual_topology_and_object_presence_no_scale"
     },
     {
       "id": "S054",

@@ -63,7 +63,27 @@
         "branch_shell_section": null,
         "relative_track_z_m": null
       },
-      "mesh_rule": "Build only a schematic/placeholder envelope unless a dimensioned site drawing is obtained. Do not import dimensions from generic Frolov or ENiR chambers as actual Belorusskaya values."
+      "mesh_rule": "Build only a schematic/placeholder envelope unless a dimensioned site drawing is obtained. Do not import dimensions from generic Frolov or ENiR chambers as actual Belorusskaya values.",
+      "actual_visual_morphology": {
+        "source_ids": [
+          "S093",
+          "S120"
+        ],
+        "status": "ACTUAL_SITE_VISUAL_MORPHOLOGY_NO_SCALE",
+        "features": [
+          "widened cast-iron-tubing crown/chamber volume around the turnout",
+          "end/bifurcation zone contains two tunnel openings separated by a substantial central wall/pier zone",
+          "monolithic reinforced-concrete end-wall/infill construction is source-backed by S093",
+          "cast-iron lining/rib rhythm continues over the widened chamber crown",
+          "local structural geometry is not a simple constant-radius extrusion of the running tunnel"
+        ],
+        "exact_dimensions_m": null,
+        "exact_pier_thickness_m": null,
+        "exact_opening_diameters_m": null,
+        "exact_tubing_ring_layout": null,
+        "exact_transition_chainages_m": null,
+        "rule": "Use for silhouette/topology validation only. Do not scale the chamber or pier from photographs."
+      }
     },
     {
       "id": "METRO_STEPWISE_BRANCH_CHAMBER_TUBING_2001_REFERENCE",

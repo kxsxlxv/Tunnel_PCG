@@ -19,6 +19,7 @@ Machine contracts:
 - `examples/koltsevaya_line_v0/track_topology.json`;
 - `data/moscow_turnout_archetypes.json`;
 - `examples/koltsevaya_line_v0/junction_events.json`;
+- `data/koltsevaya_junction_source_pinpoints.json` — exact page/figure/clause locators for the numerical junction contract;
 - `reference_impl/tunnel_pcg_ref/osm_track_graph.py`.
 
 ---

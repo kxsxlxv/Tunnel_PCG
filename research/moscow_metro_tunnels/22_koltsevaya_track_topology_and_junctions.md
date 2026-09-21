@@ -18,6 +18,7 @@ Research date: 2026-09-21.
 Machine contracts:
 - `examples/koltsevaya_line_v0/track_topology.json`;
 - `data/moscow_turnout_archetypes.json`;
+- `data/moscow_junction_civil_archetypes.json`;
 - `examples/koltsevaya_line_v0/junction_events.json`;
 - `data/koltsevaya_junction_source_pinpoints.json` — exact page/figure/clause locators for the numerical junction contract;
 - `reference_impl/tunnel_pcg_ref/osm_track_graph.py`.
@@ -164,6 +165,38 @@ The expansion hop count is only an acquisition boundary. It does not assign `BRA
 
 Не все перечисленные системы означают простой одиночный turnout. Многие — это несколько стрелок, тупик/оборотный путь и последующая соединительная ветвь.
 
+### Полный current station-level inventory
+
+Для operating-state `KOL5_OPERATING_2026_09_PRE_DOSTOEVSKAYA` станции разделены на **station track development** и отдельные nearby network junctions:
+
+| Station | Current station track development | Contract |
+|---|---|---|
+| Белорусская | yes | 3-switch turnback/depot system, S086/S093 |
+| Новослободская | no | S108 |
+| Проспект Мира | yes | 3 turnouts + 1 reversing/storage track → KRL SSV, S088 |
+| Комсомольская | no | S109 |
+| Курская | yes | 5 turnouts + 1 reversing/storage track → LDL SSV, S089/S104 |
+| Таганская | **no at the station** | S110; nearby service-connection system is a separate network object S092 |
+| Павелецкая | yes | 3 turnouts + 1 reversing/storage track → multi-line SSV system, S090 |
+| Добрынинская | no | S111 |
+| Октябрьская | no | S112 |
+| Парк культуры | yes | 5 turnouts + reversing/storage + single-track SSV to Sokolnicheskaya, S091/S105 |
+| Киевская | no | S113 |
+| Краснопресненская | yes | 3 turnouts + reversing/storage/depot connection, S087/S084/S098 |
+
+This prevents a common topology error: a service connection in the **Taganskaya area** must not be attached to the Taganskaya station object merely because the station page is nearby in plan.
+
+### Temporal topology: future Dostoevskaya
+
+S114 is stored as a **separate future state**, not current operating Line 5:
+
+- planned station opening: 2030;
+- planned station development: **4 turnouts + 2 storage tracks**;
+- additionally **3 turnouts + 1 reversing/storage track leading to the KRL SSV**, currently attributed to Prospekt Mira, are planned to become part of Dostoevskaya development;
+- construction uses bypass tunnels/switching chambers to keep Line 5 operating.
+
+Therefore the procedural graph must have a topology epoch/preset. The 2026 normal-operating graph must not silently include the future Dostoevskaya station graph or construction bypasses.
+
 ### Дополнительные actual-site visual anchors
 
 После выбора Белорусской как первого depot-side topology archetype удалось найти два полезных реальных фото-набора для валидации морфологии:
@@ -290,6 +323,29 @@ Published bearer inventory for project 2976:
 **PCG rule:** если project 2976 используется в первой визуальной реализации Белорусской, каждому объекту присваивать:
 `fallback=true`,
 `installed_model_unconfirmed=true`.
+
+### 5.4 Alternate R50 metro-specific fallback
+
+Civil opening era does **not** determine turnout rail type. To avoid forcing the R65/2001 service preset onto every legacy scene, a second metro-specific family is now machine-readable:
+
+`MOSCOW_METRO_R50_1_9_PROJECT_2891_REFERENCE_FALLBACK` — S107.
+
+Published project 2891.00.000:
+- R50, gauge 1520 mm, frog 1:9;
+- overall length **31,057 mm**;
+- front joint → point tip **4,323 mm**;
+- point tip → turnout center **11,132 mm**;
+- turnout center → mathematical frog center **13,722 mm**;
+- point tip → mathematical frog center **24,854 mm**;
+- mathematical frog center → rear joint **1,880 mm**;
+- point radius **R297259 mm**;
+- turnout curve **R200000 mm**;
+- initial point angle **0°40′51.50″**;
+- frog angle **6°20′25″**.
+
+This is an alternate **R50 service-era fallback only**. It is not evidence that the 1950s Belorusskaya junction used project 2891, nor that it was installed on Line 5 at all.
+
+The current first-mesh choice remains the R65 project-2976 path because the active Stage-10 service preset is R65/KD65/2001-reference. A geometry agent must switch to the R50 family only via an explicit service-era/site preset.
 
 ---
 
@@ -450,8 +506,10 @@ Target PCG sequence:
 
 For actual Belorusskaya / Krasnaya Presnya depot connection:
 - **existence of a tunnel-branch is source-backed**: S098 is an official infrastructure-list reference quoting a Moscow Metro letter and explicitly names the tunnel-branch to depot «Красная Пресня»;
+- S106 gives **C-confidence corroboration that the main connection is two-track**;
+- this track count does **not** resolve whether the underground civil continuation is one common two-track shell, two single-track shells, or another transition arrangement;
 - independent branch shell start = `null`;
-- whether the relevant modeled continuation is one single-track shell, two single-track shells, or another combined arrangement = `null`;
+- civil-shell arrangement = `null`;
 - diameter = `null`;
 - lining family = `null`;
 - Z = `null`;

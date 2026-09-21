@@ -207,9 +207,11 @@ contract, but replaces the legacy service-era hardware with:
     APC-4 fastening preview with 14 mm rail pad
     low rounded segmented contact-rail cover
     dedicated contact-rail support blocks / brackets / local support hoods
-    R2K11 cable racks on both walls, one per side per 1.0 m civil ring
-    22 representative continuous service cables
+    R2K11/K1351.001-09 cable racks on both walls, one per side per 1.0 m civil ring
+    K1350.002 double horns, 11 levels x 2 cable places
+    44 representative continuous service cables in the full-capacity visual preset
     one current tunnel water main, minimum DN80, weak-current side above UGR
+    periodic water-main supports at <=4.0 m spacing
 
 The timber/KD-65 implementation is **not removed**. Generate it explicitly with:
 
@@ -330,8 +332,9 @@ Stage 10.4 is closed: smooth concentric Moscow 5.5/5.1 m shell, independent
 
 Stage 10.5 is the current default production preset. It adds modern LVT-M
 half-sleeper blocks, APC-4 fastening preview, a low rounded segmented
-contact-rail cover, dedicated contact supports, R2K11 wall cable racks,
-representative cables, one DN80-minimum tunnel water main and zero-error
+contact-rail cover, dedicated contact supports, dimensioned R2K11/K1351.001-09 racks with K1350.002 horns,
+44 representative full-capacity cable routes, one DN80-minimum tunnel water
+main with periodic supports and zero-error
 continuous-sweep alignment compaction.
 
 The modern preset is default, but the complete timber/KD-65 implementation is

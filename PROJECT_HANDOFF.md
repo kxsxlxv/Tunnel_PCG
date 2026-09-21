@@ -1190,7 +1190,7 @@ inside Stage 10.5 and has not been removed.
 
 Use this as the starting instruction:
 
-> Read `PROJECT_HANDOFF.md`, `STAGE10_5_REPORT.md`, `STAGE10_5_BLENDER_SMOKE_TEST.md`, `research/moscow_metro_tunnels/21_stage10_initial_archetype.md`, `data/stage10_initial_profile.json`, and `data/stage10_source_pinpoints.json`. Stages 10.1–10.5 are implemented and CI-validated. Do not remove the legacy timber/KD-65 preset. For the next Blender visual review explicitly select `--civil-archetype rc_block_6100_5600`: verify the ten separate Moscow RC curved blocks, the smoother R2K11 omega/W horns, irregular cable sag, LVT-M/APC-4, contact-rail assembly and DN80 main. Keep exact N/C/K cast-iron detail, RC pin-hole/chamfer CAD and unresolved small hardware blocked rather than inventing them.
+> Read `PROJECT_HANDOFF.md`, `STAGE10_5_REPORT.md`, `STAGE10_5_BLENDER_SMOKE_TEST.md`, `research/moscow_metro_tunnels/21_stage10_initial_archetype.md`, `data/stage10_initial_profile.json`, and `data/stage10_source_pinpoints.json`. Stages 10.1–10.5 are implemented and CI-validated. Do not remove the legacy timber/KD-65 preset. For the next Blender visual review explicitly select `--civil-archetype rc_block_6100_5600`: verify the ten separate Moscow RC curved blocks, the literal R2K11 double-U horns, irregular cable sag, LVT-M/APC-4, contact-rail assembly and DN80 main. Keep exact N/C/K cast-iron detail, RC pin-hole/chamfer CAD and unresolved small hardware blocked rather than inventing them.
 
 ---
 
@@ -1932,13 +1932,14 @@ Placement:
 one rack per side per 1.0 m Moscow civil ring
 ```
 
-The current v5 preview follows the supplied R2K11/K1350.002 drawing, 3D
-reference and Blender feedback. Each horn is one continuous rounded-W /
-omega-like formed ribbon that starts directly on the upright, passes through
-both cable cradles and the central crest, then turns up at the free end. There
-is no separate horizontal shelf, neck or wall-side tab. The v5 mesh uses four
-sparse interpolation samples per anchor span instead of two, making the bends
-visibly rounder while preserving a modest polygon count.
+The current v6 preview follows the latest Blender correction: each K1350.002
+horn is two literal adjacent U-shaped cradles (`UU`), not a W/omega ribbon.
+There is no central crest and no horizontal shelf/neck before the first cradle;
+the first U begins directly at the upright. The visible pair spans 154 mm.
+Each U has 67 mm internal clear diameter for the 65 mm maximum cable diameter,
+leaving 1 mm radial clearance; the U shapes have a 4 mm visual gap and the
+cable-route centres are 37.5 / 116.5 mm inward from the upright. Eight arc
+subdivisions per lower semicircle keep the mesh light.
 
 The preset occupies eight distributed levels per wall with one cable per
 occupied level, for 16 representative service cables total. Cable sag is

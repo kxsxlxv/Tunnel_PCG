@@ -3400,6 +3400,9 @@ def _build_stage10_4_rc_stage9_architecture_objects(
     surface_meshing: SurfaceMeshingConfig,
     include_bolts: bool,
     seed: int,
+    start_chainage_m: float | None = None,
+    end_chainage_m: float | None = None,
+    civil_roll_assembly: TunnelAssembly | None = None,
 ) -> tuple[SceneObject, ...]:
     """Parameterize the old Stage-9 segment/joint/bolt pipeline for Moscow RC."""
     if profile.civil_family != "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000":
@@ -3412,12 +3415,15 @@ def _build_stage10_4_rc_stage9_architecture_objects(
         ring_pitch_m=profile.ring_pitch_m,
     )
     civil_ring_count = len(ranges)
-    civil_roll_assembly = _sample_moscow_civil_roll_assembly(
-        source_assembly=assembly,
-        profile=profile,
-        civil_ring_count=civil_ring_count,
-        master_seed=seed,
-    )
+    if civil_roll_assembly is None:
+        civil_roll_assembly = _sample_moscow_civil_roll_assembly(
+            source_assembly=assembly,
+            profile=profile,
+            civil_ring_count=civil_ring_count,
+            master_seed=seed,
+        )
+    elif civil_roll_assembly.config.n_rings != civil_ring_count:
+        raise ValueError("civil_roll_assembly ring count mismatch")
     result: list[SceneObject] = []
     tunnel_instance_id = stable_instance_id(f"{namespace}/tunnel")
     for range_index, (
@@ -3425,6 +3431,14 @@ def _build_stage10_4_rc_stage9_architecture_objects(
         start_chainage,
         end_chainage,
     ) in enumerate(ranges):
+        midpoint = 0.5 * (start_chainage + end_chainage)
+        if not _chainage_selected_for_window(
+            midpoint,
+            total_length_m=assembly.length_by_chainage_m,
+            start_chainage_m=start_chainage_m,
+            end_chainage_m=end_chainage_m,
+        ):
+            continue
         width = end_chainage - start_chainage
         ring = _moscow_rc_legacy_ring_mesh(
             profile,

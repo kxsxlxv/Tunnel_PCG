@@ -224,7 +224,9 @@ def test_prototype_scene_json_compacts_stage10_periodic_geometry(tmp_path):
         assert actual.ring_id == expected.ring_id
         assert actual.label_id == expected.label_id
         assert actual.instance_id == expected.instance_id
-        assert actual.extra_properties == expected.extra_properties
+        assert json.loads(json.dumps(actual.extra_properties)) == json.loads(
+            json.dumps(expected.extra_properties)
+        )
         assert len(actual.vertices) == len(expected.vertices)
         error = max(
             (

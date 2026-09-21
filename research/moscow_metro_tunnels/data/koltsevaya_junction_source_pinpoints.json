@@ -65,6 +65,12 @@
       "url": "https://base.garant.ru/406472751/",
       "locators": [
         {
+          "clause": "4.7",
+          "supports": [
+            "line-to-own-depot connection is specified as a two-track connecting branch; use as a current design constraint, not automatic as-built shell proof"
+          ]
+        },
+        {
           "clause": "5.7.1.16",
           "supports": [
             "turnout must match rail type",

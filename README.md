@@ -294,7 +294,7 @@ Run:
 
 Current automated baseline:
 
-    192 tests passed
+    193 tests passed
 
 CI also runs:
 
@@ -350,9 +350,9 @@ still selectable with `--service-preset legacy`.
 
 Current integration baseline:
 
-    192 tests passed
+    193 tests passed
     Stage 10.1-10.5 CLI / verifier gates      PASS
-    Stage 10.5 modern and legacy presets       PASS
+    Stage 10.5 modern / RC6100 / legacy gates PASS
     duplicate modern face groups               0
     stable Stage-10.5 IDs across chunk sizes  PASS
 

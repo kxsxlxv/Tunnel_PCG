@@ -29,6 +29,8 @@ from tunnel_scanner_core import (
     modern_protective_cover_profile_xz,
     modern_cable_sections_core,
     modern_water_main_section_core,
+    production_alignment_stations,
+    sample_tunnel_assembly,
     water_main_support_chainages,
     r65_rail_center_offsets_for_gauge,
     strip_internal_lining_cap_faces,
@@ -1046,6 +1048,67 @@ def test_stage10_5_rc_civil_ring_ranges_are_not_rebuilt_per_scene_object(monkeyp
         int(obj.custom_properties["liningGlobalRingCount"]) == civil_count
         for obj in transferred
     )
+
+
+def test_stage10_5_rc_warp_reuses_alignment_samples_across_ring_objects(monkeypatch):
+    profile = load_stage10_initial_moscow_profile(
+        civil_archetype="rc_block_6100_5600"
+    )
+    assembly = sample_tunnel_assembly(
+        TunnelAssemblyConfig(
+            n_rings=4,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.0,
+        ),
+        seed=5812,
+    )
+    stations = production_alignment_stations(assembly)
+    original = production_module.sample_alignment_station
+    sample_calls = 0
+
+    def counted_sample(*args, **kwargs):
+        nonlocal sample_calls
+        sample_calls += 1
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(
+        production_module,
+        "sample_alignment_station",
+        counted_sample,
+    )
+    objects = production_module._build_stage10_4_rc_stage9_architecture_objects(
+        profile=profile,
+        topology="kba",
+        namespace="stage10-5-rc-shared-warp-cache",
+        assembly=assembly,
+        stations=stations,
+        surface_meshing=SurfaceMeshingConfig(max_sagitta_m=0.002),
+        include_bolts=True,
+        seed=5812,
+    )
+    civil_count = len(
+        production_module.civil_ring_ranges(
+            assembly.length_by_chainage_m,
+            ring_pitch_m=profile.ring_pitch_m,
+        )
+    )
+    assert objects
+    assert civil_count > 1
+
+    # The previous implementation paid three unconditional front/centre/back
+    # samples per object, plus one strict sample for every unique longitudinal
+    # vertex plane *inside that object*. World Y is a monotonic image of
+    # chainage, so the mapped meshes let us reconstruct a conservative lower
+    # bound for that legacy call count. The ring-shared cache must beat it.
+    legacy_minimum_calls = 3 * len(objects) + sum(
+        len({vertex[1] for vertex in obj.vertices})
+        for obj in objects
+    )
+    assert sample_calls < legacy_minimum_calls
+
+    # The new path should also avoid falling back to a per-vertex sampler.
+    total_vertices = sum(len(obj.vertices) for obj in objects)
+    assert sample_calls < total_vertices
 
 
 def test_stage10_5_rc_kba_cap_strip_uses_moscow_civil_ring_datums():

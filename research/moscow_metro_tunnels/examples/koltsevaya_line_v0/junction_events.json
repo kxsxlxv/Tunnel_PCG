@@ -342,6 +342,30 @@
           "source_id": "S022",
           "locator": "SP 120.13330.2022 §5.10.4.2 and §5.10.4.10",
           "status": "SOURCE_BACKED_RULE_EXACT_SITE_POSITIONS_UNKNOWN"
+        },
+        {
+          "event_type": "HISTORICAL_CONTACT_RAIL_TURNOUT_RULE_1962",
+          "era": "1962 code / effective 1963-1969",
+          "source_id": "S122",
+          "locator": "SNiP II-D.3-62 printed p.21, clauses 5.19-5.20",
+          "main_or_connecting_track_rule": {
+            "break_required_at": [
+              "turnout",
+              "crossover",
+              "signalling_device",
+              "traction_sectioning"
+            ],
+            "end_ramp_slope": "1:25",
+            "min_equipment_clearance_from_metal_ramp_end_m": 0.8
+          },
+          "depot_park_track_exception": {
+            "max_speed_kmh": 25,
+            "side_ramps_allowed": true,
+            "break_may_be_omitted": true,
+            "applicability": "depot park tracks only; do not transfer to the selected tunnel turnout"
+          },
+          "status": "SOURCE_BACKED_HISTORICAL_RULE",
+          "note": "This independently corroborates that a legacy metro turnout-zone contact rail is event-based. It is later than the 1954 branch opening and is not the exact Belorusskaya laying plan."
         }
       ],
       "track_concrete_drainage_walkway_services": {
@@ -555,7 +579,15 @@
             "exact_switch_xy": null,
             "exact_chainage_m": null
           },
-          "independent_single_track_modeling_note": "The selected Belorusskaya local branch must be cut before any unresolved downstream merge/two-track depot system if the first implementation contract requires a single-track BRANCH_EDGE. Do not pretend the whole depot connection remains one single-track tunnel."
+          "independent_single_track_modeling_note": "The selected Belorusskaya local branch must be cut before any unresolved downstream merge/two-track depot system if the first implementation contract requires a single-track BRANCH_EDGE. Do not pretend the whole depot connection remains one single-track tunnel.",
+          "downstream_krasnopresnenskaya_side_profile_ref": "S121",
+          "downstream_profile_semantics": "actual crown-depth versus branch-local PK fragment; no UGR conversion",
+          "historical_construction_research_target": {
+            "source_id": "S123",
+            "reason": "Russos S120 explicitly says Dorman's 1971 book described construction of this section; RSL marks the full volume open access",
+            "exact_relevant_pages": null,
+            "status": "PAGE_EXTRACTION_PENDING"
+          }
         },
         "first_geometry_fallback": {
           "source_archetype": "METRO_STEPWISE_BRANCH_CHAMBER_RC_TUBING_2001_REFERENCE",
@@ -686,6 +718,45 @@
         "exact_frog_to_gap_m": null,
         "exact_side_ramp_dimensions": null,
         "use_rule": "For a legacy service preset, instantiate explicit GAP/RAMP/SIDE_RAMP events from a junction-specific laying plan if available. Until then, preserve the event topology but do not hard-code point/frog offsets."
+      },
+      "downstream_actual_branch_profile_constraint": {
+        "relation_to_selected_switch": "downstream depot-connection network evidence; S121 profile fragment is specifically on the Krasnopresnenskaya-side branch, not the local Belorusskaya first turnout",
+        "source_id": "S121",
+        "branch_local_stationing": [
+          {
+            "pk_start": "6+28",
+            "pk_end": "7+57",
+            "length_m": 129,
+            "crown_depth_below_conditional_0_start_m_approx": 19.3,
+            "crown_depth_below_conditional_0_end_m_approx": 14,
+            "derived_crown_rise_m_approx": 5.3,
+            "derived_mean_crown_rise_per_mille_approx": 41.09
+          },
+          {
+            "pk_start": "6+45",
+            "pk_end": "7+05",
+            "length_m": 60,
+            "crown_depth_below_conditional_0_start_m_approx": 18.5,
+            "crown_depth_below_conditional_0_end_m_approx": 16.3,
+            "derived_crown_rise_m_approx": 2.2,
+            "derived_mean_crown_rise_per_mille_approx": 36.67
+          },
+          {
+            "pk_start_approx": "6+65",
+            "pk_end_approx": "6+95",
+            "length_m_approx": 30,
+            "crown_depth_below_conditional_0_start_m_approx": 17.8,
+            "crown_depth_below_conditional_0_end_m_approx": 16.7,
+            "derived_crown_rise_m_approx": 1.1,
+            "derived_mean_crown_rise_per_mille_approx": 36.67
+          }
+        ],
+        "exact_ugr_profile": null,
+        "exact_track_grade": null,
+        "exact_shell_section": null,
+        "exact_mapping_to_graph_edge_id": null,
+        "rule": "Use only after the physical Krasnopresnenskaya-side branch edge is identified. Preserve these as crown/profile constraints; do not convert them into UGR or rail grade without section/datum evidence.",
+        "status": "ACTUAL_SOURCE_BACKED_PROFILE_FRAGMENT"
       }
     },
     {

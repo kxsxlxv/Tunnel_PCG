@@ -12,7 +12,11 @@ import math
 from typing import Any, Mapping, Sequence
 
 from .mesh import Face, Vec3
-from .moscow import MoscowStage10Profile
+from .moscow import (
+    MoscowStage10Profile,
+    R65ProductionProfile,
+    r65_rail_center_offsets_for_gauge,
+)
 from .permanent_way import sleeper_chainages
 
 
@@ -584,10 +588,31 @@ def build_modern_contact_support_meshes(
     )
     top_inner_center_u = top_inner_edge_u + half_band
 
-    # Dedicated support block remains phase-separated from running supports.
-    # Its X position follows the drawing's running-rail reference rather than
-    # the former arbitrary 1.08 m fallback.
-    base_plate_center_u = reference_u + 0.5 * modern.base_plate_transverse_m
+    # User visual review requires the entire lower support assembly to start
+    # at least 35 mm outboard of the contact-side LVT block.  Derive that
+    # boundary from the exact R65 gauge placement plus the source-backed
+    # 640 mm LVT-M block length instead of from the running-rail reference.
+    rail_centers = r65_rail_center_offsets_for_gauge(
+        profile.track.gauge_m,
+        profile=R65ProductionProfile(),
+        measurement_below_top_m=profile.track.gauge_measurement_below_ugr_m,
+    )
+    contact_side_rail_center_u = max(abs(v) for v in rail_centers)
+    lvt_block_outboard_u = (
+        contact_side_rail_center_u
+        + 0.5 * profile.modern_permanent_way.block_base_length_transverse_m
+    )
+    support_inboard_clearance_u = (
+        lvt_block_outboard_u + modern.minimum_clearance_to_lvt_block_m
+    )
+
+    support_block_transverse_m = modern.base_plate_transverse_m + 0.040
+    support_block_center_u = (
+        support_inboard_clearance_u + 0.5 * support_block_transverse_m
+    )
+    base_plate_center_u = (
+        support_inboard_clearance_u + 0.5 * modern.base_plate_transverse_m
+    )
     concrete_top_profile_z = (
         profile.track_concrete.surface_reference_z_m
         + profile.track_concrete.surface_cross_slope_to_drain
@@ -600,12 +625,13 @@ def build_modern_contact_support_meshes(
         0.0, concrete_top_profile_z
     )[1]
     block_bottom_core = block_top_core - modern.support_block_height_m
-    block_center_x = sign * base_plate_center_u
+    block_center_x = sign * support_block_center_u
+    base_plate_center_x = sign * base_plate_center_u
 
     block_mesh = _box_mesh(
         center_x_m=block_center_x,
         center_y_m=0.0,
-        size_x_m=modern.base_plate_transverse_m + 0.040,
+        size_x_m=support_block_transverse_m,
         size_y_m=modern.base_plate_longitudinal_m + 0.040,
         z0_m=block_bottom_core,
         z1_m=block_top_core,
@@ -614,7 +640,7 @@ def build_modern_contact_support_meshes(
     base_plate_z0 = block_top_core
     base_plate_z1 = base_plate_z0 + modern.base_plate_thickness_m
     base_plate_mesh = _box_mesh(
-        center_x_m=block_center_x,
+        center_x_m=base_plate_center_x,
         center_y_m=0.0,
         size_x_m=modern.base_plate_transverse_m,
         size_y_m=modern.base_plate_longitudinal_m,
@@ -634,7 +660,7 @@ def build_modern_contact_support_meshes(
         ):
             dowels.append(
                 _cylinder_z_mesh(
-                    center_x_m=block_center_x + sign * dx,
+                    center_x_m=base_plate_center_x + sign * dx,
                     center_y_m=dy,
                     radius_m=0.5 * 0.024,
                     z0_m=block_top_core - modern.support_dowel_length_m,
@@ -656,7 +682,7 @@ def build_modern_contact_support_meshes(
     lower_r = modern.bracket_lower_bend_radius_m
     upper_r = modern.bracket_upper_bend_radius_m
 
-    start_center_u = reference_u + half_band
+    start_center_u = support_inboard_clearance_u + half_band
     lower_arc_center_u = outer_center_u - lower_r
     lower_arc_center_z = base_center_profile_z + lower_r
     upper_arc_center_u = outer_center_u - upper_r
@@ -849,8 +875,14 @@ def build_modern_contact_support_meshes(
             properties={
                 "geometryMode": "dimensioned_dedicated_block_v3",
                 "heightM": modern.support_block_height_m,
-                "planTransverseM": modern.base_plate_transverse_m + 0.040,
+                "planTransverseM": support_block_transverse_m,
                 "planLongitudinalM": modern.base_plate_longitudinal_m + 0.040,
+                "lvtBlockOutboardProfileAbsXM": lvt_block_outboard_u,
+                "minimumClearanceToLVTBlockM": modern.minimum_clearance_to_lvt_block_m,
+                "actualInboardClearanceToLVTBlockM": (
+                    support_inboard_clearance_u - lvt_block_outboard_u
+                ),
+                "inboardProfileAbsXM": support_inboard_clearance_u,
                 "polymerDowelLengthM": modern.support_dowel_length_m,
                 "separateFromRunningRailSupport": True,
                 "planGeometryResolved": False,
@@ -871,6 +903,12 @@ def build_modern_contact_support_meshes(
                 "anchorCount": modern.base_plate_anchor_count,
                 "anchorPitchTransverseM": modern.base_plate_anchor_pitch_transverse_m,
                 "anchorPitchLongitudinalM": modern.base_plate_anchor_pitch_longitudinal_m,
+                "lvtBlockOutboardProfileAbsXM": lvt_block_outboard_u,
+                "minimumClearanceToLVTBlockM": modern.minimum_clearance_to_lvt_block_m,
+                "actualInboardClearanceToLVTBlockM": (
+                    support_inboard_clearance_u - lvt_block_outboard_u
+                ),
+                "inboardProfileAbsXM": support_inboard_clearance_u,
                 "exactHoleSlotGeometryResolved": False,
                 "source": "P10-USER-CONTACT-SUPPORT-873",
             },
@@ -895,6 +933,12 @@ def build_modern_contact_support_meshes(
                 "normativeWorkingSurfaceProfileZM": cr.working_surface_z_m,
                 "outerEnvelopeProfileAbsXM": outer_envelope_u,
                 "topInnerEdgeProfileAbsXM": top_inner_edge_u,
+                "lvtBlockOutboardProfileAbsXM": lvt_block_outboard_u,
+                "minimumClearanceToLVTBlockM": modern.minimum_clearance_to_lvt_block_m,
+                "lowerLegInboardProfileAbsXM": support_inboard_clearance_u,
+                "actualLowerLegClearanceToLVTBlockM": (
+                    support_inboard_clearance_u - lvt_block_outboard_u
+                ),
                 "longitudinalThicknessM": modern.bracket_longitudinal_thickness_m,
                 "channelBandThicknessM": modern.bracket_channel_band_thickness_m,
                 "topPlateWidthM": modern.bracket_top_plate_width_m,

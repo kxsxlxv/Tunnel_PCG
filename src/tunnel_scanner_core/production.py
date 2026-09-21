@@ -3043,6 +3043,7 @@ def build_production_scene(
         objects.extend(stage10_5_water_supports)
 
     stage10_4_civil_rings: tuple[SceneObject, ...] = ()
+    stage10_4_civil_details: tuple[SceneObject, ...] = ()
     if (
         config.moscow_profile is not None
         and config.moscow_stage in {"10.4", "10.5"}
@@ -3054,7 +3055,16 @@ def build_production_scene(
             stations=stations,
             label_policy=source_scene.label_policy,
         )
+        stage10_4_civil_details = _build_stage10_4_civil_detail_objects(
+            profile=config.moscow_profile,
+            namespace=config.namespace,
+            assembly=source_build.assembly,
+            stations=stations,
+            label_policy=source_scene.label_policy,
+            include_bolts=config.moscow_civil_bolts_enabled,
+        )
         objects.extend(stage10_4_civil_rings)
+        objects.extend(stage10_4_civil_details)
 
     metadata = dict(source_scene.metadata)
     metadata.update(
@@ -3425,6 +3435,40 @@ def build_production_scene(
                 ),
                 "stage9CivilGeometryRemoved": (
                     config.moscow_stage in {"10.4", "10.5"}
+                ),
+                "moscowCivilCompositeDetailStatus": (
+                    "implemented_source_sized_visual_joint_rib_bolt_overlay"
+                    if config.moscow_stage in {"10.4", "10.5"}
+                    else "deferred_to_stage10_4"
+                ),
+                "moscowCivilDetailRibObjectCount": sum(
+                    1
+                    for obj in stage10_4_civil_details
+                    if obj.object_type
+                    == "production_moscow_civil_detail_ribs"
+                ),
+                "moscowCivilBoltObjectCount": sum(
+                    1
+                    for obj in stage10_4_civil_details
+                    if obj.object_type
+                    == "production_moscow_civil_bolt_heads"
+                ),
+                "moscowCivilBoltHeadCount": sum(
+                    int(obj.custom_properties.get("boltHeadCount", 0))
+                    for obj in stage10_4_civil_details
+                    if obj.object_type
+                    == "production_moscow_civil_bolt_heads"
+                ),
+                "moscowCivilBoltsEnabled": (
+                    config.moscow_civil_bolts_enabled
+                    if config.moscow_stage in {"10.4", "10.5"}
+                    else False
+                ),
+                "moscowCivilDetailAccuracyBoundary": (
+                    "source_backed_anatomy_and_principal_dimensions;"
+                    "visual_joint_positions_not_series_CAD"
+                    if config.moscow_stage in {"10.4", "10.5"}
+                    else None
                 ),
                 "moscowCivilRingCount": (
                     len(stage10_4_civil_rings)

@@ -215,6 +215,15 @@ The Krasnaya Presnya system is no longer represented as one ambiguous generic br
 
 S121 additionally supplies a real archival crown-profile fragment for the Krasnopresnenskaya-side leg at local branch PK6+28–PK7+57. These values constrain the civil crown only; they are not UGR and are not transferred to the selected Belorusskaya leg.
 
+### Stronger Line-5 depot and dual-track evidence
+
+The topology contract now uses two stronger engineering/project sources:
+
+- **S134 (1983 engineering collection):** the Krasnaya Presnya depot is explicitly connected to Line 5 by **two single-track branches**, joining the crossover-track systems at Belorusskaya and Krasnopresnenskaya.
+- **S054 (2024 project evidence):** in the future Dostoevskaya zone the existing **right** and **left** Line-5 main tracks have separate project-PK ranges: PK147+48.991→157+01.926 and PK147+46.010→157+02.021. Their derived local spans are 952.935 m and 956.011 m. This is independent-chainage evidence only; right/left is not yet mapped to Track A/B.
+
+S135 additionally gives a real **256 m** length for one of the two depot branches, but does not name which branch. That value therefore remains unassigned and must not become the Belorusskaya branch length by assumption.
+
 ## Stage 11/22 — physical two-track topology and junctions
 
 The pilot is no longer allowed to treat Line 5 as one centerline plus an offset.

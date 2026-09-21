@@ -2570,7 +2570,7 @@ def _build_stage10_4_civil_detail_objects(
                 label_id=label_id,
                 instance_id=rib_iid,
                 semantic_class=semantic,
-                reconstruction="stage10_5_moscow_civil_composite_visual_detail_v1",
+                reconstruction="stage10_4_moscow_civil_composite_visual_detail_v1",
                 collection_path=(
                     "Tunnel", namespace, "CivilShell", "Details", "Ribs"
                 ),
@@ -2581,7 +2581,7 @@ def _build_stage10_4_civil_detail_objects(
                         f"{namespace}/tunnel"
                     ),
                     "identityScope": "periodic_moscow_civil_detail",
-                    "domainGeometryStage": "10.5",
+                    "domainGeometryStage": "10.4",
                     "eventChainageM": midpoint,
                     "moscowCivilRingIndex": ring_index,
                     "civilFamily": profile.civil_family,
@@ -2644,7 +2644,7 @@ def _build_stage10_4_civil_detail_objects(
                     label_id=0,
                     instance_id=bolt_iid,
                     semantic_class="clutter",
-                    reconstruction="stage10_5_cast_iron_M27_bolt_visual_v1",
+                    reconstruction="stage10_4_cast_iron_M27_bolt_visual_v1",
                     collection_path=(
                         "Tunnel", namespace, "CivilShell", "Details", "Bolts"
                     ),

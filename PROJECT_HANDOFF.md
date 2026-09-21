@@ -1180,7 +1180,7 @@ inside Stage 10.5 and has not been removed.
 
 - exact series-accurate classic 5.5/5.1 cast-iron tubing LOD0;
 - exact APC-4 small-part CAD;
-- exact modern contact-support hood and cover corner radii;
+- exact factory neutral-axis bend radii, clamp casting, modern contact-support hood and cover corner radii;
 - project-specific cable schedules/rack elevation;
 - exact project water-main schedule/mounting brackets.
 
@@ -1884,6 +1884,25 @@ support zone has a separate local protective hood.
 Modern contact support events use dedicated concrete support blocks rather than
 sharing or intersecting running-rail LVT supports.
 
+A 2026-09-21 user-supplied dimensioned support drawing is now part of the
+machine profile (schema 2.0). Readable callouts:
+
+```text
+running reference -> contact-axis region      0.683 m
+running reference -> outer bracket envelope   0.873 m
+upper return / top plate                       0.180 m
+bracket top above UGR/reference                0.373 m
+lower/upper bend callouts                      0.155 / 0.090 m
+```
+
+The 683/155 mm values are independent drawing cross-checks of the authoritative
+690 +/- 8 mm / +160 mm contact-rail placement and do not move the rail.
+
+The modern bracket is now `dimensioned_hook_channel_873x373_v3`, with a
+separate four-anchor base plate, explicit upper-flange saddle/bridge clamp,
+short vertical insulator stack, two visible through-bolts and a taller rounded
+local hood that encloses the +0.373 m bracket/clamp top.
+
 The target support chain remains 5.0 m inside the researched 4.5-5.4 m interval
 family, but the event phase is snapped to midpoints between running-support
 events rather than to timber sleepers.
@@ -2034,7 +2053,8 @@ Still intentionally unresolved rather than fabricated:
 - exact LVT rubber-boot outer section;
 - exact APC-4 small hardware CAD;
 - exact current contact-cover corner radii;
-- exact support-bracket bend radii and support-hood product CAD;
+- exact factory neutral-axis bend radii for the now dimension-constrained bracket;
+- exact clamp casting/base-plate slot geometry and support-hood product CAD;
 - exact project-specific R2K11 elevation;
 - exact project cable occupancy and cable diameters;
 - exact current water-main pipe schedule and mounting brackets;

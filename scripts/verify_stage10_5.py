@@ -24,9 +24,11 @@ MODERN_TYPES = {
     "production_contact_rail",
     "production_contact_rail_cover_span",
     "production_contact_rail_support_block",
+    "production_contact_rail_base_plate",
     "production_contact_rail_bracket",
     "production_contact_rail_insulator",
     "production_contact_rail_fastening_unit",
+    "production_contact_rail_clamp_bolts",
     "production_contact_rail_attachment_dowels",
     "production_contact_rail_support_hood",
     "production_service_cable",
@@ -107,9 +109,11 @@ def main() -> None:
     assert support_count > 0
     for obj_type in (
         "production_contact_rail_support_block",
+        "production_contact_rail_base_plate",
         "production_contact_rail_bracket",
         "production_contact_rail_insulator",
         "production_contact_rail_fastening_unit",
+        "production_contact_rail_clamp_bolts",
         "production_contact_rail_attachment_dowels",
         "production_contact_rail_support_hood",
     ):
@@ -117,6 +121,37 @@ def main() -> None:
     assert len(build.scene.objects_of_type("production_contact_rail_cover_span")) > 0
     assert meta["contactRailSupportSeparateFromRunningSupport"] is True
     assert meta["contactRailCoverEraMismatch"] is False
+
+    bracket = build.scene.objects_of_type("production_contact_rail_bracket")[0]
+    bp = bracket.custom_properties
+    assert bp["geometryMode"] == "dimensioned_hook_channel_873x373_v3"
+    assert math.isclose(float(bp["drawingReferenceToAxisM"]), 0.683, abs_tol=1e-12)
+    assert math.isclose(
+        float(bp["drawingReferenceToOuterEnvelopeM"]),
+        0.873,
+        abs_tol=1e-12,
+    )
+    assert math.isclose(float(bp["drawingTopAboveUGRM"]), 0.373, abs_tol=1e-12)
+    assert math.isclose(
+        float(bp["outerEnvelopeProfileAbsXM"]),
+        1.633,
+        abs_tol=2e-9,
+    )
+    clamp = build.scene.objects_of_type(
+        "production_contact_rail_fastening_unit"
+    )[0]
+    assert clamp.custom_properties["geometryMode"] == (
+        "upper_flange_saddle_insulated_two_bolt_v3"
+    )
+    assert int(clamp.custom_properties["boltCount"]) == 2
+    dowels = build.scene.objects_of_type(
+        "production_contact_rail_attachment_dowels"
+    )[0]
+    assert int(dowels.custom_properties["quantity"]) == 4
+    hood = build.scene.objects_of_type(
+        "production_contact_rail_support_hood"
+    )[0]
+    assert hood.custom_properties["coversClampAndBoltHeads"] is True
 
     civil_count = int(meta["moscowCivilRingCount"])
     assert civil_count > 0
@@ -205,6 +240,10 @@ def main() -> None:
                 "length_m": build.assembly.length_by_chainage_m,
                 "modern_lvt_support_count": lvt_count,
                 "contact_support_count": support_count,
+                "contact_bracket_outer_envelope_profile_abs_x_m": 1.633,
+                "contact_bracket_top_profile_z_m": 0.373,
+                "contact_clamp_bolt_count": 2,
+                "contact_base_anchor_count": 4,
                 "contact_cover_span_count": meta["contactRailCoverSpanCount"],
                 "civil_ring_count": civil_count,
                 "service_cable_count": meta["serviceCableCount"],

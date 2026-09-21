@@ -532,8 +532,8 @@ def build_water_main_support_local_mesh(
     pipe_outer_x = cx + outward[0] * pipe_radius
     pipe_outer_z = cz + outward[1] * pipe_radius
     standoff = (
-        (wall_x - pipe_outer_x) * inward[0]
-        + (wall_z - pipe_outer_z) * inward[1]
+        (pipe_outer_x - wall_x) * inward[0]
+        + (pipe_outer_z - wall_z) * inward[1]
     )
     if standoff <= 0.0:
         raise ValueError("water-main support standoff collapsed")

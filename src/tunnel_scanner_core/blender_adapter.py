@@ -364,14 +364,46 @@ def _strip_internal_lining_caps_in_blender(
 
         bm = bmesh.new()
         bm.from_mesh(obj.data)
+
+        # The Moscow RC Stage-9 architecture transfer uses its own 1.0 m
+        # civil-ring rhythm over the source assembly's 1.35 m longitudinal
+        # frame. Exact Blender Booleans can also perturb vertices on an end
+        # plane by a few floating-point ulps. For those transferred objects,
+        # classify the cap against the *actual* post-Boolean Y extrema, while
+        # retaining the metadata planes as a sanity check. The legacy Stage-9
+        # path keeps its original exact-plane behaviour.
+        transferred_moscow = bool(
+            props.get("stage9SegmentJointFastenerArchitectureTransferred", False)
+        )
+        cap_tolerance_m = tolerance_m
+        target_front_y = front_y
+        target_back_y = back_y
+        if transferred_moscow and bm.verts:
+            actual_front_y = min(float(vertex.co.y) for vertex in bm.verts)
+            actual_back_y = max(float(vertex.co.y) for vertex in bm.verts)
+            metadata_tolerance_m = 1e-4
+            if abs(actual_front_y - front_y) > metadata_tolerance_m:
+                raise RuntimeError(
+                    f"{scene_object.name}: Moscow lining front plane mismatch "
+                    f"(mesh={actual_front_y:.9f}, metadata={front_y:.9f})"
+                )
+            if abs(actual_back_y - back_y) > metadata_tolerance_m:
+                raise RuntimeError(
+                    f"{scene_object.name}: Moscow lining back plane mismatch "
+                    f"(mesh={actual_back_y:.9f}, metadata={back_y:.9f})"
+                )
+            target_front_y = actual_front_y
+            target_back_y = actual_back_y
+            cap_tolerance_m = max(tolerance_m, 1e-6)
+
         remove = []
         for face in bm.faces:
             ys = [float(vertex.co.y) for vertex in face.verts]
             on_front = strip_front and all(
-                abs(y - front_y) <= tolerance_m for y in ys
+                abs(y - target_front_y) <= cap_tolerance_m for y in ys
             )
             on_back = strip_back and all(
-                abs(y - back_y) <= tolerance_m for y in ys
+                abs(y - target_back_y) <= cap_tolerance_m for y in ys
             )
             if on_front or on_back:
                 remove.append(face)
@@ -386,6 +418,11 @@ def _strip_internal_lining_caps_in_blender(
         obj["internalLongitudinalCapsStripped"] = True
         obj["longitudinalCapFacesRemoved"] = int(removed)
         obj["renderSurfaceOpenAtInternalRingBoundaries"] = True
+        obj["liningCapCleanupPlaneMode"] = (
+            "post_boolean_mesh_extrema_with_metadata_guard"
+            if transferred_moscow
+            else "legacy_metadata_plane"
+        )
 
     return removed_total
 

@@ -377,7 +377,7 @@ Profile schema is now **2.2** because the dimensioned support drawing is part of
 
 Current fully green v6 code baseline:
 
-    195 tests passed
+    197 tests passed
     Stage 10.1 CLI compatibility smoke       PASS
     Stage 10.2 CLI compatibility smoke       PASS
     Stage 10.3 CLI compatibility smoke       PASS
@@ -456,3 +456,27 @@ these questions remain intentionally open:
 
 The next validation step should be a real Blender 5.2.2 scene review of the
 modern Stage-10.5 preset before adding more unresolved visual detail.
+
+
+## Blender RC cap-cleanup correction
+
+A real Blender 5.2.2 K/B/A run exposed a Moscow-specific post-Boolean cleanup
+regression: radial segment interfaces were stripped correctly, but
+`liningCapFacesRemoved` remained zero. The transferred Moscow civil rings use
+their own 1.0 m rhythm over the source Stage-9 longitudinal assembly, and exact
+Boolean output must not be classified solely by the legacy calculated Y plane.
+
+For objects tagged
+`stage9SegmentJointFastenerArchitectureTransferred=true`, Blender now resolves
+front/back cap planes from the actual post-Boolean mesh Y extrema, with the
+stored `liningRingFrontWorldYM` / `liningRingBackWorldYM` values retained as
+a 0.1 mm sanity guard. The face classifier uses a 1 micrometre post-Boolean
+plane tolerance. Legacy non-Moscow Stage-9 cleanup behaviour is unchanged.
+
+The engine-neutral render finalizer is also Moscow civil-ring aware and uses
+`liningRingIndex`, `liningGlobalRingCount` and explicit front/back world-Y
+datums instead of representative source-ring IDs.
+
+Automated regression covers K/B/A cap stripping and preservation of the two
+outer tunnel end caps. Real Blender rerun remains the authoritative runtime
+closure for this correction.

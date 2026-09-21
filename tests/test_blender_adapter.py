@@ -14,6 +14,7 @@ from tunnel_scanner_core import (
 from tunnel_scanner_core.blender_adapter import (
     _blender_custom_property_scalar,
     _blender_custom_property_value,
+    _mesh_prototype_payload,
     build_scene_package_in_blender,
 )
 from tunnel_scanner_core.scene import build_nominal_scene_package
@@ -263,6 +264,132 @@ def test_stage10_structured_contact_metadata_is_blender_safe_after_json_roundtri
     blender_obj = fake.data.objects.get(bracket.name)
     assert blender_obj is not None
     assert blender_obj["resourceEnvelopeM"] == "[0.54,0.62,0.1]"
+
+
+def test_stage10_blender_adapter_reuses_periodic_mesh_datablocks(monkeypatch):
+    from tunnel_scanner_core import (
+        ProductionConfig,
+        TunnelAssemblyConfig,
+        build_production_tunnel,
+        load_stage10_initial_moscow_profile,
+    )
+
+    fake = _FakeBpy()
+    monkeypatch.setitem(sys.modules, "bpy", fake)
+    profile = load_stage10_initial_moscow_profile()
+    build = build_production_tunnel(
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=4,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.0,
+        ),
+        include_bolts=False,
+        production_config=ProductionConfig(
+            namespace="blender-stage10-prototype-reuse",
+            moscow_profile=profile,
+            moscow_stage="10.5",
+        ),
+        seed=5812,
+    )
+
+    result = build_scene_package_in_blender(
+        build.scene,
+        apply_bolt_booleans=False,
+        reuse_mesh_prototypes=True,
+    )
+    blocks = build.scene.objects_of_type("production_lvt_block")
+    assert len(blocks) >= 2
+    first_scene, second_scene = blocks[:2]
+    assert (
+        first_scene.custom_properties["meshPrototypeKey"]
+        == second_scene.custom_properties["meshPrototypeKey"]
+    )
+
+    first = fake.data.objects.get(first_scene.name)
+    second = fake.data.objects.get(second_scene.name)
+    assert first is not None
+    assert second is not None
+    assert first.data is second.data
+    assert tuple(first.location) != tuple(second.location)
+
+    for scene_object, blender_object in (
+        (first_scene, first),
+        (second_scene, second),
+    ):
+        for local_vertex, expected_world in zip(
+            blender_object.data.vertices,
+            scene_object.vertices,
+        ):
+            actual_world = tuple(
+                float(local_vertex[index]) + float(blender_object.location[index])
+                for index in range(3)
+            )
+            assert all(
+                abs(actual - expected) <= 2e-12
+                for actual, expected in zip(actual_world, expected_world)
+            )
+
+    assert result.mesh_prototype_count > 0
+    assert result.mesh_prototype_instance_count > result.mesh_prototype_count
+    assert result.shared_mesh_data_blocks_saved == (
+        result.mesh_prototype_instance_count - result.mesh_prototype_count
+    )
+
+    root = fake.data.collections.get("TunnelScanner")
+    assert root["meshPrototypeReuseEnabled"] is True
+    assert root["meshPrototypeCount"] == result.mesh_prototype_count
+    assert root["sharedMeshDataBlocksSaved"] == result.shared_mesh_data_blocks_saved
+
+
+def test_mesh_prototype_payload_preserves_local_geometry_after_chunk_localization():
+    from tunnel_scanner_core import (
+        ChunkBoundaryPolicy,
+        ProductionConfig,
+        TunnelAssemblyConfig,
+        build_chunk_scene_packages,
+        build_production_tunnel,
+        load_stage10_initial_moscow_profile,
+    )
+
+    profile = load_stage10_initial_moscow_profile()
+    build = build_production_tunnel(
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=4,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.0,
+        ),
+        include_bolts=False,
+        production_config=ProductionConfig(
+            namespace="blender-stage10-localized-prototype",
+            moscow_profile=profile,
+            moscow_stage="10.5",
+        ),
+        seed=5812,
+    )
+    chunks = build_chunk_scene_packages(
+        build,
+        chunk_length_m=2.0,
+        boundary_policy=ChunkBoundaryPolicy.EXACT_LENGTH,
+        localize_coordinates=True,
+    )
+    prototype_object = next(
+        obj
+        for package in chunks
+        for obj in package.objects
+        if obj.object_type == "production_lvt_block"
+    )
+    payload = _mesh_prototype_payload(prototype_object)
+    assert payload is not None
+    _key, translation, local_vertices = payload
+    for local_vertex, expected in zip(local_vertices, prototype_object.vertices):
+        reconstructed = tuple(
+            local_vertex[index] + translation[index]
+            for index in range(3)
+        )
+        assert all(
+            abs(actual - target) <= 2e-12
+            for actual, target in zip(reconstructed, expected)
+        )
 
 
 def test_stage9_blender_adapter_serializes_63bit_persistent_ids_as_decimal_strings(

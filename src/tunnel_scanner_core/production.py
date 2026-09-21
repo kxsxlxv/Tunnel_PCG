@@ -125,9 +125,6 @@ def _copy_scene_object_with_stable_identity(
     namespace: str,
 ) -> SceneObject:
     key = _persistent_ring_key(namespace, obj)
-    front_station = sample_alignment_station(stations, start_chainage_m)
-    center_station = sample_alignment_station(stations, midpoint)
-    back_station = sample_alignment_station(stations, end_chainage_m)
     props = dict(obj.extra_properties)
     props.update(
         {
@@ -2793,6 +2790,9 @@ def _warp_civil_local_object_to_alignment(
         f"ring/{ring_index:06d}/{obj.name}"
     )
     iid = stable_instance_id(key)
+    front_station = sample_alignment_station(stations, start_chainage_m)
+    center_station = sample_alignment_station(stations, midpoint)
+    back_station = sample_alignment_station(stations, end_chainage_m)
     props = dict(obj.extra_properties)
     props.update(
         {

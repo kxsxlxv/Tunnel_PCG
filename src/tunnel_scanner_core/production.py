@@ -14,7 +14,7 @@ geometry into an engine-oriented representation:
 * persistent logical IDs are deterministic and independent of chunk size.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import Enum
 import hashlib
 import math
@@ -2400,6 +2400,7 @@ class ProductionConfig:
     compact_exact_collinear_continuous_stations: bool | None = None
     keep_stage8_ring_ancillary: bool = False
     keep_prescribed_outer_joint_solids: bool = False
+    moscow_civil_bolts_enabled: bool = True
     stitch_ring_geometry: bool = True
     stable_reidentify_ring_objects: bool = True
 
@@ -3106,6 +3107,15 @@ def build_production_tunnel(
     seed: int = 5812,
 ) -> ProductionTunnelBuild:
     ring_config = ring_config or RingConfig()
+    if (
+        production_config is not None
+        and production_config.moscow_profile is not None
+        and production_config.moscow_stage in {"10.4", "10.5"}
+    ):
+        production_config = replace(
+            production_config,
+            moscow_civil_bolts_enabled=bool(include_bolts),
+        )
     if assembly_config is None:
         assembly_config = TunnelAssemblyConfig(ring_width_m=ring_config.width_m)
     if ancillary_config is None:

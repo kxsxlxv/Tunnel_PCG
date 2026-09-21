@@ -1930,11 +1930,19 @@ Placement:
 one rack per side per 1.0 m Moscow civil ring
 ```
 
-The current v2 preview uses both cable places on each of the 11 rack levels per
-side, so the scene has 44 continuous representative service cables.
+The current v3 preview follows the supplied R2K11/K1350.002 references: there
+is no full-length horizontal underbar beneath the two cradle seats. The preset
+occupies eight distributed levels per wall with one cable per occupied level,
+for 16 representative service cables total. Each route uses a restrained
+25 mm midspan sag between 1.0 m supports with one extra longitudinal midpoint
+per span.
 
-This is a full-capacity visual-density preset. Exact project cable occupancy,
-cable types/diameters and route schedules remain unresolved.
+The negative-X/contact-rail-side rack midpoint is placed at the lining-axis
+height to match the supplied visual reference. This remains a visual placement
+rule rather than a manufacturer mounting datum.
+
+Exact project cable occupancy, cable types/diameters and route schedules remain
+unresolved.
 
 ### Current water main
 
@@ -1983,19 +1991,25 @@ This directly targets the user's 2.7 km observation where each R65 rail was
 approaching one million polygons. The longitudinal rail sweep section count is
 substantially reduced without changing the rail surface.
 
-### Civil geometry remains unchanged
+### Selectable Stage-10 civil envelope
 
-The Stage-10.4 civil contract is preserved:
+The generator now accepts:
 
 ```text
-intrados radius               2.550 m
-internal diameter             5.100 m
-extrados radius               2.750 m
-ring pitch                    1.000 m
+--civil-archetype cast_iron_5500_5100
+--civil-archetype rc_block_6100_5600
 ```
 
-The approximately 5.1 m Blender internal diameter is therefore intentional for
-the selected classic 5.5/5.1 family.
+The first is the existing 5.5/5.1 m classic cast-iron envelope. The second uses
+research archetype `RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000`: 6.1 m OD,
+5.6 m ID, 0.25 m structural depth, 1.0 m ring pitch and ten identical RC
+blocks. Exact block-edge/pin CAD remains unresolved, so the current rendering
+is a smooth envelope carrying the source-backed ten-block topology as metadata.
+
+S026 does not provide a separate UGR-to-lining-axis placement for this family.
+Until a project cross-section resolves it, the larger envelope explicitly
+inherits the Stage-10 reference track/UGR datum and all radius-dependent
+geometry is recomputed from the selected intrados.
 
 ### Verification
 
@@ -2019,7 +2033,7 @@ Stage 10.1-10.5 verifiers                   PASS
 modern LVT support events                   67
 contact supports                             8
 contact cover spans                          9
-service cables                              22
+service cables                              16
 R2K11 rack objects                          82
 water mains                                  1
 duplicate modern face groups                 0

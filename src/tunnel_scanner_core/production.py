@@ -1902,6 +1902,28 @@ def _periodic_mesh_prototype_properties(
     }
 
 
+def _chainage_selected_for_window(
+    chainage_m: float,
+    *,
+    total_length_m: float,
+    start_chainage_m: float | None,
+    end_chainage_m: float | None,
+    tolerance_m: float = 1e-12,
+) -> bool:
+    """Use the same half-open event ownership rule as production chunks."""
+    if start_chainage_m is None and end_chainage_m is None:
+        return True
+    start = 0.0 if start_chainage_m is None else float(start_chainage_m)
+    end = float(total_length_m) if end_chainage_m is None else float(end_chainage_m)
+    if not (0.0 <= start < end <= total_length_m + tolerance_m):
+        raise ValueError("invalid production chainage window")
+    if chainage_m < start - tolerance_m:
+        return False
+    if math.isclose(end, total_length_m, abs_tol=tolerance_m):
+        return chainage_m <= end + tolerance_m
+    return chainage_m < end - tolerance_m
+
+
 def _build_stage10_5_modern_permanent_way_scene_objects(
     *,
     profile: MoscowStage10Profile,
@@ -1909,6 +1931,8 @@ def _build_stage10_5_modern_permanent_way_scene_objects(
     assembly: TunnelAssembly,
     stations: Sequence[AlignmentStation],
     label_policy: LabelPolicy,
+    start_chainage_m: float | None = None,
+    end_chainage_m: float | None = None,
 ) -> tuple[SceneObject, ...]:
     r65 = R65ProductionProfile()
     rail_centers = r65_rail_center_offsets_for_gauge(
@@ -1939,6 +1963,13 @@ def _build_stage10_5_modern_permanent_way_scene_objects(
     }
 
     for event_index, chainage in enumerate(chainages):
+        if not _chainage_selected_for_window(
+            chainage,
+            total_length_m=assembly.length_by_chainage_m,
+            start_chainage_m=start_chainage_m,
+            end_chainage_m=end_chainage_m,
+        ):
+            continue
         station = sample_alignment_station(stations, chainage)
         ring_id = min(
             assembly.config.n_rings - 1,

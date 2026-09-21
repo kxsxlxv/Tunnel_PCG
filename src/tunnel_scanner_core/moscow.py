@@ -379,6 +379,8 @@ class MoscowCableRackProfile:
     cable_circle_vertices: int
     occupied_level_indices: tuple[int, ...]
     cable_sag_midspan_m: float
+    cable_sag_variation_fraction: float
+    cable_sag_peak_phase_jitter_fraction: float
 
     def __post_init__(self) -> None:
         positive = (
@@ -408,6 +410,16 @@ class MoscowCableRackProfile:
             self.cable_sag_midspan_m
         ):
             raise ValueError("cable sag must be finite and non-negative")
+        if (
+            not math.isfinite(self.cable_sag_variation_fraction)
+            or not (0.0 <= self.cable_sag_variation_fraction <= 0.75)
+        ):
+            raise ValueError("cable sag variation fraction must be in [0, 0.75]")
+        if (
+            not math.isfinite(self.cable_sag_peak_phase_jitter_fraction)
+            or not (0.0 <= self.cable_sag_peak_phase_jitter_fraction <= 0.25)
+        ):
+            raise ValueError("cable sag peak-phase jitter must be in [0, 0.25]")
         if (
             not self.occupied_level_indices
             or len(set(self.occupied_level_indices)) != len(self.occupied_level_indices)
@@ -1563,6 +1575,18 @@ class MoscowStage10Profile:
             ),
             cable_sag_midspan_m=float(
                 cable_preview_raw.get("midspan_sag_m", 0.0)
+            ),
+            cable_sag_variation_fraction=float(
+                cable_preview_raw.get(
+                    "midspan_sag_variation_fraction",
+                    0.0,
+                )
+            ),
+            cable_sag_peak_phase_jitter_fraction=float(
+                cable_preview_raw.get(
+                    "peak_phase_jitter_fraction",
+                    0.0,
+                )
             ),
         )
 

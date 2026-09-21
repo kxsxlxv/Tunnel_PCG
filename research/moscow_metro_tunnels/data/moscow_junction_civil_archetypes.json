@@ -447,6 +447,41 @@
       },
       "pcg_rule": "This profile fragment is stronger than a generic branch fallback. Once the correct physical branch edge is identified, constrain the civil crown to the archival PK/depth observations, but keep UGR/rail grade and cross-section unresolved until a section/datum source is found. The selected Belorusskaya first-implementation branch can terminate before this downstream profile fragment; do not force the S121 crown profile onto the Belorusskaya leg.",
       "confidence": "A/B_profile_C_construction_context"
+    },
+    {
+      "id": "KRASNAYA_PRESNYA_BEGOVAYA_SINGLE_TRACK_BRANCH_1972_ACTUAL_CONSTRAINT",
+      "status": "ACTUAL_SINGLE_TRACK_TUNNEL_EXISTENCE_SECTION_UNKNOWN",
+      "source_ids": [
+        "S126",
+        "S127"
+      ],
+      "site": "Krasnaya Presnya depot service connection to the TKL between Ulitsa 1905 Goda and Begovaya",
+      "topology": {
+        "track_count": 1,
+        "independent_tunnel": true,
+        "crossover_chamber_at_running_line_connection": true,
+        "hermetic_gate_on_branch": true
+      },
+      "civil_geometry": {
+        "internal_diameter_m": null,
+        "outer_diameter_m": null,
+        "lining_type": null,
+        "chamber_length_m": null,
+        "chamber_width_m": null,
+        "transition_length_m": null,
+        "independent_tunnel_start_from_switch_m": null
+      },
+      "construction": {
+        "source_backed": [
+          "1972 contemporary construction article explicitly calls it a single-track tunnel branch",
+          "the same article states that some route/depot-branch sections were built by open cut",
+          "2011 photographic archive shows the actual crossover chamber and hermetic gate on the branch"
+        ],
+        "exact_open_cut_vs_closed_method_chainage": null
+      },
+      "applicability": "actual Moscow/Krasnaya-Presnya analog proving that a service branch can settle into an independent single-track tunnel; not a dimensional substitute for the 1954 Belorusskaya branch",
+      "pcg_rule": "Use only to support topology/event semantics: branch may become an independent one-track tunnel and may contain a hermetic-gate event. Keep cross-section and split distance null.",
+      "confidence": "A/B_topology_C_visual"
     }
   ]
 }

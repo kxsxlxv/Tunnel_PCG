@@ -260,7 +260,6 @@
         },
         "unassigned_drawing_callouts_mm": {
           "values": [
-            8298,
             4451,
             4477,
             2000,
@@ -272,7 +271,8 @@
           "source_id": "S094",
           "locator": "project 2976 drawing image",
           "status": "SOURCE_BACKED_VISIBLE_CALLOUTS_SEMANTICS_NOT_LOCKED",
-          "rule": "Do not consume in mesh generation until each callout is mapped to an identified rail/component endpoint."
+          "rule": "Do not consume in mesh generation until each callout is mapped to an identified rail/component endpoint.",
+          "note": "8298 mm has been resolved as the point longitudinal projection; remaining callouts stay unassigned."
         }
       },
       "rail_components": {
@@ -575,10 +575,10 @@
         },
         "point_positions": {
           "point_tip_chainage_from_front_joint_mm": 2765,
-          "exact_point_root_chainage_mm": null,
+          "exact_point_root_chainage_mm": 11063,
           "exact_stock_rail_joint_chainages_mm": null,
           "exact_switch_opening_profile_mm": null,
-          "note": "Only the point-tip station can currently be reconstructed from the published overall/frog dimensions. Do not infer point root/opening dimensions.",
+          "note": "Point tip and longitudinal point-root station are now constrained. The full opening curve between tip/root and pivot hardware remain unresolved.",
           "point_component_length_mm": {
             "value": 8300,
             "source_id": "S131",
@@ -614,6 +614,11 @@
             "tolerance_minus": 2,
             "measurement": "at first connecting-rod axis",
             "locator": "§2.12.11, printed pp.43-44"
+          },
+          "point_root_to_turnout_center_mm": {
+            "value": 4160,
+            "derivation": "15223 - 11063",
+            "status": "RECONSTRUCTED_FROM_SOURCE_DIMENSION_CHAIN"
           }
         },
         "drive": {
@@ -645,7 +650,9 @@
         "exact point-machine and rods geometry at Belorusskaya",
         "exact point root pivot hardware geometry despite source-backed 8.3 m point component length and 8298 mm longitudinal projection",
         "exact frog front/rear extent relative to mathematical center despite known 4.59 m assembled length",
-        "terminal R65 1/9 Table-16 ordinate rows beyond x=14 m are intentionally not transcribed until numerator/denominator endpoint semantics are rechecked"
+        "terminal R65 1/9 Table-16 ordinate rows beyond x=14 m are intentionally not transcribed until numerator/denominator endpoint semantics are rechecked",
+        "point pivot/root hardware geometry despite resolved longitudinal root station",
+        "full point opening/gauge-face path between tip and root"
       ],
       "straight_insert_note": "No main-line source found that gives a universal distance from the project-2976 stock-rail front joint or frog tail to the next curve. Current SP instead constrains curve/vertical-curve starts to be >=20 m from turnout center (§5.3.5). The 2.9 m value in SP Table 5.30 is for depot park tracks and is not transferred to this tunnel junction.",
       "current_metro_placement_validator": {
@@ -691,7 +698,7 @@
             "status": "SOURCE_BACKED_OVERALL_LENGTH"
           }
         ],
-        "note": "Do not infer y offsets, point-root coordinates, frog nose coordinates or guard-rail extents from these scalar x stations."
+        "note": "Scalar x stations are source-backed/reconstructed. Point-root x=11063 mm is additionally constrained; no complete y-coordinate rail-centerline reconstruction is implied."
       },
       "plan_profile_placement_constraints_ref": "MOSCOW_METRO_MAIN_TURNOUT_1_9_CONSTRAINT.plan_profile_placement",
       "rail_inclination": {
@@ -841,7 +848,42 @@
           ],
           "rule": "consume only with the original table-column semantics; 1472/1435 working-face constraints remain the stronger direct validator"
         },
-        "status": "SOURCE_BACKED_NEAR_SERVICE_ERA_VALIDATOR"
+        "status": "SOURCE_BACKED_NEAR_SERVICE_ERA_VALIDATOR",
+        "turnout_curve_working_face_polyline_local_mm": [
+          {
+            "x_from_front_joint": 11063,
+            "y_working_face_ordinate_from_outer_straight_rail": 181
+          },
+          {
+            "x_from_front_joint": 13063,
+            "y_working_face_ordinate_from_outer_straight_rail": 259
+          },
+          {
+            "x_from_front_joint": 15063,
+            "y_working_face_ordinate_from_outer_straight_rail": 350
+          },
+          {
+            "x_from_front_joint": 17063,
+            "y_working_face_ordinate_from_outer_straight_rail": 460
+          },
+          {
+            "x_from_front_joint": 19063,
+            "y_working_face_ordinate_from_outer_straight_rail": 590
+          },
+          {
+            "x_from_front_joint": 21063,
+            "y_working_face_ordinate_from_outer_straight_rail": 740
+          },
+          {
+            "x_from_front_joint": 23063,
+            "y_working_face_ordinate_from_outer_straight_rail": 910
+          },
+          {
+            "x_from_front_joint": 25063,
+            "y_working_face_ordinate_from_outer_straight_rail": 1100
+          }
+        ],
+        "turnout_curve_working_face_polyline_rule": "This is a working-face validation polyline in the source's ordinate system: x is shifted by the source-backed point-root station 11063 mm; y remains the Table-16 working-face ordinate. Do not reinterpret as rail centerline coordinates without applying the rail-head/gauge-face convention."
       }
     },
     {

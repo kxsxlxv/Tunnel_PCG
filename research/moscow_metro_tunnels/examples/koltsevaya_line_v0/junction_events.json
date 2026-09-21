@@ -416,6 +416,47 @@
             "locator": "§5.7.2.12",
             "status": "SOURCE_BACKED_CURRENT_RULE"
           }
+        },
+        "legacy_turnout_foundation_reference": {
+          "status": "SOURCE_BACKED_LEGACY_METRO_FAMILY_NOT_SITE_SPECIFIC",
+          "era": "1986-1987 documented Soviet metro construction practice",
+          "source_ids": [
+            "S117",
+            "S118"
+          ],
+          "geometry_and_materials": {
+            "ordinary_running_track_transition": "replace ordinary sleeper-in-track-concrete periodic preset by a local ballasted turnout foundation event",
+            "ballast_approach_before_turnout_m": 15,
+            "ballast_approach_after_turnout_m": 15,
+            "ballast_below_sleeper_or_bearer_m": 0.3,
+            "switch_bearer_length_range_m": [
+              2.75,
+              6.75
+            ],
+            "foundation": "rectangular-section concrete trough carrying crushed-stone ballast",
+            "installation": "turnout assembled/lifted on mounting concrete cubes; ballast placed and tamped under bearers in repeated stages"
+          },
+          "fastening_and_bearers": {
+            "historical_rail_family": "R50 in VNiR 1986 turnout/crossover work norms",
+            "ordinary_turnout_frog": "1:9",
+            "crossover_frog": "2:9",
+            "bearer_material": "reinforced antiseptic-treated wood",
+            "rail_joint": "six-bolt joint bars",
+            "rail_and_baseplate_fastening": "track screws",
+            "turnout_baseplate_cant": "uncanted",
+            "transition_to_canted_track": "special variable-cant baseplate set",
+            "bearer_orientation_to_turnout_center": "perpendicular to straight-track axis",
+            "bearer_orientation_in_frog_zone": "perpendicular to frog-angle bisector"
+          },
+          "actual_belorusskaya_limitation": "No inspected source proves that the selected Belorusskaya junction retained this exact 1986 R50 support system in the 2001-reference service era. Use as an alternate legacy event preset, not as an as-built assertion."
+        },
+        "pcg_transition_rule": {
+          "approach_event_start": "15 m before turnout zone when the legacy ballasted-turnout preset is selected",
+          "ordinary_track_concrete_periodic_assets": "terminate before ballast-transition event",
+          "turnout_zone": "generate concrete trough + ballast + switch bearers + turnout-specific fastening; do not bury bearers in ordinary Stage-10 track concrete",
+          "exit_event_end": "15 m after turnout zone when returning to ordinary legacy running-track construction",
+          "exact_site_transition_chainages": null,
+          "status": "SOURCE_BACKED_GENERIC_LEGACY_RULE_CHAINAGE_RELATIVE_TO_TURNOUT_ZONE_NOT_SITE_SURVEY"
         }
       },
       "branch_exit": {
@@ -523,6 +564,17 @@
         "confidence": "C_secondary",
         "pcg_use_rule": "Use only as a morphology prior/visual validation class. It does not turn the reported 14 m span into a Belorusskaya dimension.",
         "registry_id": "MOSCOW_CAST_IRON_CROWN_MONOLITHIC_WALL_INVERT_REFERENCE"
+      },
+      "service_era_contract": {
+        "civil_era": "original Koltsevaya deep-level cast-iron civil structure; exact construction-year detail is separate from service fit-out",
+        "selected_first_geometry_service_preset": "LEGACY_R65_TIMBER_KD65_2001_REFERENCE",
+        "selected_running_rail": "R65",
+        "exact_installed_turnout_project": null,
+        "exact_installed_turnout_rail_at_selected_site": null,
+        "geometric_fallback_if_R65_service_preset": "MOSCOW_METRO_R65_1_9_PROJECT_2976_REFERENCE_FALLBACK",
+        "alternate_legacy_R50_construction_constraint": "MOSCOW_METRO_R50_1_9_VNIR_1986_LEGACY_CONSTRAINT",
+        "alternate_R50_geometric_fallback": "MOSCOW_METRO_R50_1_9_PROJECT_2891_REFERENCE_FALLBACK",
+        "rule": "Civil opening era does not choose the turnout rail/project. R65/2001 is the first PCG service preset for consistency with Stage 10, not an as-built Belorusskaya claim."
       }
     },
     {

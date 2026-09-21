@@ -1022,5 +1022,35 @@
       "exact_switch_node_ids": null,
       "status": "TOPOLOGY_AND_SINGLE_TRACK_TUNNEL_EXISTENCE_CONFIRMED_GEOMETRY_UNRESOLVED"
     }
+  ],
+  "local_physical_main_track_constraints": [
+    {
+      "id": "DOST_EXISTING_MAIN_TRACK_PK_2024",
+      "scope": "existing Line-5 main tunnels in future Dostoevskaya construction zone, Novoslobodskaya-Prospekt Mira",
+      "source_id": "S054",
+      "status": "SOURCE_BACKED_TRACK_LOCAL_CHAINAGE_MAPPING_TO_A_B_UNRESOLVED",
+      "project_tracks": [
+        {
+          "project_label": "right main track",
+          "pk_start": "147+48.991",
+          "pk_end": "157+01.926",
+          "derived_chainage_span_m": 952.935,
+          "maps_to_track_id": null
+        },
+        {
+          "project_label": "left main track",
+          "pk_start": "147+46.010",
+          "pk_end": "157+02.021",
+          "derived_chainage_span_m": 956.011,
+          "maps_to_track_id": null
+        }
+      ],
+      "derived_span_difference_m": 3.076,
+      "semantics": "This is evidence that the two project main-track alignments carry independent chainage ranges. It is not a measurement of lateral spacing or a proof of which label maps to inner/outer.",
+      "intertrack_axis_spacing_m": null,
+      "relative_z_m": null,
+      "lining_existing_main_tracks": null,
+      "mapping_rule": "Do not assign right/left to KOLTSEVAYA_TRACK_A/B until a project orientation/track-number source resolves the labels."
+    }
   ]
 }

@@ -906,5 +906,32 @@
       "exact_crossover_objects": null,
       "exact_physical_way_ids": null
     }
-  }
+  },
+  "adjacent_depot_network_connections": [
+    {
+      "id": "KRP_DEPOT_BEGOVAYA_SSV",
+      "kind": "DEPOT_TO_OTHER_LINE_SERVICE_CONNECTION",
+      "relation_to_line5_scope": "not a direct branch from a Line-5 main track; included because it is physically part of the Krasnaya Presnya depot connection network and provides an actual analogous switch-chamber / independent-branch reference",
+      "line_attachment": "Таганско-Краснопресненская линия, перегон Улица 1905 года — Беговая",
+      "depot": "ТЧ-4 Красная Пресня",
+      "track_count": 1,
+      "track_count_source_id": "S126",
+      "civil_form": {
+        "independent_tunnel": true,
+        "source_id": "S126",
+        "exact_cross_section": null,
+        "exact_diameter_m": null,
+        "exact_lining_type": null,
+        "construction_method_constraint": "some depot-branch sections were built by open cut; exact transition/method segmentation for this branch remains unresolved",
+        "status": "SOURCE_BACKED_SINGLE_TRACK_TUNNEL_SECTION_UNKNOWN"
+      },
+      "crossover_chamber_visual_source_id": "S127",
+      "hermetic_gate_visual_source_id": "S127",
+      "exact_xy": null,
+      "exact_chainage": null,
+      "exact_z": null,
+      "exact_switch_node_ids": null,
+      "status": "TOPOLOGY_AND_SINGLE_TRACK_TUNNEL_EXISTENCE_CONFIRMED_GEOMETRY_UNRESOLVED"
+    }
+  ]
 }

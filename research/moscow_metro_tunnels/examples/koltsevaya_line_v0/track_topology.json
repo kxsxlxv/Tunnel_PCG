@@ -150,7 +150,8 @@
         "S087",
         "S093",
         "S022",
-        "S098"
+        "S098",
+        "S106"
       ],
       "confirmed": [
         "depot serves Line 5",
@@ -191,8 +192,17 @@
         "source_id": "S098",
         "status": "SOURCE_BACKED"
       },
-      "branch_tunnel_track_count": null,
-      "branch_tunnel_section": null
+      "branch_tunnel_track_count": 2,
+      "branch_tunnel_section": null,
+      "reported_track_count_constraint": {
+        "value": 2,
+        "semantics": "two tracks in the main connecting branch to Line 5",
+        "source_id": "S106",
+        "status": "TERTIARY_CORROBORATION",
+        "confidence": "C",
+        "limitation": "Does not resolve civil-shell arrangement. Do not infer one common two-track tunnel versus two single-track tunnels."
+      },
+      "branch_tunnel_track_count_status": "CONSTRAINED_C_TERTIARY_CORROBORATION"
     },
     {
       "id": "KOL5_PROSPEKT_MIRA_SSV_SYSTEM",

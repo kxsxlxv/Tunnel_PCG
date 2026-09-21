@@ -330,6 +330,8 @@ def _validate_stage10_build(
             ("drawingUpperReturnM", 0.180),
             ("drawingTopAboveUGRM", 0.373),
             ("outerEnvelopeProfileAbsXM", 1.633),
+            ("minimumClearanceToLVTBlockM", 0.035),
+            ("actualLowerLegClearanceToLVTBlockM", 0.035),
         ):
             if not math.isclose(float(bp.get(key, -1)), expected, abs_tol=2e-9):
                 raise AssertionError(f"modern bracket {key} mismatch")

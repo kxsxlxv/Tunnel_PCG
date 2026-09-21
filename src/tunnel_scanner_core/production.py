@@ -1933,6 +1933,7 @@ def _build_stage10_5_modern_permanent_way_scene_objects(
     label_policy: LabelPolicy,
     start_chainage_m: float | None = None,
     end_chainage_m: float | None = None,
+    indexed_chainages: Sequence[tuple[int, float]] | None = None,
 ) -> tuple[SceneObject, ...]:
     r65 = R65ProductionProfile()
     rail_centers = r65_rail_center_offsets_for_gauge(
@@ -1946,9 +1947,17 @@ def _build_stage10_5_modern_permanent_way_scene_objects(
         profile,
         rail_centers_profile_x=rail_centers,
     )
-    chainages = modern_lvt_chainages(
-        assembly.length_by_chainage_m,
-        profile,
+    chainage_events = (
+        tuple(indexed_chainages)
+        if indexed_chainages is not None
+        else tuple(
+            enumerate(
+                modern_lvt_chainages(
+                    assembly.length_by_chainage_m,
+                    profile,
+                )
+            )
+        )
     )
     label_id, semantic = _ancillary_semantics(label_policy, "rail")
     result: list[SceneObject] = []
@@ -1962,8 +1971,8 @@ def _build_stage10_5_modern_permanent_way_scene_objects(
         "apc4_fastening": "APC4Fastenings",
     }
 
-    for event_index, chainage in enumerate(chainages):
-        if not _chainage_selected_for_window(
+    for event_index, chainage in chainage_events:
+        if indexed_chainages is None and not _chainage_selected_for_window(
             chainage,
             total_length_m=assembly.length_by_chainage_m,
             start_chainage_m=start_chainage_m,
@@ -2157,13 +2166,24 @@ def _build_stage10_5_modern_contact_scene_objects(
     running_support_phase_m: float,
     start_chainage_m: float | None = None,
     end_chainage_m: float | None = None,
+    indexed_support_chainages: Sequence[tuple[int, float]] | None = None,
+    indexed_cover_spans: Sequence[tuple[int, float, float]] | None = None,
 ) -> tuple[SceneObject, ...]:
     local_meshes = build_modern_contact_support_meshes(profile)
-    chainages = modern_contact_support_chainages(
-        assembly.length_by_chainage_m,
-        profile,
-        running_support_pitch_m=running_support_pitch_m,
-        running_support_phase_m=running_support_phase_m,
+    all_support_chainages = (
+        modern_contact_support_chainages(
+            assembly.length_by_chainage_m,
+            profile,
+            running_support_pitch_m=running_support_pitch_m,
+            running_support_phase_m=running_support_phase_m,
+        )
+        if indexed_support_chainages is None or indexed_cover_spans is None
+        else ()
+    )
+    support_events = (
+        tuple(indexed_support_chainages)
+        if indexed_support_chainages is not None
+        else tuple(enumerate(all_support_chainages))
     )
     label_id, semantic = _ancillary_semantics(label_policy, "rail")
     result: list[SceneObject] = []
@@ -2180,8 +2200,8 @@ def _build_stage10_5_modern_contact_scene_objects(
         "contact_rail_support_hood": "SupportHoods",
     }
 
-    for event_index, chainage in enumerate(chainages):
-        if not _chainage_selected_for_window(
+    for event_index, chainage in support_events:
+        if indexed_support_chainages is None and not _chainage_selected_for_window(
             chainage,
             total_length_m=assembly.length_by_chainage_m,
             start_chainage_m=start_chainage_m,
@@ -2283,14 +2303,27 @@ def _build_stage10_5_modern_contact_scene_objects(
     cover_section = _ensure_ccw_xz(
         modern_protective_cover_core_xz(profile)
     )
-    spans = modern_cover_span_ranges(
-        assembly.length_by_chainage_m,
-        profile,
-        support_chainages=chainages,
+    cover_span_events = (
+        tuple(indexed_cover_spans)
+        if indexed_cover_spans is not None
+        else tuple(
+            (
+                span_index,
+                start_chainage,
+                end_chainage,
+            )
+            for span_index, (start_chainage, end_chainage) in enumerate(
+                modern_cover_span_ranges(
+                    assembly.length_by_chainage_m,
+                    profile,
+                    support_chainages=all_support_chainages,
+                )
+            )
+        )
     )
-    for span_index, (start_chainage, end_chainage) in enumerate(spans):
+    for span_index, start_chainage, end_chainage in cover_span_events:
         midpoint = 0.5 * (start_chainage + end_chainage)
-        if not _chainage_selected_for_window(
+        if indexed_cover_spans is None and not _chainage_selected_for_window(
             midpoint,
             total_length_m=assembly.length_by_chainage_m,
             start_chainage_m=start_chainage_m,
@@ -2380,22 +2413,31 @@ def _build_stage10_5_service_rack_scene_objects(
     label_policy: LabelPolicy,
     start_chainage_m: float | None = None,
     end_chainage_m: float | None = None,
+    indexed_chainages: Sequence[tuple[int, float]] | None = None,
 ) -> tuple[SceneObject, ...]:
     local_by_side = {
         side: build_r2k11_local_rack_mesh(profile, side_sign=side)
         for side in (-1, 1)
     }
-    chainages = cable_rack_chainages(
-        assembly.length_by_chainage_m,
-        profile,
+    chainage_events = (
+        tuple(indexed_chainages)
+        if indexed_chainages is not None
+        else tuple(
+            enumerate(
+                cable_rack_chainages(
+                    assembly.length_by_chainage_m,
+                    profile,
+                )
+            )
+        )
     )
     label_id, semantic = _ancillary_semantics(label_policy, "tube")
     result: list[SceneObject] = []
     source_ring_width = assembly.config.ring_width_m
     rack = profile.cable_rack
 
-    for event_index, chainage in enumerate(chainages):
-        if not _chainage_selected_for_window(
+    for event_index, chainage in chainage_events:
+        if indexed_chainages is None and not _chainage_selected_for_window(
             chainage,
             total_length_m=assembly.length_by_chainage_m,
             start_chainage_m=start_chainage_m,
@@ -2490,18 +2532,27 @@ def _build_stage10_5_water_main_support_scene_objects(
     label_policy: LabelPolicy,
     start_chainage_m: float | None = None,
     end_chainage_m: float | None = None,
+    indexed_chainages: Sequence[tuple[int, float]] | None = None,
 ) -> tuple[SceneObject, ...]:
     local = build_water_main_support_local_mesh(profile)
-    chainages = water_main_support_chainages(
-        assembly.length_by_chainage_m,
-        profile,
+    chainage_events = (
+        tuple(indexed_chainages)
+        if indexed_chainages is not None
+        else tuple(
+            enumerate(
+                water_main_support_chainages(
+                    assembly.length_by_chainage_m,
+                    profile,
+                )
+            )
+        )
     )
     label_id, semantic = _ancillary_semantics(label_policy, "tube")
     result: list[SceneObject] = []
     source_ring_width = assembly.config.ring_width_m
 
-    for event_index, chainage in enumerate(chainages):
-        if not _chainage_selected_for_window(
+    for event_index, chainage in chainage_events:
+        if indexed_chainages is None and not _chainage_selected_for_window(
             chainage,
             total_length_m=assembly.length_by_chainage_m,
             start_chainage_m=start_chainage_m,
@@ -3403,6 +3454,9 @@ def _build_stage10_4_rc_stage9_architecture_objects(
     start_chainage_m: float | None = None,
     end_chainage_m: float | None = None,
     civil_roll_assembly: TunnelAssembly | None = None,
+    indexed_ranges: Sequence[
+        tuple[int, int, float, float]
+    ] | None = None,
 ) -> tuple[SceneObject, ...]:
     """Parameterize the old Stage-9 segment/joint/bolt pipeline for Moscow RC."""
     if profile.civil_family != "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000":
@@ -3410,11 +3464,45 @@ def _build_stage10_4_rc_stage9_architecture_objects(
     if topology not in {"ten_equal", "kba"}:
         raise ValueError("Moscow RC topology must be ten_equal or kba")
 
-    ranges = civil_ring_ranges(
-        assembly.length_by_chainage_m,
-        ring_pitch_m=profile.ring_pitch_m,
+    all_ranges = (
+        civil_ring_ranges(
+            assembly.length_by_chainage_m,
+            ring_pitch_m=profile.ring_pitch_m,
+        )
+        if indexed_ranges is None
+        else ()
     )
-    civil_ring_count = len(ranges)
+    civil_ring_count = (
+        len(all_ranges)
+        if indexed_ranges is None
+        else (
+            civil_roll_assembly.config.n_rings
+            if civil_roll_assembly is not None
+            else len(
+                civil_ring_ranges(
+                    assembly.length_by_chainage_m,
+                    ring_pitch_m=profile.ring_pitch_m,
+                )
+            )
+        )
+    )
+    range_events = (
+        tuple(indexed_ranges)
+        if indexed_ranges is not None
+        else tuple(
+            (
+                range_index,
+                ring_index,
+                start_chainage,
+                end_chainage,
+            )
+            for range_index, (
+                ring_index,
+                start_chainage,
+                end_chainage,
+            ) in enumerate(all_ranges)
+        )
+    )
     if civil_roll_assembly is None:
         civil_roll_assembly = _sample_moscow_civil_roll_assembly(
             source_assembly=assembly,
@@ -3426,13 +3514,14 @@ def _build_stage10_4_rc_stage9_architecture_objects(
         raise ValueError("civil_roll_assembly ring count mismatch")
     result: list[SceneObject] = []
     tunnel_instance_id = stable_instance_id(f"{namespace}/tunnel")
-    for range_index, (
+    for (
+        range_index,
         ring_index,
         start_chainage,
         end_chainage,
-    ) in enumerate(ranges):
+    ) in range_events:
         midpoint = 0.5 * (start_chainage + end_chainage)
-        if not _chainage_selected_for_window(
+        if indexed_ranges is None and not _chainage_selected_for_window(
             midpoint,
             total_length_m=assembly.length_by_chainage_m,
             start_chainage_m=start_chainage_m,
@@ -5054,6 +5143,78 @@ def _event_chainage_chunk_index(
     return None
 
 
+def _bucket_indexed_chainages(
+    chunks: Sequence[ChunkDescriptor],
+    *,
+    total_length_m: float,
+    chainages: Sequence[float],
+) -> tuple[tuple[tuple[int, float], ...], ...]:
+    buckets: list[list[tuple[int, float]]] = [[] for _ in chunks]
+    for event_index, chainage in enumerate(chainages):
+        chunk_id = _event_chainage_chunk_index(
+            chainage,
+            chunks,
+            total_length_m=total_length_m,
+        )
+        if chunk_id is not None:
+            buckets[chunk_id].append((event_index, float(chainage)))
+    return tuple(tuple(bucket) for bucket in buckets)
+
+
+def _bucket_indexed_cover_spans(
+    chunks: Sequence[ChunkDescriptor],
+    *,
+    total_length_m: float,
+    spans: Sequence[tuple[float, float]],
+) -> tuple[tuple[tuple[int, float, float], ...], ...]:
+    buckets: list[list[tuple[int, float, float]]] = [
+        [] for _ in chunks
+    ]
+    for span_index, (start, end) in enumerate(spans):
+        midpoint = 0.5 * (start + end)
+        chunk_id = _event_chainage_chunk_index(
+            midpoint,
+            chunks,
+            total_length_m=total_length_m,
+        )
+        if chunk_id is not None:
+            buckets[chunk_id].append(
+                (span_index, float(start), float(end))
+            )
+    return tuple(tuple(bucket) for bucket in buckets)
+
+
+def _bucket_indexed_civil_ranges(
+    chunks: Sequence[ChunkDescriptor],
+    *,
+    total_length_m: float,
+    ranges: Sequence[tuple[int, float, float]],
+) -> tuple[
+    tuple[tuple[int, int, float, float], ...],
+    ...,
+]:
+    buckets: list[list[tuple[int, int, float, float]]] = [
+        [] for _ in chunks
+    ]
+    for range_index, (ring_index, start, end) in enumerate(ranges):
+        midpoint = 0.5 * (start + end)
+        chunk_id = _event_chainage_chunk_index(
+            midpoint,
+            chunks,
+            total_length_m=total_length_m,
+        )
+        if chunk_id is not None:
+            buckets[chunk_id].append(
+                (
+                    range_index,
+                    int(ring_index),
+                    float(start),
+                    float(end),
+                )
+            )
+    return tuple(tuple(bucket) for bucket in buckets)
+
+
 @dataclass(frozen=True)
 class Stage105RCModernChunkPlan:
     """Lightweight global state for chunk-first Stage-10.5 RC generation."""
@@ -5067,6 +5228,20 @@ class Stage105RCModernChunkPlan:
     chunks: tuple[ChunkDescriptor, ...]
     boundary_policy: ChunkBoundaryPolicy
     civil_roll_assembly: TunnelAssembly
+    lvt_events_by_chunk: tuple[tuple[tuple[int, float], ...], ...]
+    contact_support_events_by_chunk: tuple[
+        tuple[tuple[int, float], ...], ...
+    ]
+    contact_cover_spans_by_chunk: tuple[
+        tuple[tuple[int, float, float], ...], ...
+    ]
+    rack_events_by_chunk: tuple[tuple[tuple[int, float], ...], ...]
+    water_support_events_by_chunk: tuple[
+        tuple[tuple[int, float], ...], ...
+    ]
+    civil_ranges_by_chunk: tuple[
+        tuple[tuple[int, int, float, float], ...], ...
+    ]
     seed: int
     metadata: Mapping[str, Any]
 
@@ -5204,6 +5379,37 @@ def build_stage10_5_rc_modern_chunk_plan(
         source.assembly.length_by_chainage_m,
         profile,
     )
+    total_length_m = source.assembly.length_by_chainage_m
+    lvt_events_by_chunk = _bucket_indexed_chainages(
+        chunks,
+        total_length_m=total_length_m,
+        chainages=lvt_events,
+    )
+    contact_support_events_by_chunk = _bucket_indexed_chainages(
+        chunks,
+        total_length_m=total_length_m,
+        chainages=support_chainages,
+    )
+    contact_cover_spans_by_chunk = _bucket_indexed_cover_spans(
+        chunks,
+        total_length_m=total_length_m,
+        spans=cover_spans,
+    )
+    rack_events_by_chunk = _bucket_indexed_chainages(
+        chunks,
+        total_length_m=total_length_m,
+        chainages=rack_chainages,
+    )
+    water_support_events_by_chunk = _bucket_indexed_chainages(
+        chunks,
+        total_length_m=total_length_m,
+        chainages=water_supports,
+    )
+    civil_ranges_by_chunk = _bucket_indexed_civil_ranges(
+        chunks,
+        total_length_m=total_length_m,
+        ranges=civil_ranges,
+    )
 
     civil_segment_count = (
         6
@@ -5239,6 +5445,7 @@ def build_stage10_5_rc_modern_chunk_plan(
         "sourceRingGeometrySkippedAsFullyReplaced": True,
         "chunking": "chunk_first_generation_without_full_scene",
         "chunkFirstGeneration": True,
+        "chunkSchedulesPrebucketed": True,
         "continuousSweepAlignmentCompaction": (
             "exact_zero_error_collinear"
             if production_config.resolved_compact_exact_collinear_continuous_stations
@@ -5338,6 +5545,12 @@ def build_stage10_5_rc_modern_chunk_plan(
         chunks=chunks,
         boundary_policy=resolved_boundary_policy,
         civil_roll_assembly=civil_roll_assembly,
+        lvt_events_by_chunk=lvt_events_by_chunk,
+        contact_support_events_by_chunk=contact_support_events_by_chunk,
+        contact_cover_spans_by_chunk=contact_cover_spans_by_chunk,
+        rack_events_by_chunk=rack_events_by_chunk,
+        water_support_events_by_chunk=water_support_events_by_chunk,
+        civil_ranges_by_chunk=civil_ranges_by_chunk,
         seed=int(seed),
         metadata=metadata,
     )
@@ -5369,6 +5582,9 @@ def iter_stage10_5_rc_modern_chunk_scene_packages(
                 label_policy=plan.source_build.scene.label_policy,
                 start_chainage_m=start,
                 end_chainage_m=end,
+                indexed_chainages=plan.lvt_events_by_chunk[
+                    chunk.chunk_id
+                ],
             )
         )
         periodic.extend(
@@ -5382,6 +5598,12 @@ def iter_stage10_5_rc_modern_chunk_scene_packages(
                 running_support_phase_m=0.5 * modern_pw.support_pitch_m,
                 start_chainage_m=start,
                 end_chainage_m=end,
+                indexed_support_chainages=(
+                    plan.contact_support_events_by_chunk[chunk.chunk_id]
+                ),
+                indexed_cover_spans=(
+                    plan.contact_cover_spans_by_chunk[chunk.chunk_id]
+                ),
             )
         )
         periodic.extend(
@@ -5393,6 +5615,9 @@ def iter_stage10_5_rc_modern_chunk_scene_packages(
                 label_policy=plan.source_build.scene.label_policy,
                 start_chainage_m=start,
                 end_chainage_m=end,
+                indexed_chainages=plan.rack_events_by_chunk[
+                    chunk.chunk_id
+                ],
             )
         )
         periodic.extend(
@@ -5404,6 +5629,9 @@ def iter_stage10_5_rc_modern_chunk_scene_packages(
                 label_policy=plan.source_build.scene.label_policy,
                 start_chainage_m=start,
                 end_chainage_m=end,
+                indexed_chainages=plan.water_support_events_by_chunk[
+                    chunk.chunk_id
+                ],
             )
         )
         periodic.extend(
@@ -5419,6 +5647,9 @@ def iter_stage10_5_rc_modern_chunk_scene_packages(
                 start_chainage_m=start,
                 end_chainage_m=end,
                 civil_roll_assembly=plan.civil_roll_assembly,
+                indexed_ranges=plan.civil_ranges_by_chunk[
+                    chunk.chunk_id
+                ],
             )
         )
 

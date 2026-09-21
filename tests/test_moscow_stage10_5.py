@@ -1630,6 +1630,28 @@ def test_stage10_5_rc_chunk_first_3000_ring_first_chunk_is_local(monkeypatch):
         plan.metadata["productionGeometry"]["moscowCivilRingCount"]
     ) == 4050
     assert built_civil_rings == 0
+    assert plan.metadata["productionGeometry"][
+        "chunkSchedulesPrebucketed"
+    ] is True
+
+    def schedule_recomputed(*_args, **_kwargs):
+        raise AssertionError(
+            "chunk generation recomputed a global prebucketed schedule"
+        )
+
+    for name in (
+        "modern_lvt_chainages",
+        "modern_contact_support_chainages",
+        "modern_cover_span_ranges",
+        "cable_rack_chainages",
+        "water_main_support_chainages",
+        "civil_ring_ranges",
+    ):
+        monkeypatch.setattr(
+            production_module,
+            name,
+            schedule_recomputed,
+        )
 
     first = next(
         iter_stage10_5_rc_modern_chunk_scene_packages(plan)

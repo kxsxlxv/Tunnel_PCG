@@ -193,3 +193,27 @@ The same published evidence lists a 2022 Mosgorgeotrest engineering-geodetic sur
 A 2026 construction statement confirms that the existing Line-5 tunnels in the reserved future-station zone have zero grade and lie at a construction depth greater than 38 m.
 
 These are stronger than interpolating generic station depths, so they are encoded separately as project/local profile constraints with unresolved exact chainage limits.
+
+## Stage 11/22 — physical two-track topology and junctions
+
+The pilot is no longer allowed to treat Line 5 as one centerline plus an offset.
+
+New contract:
+- `KOLTSEVAYA_TRACK_A` = I main track, inner ring, clockwise;
+- `KOLTSEVAYA_TRACK_B` = II main track, outer ring, counterclockwise;
+- both must be reconstructed independently from physical `railway=subway` ways/project alignments;
+- current exact OSM way IDs remain unresolved because relation/full bytes were not obtainable in the research runtime. No IDs were guessed.
+
+New files:
+- `22_koltsevaya_track_topology_and_junctions.md`;
+- `examples/koltsevaya_line_v0/track_topology.json`;
+- `examples/koltsevaya_line_v0/junction_events.json`;
+- `data/moscow_turnout_archetypes.json`;
+- `reference_impl/tunnel_pcg_ref/osm_track_graph.py`;
+- `reference_impl/tests/test_osm_track_graph.py`.
+
+The first real junction selected for geometry hand-off is the Belorusskaya/Krasnaya-Presnya depot-side node. A Metrostroy historical photo/caption identifies II main track straight toward Krasnopresnenskaya and a left branch toward the turnback/depot system, with a cast-iron tubing chamber and monolithic-RC end wall.
+
+The exact installed turnout project and actual chamber dimensions are not public in the inspected set. A dimensioned R65 1:9 metro turnout project 2976.00.000 is retained only as an explicit fallback. Frolov's dimensioned stepwise branch chambers are likewise retained only as a generic civil-transition reference, not as the Belorusskaya as-built shell.
+
+See `22_koltsevaya_track_topology_and_junctions.md` for the KNOWN / CONSTRAINED / UNKNOWN boundary.

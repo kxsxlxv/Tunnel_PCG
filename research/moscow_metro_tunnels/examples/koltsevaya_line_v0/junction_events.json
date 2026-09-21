@@ -749,6 +749,39 @@
             "locator": "§5.7.2.12",
             "status": "SOURCE_BACKED_CURRENT_RULE"
           }
+        },
+        "legacy_2005_storage_and_safe_passage_events": {
+          "source_id": "S128",
+          "locator": "§§7.2-7.4, printed pp.122-124",
+          "applicability": "near-service-era maintenance layout; exact Belorusskaya storage-pad geometry remains site-specific",
+          "kilometre_stock_rails": {
+            "tunnel_location": "at tunnel wall; where a banquette exists, preferably in its breaks",
+            "support_spacing_m_max_range": [
+              5.5,
+              6
+            ],
+            "secured_against_movement": true,
+            "status": "SOURCE_BACKED"
+          },
+          "turnout_spare_parts": {
+            "location": "immediate vicinity of turnout",
+            "safe_personnel_passage_must_be_preserved": true,
+            "exact_passage_width_m": null,
+            "station_specific_layout_scheme_required": true,
+            "forbidden_zone": {
+              "from": "frog end",
+              "to": "limit rail",
+              "rule": "storage normally prohibited; exceptional only if no other location",
+              "status": "SOURCE_BACKED"
+            },
+            "stored_parts_examples": [
+              "stock/frame rails",
+              "points",
+              "frogs"
+            ],
+            "status": "SOURCE_BACKED"
+          },
+          "pcg_rule": "Treat stock rails/spare turnout parts as explicit storage events. Do not scatter them periodically through the chamber and do not occupy the frog-end-to-limit-rail zone."
         }
       },
       "branch_exit": {

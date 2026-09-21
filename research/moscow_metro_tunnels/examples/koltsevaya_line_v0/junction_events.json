@@ -29,7 +29,8 @@
           "S120",
           "S124",
           "S125",
-          "S134"
+          "S134",
+          "S135"
         ],
         "civil_shell": {
           "known": [
@@ -139,19 +140,30 @@
           "source_ids": [
             "S093",
             "S120",
-            "S123"
+            "S123",
+            "S135"
           ],
           "source_backed": [
             "the depot branch passes through a difficult deep-to-shallow transition",
             "ground freezing was used on the Circle-line depot branch",
             "S120 describes powerful quicksand and identifies the closed-method frozen section in photos",
-            "S123 is the open-access Dorman 1971 acquisition target explicitly cross-referenced by S120"
+            "S123 is the open-access Dorman 1971 acquisition target explicitly cross-referenced by S120",
+            "Dorman 1983 states that a frozen-ground tunnel section was built at the exit toward Krasnopresnenskoye depot",
+            "Dorman 1983 states that two Koltsevaya crossover chambers were among the frozen-ground construction objects",
+            "one of the two Line-5 depot branches is explicitly 256 m long and was protected by fan-arranged freezing holes beneath dense development"
           ],
           "exact_freezing_scheme": null,
           "exact_freezing_hole_spacing": null,
           "exact_frozen_wall_thickness": null,
           "caisson_used": null,
-          "status": "CONSTRUCTION_METHOD_CONFIRMED_GEOMETRY_UNKNOWN"
+          "status": "CONSTRUCTION_METHOD_CONFIRMED_GEOMETRY_UNKNOWN",
+          "unassigned_branch_length_constraint": {
+            "value_m": 256,
+            "applies_to": "one of the two Line-5 depot branches",
+            "selected_belorusskaya_leg_match": null,
+            "source_id": "S135",
+            "status": "SOURCE_BACKED_BUT_UNASSIGNED"
+          }
         }
       },
       "turnout_geometry": {

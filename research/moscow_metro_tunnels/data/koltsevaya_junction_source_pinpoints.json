@@ -514,6 +514,31 @@
       },
       "limitation": "Tertiary source. Use only as corroboration that the connection has two tracks. It does not establish whether those tracks share one civil tunnel shell, occupy two single-track shells, or where that topology transition occurs underground.",
       "confidence": "C"
+    },
+    {
+      "id": "S107",
+      "title": "Murom switch product catalogue — metro R50 1:9 project 2891.00.000",
+      "url": "https://www.inforta.lt/uploads/Failai/Murom%20catalog%20maket%20END.pdf",
+      "locator": {
+        "catalogue_page": 111,
+        "project": "2891.00.000",
+        "drawing": "Схема геометрических размеров / Схема укладки",
+        "supports": [
+          "metro-specific ordinary R50 turnout, gauge 1520, frog 1:9",
+          "overall length 31057 mm",
+          "front stock-rail overhang 4323 mm",
+          "point/stock-rail geometry callout 6513 mm (drawing also contains 6515 mm point-related callout; exact semantic assignment must follow the drawing)",
+          "turnout-center/frog-side major dimension 13722 mm",
+          "radii R297259 and R200000 mm",
+          "frog angle alpha = 6°20′25″",
+          "initial point angle beta_n = 0°40′51.50″",
+          "rail lengths 5936, 6049, 7622, 7684 and 2x8619 mm",
+          "bearer/pitch groups shown explicitly: 7x520=3640; 5x565=2825/2625 as transcribed variants; 9x570=5130; 13x585=7605; 5x580=2900; 18x545=9810; 8x560=4480",
+          "bearer length groups shown: 7x3.00 m, 7x3.25 m, 7x3.50 m, 5x3.75 m, 3x4.00 m, 4x4.25 m, 7x4.50 m, 4x4.75 m, 5x5.00 m, 4x5.25 m"
+        ]
+      },
+      "limitation": "Published project geometry proves a metro R50 turnout family, not its installation at Belorusskaya. A few OCR/transcribed bearer callouts conflict; preserve them as drawing evidence rather than silently resolving them.",
+      "confidence": "B"
     }
   ]
 }

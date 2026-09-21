@@ -853,16 +853,18 @@
         "negative_side_center_profile_z_m": 1.67
       },
       "initial_horn_mesh": {
-        "mode": "K1350_002_open_double_cradle_v3_no_common_underbar",
+        "mode": "K1350_002_single_continuous_omega_ribbon_v4",
         "longitudinal_width_m": 0.04,
         "first_cable_center_inward_m": 0.07,
         "second_cable_center_inward_m": 0.125,
         "confidence": "A_envelope_B_center_callouts_C_exact_bend_path",
-        "note": "K1350.002 current manufacturer envelope is 169x40x87 mm at 4 mm steel. The 2026-09-21 user-supplied drawing/3D references show two open semicircular cradles without a continuous horizontal underbar; the preview therefore removes the former full-length radial seat while retaining a short wall-side neck. Exact stamped bend radii remain unresolved.",
+        "note": "K1350.002 current manufacturer envelope is 169x40x87 mm at 4 mm steel. The 2026-09-21 user-supplied drawing/3D references constrain the visible silhouette to one continuous rounded W/omega-like formed ribbon: it leaves the upright directly, forms both cable cradles and the central crest, and has no separate horizontal neck/shelf or wall-side tab. Exact factory neutral-axis bend radii remain unresolved.",
         "overall_length_m": 0.169,
         "overall_height_m": 0.087,
         "cable_places_per_horn": 2,
-        "common_horizontal_underbar": false
+        "common_horizontal_underbar": false,
+        "separate_wall_tab": false,
+        "separate_horizontal_neck": false
       },
       "assembly_designation": "R2K11 / K1351.001-09 + 11xK1350.002",
       "upright_designation": "K1351.001-09",
@@ -883,7 +885,7 @@
       "circle_vertices": 8,
       "exact_route_schedule_resolved": false,
       "confidence": "C_visual_density_only",
-      "note": "R2K11 provides two cable places on each of 11 levels. Stage10.5 v3 occupies eight distributed levels with one cable per level on each wall (16 representative longitudinal cables total), matching the requested moderate service density rather than the former full-capacity 44-cable preview.",
+      "note": "R2K11 provides two cable places on each of 11 levels. Stage10.5 v4 occupies eight distributed levels with one cable per level on each wall (16 representative longitudinal cables total). Each 1 m support span receives a deterministic per-cable/per-span sag amplitude around 25 mm (+/-35%) and a peak phase jitter of +/-0.12 span, retaining one interior sag control point per span to keep polygon growth bounded.",
       "occupied_places_per_horn": 1,
       "total_representative_cables": 16,
       "side_assignment": {
@@ -902,8 +904,10 @@
         9
       ],
       "midspan_sag_m": 0.025,
-      "sag_shape": "piecewise_linear_support_midspan_support",
-      "sag_stations_per_support_span": 3
+      "sag_shape": "deterministic_asymmetric_single_peak_per_support_span",
+      "sag_stations_per_support_span": 3,
+      "midspan_sag_variation_fraction": 0.35,
+      "peak_phase_jitter_fraction": 0.12
     },
     "pipes": {
       "status": "source_backed_tunnel_water_main_with_explicit_placement_fallback",

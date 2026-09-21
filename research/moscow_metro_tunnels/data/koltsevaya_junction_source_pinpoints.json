@@ -636,6 +636,39 @@
         ]
       },
       "confidence": "B/C_future_project_topology"
+    },
+    {
+      "id": "S115",
+      "title": "Dostoevskaya Line 5 — current bypass/switching-chamber construction state",
+      "url": "https://www.gazetametro.ru/articles/vladimir-efimov-na-dostoevskoj-zavershajutsja-gornoprohodcheskie-raboty-15-08-2026",
+      "locator": {
+        "publication_date": "2026-08-15",
+        "section": "statement quoting Moscow Urban Development and Construction Complex / Vladimir Efimov",
+        "supports": [
+          "both Line-5 bypass tunnels have been completed",
+          "construction continues in four traffic-switching chambers",
+          "a technical inter-tunnel cross-passage is being completed",
+          "works are immediately adjacent to the operating Koltsevaya tunnels"
+        ]
+      },
+      "confidence": "A/B_current_construction_state"
+    },
+    {
+      "id": "S116",
+      "title": "Dostoevskaya Line 5 — switching chamber No.1 construction detail",
+      "url": "https://www.nashtransport.ru/russia/moscow/metro/lines/line_5/dostoyevskaya/",
+      "locator": {
+        "section": "2026 construction report 'Решение трудных задач' / quoted Metrostroevets material",
+        "supports": [
+          "traffic-switching chambers are used so Koltsevaya trains can enter bypass tunnels and clear the existing tunnel for station construction",
+          "upper half-vault of chamber No.1 was constructed over the operating Line-5 tunnel",
+          "nonstandard diameter of chamber No.1 is stated as 13 m",
+          "first cut half-rings were installed while trains continued through the tunnel below",
+          "four chambers correspond to the two directions and two ends of the bypass system; exact full 3D chamber profiles are not published in this source"
+        ]
+      },
+      "limitation": "Actual current construction source with one chamber diameter, but not a complete dimensioned chamber drawing. Do not infer chamber length, wall thickness, turnout rail geometry or all four chamber diameters from the single 13 m statement.",
+      "confidence": "B/C_actual_construction_detail"
     }
   ]
 }

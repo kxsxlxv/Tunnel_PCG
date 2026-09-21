@@ -133,19 +133,23 @@ K1350.002 double horn
 The R2K family increments vertically at 125 mm; R2K11 therefore uses ten
 125 mm intervals between eleven horn levels.
 
-Stage-10.5 geometry uses the exact component envelopes above. The precise
-factory neutral-axis bend path/radii of K1350.002 are not yet available as CAD
-and remain a replaceable local preview. The 2026-09-21 user-supplied product
-drawing, 3D reference and follow-up Blender screenshot constrain the visible
-topology more tightly: each double horn is one continuous formed strip, with a
-rounded-W / omega-like profile. It leaves the upright directly, forms the first
-cradle, rises through the central crest, forms the second cradle and turns up
-at the free end. There is no separate horizontal shelf, neck or wall-side tab.
-The production mesh therefore uses one continuous low-poly ribbon per horn.
-The v5 visual pass keeps that topology but raises the sparse profile sampling
-from two to four interpolation samples per anchor span. This removes the
-visibly faceted W-shape seen in Blender while remaining a lightweight mesh;
-it does not claim newly resolved factory bend radii.
+Stage-10.5 geometry keeps the exact component envelopes above, while the
+precise factory bend path/radii of K1350.002 remain unresolved. The 2026-09-21
+user Blender correction supersedes the previous W/omega preview: the double
+horn is rendered as two simple adjacent U-shaped cradles, visually `UU`.
+There is no central omega crest and no horizontal shelf/neck before the first
+cradle; the first U begins directly at the upright.
+
+The supplied drawing gives a 154 mm visible double-cradle span. The visual
+preview gives each U a 67 mm internal clear diameter, 2 mm larger than the
+published 65 mm maximum cable diameter (1 mm radial clearance). With 4 mm steel
+this leaves a 4 mm visual gap between the two U shapes. The cable-route centres
+are therefore 37.5 mm and 116.5 mm inward from the upright and are shared by
+the geometry and cable-placement code. Eight arc subdivisions per U keep the
+seat visibly round without a dense mesh.
+
+These 67 mm / 4 mm clearance-layout values are visual reconstruction choices,
+not factory bend-radius dimensions.
 
 Placement remains one rack per side at each 1.0 m Moscow civil ring for the
 selected archetype. That longitudinal pitch is a procedural archetype choice,
@@ -154,7 +158,7 @@ the lining-axis height for its upright midpoint in the visual preset; this
 side-specific elevation is a photo/reference-driven layout rule, not a
 manufacturer mounting dimension.
 
-For visual density the current v5 preset occupies eight distributed levels and
+For visual density the current v6 preset occupies eight distributed levels and
 one cable place on each occupied level:
 
 ```text

@@ -464,6 +464,52 @@
         "exact_branch_feed_pickup_chainage_m": null,
         "status": "UNKNOWN_SITE_COORDINATES",
         "rule": "Do not place the gap by a hard-coded offset from point tip or frog until a project/maintenance layout is sourced."
+      },
+      "historical_cast_iron_chamber_reference": {
+        "archetype_id": "CAST_IRON_CROSSOVER_CHAMBER_8750_WITH_6000_ACTIVE_TUNNEL_1987_REFERENCE",
+        "actual_site_match": false,
+        "source_id": "S102",
+        "locator": "ENiR E36-2 issue 2 (1987), §E36-2-75",
+        "era": "late Soviet construction norm",
+        "applicability": "generic cast-iron crossover-chamber construction reference; morphologically closer to the actual cast-iron Belorusskaya chamber than the RC-tubing Frolov sequence, but NOT proven at Belorusskaya",
+        "geometry": {
+          "chamber_diameter_m": 8.75,
+          "existing_operating_tunnel_diameter_m": 6,
+          "ring_width_m": 0.75,
+          "tubings_per_ring": 11,
+          "tubing_types": {
+            "EK": 1,
+            "ES": 2,
+            "EN": 6,
+            "NKU": 2
+          },
+          "additional_spacers_or_gaskets": 2,
+          "NKU_fixing": "anchor bolts into concrete foundation",
+          "other_tubing_fixing": "bolts with spherical washers",
+          "chamber_length_m": null,
+          "turnout_axis_layout": null,
+          "track_axis_separation_m": null,
+          "transition_length_m": null
+        },
+        "status": "SOURCE_BACKED_GENERIC_HISTORICAL_REFERENCE",
+        "pcg_use_rule": "May inform cast-iron ring/chamber morphology only. Do not copy 8.75 m, 6.0 m, 0.75 m ring pitch or the 11-piece set into Belorusskaya as-built geometry without site-specific evidence."
+      },
+      "moscow_hybrid_crossover_morphology_reference": {
+        "archetype_id": "MOSCOW_CAST_IRON_CROWN_MONOLITHIC_WALL_INVERT_REFERENCE",
+        "actual_site_match": false,
+        "source_id": "S103",
+        "locator": "secondary historical engineering overview, lines 39-52",
+        "era": "historical",
+        "applicability": "Moscow metro morphology context only",
+        "source_backed_morphology": [
+          "cast-iron tubing crown with monolithic-concrete walls and invert was widespread on Moscow sections with high water inflow",
+          "reported spans reach up to 14 m in that construction family",
+          "station/escalator-tunnel tubings and wedge spacers could be reused to form large chamber crowns",
+          "for prefabricated-element bellmouth/chamber ends accepting two single-track tunnels, the end wall is monolithic reinforced concrete"
+        ],
+        "dimensions_for_selected_belorusskaya": null,
+        "confidence": "C_secondary",
+        "pcg_use_rule": "Use only as a morphology prior/visual validation class. It does not turn the reported 14 m span into a Belorusskaya dimension."
       }
     }
   ],
@@ -481,7 +527,8 @@
       "Generic stepwise chamber geometry can drive a fallback transition algorithm, but is not site-identical evidence.",
       "Independent single-track tunnels in the generic Frolov scheme occur only after inter-track spacing exceeds 6 m; exact post-chamber-6 split chainage is not dimensioned.",
       "Contact-rail ramp/gap/support ranges are source-backed standards, while exact local positions are unresolved.",
-      "Current drainage and evacuation geometry is normatively constrained but the historical Belorusskaya site layout is not."
+      "Current drainage and evacuation geometry is normatively constrained but the historical Belorusskaya site layout is not.",
+      "A late-Soviet generic cast-iron chamber reference (S102) provides an 8.75 m / 11-tubing construction family, and a secondary Moscow reference (S103) documents cast-iron-crown + monolithic-wall/invert chambers; neither is proven as the Belorusskaya as-built geometry."
     ],
     "UNKNOWN": [
       "exact Belorusskaya switch OSM/project XY and chainage",

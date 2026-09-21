@@ -13,6 +13,7 @@ from tunnel_scanner_core import (
     build_modern_contact_support_meshes,
     build_modern_lvt_local_event_meshes,
     build_r2k11_local_rack_mesh,
+    build_water_main_support_local_mesh,
     build_production_tunnel,
     cable_rack_chainages,
     contact_rail_axis_profile_x,
@@ -22,6 +23,7 @@ from tunnel_scanner_core import (
     modern_protective_cover_profile_xz,
     modern_cable_sections_core,
     modern_water_main_section_core,
+    water_main_support_chainages,
     r65_rail_center_offsets_for_gauge,
 )
 
@@ -46,6 +48,7 @@ MODERN_TYPES = {
     "production_service_cable",
     "production_cable_rack_r2k11",
     "production_water_main",
+    "production_water_main_support",
     "production_moscow_walkway",
     "production_moscow_civil_shell_ring",
 }
@@ -65,12 +68,13 @@ def test_stage10_5_profile_contains_modern_default_and_legacy_alternative():
     pw = profile.modern_permanent_way
     cr = profile.modern_contact_rail
 
-    assert profile.schema_version == "2.1"
+    assert profile.schema_version == "2.2"
     assert profile.default_service_preset == "MODERN_MOSCOW_LVT_SERVICES_2020S"
     assert profile.water_main.min_nominal_dn_mm == 80
     assert profile.water_main.quantity_single_track_tunnel == 1
     assert profile.water_main.side_profile_x_sign == 1
-    assert math.isclose(profile.water_main.center_profile_z_m, 0.70, abs_tol=1e-12)
+    assert math.isclose(profile.water_main.center_profile_z_m, 0.60, abs_tol=1e-12)
+    assert math.isclose(profile.water_main.support_max_pitch_m, 4.0, abs_tol=1e-12)
 
     assert pw.preset_id == "MOSCOW_LVT_M_R65_APC4_2020S"
     assert pw.fastening_family == "APC-4"
@@ -113,13 +117,22 @@ def test_stage10_5_profile_contains_modern_default_and_legacy_alternative():
 
     rack = profile.cable_rack
     assert rack.family == "R2K11"
+    assert rack.assembly_designation == "R2K11 / K1351.001-09 + 11xK1350.002"
+    assert rack.upright_designation == "K1351.001-09"
+    assert rack.horn_designation == "K1350.002"
     assert rack.horn_count == 11
     assert math.isclose(rack.overall_arc_length_m, 1.440, abs_tol=1e-12)
     assert math.isclose(rack.upright_width_longitudinal_m, 0.048, abs_tol=1e-12)
     assert math.isclose(rack.upright_thickness_m, 0.003, abs_tol=1e-12)
     assert math.isclose(rack.horn_thickness_m, 0.004, abs_tol=1e-12)
     assert math.isclose(rack.horn_radius_m, 0.0325, abs_tol=1e-12)
+    assert math.isclose(rack.horn_overall_length_m, 0.169, abs_tol=1e-12)
+    assert math.isclose(rack.horn_overall_height_m, 0.087, abs_tol=1e-12)
+    assert rack.cable_places_per_horn == 2
+    assert rack.occupied_places_per_horn == 2
     assert math.isclose(rack.horn_pitch_m, 0.125, abs_tol=1e-12)
+    assert math.isclose(rack.first_cable_center_inward_m, 0.070, abs_tol=1e-12)
+    assert math.isclose(rack.second_cable_center_inward_m, 0.125, abs_tol=1e-12)
     assert math.isclose(rack.max_cable_diameter_m, 0.065, abs_tol=1e-12)
 
 
@@ -133,12 +146,31 @@ def test_stage10_5_r2k11_racks_repeat_on_both_walls_and_stay_inside_shell():
         assert rack.properties["family"] == "R2K11"
         assert rack.properties["hornCount"] == 11
         assert rack.properties["cablePlacesPerHorn"] == 2
+        assert rack.properties["uprightDesignation"] == "K1351.001-09"
+        assert rack.properties["hornDesignation"] == "K1350.002"
+        assert math.isclose(rack.properties["hornOverallLengthM"], 0.169, abs_tol=1e-12)
+        assert math.isclose(rack.properties["hornOverallHeightM"], 0.087, abs_tol=1e-12)
+        assert math.isclose(rack.properties["hornLongitudinalWidthM"], 0.040, abs_tol=1e-12)
         assert rack.vertices
         max_radius = max(
             math.hypot(x, z)
             for x, _y, z in rack.vertices
         )
         assert max_radius < profile.intrados_radius_m
+
+    cables = modern_cable_sections_core(profile)
+    assert len(cables) == 44
+    assert {
+        props["occupiedCablePlaceIndex"]
+        for _name, _section, props in cables
+    } == {0, 1}
+    assert {
+        props["serviceSideClass"]
+        for _name, _section, props in cables
+    } == {
+        "strong_current_side_contact_rail_side",
+        "weak_current_side_walkway_side",
+    }
 
 
 def test_stage10_5_modern_cover_is_low_rounded_wrap_not_legacy_tall_box():
@@ -439,12 +471,14 @@ def test_stage10_5_modern_is_default_and_legacy_remains_selectable():
     ) == support_count
     assert mm["contactRailSupportSeparateFromRunningSupport"] is True
     assert len(modern.scene.objects_of_type("production_tube")) == 0
-    assert len(modern.scene.objects_of_type("production_service_cable")) == 22
+    assert len(modern.scene.objects_of_type("production_service_cable")) == 44
     rack_count = len(
         modern.scene.objects_of_type("production_cable_rack_r2k11")
     )
     assert rack_count == 22
-    assert mm["serviceCableCount"] == 22
+    assert mm["serviceCableCount"] == 44
+    assert mm["serviceCablePlacesPerHorn"] == 2
+    assert mm["serviceCableOccupiedPlacesPerHorn"] == 2
     assert mm["serviceCableRackCount"] == rack_count
     assert mm["serviceCableRackFamily"] == "R2K11"
     assert mm["serviceCableRackHornCount"] == 11
@@ -455,6 +489,10 @@ def test_stage10_5_modern_is_default_and_legacy_remains_selectable():
     assert mm["serviceWaterMainCount"] == 1
     assert mm["serviceWaterMainMinNominalDNmm"] == 80
     assert len(modern.scene.objects_of_type("production_water_main")) == 1
+    water_supports = modern.scene.objects_of_type("production_water_main_support")
+    assert water_supports
+    assert len(water_supports) == mm["serviceWaterMainSupportCount"]
+    assert math.isclose(mm["serviceWaterMainSupportMaxPitchM"], 4.0, abs_tol=1e-12)
     assert mm["legacyStage8TubeCount"] == 0
 
     # Validate containment in the core-local cross-section. World X/Z include
@@ -473,6 +511,19 @@ def test_stage10_5_modern_is_default_and_legacy_remains_selectable():
     assert water_props["minNominalDNmm"] == 80
     assert water_props["positionRule"] == "above_UGR_weak_current_side"
     assert water_props["exactProjectRouteResolved"] is False
+
+    supports = water_main_support_chainages(10.0, profile)
+    assert supports == (2.0, 6.0)
+    assert supports[0] <= 4.0
+    assert 10.0 - supports[-1] <= 4.0
+    local_support = build_water_main_support_local_mesh(profile)
+    assert local_support.object_type == "production_water_main_support"
+    assert local_support.properties["normativeSupportIntervalResolved"] is True
+    assert math.isclose(
+        local_support.properties["supportMaxPitchM"],
+        4.0,
+        abs_tol=1e-12,
+    )
 
     lm = legacy.scene.metadata["productionGeometry"]
     assert legacy.config.resolved_moscow_service_preset == "legacy"

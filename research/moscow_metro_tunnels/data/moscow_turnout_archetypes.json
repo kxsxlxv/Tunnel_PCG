@@ -616,7 +616,21 @@
         },
         "exact_local_flangeway_profile": null
       },
-      "minimum_straight_insert_note": "Exact front/rear joint straight inserts remain unresolved. Apply the source-backed turnout-center >=20 m distance to nearby plan/vertical curve starts from SP 120 §5.3.5."
+      "minimum_straight_insert_note": "Exact front/rear joint straight inserts remain unresolved. Apply the source-backed turnout-center >=20 m distance to nearby plan/vertical curve starts from SP 120 §5.3.5.",
+      "drawing_sources": {
+        "numeric_primary": {
+          "source_id": "S094",
+          "locator": "Murom Switch Plant catalogue p.139",
+          "authority": "manufacturer catalogue"
+        },
+        "high_resolution_mirror": {
+          "source_id": "S130",
+          "use": "visual legibility/check only",
+          "geometry_image": "https://www.vsp74.ru/upload/resize_cache/webp/medialibrary/b4f/scsob7pxv3b9pvplvzbxsg7m76j0myt2.webp",
+          "bearer_image": "https://www.vsp74.ru/upload/resize_cache/webp/medialibrary/7bf/n89s2iyugcm11wzqq0yidky2b3qauhzy.webp",
+          "warning": "supplier page contains inconsistent LPTP marketing codes; do not override S094 numeric values"
+        }
+      }
     },
     {
       "id": "MOSCOW_METRO_CROSSOVER_2_9_CONSTRAINT",

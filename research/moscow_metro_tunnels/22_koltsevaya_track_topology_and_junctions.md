@@ -164,6 +164,26 @@ The expansion hop count is only an acquisition boundary. It does not assign `BRA
 
 Не все перечисленные системы означают простой одиночный turnout. Многие — это несколько стрелок, тупик/оборотный путь и последующая соединительная ветвь.
 
+### Дополнительные actual-site visual anchors
+
+После выбора Белорусской как первого depot-side topology archetype удалось найти два полезных реальных фото-набора для валидации морфологии:
+
+**Курская — ССВ на Люблинско-Дмитровскую / Чкаловскую систему (S104).**
+Фотоочерк с подписями фиксирует:
+- стрелку №4 на **II пути**, причём II путь прямо назван внешним кольцом; вид направлен к Комсомольской;
+- бывший оборотный тупик за Курской, в который в 1990-е была врезана новая камера для ССВ;
+- от существующего развития ССВ **уходит вниз влево** — это source-backed qualitative vertical relation, но не численное ΔZ;
+- новую камеру со **стрелкой №7**;
+- камеру выезда через стрелку №4 как полностью монолитную;
+- последующее развитие как **комбинированную обделку**: большая часть чугунная, самый широкий пролёт монолитный.
+
+Никакие абсолютные размеры из этих фотографий не снимаются.
+
+**Парк культуры — ССВ на Сокольническую (S105).**
+Фотоархив прямо подписывает **стрелку №4** и указывает, что в показанной ориентации ССВ на Сокольническую линию уходит **направо**. Номер главного пути, chainage и инженерные координаты из одной подписи не выводятся.
+
+Эти объекты остаются secondary validation archetypes. Первым depot-oriented junction contract остаётся Белорусская/Красная Пресня, поскольку для него есть одновременно actual-site tunnel-node photo/caption и прямое подтверждение связи с обслуживающим Line 5 депо.
+
 ---
 
 ## 4. Первый junction archetype: Белорусская → оборотный тупик / ТЧ «Красная Пресня»
@@ -328,6 +348,27 @@ This sequence may drive a **generic fallback transition algorithm**, but the gen
 
 Actual Belorusskaya chamber must not inherit the 5.56 / 7.20 / 7.70 / 9.00 m diameters, chamber lengths, chamber-6 radii or >6 m split criterion as as-built dimensions.
 
+### 6.3 Historical cast-iron chamber references closer to the actual material class
+
+Для Белорусской actual evidence говорит **cast-iron tubings**, поэтому дополнительно зафиксирован более близкий по материалу исторический reference.
+
+S102, ЕНиР Е36-2, вып.2 (1987), §Е36-2-75:
+- чугунная тюбинговая камера съездов **D=8.75 m**;
+- внутри неё расположен действующий перегонный тоннель **D=6.0 m**;
+- кольцо камеры имеет ширину **0.75 m**;
+- **11 тюбингов**: ЭК×1, ЭС×2, ЭН×6, НКУ×2, плюс две прокладки;
+- НКУ закрепляются анкерными болтами в бетонном фундаменте; прочие тюбинги — болтами со сферическими шайбами.
+
+Это **generic late-Soviet construction reference**, а не проект Белорусской. Для Belorusskaya запрещено автоматически переносить D=8.75 m, D=6.0 m, pitch=0.75 m или эту 11-piece раскладку.
+
+S103 — secondary historical engineering reprint — даёт только morphology context для Москвы:
+- на водообильных участках Московского метро применялись камеры со **сводом из чугунных тюбингов** и **стенами/лотком из монолитного бетона**;
+- в этом семействе упоминаются пролёты до **14 m**;
+- крупные своды могли собираться из тюбингов станционных/эскалаторных тоннелей и клиновидных прокладок;
+- при сопряжении сборной камеры с двумя однопутными тоннелями торцевая стена могла быть монолитной железобетонной.
+
+S103 имеет C-confidence и используется только как morphology prior; 14 m **не является размером Белорусской**.
+
 ---
 
 ## 7. Contact rail through the turnout event
@@ -436,7 +477,7 @@ Again: none of these generic dimensions are assigned to the actual Belorusskaya 
 | junction location | Belorusskaya, Krasnopresnenskaya side; II straight, branch left | multi-switch turnback/depot system | exact switch XY / chainage / Z |
 | turnout | ordinary main/turnback turnout uses 1:9 | metro-specific R65 project 2976 usable as tagged fallback | exact installed project at Belorusskaya |
 | turnout rails | stock rails, points, frog, guard rails needed | project 2976 dimensions available | exact historical fastener/point machine at site |
-| actual chamber | cast-iron tubings + RC end wall | correct visual class confirmed by photo | actual length/width/height/tubing coordinates |
+| actual chamber | cast-iron tubings + RC end wall | correct visual class confirmed by photo; S102/S103 give generic cast-iron/hybrid morphology references only | actual length/width/height/tubing coordinates |
 | generic chamber progression | Frolov 5.56→7.20→7.70→9.00 m widening, then 15 m two-vault common-wall chamber 6 | independent tunnels only after inter-track >6 m; can drive fallback algorithm only | exact post-chamber-6 split chainage and correspondence to Belorusskaya |
 | contact rail | must be event-based with gaps/ramps/sectioning | normative ranges known | exact local positions |
 | drainage/walkway/services | cannot be periodic through turnout; current passage/drainage/power/sign rules are known | event-based current-rule geometry is constrained | historical/as-built Belorusskaya plan/levels/products |

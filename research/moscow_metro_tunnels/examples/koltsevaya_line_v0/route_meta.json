@@ -1,14 +1,13 @@
 {
-  "schema_version": "0.1",
+  "schema_version": "0.2",
   "route_id": "moscow_line_5_koltsevaya_v0",
-  "status": "pilot_station_anchor_reconstruction",
+  "status": "pilot_station_anchor_reconstruction_with_resolved_osm_route_hierarchy",
   "line_number": 5,
   "line_name_ru": "Кольцевая линия",
   "official_public_length_m": 19400,
   "stations": 12,
   "osm_relation_current": 1462012,
-  "osm_relation_current_source": "Wikidata Q831673 retrieved 2026-09-19",
-  "osm_relation_legacy_do_not_use": 300607,
+  "osm_relation_current_source": "S099 current OSM route_master checked 2026-09-21",
   "source_crs": "EPSG:4326",
   "engineering_crs": "EPSG:32637",
   "local_origin": {
@@ -26,7 +25,7 @@
     "published_line_length_difference_percent": 2.53712810709354,
     "min_sampled_radius_m": 393.0818123587114,
     "samples_with_radius_below_600m": 13,
-    "rule": "This is a preview/fallback only. Replace with OSM relation 1462012 railway=subway ways or project alignment before high-fidelity generation.",
+    "rule": "This is a preview/fallback only. Replace with independent physical railway=subway centerlines extracted from child route relations 300607 (Inner) and 1462011 (Outer), or stronger project alignment.",
     "samples_with_radius_below_300m": 0,
     "curvature_sample_note": "Radius estimated from neighboring 25 m plan samples; diagnostic only."
   },
@@ -38,18 +37,41 @@
     "rule": "Do not interpolate published depths as absolute tunnel Z. First sample a DEM/survey in a known vertical datum, then convert only depths with known datum and solve the constrained vertical profile."
   },
   "expected_upgrade_path": [
-    "fetch current OSM relation 1462012 physical railway=subway member ways",
-    "split inner/outer track if both ways are available",
+    "fetch current OSM child route 300607 (Inner) relation/full or equivalent PBF objects",
+    "fetch current OSM child route 1462011 (Outer) relation/full or equivalent PBF objects",
+    "preserve physical way/node graph separately for each route; do not build one track as an offset of the other",
+    "resolve branch/crossover edges with explicit topology annotations",
     "sample FABDEM/Copernicus or project LandXML surface",
     "resolve vertical datum",
     "attach station/profile Z anchors",
     "solve grade and vertical curves",
-    "export alignment_3d.json to Blender"
+    "export separate alignment_3d data for both physical main tracks to Blender"
   ],
   "warnings": [
     "Station coordinates are not guaranteed to be platform-axis or tunnel-axis survey coordinates.",
     "Spline is not an as-built track centerline.",
     "Published station depth is retained as an anchor attribute only, not used as z_ugr.",
-    "Current OSM underground geometry may itself be approximate."
-  ]
+    "Current OSM underground geometry may itself be approximate.",
+    "OSM route hierarchy is resolved, but child-relation way/node bytes have not been acquired in this research runtime; no way IDs are guessed."
+  ],
+  "osm_route_hierarchy": {
+    "master": {
+      "relation_id": 1462012,
+      "type": "route_master",
+      "route_master": "subway",
+      "source_id": "S099"
+    },
+    "inner": {
+      "relation_id": 300607,
+      "name": "Circle line (Inner)",
+      "track_contract_id": "KOLTSEVAYA_TRACK_A",
+      "source_id": "S100"
+    },
+    "outer": {
+      "relation_id": 1462011,
+      "name": "Circle line (Outer)",
+      "track_contract_id": "KOLTSEVAYA_TRACK_B",
+      "source_id": "S101"
+    }
+  }
 }

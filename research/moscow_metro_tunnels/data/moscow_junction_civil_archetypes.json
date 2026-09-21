@@ -176,19 +176,40 @@
     {
       "id": "MOSCOW_CAST_IRON_CROWN_MONOLITHIC_WALL_INVERT_REFERENCE",
       "status": "GENERIC_MORPHOLOGY_REFERENCE",
-      "source_id": "S103",
       "locator": "historical engineering overview/reprint, relevant chamber/bellmouth passages",
-      "era": "historical secondary source",
+      "era": "historical Moscow engineering reference; primary textbook 1975 plus secondary corroboration",
       "applicability": "Moscow metro morphology context",
       "morphology": [
-        "cast-iron tubing crown with monolithic-concrete walls and invert on high-water Moscow sections",
-        "large chamber crowns assembled with station/escalator-tunnel tubings and wedge spacers",
-        "monolithic reinforced-concrete end walls at some junctions between prefabricated chambers and two single-track tunnels"
+        "deep separate single-track running tunnels widen progressively through crossover chambers until a connecting tunnel can join",
+        "Moscow crossover chambers widely used cast-iron tubing crowns resting on monolithic-concrete foundations with concrete inverts",
+        "reported crown spans in that Moscow construction family reach up to 14 m",
+        "large crowns use standard station/escalator-tunnel tubings with wedge-shaped cast-iron spacers",
+        "bellmouth morphology is gradual widening for two-track-to-two-single-track transitions and is also used at connecting-tunnel junctions",
+        "deep-level turnback-track junction chambers are structurally analogous to crossover chambers and may include additional large-span chambers"
       ],
       "reported_family_span_upper_context_m": 14,
       "selected_site_dimension_use": false,
-      "confidence": "C",
-      "mesh_rule": "Visual/morphology prior only. The reported 14 m span is not a Belorusskaya dimension."
+      "confidence": "B_primary_textbook_morphology_C_secondary_corroboration",
+      "mesh_rule": "Use as a Moscow-specific historical morphology prior. The 14 m span and generic deep-turnback dimensions are family/context values, not Belorusskaya dimensions.",
+      "source_ids": [
+        "S119",
+        "S103"
+      ],
+      "locators": [
+        "S119: Samoilov et al. 1975, printed pp.68-69, section 'Камеры съездов, раструбы и тупики'",
+        "S103: secondary historical engineering overview/reprint"
+      ],
+      "generic_deep_turnback_context": {
+        "track_axis_spacing_m": 12,
+        "inspection_ditch_width_m": 1.2,
+        "inspection_ditch_depth_m": 1.2,
+        "inspection_ditch_length_m": 155,
+        "service_platform_height_above_ugr_m": 1.2,
+        "service_platform_length_m": 155,
+        "source_id": "S119",
+        "status": "GENERIC_DEEP_TURNBACK_CONTEXT_NOT_BELORUSSKAYA_JUNCTION_GEOMETRY",
+        "use_rule": "Do not apply these dimensions to the selected Belorusskaya divergence chamber or depot branch without site-specific evidence."
+      }
     },
     {
       "id": "KURSKAYA_LDL_SERVICE_BRANCH_ACTUAL_VISUAL_CONSTRAINT",

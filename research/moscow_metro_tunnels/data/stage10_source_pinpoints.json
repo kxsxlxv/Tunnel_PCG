@@ -461,6 +461,25 @@
         "The clauses do not fix one universal X/Z mounting coordinate for this specific 5.5/5.1 archetype.",
         "The 89 mm preview outer diameter and +0.70 m profile-Z center remain explicitly tagged visualization/placement fallbacks, not normative dimensions."
       ]
+    },
+    {
+      "id": "P10-USER-CONTACT-SUPPORT-873",
+      "title": "User-supplied dimensioned metro contact-rail support drawing",
+      "url": null,
+      "locator": {
+        "conversation_date": "2026-09-21",
+        "image_callouts": "873, 683, 180, 373, 155, 90 mm"
+      },
+      "supports": [
+        "readable horizontal callout 683 mm from running-reference datum to the contact-support/contact-rail axis region",
+        "readable horizontal overall callout 873 mm to the outboard bracket envelope",
+        "readable upper return callout 180 mm",
+        "readable overall vertical callout 373 mm above the running-reference/UGR line",
+        "readable lower/upper bend construction callouts 155 mm and 90 mm",
+        "two-fastener over-rail clamp topology visible in the support assembly"
+      ],
+      "confidence": "B_readable_callouts_C_exact_referent_interpretation",
+      "note": "The 683 and 155 mm callouts closely cross-check the already authoritative 690±8 mm horizontal and +160 mm vertical contact-rail placement. They do not replace those normative datums."
     }
   ]
 }

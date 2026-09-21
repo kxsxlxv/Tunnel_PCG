@@ -1167,6 +1167,44 @@
       },
       "limitation": "Secondary supplier mirror. The page title/project field identifies 2976.00.000 but marketing prose also mentions inconsistent LPTP product codes. Use S094 manufacturer catalog as numeric authority and S130 only as a legibility/visual cross-check.",
       "confidence": "C_supplemental_drawing_mirror"
+    },
+    {
+      "id": "S131",
+      "title": "Dnipro Switch Plant — metro turnout product table",
+      "url": "https://dnsz.ua/ua/product/strelochnaya-produktsiya/dlya-metro",
+      "locator": {
+        "table": "Переводи стрілочні / Для метро",
+        "row": "R65 | 1/9 | wooden bearers | project 2976Dn.00.000;(-01) | analogue 2976",
+        "supports": [
+          "turnout radii 300.00 / 200.06 m",
+          "frame/stock rail length 12.5 m",
+          "rotating point length 8.3 m",
+          "assembled frog length 4.59 m",
+          "overall turnout length 31.035 m",
+          "project has right/left paired designations .00.000 and (-01)"
+        ],
+        "parallel_row": "R50 1/9 project 2891Dn: stock rail 12.5 m, point 6.515 m, frog 3.965 m, total 31.057 m"
+      },
+      "confidence": "B_official_manufacturer_crosscheck_not_selected_site_proof"
+    },
+    {
+      "id": "S132",
+      "title": "Dnipro Switch Plant — turnout drive fittings catalogue",
+      "url": "https://dnsz.ua/files/zagruzki/Rizne_ukr.pdf",
+      "locator": {
+        "pdf_page": 4,
+        "printed_page": "4 of 7",
+        "table": "Група I — гарнітура без додаткових перевідних пристроїв до стрілки",
+        "row": 7,
+        "supports": [
+          "fitting project 16760-00-00 / 16760Dn.00.000",
+          "for SP-6 electric point machine",
+          "for R65 1/9 1520 mm metro turnout project 2976Dn",
+          "fitting mass 132 kg"
+        ]
+      },
+      "limitation": "Compatibility/product-family evidence only. It does not prove the selected Belorusskaya switch uses SP-6 or this fitting set.",
+      "confidence": "B_official_manufacturer_compatibility"
     }
   ],
   "acquisition_targets": [

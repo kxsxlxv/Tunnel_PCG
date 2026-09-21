@@ -315,7 +315,14 @@
           "lining_type": null,
           "z_ugr_m": null,
           "cut_marker_xy": null,
-          "status": "UNKNOWN_PUBLICLY"
+          "status": "UNKNOWN_PUBLICLY",
+          "tunnel_branch_existence": {
+            "value": true,
+            "source_id": "S098",
+            "locator": "official OTI list quoting Moscow Metro letter dated 20.08.2013",
+            "status": "SOURCE_BACKED"
+          },
+          "track_count_or_single_shell_arrangement": null
         },
         "first_geometry_fallback": {
           "source_archetype": "METRO_STEPWISE_BRANCH_CHAMBER_RC_TUBING_2001_REFERENCE",

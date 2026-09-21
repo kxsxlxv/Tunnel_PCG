@@ -428,7 +428,7 @@ def sample_alignment_station(
     )
 
 
-def _sample_alignment_stations_sorted(
+def sample_alignment_stations_sorted(
     stations: Sequence[AlignmentStation],
     chainages_m: Sequence[float],
 ) -> tuple[AlignmentStation, ...]:

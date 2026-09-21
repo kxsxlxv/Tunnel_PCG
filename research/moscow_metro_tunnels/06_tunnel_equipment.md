@@ -98,6 +98,79 @@ Historical/current-compatible metro practice places some traction jumper/return 
 Keep as a configurable subsystem:
 `TRACTION_CABLE_LOWER_BRACKET_RUN`.
 
+
+### 1.7 Current R2K11 / K1351.001-09 rack dimensions
+
+For the current Stage-10.5 circular-tunnel service preset, use the curved
+11-level R2K11 family rather than a generic cable shelf.
+
+Current component mapping:
+
+```text
+assembly            R2K11
+curved upright      K1351.001-09
+double horn         K1350.002
+```
+
+Current product dimensions pinned in the source register:
+
+```text
+K1351.001-09 upright
+  arc/overall length          1440 mm
+  longitudinal width            48 mm
+  steel thickness                3 mm
+  horn levels                   11
+
+K1350.002 double horn
+  overall radial length         169 mm
+  longitudinal width             40 mm
+  overall height                 87 mm
+  steel thickness                 4 mm
+  cable places                    2
+  maximum cable diameter         65 mm
+```
+
+The R2K family increments vertically at 125 mm; R2K11 therefore uses ten
+125 mm intervals between eleven horn levels.
+
+Stage-10.5 geometry uses the exact component envelopes above. The precise
+stamped bend path/radii of K1350.002 are not yet available as factory CAD and
+remain a replaceable local preview.
+
+Placement remains one rack per side at each 1.0 m Moscow civil ring for the
+selected archetype. That longitudinal pitch is a procedural archetype choice,
+not a universal normative R2K11 pitch.
+
+For visual density the current preset fills both cable places on all 11 levels
+on both sides:
+
+```text
+11 levels x 2 places x 2 tunnel sides = 44 representative cables
+```
+
+This is explicitly a maximum-density/capacity preview. Do not describe it as
+the exact cable schedule of a named Moscow tunnel.
+
+Side semantics follow the current tunnel-layout rule:
+
+- contact-rail / negative-X wall: strong-current side;
+- walkway / positive-X wall: weak-current side.
+
+### 1.8 Tunnel water-main support rule
+
+The current tunnel-water contract remains:
+
+- one water main per single-track tunnel;
+- nominal diameter at least DN80;
+- above UGR;
+- normally on the weak-current side.
+
+Pipeline supports are generated at intervals no greater than 4 m.
+
+The current 5.5/5.1 archetype preview uses profile z=+0.600 m to keep the pipe
+below the lowest R2K11 cable/horn layer. That exact X/Z mounting position and
+the 89 mm visual OD proxy are still project-independent fallbacks.
+
 ---
 
 ## 2. Lighting

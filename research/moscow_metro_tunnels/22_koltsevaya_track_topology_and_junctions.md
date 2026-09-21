@@ -839,6 +839,19 @@ Therefore PCG handling is explicitly event-based:
 
 ---
 
+### 8.2 Near-era maintenance storage and safe-passage events
+
+S128 §§7.2–7.4 also closes part of the otherwise vague "safe zones / equipment near turnout" requirement:
+
+- kilometre-stock running/contact rails in tunnels are stored **at the wall**; where a banquette exists, preferably **in breaks in the banquette**;
+- rail supports/spacers are placed along the stored rail at no more than roughly **5.5–6 m** spacing;
+- spare turnout parts are stored **immediately near the turnout**, but their arrangement must preserve **safe passage for maintenance personnel**;
+- the exact spare-parts layout is station-specific and approved by the track division;
+- storing turnout parts **between the end of the frog and the limit rail is normally prohibited** and allowed only exceptionally when no other place exists;
+- spare stock rails, points and frogs are part of the maintained turnout inventory.
+
+For PCG this creates explicit `STOCK_RAIL_STORAGE` / `TURNOUT_SPARES_STORAGE` events plus a `NO_STORAGE_FROG_TO_LIMIT_RAIL` zone. It still does not define a numeric historical walkway width at Belorusskaya, so that width remains unresolved rather than inferred.
+
 ### Current turnout service events for a modern-retrofit preset
 
 For a **current/modern retrofit** event preset only, S022 now closes several previously generic service placeholders:

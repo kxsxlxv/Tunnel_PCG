@@ -42,7 +42,9 @@
             "chamber 5 length 9.75 m and ID 9.00 m (read from the printed scan; OCR mirror misreads this value in one text extraction)",
             "chamber 6 length 15.0 m",
             "section 2-2 of chamber 6 shows two open single-track lining arches with reference radii R_in=2.57 m and R_out=2.82 m, supported at the common central wall",
-            "section 2-2 shows lining-axis to UGR vertical dimension 1.70 m for the generic two-vault reference"
+            "section 2-2 shows lining-axis to UGR vertical dimension 1.70 m for the generic two-vault reference",
+            "section 1-1 shows horizontal track-axis offsets 2.460 m and 2.000 m from the central reference; their sum reproduces M4=4.460 m",
+            "section 2-2 shows raw horizontal 2.050 m callouts from each track axis toward the central wall/reference zone; exact central-wall datum is not sufficiently clear in the available scan, so no 4.10 m center-spacing claim is made"
           ]
         },
         {

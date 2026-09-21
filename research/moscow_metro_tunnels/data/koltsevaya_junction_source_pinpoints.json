@@ -1002,6 +1002,93 @@
         ]
       },
       "confidence": "B/C_transport_encyclopedia_topology_not_engineering_plan"
+    },
+    {
+      "id": "S126",
+      "title": "Инструкция по текущему содержанию пути и контактного рельса метрополитенов",
+      "url": "https://wiki.nashtransport.ru/images/e/e5/%D0%98%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BA%D1%86%D0%B8%D1%8F_%D0%BF%D0%BE_%D1%81%D0%BE%D0%B4%D0%B5%D1%80%D0%B6%D0%B0%D0%BD%D0%B8%D1%8E_%D0%BF%D1%83%D1%82%D0%B8_%D0%B8_%D0%9A%D0%A0_%D0%BC%D0%B5%D1%82%D1%80%D0%BE%D0%BF%D0%BE%D0%BB%D0%B8%D1%82%D0%B5%D0%BD%D0%BE%D0%B2.pdf",
+      "edition": "2005",
+      "locators": [
+        {
+          "printed_pages": "15, 29-36",
+          "clauses": [
+            "2.4.2",
+            "2.9.1",
+            "2.9.6",
+            "2.10.1",
+            "2.10.2",
+            "2.11.2",
+            "2.12.1",
+            "2.12.2"
+          ],
+          "supports": [
+            "rails on turnouts/crossovers are laid without rail inclination",
+            "wooden turnout/crossover bearers follow GOST 8816",
+            "single-turnout bearer lengths range 3.00-5.25 m",
+            "turnouts/crossovers use ballast; ordinary track concrete is omitted under them",
+            "track concrete is also omitted on adjacent 5-25 m sections on each side",
+            "minimum compacted ballast thickness in tunnel turnout/crossover zone is 0.24 m under each rail",
+            "limit rail is placed at 3.400 m converging/diverging track-axis separation (3.300 m retained on some pre-1963 lines)",
+            "limit rail is fixed to sleepers/bearers and must not project above UGR",
+            "main/station/special-purpose tunnel turnouts use frog no steeper than 1:9",
+            "counterrail-to-frog-core working-face distance >=1472 mm",
+            "counterrail-to-wing-rail working-face distance <=1435 mm"
+          ]
+        },
+        {
+          "printed_pages": "59-62",
+          "clauses": [
+            "3.10",
+            "3.12",
+            "3.14"
+          ],
+          "supports": [
+            "turnout/crossover air gaps are overlapping and normally <=7.7 m in this service-era rule",
+            "non-main turnout gap may exceptionally reach 10 m with permission",
+            "equipment in an air gap is >=0.8 m from metallic ramp end",
+            "main-track receiving ramp 1:30 and trailing ramp 1:25",
+            "existing lines may retain 1:25 receiving ramps until reconstruction",
+            "station/connecting tracks use 1:25 at both ends",
+            "end ramps are protected by the contact-rail box along their whole length",
+            "ramp end tips are beech or polyethylene",
+            "contact-rail segment including ramps is normally >=18.7 m and exceptionally >=12.5 m on main/station/connecting tracks"
+          ]
+        },
+        {
+          "printed_pages": "123-124",
+          "section": "turnout spare-parts storage rules",
+          "supports": [
+            "turnout spare parts are stored near the turnout while preserving safe personnel passage",
+            "storage between frog end and limit rail is generally excluded except specially permitted cases"
+          ]
+        }
+      ],
+      "confidence": "A/B_historical_operational_instruction"
+    },
+    {
+      "id": "S127",
+      "title": "ГОСТ 8816-2003 — Брусья деревянные для стрелочных переводов железных дорог широкой колеи",
+      "url": "https://files.stroyinf.ru/Data1/43/43320/index.htm",
+      "locators": [
+        {
+          "clause": "4.3 Table 1",
+          "supports": [
+            "Type II sawn bearer nominal thickness h=160 mm",
+            "Type II widened upper face b=220 mm and normal upper face b=175 mm",
+            "Type II lower face b1=250 mm (+20/-5)",
+            "sawn-side height h1 >=120 mm"
+          ]
+        },
+        {
+          "clause": "4.8 Table 2, set A4",
+          "supports": [
+            "A4 set applies to R65/R50/R43 with frog 1:9",
+            "A4 total 68 bearers",
+            "length counts: 3.00 m x17; 3.25 x10; 3.50 x8; 3.75 x4; 4.00 x6; 4.25 x5; 4.50 x6; 4.75 x4; 5.00 x4; 5.25 x4"
+          ]
+        }
+      ],
+      "confidence": "A_standard_dimensions_B_for_specific_project_applicability"
     }
   ],
   "acquisition_targets": [

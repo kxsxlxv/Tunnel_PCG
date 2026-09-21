@@ -27,6 +27,10 @@ from tunnel_scanner_core import (
     r65_rail_center_offsets_for_gauge,
 )
 
+from tunnel_scanner_core.production import (
+    _periodic_cable_sag_alignment_stations,
+)
+
 
 MODERN_TYPES = {
     "production_rail",
@@ -51,6 +55,8 @@ MODERN_TYPES = {
     "production_water_main_support",
     "production_moscow_walkway",
     "production_moscow_civil_shell_ring",
+    "production_moscow_civil_detail_ribs",
+    "production_moscow_civil_bolt_heads",
 }
 
 
@@ -153,6 +159,16 @@ def test_stage10_5_profile_contains_modern_default_and_legacy_alternative():
     assert rack.occupied_level_indices == (1, 2, 3, 4, 6, 7, 8, 9)
     assert math.isclose(rack.cable_sag_midspan_m, 0.025, abs_tol=1e-12)
     assert math.isclose(
+        rack.cable_sag_variation_fraction,
+        0.35,
+        abs_tol=1e-12,
+    )
+    assert math.isclose(
+        rack.cable_sag_peak_phase_jitter_fraction,
+        0.12,
+        abs_tol=1e-12,
+    )
+    assert math.isclose(
         rack.negative_side_center_profile_z_m,
         profile.datums.lining_axis_z_m,
         abs_tol=1e-12,
@@ -179,9 +195,12 @@ def test_stage10_5_r2k11_racks_repeat_on_both_walls_and_stay_inside_shell():
         assert math.isclose(rack.properties["hornOverallHeightM"], 0.087, abs_tol=1e-12)
         assert math.isclose(rack.properties["hornLongitudinalWidthM"], 0.040, abs_tol=1e-12)
         assert rack.properties["commonHorizontalUnderbar"] is False
+        assert rack.properties["separateWallTab"] is False
+        assert rack.properties["separateHorizontalNeck"] is False
         assert rack.properties["hornGeometryMode"] == (
-            "open_double_cradle_no_common_underbar_v3"
+            "single_continuous_omega_ribbon_v4"
         )
+        assert rack.properties["hornRibbonSamplesPerSpan"] == 2
         if side < 0:
             assert math.isclose(
                 rack.properties["centerProfileZM"],
@@ -211,6 +230,22 @@ def test_stage10_5_r2k11_racks_repeat_on_both_walls_and_stay_inside_shell():
     )
     assert all(
         math.isclose(props["longitudinalSagM"], 0.025, abs_tol=1e-12)
+        for _name, _section, props in cables
+    )
+    assert all(
+        math.isclose(
+            props["longitudinalSagVariationFraction"],
+            0.35,
+            abs_tol=1e-12,
+        )
+        for _name, _section, props in cables
+    )
+    assert all(
+        math.isclose(
+            props["longitudinalSagPeakPhaseJitterFraction"],
+            0.12,
+            abs_tol=1e-12,
+        )
         for _name, _section, props in cables
     )
     assert {
@@ -247,6 +282,58 @@ def test_stage10_5_r2k11_racks_repeat_on_both_walls_and_stay_inside_shell():
                 ),
             )
     assert min_rack_distance > water_radius + 1e-4
+
+
+def test_stage10_5_cable_sag_is_stable_irregular_and_low_poly():
+    stations = (
+        AlignmentStation(0.0, 0.0, 0.0, 0.0, "start"),
+        AlignmentStation(4.0, 4.0, 0.0, 0.0, "end"),
+    )
+    kwargs = {
+        "support_pitch_m": 1.0,
+        "support_phase_m": 0.5,
+        "midspan_sag_m": 0.025,
+        "variation_fraction": 0.35,
+        "peak_phase_jitter_fraction": 0.12,
+    }
+    a1 = _periodic_cable_sag_alignment_stations(
+        stations,
+        asset_key="cable-A",
+        **kwargs,
+    )
+    a2 = _periodic_cable_sag_alignment_stations(
+        stations,
+        asset_key="cable-A",
+        **kwargs,
+    )
+    b = _periodic_cable_sag_alignment_stations(
+        stations,
+        asset_key="cable-B",
+        **kwargs,
+    )
+
+    assert a1 == a2
+    assert a1 != b
+
+    # Four metres with half-metre support phase yields one interior peak per
+    # support span plus support stations, not a dense spline tessellation.
+    assert len(a1) <= 11
+    sagged = [
+        -station.offset_z_m
+        for station in a1
+        if station.offset_z_m < -1e-9
+    ]
+    assert sagged
+    assert max(sagged) - min(sagged) > 0.002
+
+    support_chainages = (0.5, 1.5, 2.5, 3.5)
+    by_chainage = {round(s.chainage_m, 9): s for s in a1}
+    for chainage in support_chainages:
+        assert math.isclose(
+            by_chainage[round(chainage, 9)].offset_z_m,
+            0.0,
+            abs_tol=1e-12,
+        )
 
 
 def test_stage10_5_modern_cover_is_low_rounded_wrap_not_legacy_tall_box():
@@ -562,6 +649,16 @@ def test_stage10_5_modern_is_default_and_legacy_remains_selectable():
             0.025,
             abs_tol=1e-12,
         )
+        assert math.isclose(
+            cable.custom_properties["cableSagVariationFraction"],
+            0.35,
+            abs_tol=1e-12,
+        )
+        assert math.isclose(
+            cable.custom_properties["cableSagPeakPhaseJitterFraction"],
+            0.12,
+            abs_tol=1e-12,
+        )
         assert cable.custom_properties["cableSagControlStationsAdded"] > 0
     assert mm["serviceCableRackCount"] == rack_count
     assert mm["serviceCableRackFamily"] == "R2K11"
@@ -662,6 +759,21 @@ def test_stage10_5_rc_6100_5600_civil_archetype_adapts_geometry():
     assert meta["civilArchetypeID"] == profile.civil_family
     civil = build.scene.objects_of_type("production_moscow_civil_shell_ring")
     assert civil
+    details = build.scene.objects_of_type(
+        "production_moscow_civil_detail_ribs"
+    )
+    assert len(details) == len(civil)
+    assert all(
+        obj.custom_properties["visualSegmentCount"] == 10
+        for obj in details
+    )
+    assert all(
+        obj.custom_properties["visualSegmentCountIsLOD0"] is False
+        for obj in details
+    )
+    assert not build.scene.objects_of_type(
+        "production_moscow_civil_bolt_heads"
+    )
     assert all(
         math.isclose(
             obj.custom_properties["intradosRadiusM"],

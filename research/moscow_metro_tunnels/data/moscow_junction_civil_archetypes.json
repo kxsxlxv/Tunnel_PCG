@@ -1,0 +1,194 @@
+{
+  "schema_version": "1.0",
+  "research_date": "2026-09-21",
+  "scope": "Civil-shell archetypes and constraints for Moscow Metro turnout/divergence chambers used by Koltsevaya PCG",
+  "evidence_policy": "Actual-site archetypes contain only site-supported facts. Generic historical/design references are separate and must never be silently promoted to an actual Koltsevaya chamber.",
+  "source_pinpoints_file": "koltsevaya_junction_source_pinpoints.json",
+  "archetypes": [
+    {
+      "id": "BELORUSSKAYA_CAST_IRON_DEPOT_JUNCTION_ACTUAL_CONSTRAINT",
+      "status": "ACTUAL_SITE_CONSTRAINED",
+      "site": "Кольцевая линия, Белорусская, сторона Краснопресненской / ветвь к ТЧ Красная Пресня",
+      "topology": {
+        "straight_route": "II главный путь toward Краснопресненская",
+        "diverging_route": "left toward turnback/depot system",
+        "source_id": "S093",
+        "status": "SOURCE_BACKED"
+      },
+      "civil": {
+        "primary_lining_material": "cast-iron tubings",
+        "end_wall": "monolithic reinforced concrete",
+        "waterproofing_history": "original pasted waterproofing later replaced by metal isolation",
+        "source_id": "S093",
+        "locator": "Metrostroy historical album, pp.78-79, caption to Belorusskaya Koltsevaya tunnel node",
+        "confidence": "A/B",
+        "status": "SOURCE_BACKED"
+      },
+      "geometry": {
+        "chamber_length_m": null,
+        "maximum_internal_width_m": null,
+        "internal_height_m": null,
+        "roof_profile": null,
+        "wall_profile": null,
+        "invert_profile": null,
+        "main_track_axis_offset_m": null,
+        "branch_track_axis_offset_m": null,
+        "axis_separation_at_end_m": null,
+        "transition_length_from_running_tunnel_m": null,
+        "lining_ring_pitch_m": null,
+        "tubing_count_per_ring": null,
+        "tubing_type_layout": null,
+        "central_wall_or_pier_geometry": null,
+        "branch_independent_shell_start_m": null,
+        "branch_shell_section": null,
+        "relative_track_z_m": null
+      },
+      "mesh_rule": "Build only a schematic/placeholder envelope unless a dimensioned site drawing is obtained. Do not import dimensions from generic Frolov or ENiR chambers as actual Belorusskaya values."
+    },
+    {
+      "id": "METRO_STEPWISE_BRANCH_CHAMBER_TUBING_2001_REFERENCE",
+      "status": "GENERIC_DIMENSIONED_REFERENCE_NOT_SITE_SPECIFIC",
+      "source_id": "S058",
+      "locator": "Frolov et al. 2001, printed pp.146-150, Figs.4.33-4.35",
+      "era": "2001 textbook/design reference",
+      "applicability": "generic closed-method single-track metro divergence sequence",
+      "sequence": [
+        {
+          "chamber": 1,
+          "length_m": 5,
+          "section": "approach/reference",
+          "internal_diameter_m": null,
+          "axis_parameter_m": null
+        },
+        {
+          "chamber": 2,
+          "length_m": 10,
+          "section": "circular",
+          "internal_diameter_m": 5.56,
+          "axis_parameter_m": 0.7
+        },
+        {
+          "chamber": 3,
+          "length_m": 15,
+          "section": "circular",
+          "internal_diameter_m": 7.2,
+          "axis_parameter_m": 2.22
+        },
+        {
+          "chamber": 4,
+          "length_m": 11.25,
+          "section": "circular",
+          "internal_diameter_m": 7.7,
+          "axis_parameter_m": 3.36
+        },
+        {
+          "chamber": 5,
+          "length_m": 9.75,
+          "section": "large circular or elongated/elliptical alternative",
+          "internal_diameter_m": 9,
+          "axis_parameter_m": 4.46
+        },
+        {
+          "chamber": 6,
+          "length_m": 15,
+          "section": "two-vault common-wall chamber",
+          "lining_arc_inner_radius_m": 2.57,
+          "lining_arc_outer_radius_m": 2.82,
+          "lining_axis_above_ugr_m": 1.7,
+          "common_wall": "concrete or reinforced concrete",
+          "exact_wall_thickness_m": null,
+          "exact_axis_separation_m": null
+        }
+      ],
+      "derived_chainage_from_chamber2_start_m": {
+        "chamber6_start": 46,
+        "chamber6_end": 61,
+        "independent_single_track_start": null
+      },
+      "independent_single_track_rule": {
+        "condition": "inter-track spacing > 6 m",
+        "exact_transition_chainage_m": null,
+        "exact_independent_tunnel_diameter_m": null
+      },
+      "construction_notes": [
+        "large circular chamber 5 can be replaced by an elongated/elliptical form",
+        "additional adjacent/key tubings and wedge spacers may be used",
+        "gaps between chambers of different spans are filled with monolithic concrete and waterproofed as required"
+      ],
+      "confidence": "A for printed dimensions/text; B for generic PCG transfer",
+      "mesh_rule": "May drive a generic transition algorithm only. Tag generated geometry generic_reference=true and actual_site_match=false."
+    },
+    {
+      "id": "CAST_IRON_CROSSOVER_CHAMBER_8750_1987_REFERENCE",
+      "status": "GENERIC_HISTORICAL_DIMENSIONED_REFERENCE_NOT_SITE_SPECIFIC",
+      "source_id": "S102",
+      "locator": "ENiR E36-2 issue 2 (1987), §E36-2-75",
+      "era": "late Soviet construction norm",
+      "applicability": "cast-iron tubing crossover chamber construction",
+      "geometry": {
+        "chamber_diameter_m": 8.75,
+        "existing_operating_running_tunnel_diameter_m": 6,
+        "ring_width_m": 0.75,
+        "chamber_length_m": null,
+        "turnout_axis_layout": null,
+        "track_axis_separation_m": null,
+        "transition_length_m": null
+      },
+      "lining": {
+        "tubings_per_ring": 11,
+        "types": {
+          "EK": 1,
+          "ES": 2,
+          "EN": 6,
+          "NKU": 2
+        },
+        "additional_spacers_or_gaskets": 2,
+        "NKU_support": "concrete foundation with anchor bolts",
+        "other_tubing_bolting": "bolts with spherical washers"
+      },
+      "confidence": "A/B",
+      "mesh_rule": "Use only as a cast-iron chamber morphology/construction reference. Do not assign 8.75 m, 6.0 m, 0.75 m pitch or this tubing composition to Belorusskaya without site-specific evidence."
+    },
+    {
+      "id": "MOSCOW_CAST_IRON_CROWN_MONOLITHIC_WALL_INVERT_REFERENCE",
+      "status": "GENERIC_MORPHOLOGY_REFERENCE",
+      "source_id": "S103",
+      "locator": "historical engineering overview/reprint, relevant chamber/bellmouth passages",
+      "era": "historical secondary source",
+      "applicability": "Moscow metro morphology context",
+      "morphology": [
+        "cast-iron tubing crown with monolithic-concrete walls and invert on high-water Moscow sections",
+        "large chamber crowns assembled with station/escalator-tunnel tubings and wedge spacers",
+        "monolithic reinforced-concrete end walls at some junctions between prefabricated chambers and two single-track tunnels"
+      ],
+      "reported_family_span_upper_context_m": 14,
+      "selected_site_dimension_use": false,
+      "confidence": "C",
+      "mesh_rule": "Visual/morphology prior only. The reported 14 m span is not a Belorusskaya dimension."
+    },
+    {
+      "id": "KURSKAYA_LDL_SERVICE_BRANCH_ACTUAL_VISUAL_CONSTRAINT",
+      "status": "ACTUAL_SITE_VISUAL_CONSTRAINED",
+      "site": "Кольцевая линия, Курская, бывший оборотный тупик / ССВ к Люблинско-Дмитровской",
+      "source_id": "S104",
+      "locator": "2016 photo essay captions",
+      "topology_and_morphology": [
+        "switch No.4 on II track / outer ring in the photographed description",
+        "1990s service branch cut into former turnback development",
+        "service branch descends qualitatively downward-left after divergence",
+        "new chamber contains switch No.7",
+        "switch No.4 exit chamber described as fully monolithic",
+        "later/wider chamber uses mixed lining: mostly cast iron with the widest span monolithic"
+      ],
+      "geometry": {
+        "exact_xy": null,
+        "exact_chainage_m": null,
+        "exact_delta_z_m": null,
+        "chamber_dimensions_m": null,
+        "lining_ring_layout": null
+      },
+      "confidence": "C_actual_site_photo_captions",
+      "mesh_rule": "Use for visual/civil-class validation only; no absolute dimensions from photos."
+    }
+  ]
+}

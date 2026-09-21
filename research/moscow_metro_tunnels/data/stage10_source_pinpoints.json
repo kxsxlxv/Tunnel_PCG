@@ -515,7 +515,7 @@
     {
       "id": "P10-K1350-002-KZEMI-2026",
       "title": "АО КЗЭМИ / current product: double horn K1350.002",
-      "url": "https://svetelektro.net/tray-metal/p0000011331-zavod-emi-kurgan.html",
+      "url": "https://emi-kurgan.ru/products/izdeliya-dlya-metropolitena-/rozhki_odinarnye_i_dvoynye/rozhok_dvoynoy_k1350_002_ut1_5_goryachee_tsinkovanie_s4_0/128842",
       "locator": {
         "product": "K1350.002",
         "current_listing_reviewed": "2026-09-21"
@@ -527,7 +527,7 @@
         "overall height 87 mm",
         "steel thickness 4 mm"
       ],
-      "confidence": "A/B_current_manufacturer_product_dimensions"
+      "confidence": "A_current_manufacturer_product_dimensions"
     },
     {
       "id": "P10-SP-CABLE-LAYOUT",

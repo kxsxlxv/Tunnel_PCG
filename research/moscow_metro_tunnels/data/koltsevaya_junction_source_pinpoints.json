@@ -913,6 +913,27 @@
             ],
             "visual_only": true,
             "limitation": "No absolute dimension, exact contact-rail endpoint, cabinet coordinate, bearer pitch, walkway width, or signal chainage is inferred from the photograph."
+          },
+          {
+            "photo": 9,
+            "caption": "Начало проходки закрытым способом.",
+            "supports": [
+              "actual depot-connection network contains a transition from a wider concrete/open-cut style section into a closed-method tunnel",
+              "the photographed transition is associated with a single physical track"
+            ],
+            "visual_only": true,
+            "limitation": "The caption does not identify whether this post-split leg is the Belorusskaya or Krasnopresnenskaya branch."
+          },
+          {
+            "photo": 10,
+            "caption": "Это участок как раз проходили с заморозкой.",
+            "supports": [
+              "the closed-method/frozen-ground branch section visibly transitions into a circular or near-circular flanged-tubing single-track tunnel",
+              "concrete/monolithic transition structure is visible before the circular tubing section",
+              "the actual depot network therefore contains the morphology: widened/open-cut or transition structure -> independent single-track tubing tunnel"
+            ],
+            "visual_only": true,
+            "limitation": "No diameter, ring pitch, exact lining series, split chainage, or branch-leg identity is inferred from the photograph."
           }
         ],
         "page_lines": "LiveJournal page lines 152-194; photo captions 2,7,8,16,20"

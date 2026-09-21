@@ -46,7 +46,7 @@ from .bolts import (
 )
 from .config import RingConfig
 from .curved_mesh import SurfaceMeshingConfig
-from .joints import build_prescribed_joint_set, sample_joint_config
+from .joints import PrescribedJointSet, build_prescribed_joint_set, sample_joint_config
 from .mesh import (
     Face,
     RingMesh,
@@ -3448,11 +3448,18 @@ def _build_stage10_4_rc_stage9_architecture_objects(
             width_m=width,
             seed=seed,
         )
-        joints = build_prescribed_joint_set(
-            ring,
-            sample_joint_config(
-                seed=_stage9_child_seed(seed, ring_index, 2)
-            ),
+        joint_config = sample_joint_config(
+            seed=_stage9_child_seed(seed, ring_index, 2)
+        )
+        joints = (
+            build_prescribed_joint_set(ring, joint_config)
+            if include_prescribed_outer_joint_solids
+            else PrescribedJointSet(
+                config=joint_config,
+                radial=(),
+                circumferential_front=(),
+                circumferential_back=(),
+            )
         )
 
         # Stage 9 uses TYPE1_CENTERED by default: three pockets/heads per

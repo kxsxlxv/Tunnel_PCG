@@ -65,6 +65,18 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--civil-topology",
+        choices=["auto", "ten_equal", "kba"],
+        default="auto",
+        help=(
+            "RC lining topology for rc_block_6100_5600. auto resolves to "
+            "ten_equal; ten_equal uses the S026 ten-identical-block family; "
+            "kba uses the legacy Stage-9 K/B/A six-segment topology as an "
+            "explicit photo-reference visual alternative. Both reuse the old "
+            "Stage-9 segment/joint/bolt-pocket/head architecture."
+        ),
+    )
+    parser.add_argument(
         "--dense-continuous-sweeps",
         action="store_true",
         help=(
@@ -589,6 +601,7 @@ def main() -> None:
             moscow_profile=profile,
             moscow_stage=args.domain_stage,
             moscow_service_preset=args.service_preset,
+            moscow_civil_topology=args.civil_topology,
             compact_exact_collinear_continuous_stations=(
                 False if args.dense_continuous_sweeps else None
             ),
@@ -630,6 +643,14 @@ def main() -> None:
             args.domain_stage in {"10.4", "10.5"}
         ),
         "servicePreset": production_meta.get("servicePreset"),
+        "civilArchetype": args.civil_archetype,
+        "civilTopology": production_meta.get("moscowCivilTopology"),
+        "civilStage9ArchitectureTransferred": production_meta.get(
+            "moscowCivilStage9ArchitectureTransferred"
+        ),
+        "civilBoltHeadCount": production_meta.get(
+            "moscowCivilBoltHeadCount"
+        ),
         "continuousSweepAlignmentCompaction": production_meta.get(
             "continuousSweepAlignmentCompaction"
         ),

@@ -497,6 +497,32 @@ def main() -> None:
             )
         if int(production_meta.get("serviceCableCount", -1)) != 16:
             errors.append("Stage 10.5 modern service cable count must be 16")
+        racks = [
+            o for o in production
+            if o.object_type == "production_cable_rack_r2k11"
+        ]
+        for rack_obj in racks:
+            rp = rack_obj.custom_properties
+            if rp.get("hornGeometryMode") != "double_u_cradle_pair_v6":
+                errors.append(f"{rack_obj.name}: wrong double-U horn mode")
+            if rp.get("centralOmegaCrest") is not False:
+                errors.append(f"{rack_obj.name}: obsolete omega crest retained")
+            if int(rp.get("hornUCradleCount", -1)) != 2:
+                errors.append(f"{rack_obj.name}: wrong U-cradle count")
+            if not _close(rp.get("hornUVisualPairSpanM", -1), 0.154):
+                errors.append(f"{rack_obj.name}: wrong U-pair span")
+            if not _close(rp.get("hornUCentralGapM", -1), 0.004):
+                errors.append(f"{rack_obj.name}: wrong U central gap")
+            if not _close(rp.get("hornUInnerClearDiameterM", -1), 0.067):
+                errors.append(f"{rack_obj.name}: wrong U clear diameter")
+            centers = rp.get("hornUCableCenterOffsetsM", ())
+            if len(centers) != 2:
+                errors.append(f"{rack_obj.name}: missing U cable centres")
+            else:
+                if not _close(float(centers[0]), 0.0375):
+                    errors.append(f"{rack_obj.name}: wrong first U cable centre")
+                if not _close(float(centers[1]), 0.1165):
+                    errors.append(f"{rack_obj.name}: wrong second U cable centre")
         cables = [
             o for o in production
             if o.object_type == "production_service_cable"

@@ -240,21 +240,21 @@ The wall-rack assembly is now tied to current component designations:
     horn pitch                     0.125 m
     max cable diameter             0.065 m
 
-The former detached double-cradle preview is replaced by one continuous
-K1350.002 formed-ribbon mesh. The 169 x 40 x 87 mm component envelope is tied
-to current product data; exact factory neutral-axis bend radii remain
-unresolved.
+K1350.002 keeps the current 169 x 40 x 87 mm component envelope, but the
+visual horn topology is now the literal `UU` requested from Blender review:
+two adjacent U-shaped cradles, with no central omega/W crest and no horizontal
+shelf/neck before the first cradle. The first U begins directly at the upright.
+
+The visible double-cradle span is 154 mm. Each U has 67 mm internal clear
+diameter, giving 1 mm radial clearance over the 65 mm maximum cable diameter.
+With 4 mm strip thickness the two U shapes are separated by a 4 mm visual gap.
+Cable-route centres use the same geometry at 37.5 mm and 116.5 mm inward from
+the upright. Each lower semicircle uses eight arc subdivisions, so the result is
+round enough in Blender without a dense spline mesh. Exact factory bend radii
+remain unresolved.
 
 One R2K11 rack is generated on each wall at the midpoint of every 1.0 m Moscow
 civil ring.
-
-Stage-10.5 v5 follows the supplied drawing, 3D reference and Blender feedback:
-each horn leaves the upright directly and follows one rounded-W / omega-like
-strip through both cable cradles and the central crest. There is no separate
-horizontal shelf, wall-side tab or short neck between the upright and cradle.
-The v5 pass raises the sparse smooth-profile sampling from two to four samples
-per anchor span so the bends read rounder in Blender without turning the horn
-into a dense spline mesh.
 
 The visual cable preset occupies eight distributed levels per wall and one
 cable place on each occupied level:
@@ -375,7 +375,7 @@ Stress/integration gate:
 
 Profile schema is now **2.2** because the dimensioned support drawing is part of the typed machine contract.
 
-Current fully green v5 code baseline:
+Current fully green v6 code baseline:
 
     194 tests passed
     Stage 10.1 CLI compatibility smoke       PASS

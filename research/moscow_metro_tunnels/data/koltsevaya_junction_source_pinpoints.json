@@ -729,6 +729,30 @@
       "era": "1986",
       "applicability": "source-backed legacy metro turnout construction family; does not identify the exact Belorusskaya installed turnout",
       "confidence": "A/B"
+    },
+    {
+      "id": "S119",
+      "title": "Самойлов Д.С. и др. Городской скоростной пассажирский транспорт",
+      "url": "https://ru.djvu.online/file/ZsnjOuEnMIf4l",
+      "locator": {
+        "edition": "Высшая школа, Москва, 1975",
+        "printed_pages": "68-69",
+        "section": "Камеры съездов, раструбы и тупики",
+        "web_lines": "3250-3312",
+        "supports": [
+          "when deep-level main tracks are in separate single-track tunnels, special connecting tunnels are required and each running tunnel is gradually widened by crossover chambers",
+          "crossover-chamber linings may be monolithic concrete, cast-iron tubings or precast reinforced concrete",
+          "on Moscow Metro, cast-iron crossover-chamber crowns resting on monolithic concrete foundations with concrete inverts were widely used",
+          "reported chamber-crown spans in that Moscow family reach up to 14 m",
+          "such crowns use standard station/escalator-tunnel tubings with wedge-shaped cast-iron spacers",
+          "a bellmouth is a gradual widening used where a two-track tunnel connects to two single-track tunnels, and the same morphology is used where a connecting tunnel joins through the maximum-span chamber",
+          "deep-level turnback tracks use special chambers structurally analogous to crossover chambers, plus large-span chambers for crossover and turnback-track connections",
+          "generic deep turnback facilities are described with 12 m track-axis spacing, 1.2 x 1.2 m inspection ditch and 1.2 m-high service platforms, but these are not Belorusskaya junction dimensions"
+        ]
+      },
+      "era": "1975 design/construction textbook",
+      "applicability": "Moscow metro historical civil morphology and generic deep-junction design logic; not a site-specific Belorusskaya dimensional drawing",
+      "confidence": "B"
     }
   ]
 }

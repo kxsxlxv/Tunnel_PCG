@@ -229,3 +229,38 @@ The first real junction selected for geometry hand-off is the Belorusskaya/Krasn
 The exact installed turnout project and actual chamber dimensions are not public in the inspected set. A dimensioned R65 1:9 metro turnout project 2976.00.000 is retained only as an explicit fallback. Frolov's dimensioned stepwise branch chambers are likewise retained only as a generic civil-transition reference, not as the Belorusskaya as-built shell.
 
 See `22_koltsevaya_track_topology_and_junctions.md` for the KNOWN / CONSTRAINED / UNKNOWN boundary.
+
+
+### Complete current station-development inventory
+
+The topology contract now covers all 12 current Line-5 stations and distinguishes station track development from nearby service-connection nodes.
+
+Current station-development = yes:
+- Белорусская;
+- Проспект Мира;
+- Курская;
+- Павелецкая;
+- Парк культуры;
+- Краснопресненская.
+
+Current station-development = no:
+- Новослободская;
+- Комсомольская;
+- Таганская;
+- Добрынинская;
+- Октябрьская;
+- Киевская.
+
+Taganskaya is deliberately notable: the station itself is source-backed as having no track development, while a separate nearby service-connection system exists in the area. Those objects must not be collapsed.
+
+The planned Dostoevskaya topology is stored as a separate future state rather than mutating the 2026 operating graph.
+
+### Turnout/civil fallback separation
+
+The machine-readable research now separates:
+- actual-site civil constraints;
+- generic dimensioned civil references;
+- R65 project-2976 turnout fallback;
+- alternate R50 project-2891 turnout fallback.
+
+Civil opening year does not choose R50/R65 automatically. Service-era/site evidence or an explicit preset must do so.

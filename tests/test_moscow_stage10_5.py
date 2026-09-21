@@ -36,9 +36,11 @@ MODERN_TYPES = {
     "production_contact_rail",
     "production_contact_rail_cover_span",
     "production_contact_rail_support_block",
+    "production_contact_rail_base_plate",
     "production_contact_rail_bracket",
     "production_contact_rail_insulator",
     "production_contact_rail_fastening_unit",
+    "production_contact_rail_clamp_bolts",
     "production_contact_rail_attachment_dowels",
     "production_contact_rail_support_hood",
     "production_service_cable",
@@ -372,6 +374,18 @@ def test_stage10_5_modern_is_default_and_legacy_remains_selectable():
     assert support_count > 0
     assert len(
         modern.scene.objects_of_type("production_contact_rail_support_block")
+    ) == support_count
+    assert len(
+        modern.scene.objects_of_type("production_contact_rail_base_plate")
+    ) == support_count
+    assert len(
+        modern.scene.objects_of_type("production_contact_rail_fastening_unit")
+    ) == support_count
+    assert len(
+        modern.scene.objects_of_type("production_contact_rail_clamp_bolts")
+    ) == support_count
+    assert len(
+        modern.scene.objects_of_type("production_contact_rail_attachment_dowels")
     ) == support_count
     assert len(
         modern.scene.objects_of_type("production_contact_rail_support_hood")

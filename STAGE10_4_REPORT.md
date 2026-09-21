@@ -160,23 +160,41 @@ historical/project source is added to the research register.
 Exact RC end-face chamfers, Ø22 pin-hole/seating geometry and reinforcement
 cage CAD remain unresolved.
 
-## Ring construction
+## Ring construction and axial stagger
 
 Moscow civil rings are a separate periodic system from the historical
 Stage-9 1.35 m source-ring scaffold.
 
 Each Moscow ring covers up to 1.000 m of chainage. A final partial ring is
 permitted when the generated tunnel length is not an integer number of metres.
-
 Internal ring boundaries have no duplicate longitudinal end caps. Only the
 global tunnel start/end may be capped.
 
-Each ring gets a stable key:
+For the RC Stage-9 architecture transfer, stable keys include topology, civil
+ring index and legacy object name:
 
-    <namespace>/civil-shell/ring/<ring-index>
+    <namespace>/civil-stage9-transfer/<topology>/ring/<ring-index>/<object>
 
-and its own midpoint `eventChainageM`, so export chunking is independent from
-Stage-9 ring IDs.
+The old Stage-7 axial ring-stagger mechanism is also preserved, but it is
+resampled on the independent 1.0 m Moscow civil rhythm rather than indexing the
+source 1.35 m assembly poses. The existing `--rotation-strategy` controls it.
+
+With the Stage-10 CLI default `ringwise_gaussian`, every complete civil-ring
+assembly receives one seeded local +Y roll before alignment:
+
+    phi_nominal_i ~ truncated Gaussian within +/-6*theta_K
+    delta_i ~ N(0, (0.1*|phi_nominal_i|)^2)
+    phi_i = phi_nominal_i + delta_i
+
+Segments, prescribed joints, bolt cutters and heads in one civil ring share the
+same `phi_i`. Track, walkway, contact rail and service infrastructure are not
+rolled. Consequently the narrow K segment in the K/B/A topology changes
+circumferential position from ring to ring, matching the old Stage-9 assembly
+behaviour.
+
+`continuous` remains available for zero roll; `paper_constant_nominal`
+retains the old common-nominal interpretation. This is a transferred Stage-7/9
+reconstruction policy, not a Moscow project-specific statistical claim.
 
 ## Walkway geometry
 
@@ -218,21 +236,23 @@ interface and the lining interface.
 
 This avoids coplanar z-fighting while preserving a closed physical section.
 
-## Stage-9 civil removal
+## Stage-9 civil architecture reuse
 
-In Stage 10.4 the production scene does not retain:
+For the RC family, Stage 10.4 intentionally preserves the legacy Stage-9 civil
+object types so the same Blender Boolean and interface-cleanup path is reused:
 
     lining_segment
-    bolt_head
-    bolt_pocket_cutter
     prescribed_radial_joint
     prescribed_circumferential_joint
-    production_walkway
+    bolt_pocket_cutter
+    bolt_head
 
-Stage-9 bolt Boolean geometry is not generated at all in Stage 10.4.
+These objects are rebuilt on the Moscow radii/ring pitch/topology and receive
+Moscow-specific identity, chainage, ring-width and rotation metadata. They are
+not the unrelated source Stage-9 6.7/6.0 m scene objects.
 
-The old service tubes remain transitional infrastructure and are not claimed to
-be the final Moscow cable/service arrangement.
+For the unresolved cast-iron family, the legacy RC/KBA detail pipeline is not
+used; only the source-sized smooth envelope is kept.
 
 ## Production metadata
 

@@ -317,7 +317,7 @@ def _continuous_omega_horn_polygon(
     )
     centerline = _smooth_anchor_polyline(
         anchors,
-        samples_per_span=2,
+        samples_per_span=4,
     )
 
     half_t = 0.5 * thickness_m
@@ -451,8 +451,8 @@ def build_r2k11_local_rack_mesh(
             "commonHorizontalUnderbar": False,
             "separateWallTab": False,
             "separateHorizontalNeck": False,
-            "hornGeometryMode": "single_continuous_omega_ribbon_v4",
-            "hornRibbonSamplesPerSpan": 2,
+            "hornGeometryMode": "single_continuous_omega_ribbon_v5_smoother",
+            "hornRibbonSamplesPerSpan": 4,
             "shellClearanceInwardM": rack.shell_clearance_inward_m,
         },
     )

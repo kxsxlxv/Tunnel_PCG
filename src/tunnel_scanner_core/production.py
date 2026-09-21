@@ -83,7 +83,6 @@ from .services import (
 )
 from .civil import (
     build_annular_shell_sweep,
-    build_segmented_rc_ring_sweep,
     civil_ring_ranges,
     walkway_core_xz,
 )
@@ -2990,11 +2989,6 @@ def _build_stage10_4_civil_shell_objects(
     label_id, semantic = _civil_semantics(label_policy)
     result: list[SceneObject] = []
     source_ring_width = assembly.config.ring_width_m
-    is_rc_10block = (
-        profile.civil_family
-        == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
-    )
-
     ranges = civil_ring_ranges(
         total,
         ring_pitch_m=profile.ring_pitch_m,
@@ -3016,36 +3010,20 @@ def _build_stage10_4_civil_shell_objects(
         cap_start = math.isclose(start_chainage, 0.0, abs_tol=1e-12)
         cap_end = math.isclose(end_chainage, total, abs_tol=1e-12)
 
-        if is_rc_10block:
-            mesh = build_segmented_rc_ring_sweep(
-                profile,
-                station_xyz,
-                segment_count=10,
-                seam_width_m=0.008,
-                angular_subdivisions_per_segment=8,
-                cap_start=cap_start,
-                cap_end=cap_end,
-            )
-            reconstruction = (
-                "stage10_4_moscow_rc_10block_stage9_like_segmented_ring_v1"
-            )
-            coarse_count_is_geometry = True
-            civil_render_mode = "source_backed_10_equal_curved_rc_blocks"
-        else:
-            mesh = build_annular_shell_sweep(
-                profile,
-                station_xyz,
-                angular_segments=96,
-                cap_start=cap_start,
-                cap_end=cap_end,
-            )
-            reconstruction = (
-                "stage10_4_moscow_cast_iron_smooth_envelope_detail_deferred"
-            )
-            coarse_count_is_geometry = False
-            civil_render_mode = (
-                "source_sized_smooth_cast_iron_envelope_detail_deferred"
-            )
+        mesh = build_annular_shell_sweep(
+            profile,
+            station_xyz,
+            angular_segments=96,
+            cap_start=cap_start,
+            cap_end=cap_end,
+        )
+        reconstruction = (
+            "stage10_4_moscow_cast_iron_smooth_envelope_detail_deferred"
+        )
+        coarse_count_is_geometry = False
+        civil_render_mode = (
+            "source_sized_smooth_cast_iron_envelope_detail_deferred"
+        )
 
         midpoint = 0.5 * (start_chainage + end_chainage)
         representative_ring_id = min(
@@ -3095,45 +3073,12 @@ def _build_stage10_4_civil_shell_objects(
                     "circumferentialSegmentSurfaceMode": (
                         profile.civil_segment_surface_mode
                     ),
-                    "coarseSegmentCountReference": (
-                        10 if is_rc_10block else 11
-                    ),
-                    "coarseSegmentCountIsGeometry": (
-                        coarse_count_is_geometry
-                    ),
+                    "coarseSegmentCountReference": 11,
+                    "coarseSegmentCountIsGeometry": coarse_count_is_geometry,
                     "seriesAccurateTubingLOD0": False,
                     "seriesAccurateCivilLOD0": False,
-                    "stage9LikeCurvedSegmentConstruction": is_rc_10block,
-                    "renderedRCBlockCount": 10 if is_rc_10block else 0,
-                    "renderedRCVisualSeamWidthM": (
-                        0.008 if is_rc_10block else 0.0
-                    ),
-                    "renderedRCBlockNominalAngularSpanDeg": (
-                        36.0 if is_rc_10block else 0.0
-                    ),
-                    "rcBlocksIdenticalBySource": (
-                        True if is_rc_10block else False
-                    ),
-                    "rcPermanentBoltedBlockJoints": (
-                        False if is_rc_10block else False
-                    ),
-                    "rcWorkingRebarDiameterM": (
-                        0.016 if is_rc_10block else 0.0
-                    ),
-                    "rcBlockVolumeSourceM3": (
-                        0.46 if is_rc_10block else 0.0
-                    ),
-                    "rcBlockMassSourceT": (
-                        1.15 if is_rc_10block else 0.0
-                    ),
-                    "rcConcreteGradeHistorical": (
-                        "400" if is_rc_10block else ""
-                    ),
-                    "rcAssemblyPinDiameterM": (
-                        0.022 if is_rc_10block else 0.0
-                    ),
-                    "rcAssemblyPinGeometryResolved": False,
-                    "rcExactBlockEdgeChamferResolved": False,
+                    "stage9LikeCurvedSegmentConstruction": False,
+                    "renderedRCBlockCount": 0,
                     "intradosRadiusM": profile.intrados_radius_m,
                     "intradosDiameterM": 2.0 * profile.intrados_radius_m,
                     "extradosRadiusM": profile.extrados_radius_m,

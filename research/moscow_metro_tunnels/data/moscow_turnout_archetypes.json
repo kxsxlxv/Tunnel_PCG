@@ -66,7 +66,23 @@
       "exact_point_geometry": null,
       "exact_bearer_layout": null,
       "exact_fastening_family": null,
-      "note": "Do not synthesize these null fields from generic railway practice."
+      "note": "Do not synthesize these null fields from generic railway practice.",
+      "placement_geometry_current_rule": {
+        "track_plan": "straight at turnout",
+        "max_longitudinal_grade_per_mille": {
+          "normal": 5,
+          "difficult_conditions": 10
+        },
+        "min_distance_from_plan_curve_start_to_turnout_center_m": 20,
+        "min_distance_from_vertical_curve_start_to_turnout_center_m": 20,
+        "min_distance_turnout_center_to_station_platform_start_m": 25,
+        "source_id": "S022",
+        "locator": "SP 120.13330.2022 §5.3.5",
+        "era": "current",
+        "applicability": "current metro design geometry; use as a validator, not proof of 1950s as-built Belorusskaya chainage",
+        "confidence": "A",
+        "status": "SOURCE_BACKED_CONSTRAINT"
+      }
     },
     {
       "id": "MOSCOW_METRO_R65_1_9_PROJECT_2976_REFERENCE_FALLBACK",
@@ -241,7 +257,10 @@
         "source_id": "S094",
         "locator": "project 2976.00.000 laying diagram",
         "confidence": "B for bearer length inventory; C for partial spacing transcription",
-        "status": "PARTIAL_SOURCE_BACKED"
+        "status": "PARTIAL_SOURCE_BACKED",
+        "total_bearers_derived": 68,
+        "total_bearers_derivation": "17+10+8+4+6+5+6+4+4+4 from the source-backed length groups",
+        "total_bearers_status": "DERIVED_FROM_SOURCE_GROUP_COUNTS"
       },
       "fastening": {
         "family": "separate fastening; high-flange plates/bridges and spring rail fasteners",
@@ -252,7 +271,25 @@
           "S095"
         ],
         "confidence": "B for topology, UNKNOWN for exact package variant",
-        "status": "CONSTRAINED"
+        "status": "CONSTRAINED",
+        "product_package_evidence": [
+          {
+            "family": "SK65",
+            "specification": "GOST 16277-93",
+            "quantity": 117,
+            "source_id": "S095",
+            "locator": "ATIZ product page, комплект поставки",
+            "status": "SOURCE_BACKED_PRODUCT_PAGE"
+          },
+          {
+            "family": "SKL65 with fasteners",
+            "quantity": 208,
+            "source_id": "S095",
+            "locator": "alternate current supplier listings for the same project, including Kazprom; conflicts with the 117-piece SK65 package",
+            "status": "CONFLICTING_CURRENT_SUPPLIER_PACKAGE"
+          }
+        ],
+        "mesh_rule": "Use high-flange separate-fastening morphology. Do not hard-code one plate count/package for the Belorusskaya as-built junction; the installed historical package remains unknown."
       },
       "speeds_kmh": {
         "straight": 100,
@@ -337,7 +374,20 @@
         "complete bearer longitudinal spacing sequence",
         "exact turnout plate/baseplate SKU variant",
         "exact point-machine and rods geometry at Belorusskaya"
-      ]
+      ],
+      "straight_insert_note": "No main-line source found that gives a universal distance from the project-2976 stock-rail front joint or frog tail to the next curve. Current SP instead constrains curve/vertical-curve starts to be >=20 m from turnout center (§5.3.5). The 2.9 m value in SP Table 5.30 is for depot park tracks and is not transferred to this tunnel junction.",
+      "current_metro_placement_validator": {
+        "turnout_on_straight": true,
+        "max_grade_per_mille": {
+          "normal": 5,
+          "difficult": 10
+        },
+        "curve_start_clearance_from_turnout_center_m": 20,
+        "platform_start_clearance_from_turnout_center_m": 25,
+        "source_id": "S022",
+        "locator": "§5.3.5",
+        "status": "SOURCE_BACKED_CURRENT_VALIDATOR"
+      }
     },
     {
       "id": "MOSCOW_METRO_CROSSOVER_2_9_CONSTRAINT",

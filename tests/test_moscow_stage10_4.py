@@ -30,7 +30,7 @@ def test_stage10_4_profile_closes_civil_shell_and_walkway_contract():
     profile = load_stage10_initial_moscow_profile()
     w = profile.walkway
 
-    assert profile.schema_version == "2.0"
+    assert profile.schema_version == "2.1"
     assert profile.civil_family == "CAST_IRON_5500_R1000"
     assert profile.civil_geometry_mode == "smooth_concentric_ringwise_shell_v1"
     assert profile.civil_segment_surface_mode == (

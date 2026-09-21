@@ -266,6 +266,83 @@
       "exact_turnout_or_rail_switch_geometry": null,
       "confidence": "B/C_actual_construction_one_numeric_dimension",
       "mesh_rule": "May be used as an actual current construction-state chamber envelope only for the 13 m diameter claim. All unsourced longitudinal, axis-offset, wall/invert and rail-switch geometry stays null."
+    },
+    {
+      "id": "FROLOV_CLOSED_METHOD_MAIN_TRACK_CROSSOVER_PLAN_2001",
+      "status": "GENERIC_DIMENSIONED_PLAN_REFERENCE_NOT_SITE_SPECIFIC",
+      "source_id": "S058",
+      "locator": "Frolov et al. 2001, printed p.147, Fig.4.33a",
+      "era": "2001 textbook/design reference",
+      "applicability": "generic closed-method crossover between two main tracks in separate single-track tunnels",
+      "plan_geometry": {
+        "left_end_main_track_axis_spacing_m": 22,
+        "right_end_main_track_axis_spacing_m": 20,
+        "marked_longitudinal_dimension_m": 120.811,
+        "marked_longitudinal_dimension_endpoints": "between the two vertical reference lines labelled Ц1сп / Ц2сп in the drawing; exact engineering definition of the abbreviation is not expanded in the visible caption",
+        "chamber_sequence_numbers_visible": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "exact_switch_point_chainages_m": null,
+        "exact_curve_radii_m": null
+      },
+      "confidence": "A_for_raw_figure_dimensions_B_for_generic_layout_semantics",
+      "mesh_rule": "Use only as a generic plan-layout constraint. Do not map the 22/20 m spacings or 120.811 m dimension onto any Koltsevaya site without project evidence."
+    },
+    {
+      "id": "FROLOV_CLOSED_METHOD_SINGLE_TRACK_BRANCH_PLAN_2001",
+      "status": "GENERIC_DIMENSIONED_PLAN_REFERENCE_NOT_SITE_SPECIFIC",
+      "source_id": "S058",
+      "locator": "Frolov et al. 2001, printed p.147, Fig.4.33b",
+      "era": "2001 textbook/design reference",
+      "applicability": "generic closed-method divergence from a main-track pair to a single-track branch",
+      "plan_geometry": {
+        "left_end_main_track_axis_spacing_m": 22,
+        "right_end_top_main_to_branch_axis_spacing_m": 10.5,
+        "right_end_branch_to_bottom_main_axis_spacing_m": 10.5,
+        "right_end_top_to_bottom_main_axis_spacing_m": 21,
+        "upper_marked_longitudinal_dimension_m": 83.148,
+        "lower_marked_longitudinal_dimension_m": 104.701,
+        "dimension_endpoint_note": "raw dimensions between vertical reference lines marked in Fig.4.33b; exact switch-center abbreviation semantics are not promoted beyond the drawing",
+        "raw_section_or_diameter_callouts_m": [
+          6,
+          7.5,
+          8.5,
+          9.5
+        ],
+        "raw_section_callout_semantics": "values are printed inside the chamber sequence in the drawing and are retained as raw callouts; exact chamber-number mapping is not relied on for the first mesh",
+        "exact_switch_point_chainages_m": null,
+        "exact_curve_radii_m": null
+      },
+      "relation_to_stepwise_chamber_reference": "topologically closest Fig.4.33 layout to the single-track-branch sequence detailed dimensionally in Fig.4.34; do not assume all raw Fig.4.33 dimensions describe the exact Fig.4.34 worked example",
+      "confidence": "A_for_raw_figure_dimensions_B_for_generic_layout_semantics",
+      "mesh_rule": "Useful for a generic branch graph/plan fallback. It is not the Belorusskaya as-built alignment."
+    },
+    {
+      "id": "FROLOV_CLOSED_METHOD_DOUBLE_TRACK_STUB_CROSSOVER_PLAN_2001",
+      "status": "GENERIC_DIMENSIONED_PLAN_REFERENCE_NOT_SITE_SPECIFIC",
+      "source_id": "S058",
+      "locator": "Frolov et al. 2001, printed p.147, Fig.4.33c",
+      "era": "2001 textbook/design reference",
+      "applicability": "generic crossover leading to a double-track dead-end/stub",
+      "plan_geometry": {
+        "left_end_main_track_axis_spacing_m": 22,
+        "right_end_outer_to_upper_stub_axis_spacing_m": 9,
+        "right_end_stub_pair_axis_spacing_m": 4,
+        "right_end_lower_stub_to_outer_axis_spacing_m": 9,
+        "right_end_total_outer_axis_spacing_m": 22,
+        "first_marked_longitudinal_dimension_m": 81,
+        "second_marked_longitudinal_dimension_m": 36,
+        "total_of_marked_dimensions_m": 117,
+        "exact_switch_point_chainages_m": null,
+        "exact_curve_radii_m": null
+      },
+      "confidence": "A_for_raw_figure_dimensions_B_for_generic_layout_semantics",
+      "mesh_rule": "Use only as a generic two-track-stub/crossover topology reference."
     }
   ]
 }

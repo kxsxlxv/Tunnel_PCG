@@ -863,6 +863,72 @@
       "confidence": "A_for_project_PK_and_bypass_dimensions_B_for_context",
       "era": "2024 project / existing Line-5 chainage context",
       "applicability": "Novoslobodskaya-Prospekt Mira future Dostoevskaya zone"
+    },
+    {
+      "id": "S121",
+      "title": "ГИКЭ / проектная документация участка на ул. Климашкина — архивные данные ветки в ТЧ «Красная Пресня»",
+      "url": "https://www.mos.ru/upload/documents/files/6694/AKTKlimashkinaylsprilojeniyami.pdf",
+      "locator": {
+        "document_page_context": "Пояснительная записка, лист 26 of 56 in the embedded project-document pagination; web index snippet exposes the paragraph beginning 'На основании анализа архивных данных планово-высотного положения сооружений ГУП Московский метрополитен...'",
+        "site": "ул. Климашкина, влд. 7/11, стр. 1",
+        "branch_side": "ветка в электродепо Красная Пресня со стороны ст. м. Краснопресненская",
+        "supports": [
+          "PK6+28-PK7+57: crown-part depth approximately 19.3 m to 14.0 m respectively below the concept's conditional 0.000 datum",
+          "PK6+45-PK7+05: crown-part depth approximately 18.5 m to 16.3 m respectively below the same conditional 0.000 datum",
+          "approximately PK6+65-PK6+95: crown-part depth approximately 17.8 m to 16.7 m respectively below the same conditional 0.000 datum",
+          "site ground-surface absolute elevations are stated as 143.17-145.67 m",
+          "the source explicitly says the tunnel values came from archival plan-and-elevation data of Moscow Metro structures"
+        ],
+        "limitations": [
+          "conditional concept datum 0.000 is not identified here as an absolute elevation; do not convert these depths into absolute tunnel Z",
+          "depth is to the crown part of the structure, not UGR",
+          "the cited PK is branch-local engineering stationing; it is not the Line-5 main-track chainage",
+          "the source does not state the branch lining radius/section in the indexed paragraph"
+        ]
+      },
+      "confidence": "A/B_actual_archival_plan_elevation_values"
+    },
+    {
+      "id": "S122",
+      "title": "СНиП II-Д.3-62 Метрополитены. Нормы проектирования",
+      "url": "https://files.stroyinf.ru/Data2/1/4293780/4293780128.pdf",
+      "locator": {
+        "printed_page": 21,
+        "clauses": [
+          {
+            "clause": "5.19",
+            "supports": [
+              "contact-rail breaks are required at turnouts, crossovers, signalling devices and traction-network sectioning points",
+              "contact-rail end ramps at breaks have 1:25 slope in the working part",
+              "equipment inside a contact-rail break is placed at least 0.8 m from the metal end of the ramp"
+            ]
+          },
+          {
+            "clause": "5.20",
+            "supports": [
+              "on depot park tracks at turnouts with speed <=25 km/h, side ramps are permitted and the rail break may be omitted"
+            ]
+          }
+        ]
+      },
+      "era": "approved 1962; effective 1963-1969",
+      "applicability": "historical metro design family; useful corroboration of switch-zone contact-rail event topology, but not direct proof of the 1954 Belorusskaya laying plan",
+      "confidence": "A_historical_normative"
+    },
+    {
+      "id": "S123",
+      "title": "Я.А. Дорман. Искусственное замораживание грунтов при строительстве метрополитенов",
+      "url": "https://search.rsl.ru/ru/record/01007114602",
+      "locator": {
+        "RSL_record_id": "01007114602",
+        "bibliographic_pages": 271,
+        "publication": "Москва: Транспорт, 1971",
+        "access": "RSL record explicitly marks the complete document as freely available in its online viewer",
+        "cross_reference": "S120 lines/caption text says this book contained a description of construction of this Krasnaya Presnya depot-branch section",
+        "exact_relevant_pages": null
+      },
+      "status": "ACQUISITION_TARGET_FULL_TEXT_NOT_PAGE_EXTRACTED",
+      "confidence": "A_bibliographic_C_cross_reference_to_branch_content"
     }
   ]
 }

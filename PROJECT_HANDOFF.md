@@ -2118,13 +2118,15 @@ Still intentionally unresolved rather than fabricated:
 Do not add another geometry stage before a real Blender 5.2.2 visual/runtime
 review of the current RC-focused Stage-10.5 preset.
 
-Use the 6.1/5.6 m ten-block family explicitly:
+Review both selectable 6.1/5.6 m RC topologies. Start with the source-backed
+ten-equal family:
 
 ```text
 python examples/generate_stage10_production_tunnel.py \
   --rings 30 \
-  --namespace stage10-5-rc-segmented-v5 \
+  --namespace stage10-5-rc-ten-equal-v6 \
   --civil-archetype rc_block_6100_5600 \
+  --civil-topology ten_equal \
   --output examples/stage10_production_scene_rc6100.json
 
 blender --background --python scripts/blender_verify_stage10.py -- \
@@ -2133,6 +2135,18 @@ blender --background --python scripts/blender_verify_stage10.py -- \
   --save-blend examples/stage10_production_scene_rc6100.blend
 ```
 
-Inspect one R2K11 horn close-up and one complete RC ring before increasing the
-length. The expected ring is ten separate curved blocks, not a smooth cylinder
-with a seam overlay.
+Then compare the K/B/A visual alternative with:
+
+```text
+python examples/generate_stage10_production_tunnel.py \
+  --rings 30 \
+  --namespace stage10-5-rc-kba-v6 \
+  --civil-archetype rc_block_6100_5600 \
+  --civil-topology kba \
+  --output examples/stage10_production_scene_rc6100_kba.json
+```
+
+Inspect one R2K11 horn close-up and one complete RC ring for each topology.
+Expected civil geometry must visibly retain the old Stage-9 segment/joint/
+pocket/head language rather than the removed simplified sector sweep. The R2K11
+horn must read as two adjacent U shapes, not W/omega.

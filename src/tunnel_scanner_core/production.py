@@ -1454,7 +1454,7 @@ def scene_object_from_continuous_asset(
             sag_peak_jitter if spec.category == "cable" else 0.0
         ),
         "cableSagDeterministicKey": (
-            spec.persistent_key if spec.category == "cable" else None
+            spec.persistent_key if spec.category == "cable" else ""
         ),
         "cableSagControlStationsAdded": (
             len(sweep_stations) - len(base_sweep_stations)

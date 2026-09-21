@@ -173,7 +173,7 @@
         },
         "rail_inclination": {
           "value": "no poduklonka",
-          "source_id": "S102",
+          "source_id": "S126",
           "locator": "2005 Instruction §2.4.2",
           "status": "SOURCE_BACKED_NEAR_SERVICE_ERA"
         },
@@ -181,7 +181,7 @@
           "counterrail_to_frog_core_working_faces_min_mm": 1472,
           "counterrail_to_wing_rail_working_faces_max_mm": 1435,
           "exact_flangeway_profile": null,
-          "source_id": "S102",
+          "source_id": "S126",
           "locator": "§2.12.2 / Fig.25 context",
           "status": "SOURCE_BACKED_CONSTRAINT"
         }
@@ -514,7 +514,7 @@
           {
             "field": "service-era turnout trackbed",
             "value": "ballast; ordinary track concrete omitted under turnout/crossover",
-            "source_id": "S102",
+            "source_id": "S126",
             "locator": "2005 Instruction §2.9.1 and §2.10.1",
             "era": "2005 near the selected 2001-reference service era",
             "status": "SOURCE_BACKED_NEAR_SERVICE_ERA"
@@ -525,7 +525,7 @@
               5,
               25
             ],
-            "source_id": "S102",
+            "source_id": "S126",
             "locator": "2005 Instruction §2.10.1, printed p.32",
             "note": "track concrete omitted on adjacent sections on each side of turnout/crossover",
             "status": "SOURCE_BACKED_NEAR_SERVICE_ERA"
@@ -533,7 +533,7 @@
           {
             "field": "minimum ballast thickness under each rail at turnout/crossover in tunnel",
             "value_m": 0.24,
-            "source_id": "S102",
+            "source_id": "S126",
             "locator": "2005 Instruction §2.10.2, printed p.32",
             "status": "SOURCE_BACKED_NEAR_SERVICE_ERA"
           },
@@ -542,7 +542,7 @@
             "trigger_axis_separation_m": 3.4,
             "mounting": "fixed to sleepers/bearers in the intertrack",
             "top_elevation_rule": "must not project above UGR",
-            "source_id": "S102",
+            "source_id": "S126",
             "locator": "2005 Instruction §2.11.2, printed pp.33-34",
             "status": "SOURCE_BACKED_NEAR_SERVICE_ERA"
           },
@@ -941,14 +941,14 @@
         "turnout_or_crossover_air_gap": {
           "mode": "overlapping",
           "max_length_m": 7.7,
-          "source_id": "S102",
+          "source_id": "S126",
           "locator": "§3.10, printed p.61",
           "status": "SOURCE_BACKED_NEAR_SERVICE_ERA"
         },
         "non_main_exception_max_gap_m": {
           "value": 10,
           "condition": "exceptional, with metro chief permission",
-          "source_id": "S102",
+          "source_id": "S126",
           "locator": "§3.10"
         },
         "equipment_clearance_from_metal_ramp_end_min_m": 0.8,
@@ -967,7 +967,7 @@
           "normal": 18.7,
           "exceptional_main_station_connecting": 12.5
         },
-        "source_id": "S102",
+        "source_id": "S126",
         "locators": [
           "§3.10",
           "§3.12",

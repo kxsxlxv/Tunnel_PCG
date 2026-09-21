@@ -2155,6 +2155,8 @@ def _build_stage10_5_modern_contact_scene_objects(
     label_policy: LabelPolicy,
     running_support_pitch_m: float,
     running_support_phase_m: float,
+    start_chainage_m: float | None = None,
+    end_chainage_m: float | None = None,
 ) -> tuple[SceneObject, ...]:
     local_meshes = build_modern_contact_support_meshes(profile)
     chainages = modern_contact_support_chainages(
@@ -2179,6 +2181,13 @@ def _build_stage10_5_modern_contact_scene_objects(
     }
 
     for event_index, chainage in enumerate(chainages):
+        if not _chainage_selected_for_window(
+            chainage,
+            total_length_m=assembly.length_by_chainage_m,
+            start_chainage_m=start_chainage_m,
+            end_chainage_m=end_chainage_m,
+        ):
+            continue
         station = sample_alignment_station(stations, chainage)
         ring_id = min(
             assembly.config.n_rings - 1,
@@ -2280,6 +2289,14 @@ def _build_stage10_5_modern_contact_scene_objects(
         support_chainages=chainages,
     )
     for span_index, (start_chainage, end_chainage) in enumerate(spans):
+        midpoint = 0.5 * (start_chainage + end_chainage)
+        if not _chainage_selected_for_window(
+            midpoint,
+            total_length_m=assembly.length_by_chainage_m,
+            start_chainage_m=start_chainage_m,
+            end_chainage_m=end_chainage_m,
+        ):
+            continue
         clipped = clipped_alignment_stations(
             stations,
             start_chainage_m=start_chainage,
@@ -2291,7 +2308,6 @@ def _build_stage10_5_modern_contact_scene_objects(
             cap_start=True,
             cap_end=True,
         )
-        midpoint = 0.5 * (start_chainage + end_chainage)
         ring_id = min(
             assembly.config.n_rings - 1,
             max(0, int(math.floor(midpoint / L))),

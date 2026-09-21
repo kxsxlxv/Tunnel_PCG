@@ -8,6 +8,7 @@ from tunnel_scanner_core import (
     LabelPolicy,
     ProductionConfig,
     R65ProductionProfile,
+    RingConfig,
     RingRotationStrategy,
     SurfaceMeshingConfig,
     TunnelAssemblyConfig,
@@ -19,6 +20,7 @@ from tunnel_scanner_core import (
     build_r2k11_local_rack_mesh,
     build_water_main_support_local_mesh,
     build_production_tunnel,
+    build_procedural_nominal_tunnel,
     cable_rack_chainages,
     contact_rail_axis_profile_x,
     load_stage10_initial_moscow_profile,
@@ -888,6 +890,77 @@ def test_stage10_5_rc_6100_5600_civil_archetype_adapts_geometry():
             math.hypot(x, z)
             for x, _y, z in local_rack.vertices
         ) < profile.intrados_radius_m
+
+
+def test_stage10_5_replaced_stage7_source_skeleton_is_geometry_equivalent():
+    profile = load_stage10_initial_moscow_profile(
+        civil_archetype="rc_block_6100_5600"
+    )
+    ring_config = RingConfig()
+    assembly_config = TunnelAssemblyConfig(
+        n_rings=2,
+        ring_width_m=ring_config.width_m,
+        axis_noise_sigma_m=0.0,
+        ring_rotation_strategy=RingRotationStrategy.RINGWISE_GAUSSIAN,
+    )
+    meshing = SurfaceMeshingConfig(max_sagitta_m=0.002)
+    config = ProductionConfig(
+        namespace="stage10-5-source-skeleton-equivalence",
+        moscow_profile=profile,
+        moscow_stage="10.5",
+        moscow_civil_topology="kba",
+        moscow_civil_bolts_enabled=False,
+    )
+
+    fast = build_production_tunnel(
+        ring_config=ring_config,
+        assembly_config=assembly_config,
+        surface_meshing=meshing,
+        include_bolts=False,
+        label_policy=LabelPolicy.STSD_COARSE,
+        production_config=config,
+        seed=5812,
+    )
+    assert fast.source_build.ring_packages == ()
+    assert fast.source_build.scene.objects == ()
+    assert fast.scene.metadata["productionGeometry"][
+        "sourceRingGeometrySkippedAsFullyReplaced"
+    ] is True
+
+    materialized_source = build_procedural_nominal_tunnel(
+        ring_config=ring_config,
+        assembly_config=assembly_config,
+        surface_meshing=meshing,
+        include_bolts=False,
+        include_ancillary=False,
+        include_prescribed_joint_solids=False,
+        label_policy=LabelPolicy.STSD_COARSE,
+        seed=5812,
+    )
+    legacy = production_module.build_production_scene(
+        materialized_source,
+        ancillary=fast.ancillary,
+        surface_meshing=meshing,
+        config=config,
+    )
+
+    # The skeleton must preserve every source pose/provenance datum used by
+    # downstream production, while eliminating only transient source meshes.
+    assert fast.source_build.assembly == materialized_source.assembly
+    assert fast.source_build.scene.metadata == materialized_source.scene.metadata
+    assert fast.scene.objects == legacy.scene.objects
+    assert fast.asset_specs == legacy.asset_specs
+    assert fast.alignment_stations == legacy.alignment_stations
+
+    fast_meta = dict(fast.scene.metadata["productionGeometry"])
+    legacy_meta = dict(legacy.scene.metadata["productionGeometry"])
+    for key in (
+        "sourceRingGeometryMaterialized",
+        "sourceRingGeometrySkippedAsFullyReplaced",
+    ):
+        fast_meta.pop(key)
+        legacy_meta.pop(key)
+    assert fast_meta == legacy_meta
 
 
 def test_stage10_5_rc_transfer_uses_requested_surface_meshing_tolerance():

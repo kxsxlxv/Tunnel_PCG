@@ -3788,6 +3788,14 @@ def build_production_scene(
                     "omits hidden outer solids by default"
                 ),
                 "continuousInfrastructureAssets": len(specs),
+                "sourceRingGeometryMaterialized": bool(
+                    source_build.ring_packages
+                ),
+                "sourceRingGeometrySkippedAsFullyReplaced": (
+                    config.moscow_profile is not None
+                    and config.moscow_stage in {"10.4", "10.5"}
+                    and not source_build.ring_packages
+                ),
                 "ringGeometryStitchedToAlignment": config.stitch_ring_geometry,
                 "ringGeometryAlignmentMap": (
                     "piecewise_linear_xz_by_local_y"
@@ -4436,6 +4444,148 @@ def build_production_scene(
     )
 
 
+def _build_stage10_replaced_source_skeleton(
+    *,
+    ring_config: RingConfig,
+    assembly_config: TunnelAssemblyConfig,
+    label_policy: LabelPolicy,
+    include_prescribed_joint_solids: bool,
+    seed: int,
+) -> ProceduralTunnelBuild:
+    """Build Stage-7 provenance/poses without meshes that Stage 10.4+ discards.
+
+    Moscow Stage 10.4/10.5 replaces every source lining/joint/bolt object before
+    the production scene is emitted. Materializing those Stage-7 meshes first is
+    pure transient work. This skeleton reproduces the source assembly and scene
+    metadata exactly while intentionally carrying no ring packages or objects.
+    """
+    if abs(assembly_config.ring_width_m - ring_config.width_m) > 1e-12:
+        raise ValueError(
+            "assembly_config.ring_width_m must equal ring_config.width_m so adjacent "
+            "ring chainage is coherent"
+        )
+
+    assembly = sample_tunnel_assembly(
+        assembly_config,
+        seed=_stage9_child_seed(seed, 0, 10_000),
+    )
+    cfg = assembly.config
+    legacy_override = (
+        cfg.uses_legacy_omega_x_override or cfg.uses_legacy_omega_z_override
+    )
+    ring_metadata = [
+        {
+            "ringID": index,
+            "chainageM": pose.chainage_m,
+            "translationM": list(pose.translation_m),
+            "rotationYDeg": pose.rotation_y_deg,
+            "nominalRotationDeg": pose.nominal_rotation_deg,
+            "angularImperfectionDeg": pose.angular_imperfection_deg,
+            "sourcePackage": f"tunnel_scanner_nominal_ring_{index:04d}",
+        }
+        for index, pose in enumerate(assembly.poses)
+    ]
+    metadata = {
+        "sourceStage": "7.1",
+        "sourceEquation": "Yang et al. (2026) Eq. (21)",
+        "ringCount": cfg.n_rings,
+        "paperRingCountBounds": [10, 30],
+        "ringWidthM": cfg.ring_width_m,
+        "chainageLengthM": assembly.length_by_chainage_m,
+        "axisDisplacementAmplitudeM": cfg.displacement_amplitude_m,
+        "frequencyParameterization": (
+            "explicit_rad_per_ring_override"
+            if legacy_override
+            else "physical_wavelength_by_chainage"
+        ),
+        "lateralWavelengthM": cfg.resolved_lateral_wavelength_m,
+        "verticalWavelengthM": cfg.resolved_vertical_wavelength_m,
+        "omegaXRadPerM": cfg.resolved_omega_x_rad_per_m,
+        "omegaZRadPerM": cfg.resolved_omega_z_rad_per_m,
+        "omegaXRadPerRing": cfg.resolved_omega_x,
+        "omegaZRadPerRing": cfg.resolved_omega_z,
+        "frequencyStatus": (
+            "explicit omega override supplied by caller"
+            if legacy_override
+            else (
+                "Stage-7.1 engineering defaults: 50 m lateral wavelength and "
+                "100 m vertical wavelength; paper publishes omega symbols but no values"
+            )
+        ),
+        "deterministicAdjacentStepBoundXM": (
+            cfg.deterministic_adjacent_step_bound_x_m()
+        ),
+        "deterministicAdjacentStepBoundZM": (
+            cfg.deterministic_adjacent_step_bound_z_m()
+        ),
+        "deterministicAdjacentTransverseStepBoundM": (
+            cfg.deterministic_adjacent_transverse_step_bound_m()
+        ),
+        "axisNoiseSigmaM": cfg.axis_noise_sigma_m,
+        "axisNoiseStatus": (
+            "Stage-7.1 interprets printed N(0,0.005 m^2) as sigma=0.005 m; "
+            "literal variance would imply ~70.7 mm sigma"
+        ),
+        "rotationStrategy": cfg.ring_rotation_strategy.value,
+        "staggerBoundDeg": cfg.stagger_bound_deg,
+        "angularImperfectionFraction": cfg.angular_imperfection_fraction,
+        "lateralOffsetsRecentered": cfg.recenter_lateral_offsets,
+        "lateralRecenterM": list(assembly.lateral_recenter_m),
+        "seed": assembly.seed,
+        "coordinateConvention": {
+            "longitudinalAxis": "+Y",
+            "crossSection": "XZ",
+            "ringRotationAxis": "+Y",
+            "units": "metres",
+        },
+        "ringPoses": ring_metadata,
+        "ancillaryTransformPolicy": {
+            "objectsWithStitchedAlignment": 0,
+            "policy": (
+                "Stage-8 ancillary infrastructure uses a piecewise-linear X/Z sweep "
+                "through ring centres with shared inter-ring boundary cross-sections; "
+                "it does not follow segment-ring axial staggering and remains fixed "
+                "relative to the tunnel gravity frame"
+            ),
+        },
+        "booleanPipeline": (
+            "Stage-6 cutter/head metadata is preserved after Stage-7.1 world transform; "
+            "Blender Boolean targets remain ring-local stable names"
+        ),
+        "proceduralBuild": {
+            "masterSeed": int(seed),
+            "ringGeometryRandomizedIndependently": True,
+            "includeBolts": False,
+            "boltLayout": None,
+            "includeAncillary": False,
+            "ancillarySamplingPolicy": None,
+            "ancillarySceneGlobalCrossSection": False,
+            "ancillaryObjectCountPerRing": 0,
+            "labelPolicy": label_policy.value,
+            "includePrescribedJointSolids": bool(
+                include_prescribed_joint_solids
+            ),
+            "terminalCircumferentialJoint": False,
+            "expectedCircumferentialInterfaces": max(
+                0,
+                assembly_config.n_rings - 1,
+            ),
+        },
+    }
+    scene = ScenePackage(
+        name=f"tunnel_scanner_stage7_1_{assembly_config.n_rings:02d}_rings",
+        mode=SceneMode.MULTI_RING_TUNNEL,
+        label_policy=label_policy,
+        objects=(),
+        metadata=metadata,
+    )
+    return ProceduralTunnelBuild(
+        scene=scene,
+        assembly=assembly,
+        ring_packages=(),
+    )
+
+
 def build_production_tunnel(
     *,
     ring_config: RingConfig | None = None,
@@ -4473,25 +4623,35 @@ def build_production_tunnel(
         config=ancillary_config,
     )
 
-    effective_include_bolts = include_bolts and not (
+    source_geometry_fully_replaced = (
         production_config is not None
         and production_config.moscow_profile is not None
         and production_config.moscow_stage in {"10.4", "10.5"}
     )
-    source = build_procedural_nominal_tunnel(
-        ring_config=ring_config,
-        assembly_config=assembly_config,
-        surface_meshing=surface_meshing,
-        include_bolts=effective_include_bolts,
-        include_ancillary=False,
-        include_prescribed_joint_solids=(
-            production_config.keep_prescribed_outer_joint_solids
-            if production_config is not None
-            else False
-        ),
-        label_policy=label_policy,
-        seed=seed,
+    include_prescribed_joint_solids = (
+        production_config.keep_prescribed_outer_joint_solids
+        if production_config is not None
+        else False
     )
+    if source_geometry_fully_replaced:
+        source = _build_stage10_replaced_source_skeleton(
+            ring_config=ring_config,
+            assembly_config=assembly_config,
+            label_policy=label_policy,
+            include_prescribed_joint_solids=include_prescribed_joint_solids,
+            seed=seed,
+        )
+    else:
+        source = build_procedural_nominal_tunnel(
+            ring_config=ring_config,
+            assembly_config=assembly_config,
+            surface_meshing=surface_meshing,
+            include_bolts=include_bolts,
+            include_ancillary=False,
+            include_prescribed_joint_solids=include_prescribed_joint_solids,
+            label_policy=label_policy,
+            seed=seed,
+        )
     return build_production_scene(
         source,
         ancillary=ancillary,

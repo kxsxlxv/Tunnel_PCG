@@ -251,6 +251,41 @@ def test_full_production_assets_have_only_two_end_caps_each():
         assert len(obj.faces) == expected_side_faces + 2
 
 
+def test_exact_length_chunk_plan_matches_legacy_full_ring_scan():
+    assembly = sample_tunnel_assembly(
+        TunnelAssemblyConfig(
+            n_rings=3000,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.0,
+        ),
+        seed=5812,
+    )
+    chunk_length = 17.3
+    chunks = plan_chunks(
+        assembly,
+        chunk_length_m=chunk_length,
+        boundary_policy=ChunkBoundaryPolicy.EXACT_LENGTH,
+    )
+    total = assembly.length_by_chainage_m
+    L = assembly.config.ring_width_m
+
+    for chunk in chunks:
+        expected = tuple(
+            i
+            for i in range(assembly.config.n_rings)
+            if chunk.start_chainage_m <= (i + 0.5) * L < chunk.end_chainage_m
+            or (
+                math.isclose(chunk.end_chainage_m, total, abs_tol=1e-12)
+                and math.isclose(
+                    (i + 0.5) * L,
+                    chunk.end_chainage_m,
+                    abs_tol=1e-12,
+                )
+            )
+        )
+        assert chunk.ring_ids == expected
+
+
 def test_chunk_plan_is_optional_and_global_coordinates_are_preserved():
     prod = _production(12)
     chunks = plan_chunks(

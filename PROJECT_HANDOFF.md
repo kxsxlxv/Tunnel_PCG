@@ -1190,7 +1190,7 @@ inside Stage 10.5 and has not been removed.
 
 Use this as the starting instruction:
 
-> Read `PROJECT_HANDOFF.md`, `STAGE10_5_REPORT.md`, `STAGE10_5_BLENDER_SMOKE_TEST.md`, `research/moscow_metro_tunnels/21_stage10_initial_archetype.md`, `data/stage10_initial_profile.json`, and `data/stage10_source_pinpoints.json`. Stages 10.1–10.5 are implemented and CI-validated. Do not remove the legacy timber/KD-65 preset. First inspect the user's Blender 5.2.2 result for the default Stage-10.5 modern preset: LVT-M/APC-4, segmented rounded contact cover, dedicated contact supports, R2K11 racks/cables, DN80 water main, 5.5/5.1 shell and sweep compaction. Fix only demonstrated regressions or source-backed dimensional issues. Keep exact N/C/K cast-iron detail and unresolved small hardware blocked rather than inventing it.
+> Read `PROJECT_HANDOFF.md`, `STAGE10_5_REPORT.md`, `STAGE10_5_BLENDER_SMOKE_TEST.md`, `research/moscow_metro_tunnels/21_stage10_initial_archetype.md`, `data/stage10_initial_profile.json`, and `data/stage10_source_pinpoints.json`. Stages 10.1–10.5 are implemented and CI-validated. Do not remove the legacy timber/KD-65 preset. For the next Blender visual review explicitly select `--civil-archetype rc_block_6100_5600`: verify the ten separate Moscow RC curved blocks, the smoother R2K11 omega/W horns, irregular cable sag, LVT-M/APC-4, contact-rail assembly and DN80 main. Keep exact N/C/K cast-iron detail, RC pin-hole/chamfer CAD and unresolved small hardware blocked rather than inventing them.
 
 ---
 
@@ -1212,11 +1212,13 @@ legacy selectable:
   legacy service preview
 ```
 
-The selected civil shell remains the classic 5.5/5.1 family, so the Blender
-internal diameter of approximately 5.10 m is intentional.
+The CLI compatibility default remains the classic 5.5/5.1 cast-iron envelope,
+but its detailed tubing geometry is intentionally unresolved. The current
+visual-development target is the source-backed 6.1/5.6 m ten-block RC family.
 
 The next authoritative gate is a real Blender 5.2.2 visual/runtime review of
-the modern preset. Keep unresolved factory/project-specific details explicit.
+the modern preset with `--civil-archetype rc_block_6100_5600`. Keep
+unresolved factory/project-specific details explicit.
 
 
 ---
@@ -2113,19 +2115,23 @@ Still intentionally unresolved rather than fabricated:
 ### Next action
 
 Do not add another geometry stage before a real Blender 5.2.2 visual/runtime
-review of the Stage-10.5 modern preset.
+review of the current RC-focused Stage-10.5 preset.
 
-Use:
+Use the 6.1/5.6 m ten-block family explicitly:
 
 ```text
 python examples/generate_stage10_production_tunnel.py \
-  --rings 2000 \
-  --namespace stage10-5-modern
+  --rings 30 \
+  --namespace stage10-5-rc-segmented-v5 \
+  --civil-archetype rc_block_6100_5600 \
+  --output examples/stage10_production_scene_rc6100.json
 
 blender --background --python scripts/blender_verify_stage10.py -- \
-  examples/stage10_production_scene.json \
-  --report examples/blender_stage10_runtime_report.json \
-  --save-blend examples/stage10_production_scene.blend
+  examples/stage10_production_scene_rc6100.json \
+  --report examples/blender_stage10_runtime_report_rc6100.json \
+  --save-blend examples/stage10_production_scene_rc6100.blend
 ```
 
-For faster visual iteration use 20-100 rings first.
+Inspect one R2K11 horn close-up and one complete RC ring before increasing the
+length. The expected ring is ten separate curved blocks, not a smooth cylinder
+with a seam overlay.

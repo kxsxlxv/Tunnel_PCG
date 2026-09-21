@@ -84,3 +84,38 @@ These are stored in `vertical_constraints.json`. Exact chainage limits remain nu
 It refuses null Z, verifies route closure, then uses the tested `closed_parallel_transport_frames()` solver so a non-planar ring does not accumulate an orientation seam at the closure point.
 
 See `ALIGNMENT_3D_CONTRACT.md`.
+
+## Physical topology and junction events
+
+This example now has an explicit two-track/topology layer.
+
+Files:
+- `track_topology.json` — two independently identified Line-5 main tracks plus source-backed junction-system annotations;
+- `junction_events.json` — event contract for the first Belorusskaya/Krasnaya-Presnya depot-side divergence;
+- `../../data/moscow_turnout_archetypes.json` — source-backed turnout constraints and the tagged project-2976 fallback.
+
+Main-track identities:
+- `KOLTSEVAYA_TRACK_A`: I main / inner / clockwise;
+- `KOLTSEVAYA_TRACK_B`: II main / outer / counterclockwise.
+
+The physical centerlines are **not** created from `alignment_xy_station_spline_25m.csv` and are **not** offsets of each other. Exact OSM way/node IDs are deliberately null until a current relation/full or Moscow-PBF extraction is available.
+
+Graph workflow:
+1. fetch relation 1462012 and any nested route relations;
+2. preserve all physical `railway=subway` ways and OSM node IDs;
+3. run the conservative graph extractor;
+4. resolve the two closed main cycles against the sourced direction/station-order contract;
+5. attach branch/crossover semantics from `track_topology.json`;
+6. leave unresolved branches unclassified rather than selecting them automatically.
+
+`osm_track_stitch.py` still rejects graph degree >2. The separate `osm_track_graph.py` is the branch-preserving path for turnout/crossover research.
+
+### First junction
+
+`JUNCTION_KOL5_BELORUSSKAYA_DEPOT_WEST`:
+- II main track continues straight toward Krasnopresnenskaya;
+- the turnback/depot route diverges left;
+- the actual chamber is source-backed as cast-iron tubing with a monolithic-RC end wall;
+- switch XY/Z, installed turnout project and actual chamber dimensions remain unresolved.
+
+The example therefore contains a strict KNOWN/CONSTRAINED/UNKNOWN boundary. Generic chamber/turnout fallback data must stay tagged as fallback in generated geometry.

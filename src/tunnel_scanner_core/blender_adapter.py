@@ -342,10 +342,25 @@ def _strip_internal_lining_caps_in_blender(
             if bool(props.get("coordinatesLocalizedToChunk", False))
             else 0.0
         )
-        front_y = (scene_object.ring_id - 0.5) * ring_width_m - origin_y
-        back_y = (scene_object.ring_id + 0.5) * ring_width_m - origin_y
-        strip_front = scene_object.ring_id > 0
-        strip_back = scene_object.ring_id < global_max_ring_id
+        if (
+            "liningRingFrontWorldYM" in props
+            and "liningRingBackWorldYM" in props
+        ):
+            front_y = float(props["liningRingFrontWorldYM"]) - origin_y
+            back_y = float(props["liningRingBackWorldYM"]) - origin_y
+            lining_ring_index = int(
+                props.get("liningRingIndex", scene_object.ring_id)
+            )
+            lining_ring_count = int(
+                props.get("liningGlobalRingCount", global_ring_count)
+            )
+            strip_front = lining_ring_index > 0
+            strip_back = lining_ring_index < lining_ring_count - 1
+        else:
+            front_y = (scene_object.ring_id - 0.5) * ring_width_m - origin_y
+            back_y = (scene_object.ring_id + 0.5) * ring_width_m - origin_y
+            strip_front = scene_object.ring_id > 0
+            strip_back = scene_object.ring_id < global_max_ring_id
 
         bm = bmesh.new()
         bm.from_mesh(obj.data)
@@ -416,6 +431,9 @@ def _strip_coincident_lining_interfaces_in_blender(
                 f"{scene_object.name}: missing angular boundary metadata for Stage-9 cleanup"
             )
 
+        local_ring_width_m = float(
+            props.get("liningRingWidthM", ring_width_m)
+        )
         tx = float(props["ringTranslationX"])
         ty = float(props["ringTranslationY"])
         tz = float(props["ringTranslationZ"])
@@ -465,8 +483,8 @@ def _strip_coincident_lining_interfaces_in_blender(
                             1.0,
                             max(
                                 0.0,
-                                (local_y + 0.5 * ring_width_m)
-                                / (0.5 * ring_width_m),
+                                (local_y + 0.5 * local_ring_width_m)
+                                / (0.5 * local_ring_width_m),
                             ),
                         )
                         center_x = front_x + u * (centre_x - front_x)
@@ -474,7 +492,7 @@ def _strip_coincident_lining_interfaces_in_blender(
                     else:
                         u = min(
                             1.0,
-                            max(0.0, local_y / (0.5 * ring_width_m)),
+                            max(0.0, local_y / (0.5 * local_ring_width_m)),
                         )
                         center_x = centre_x + u * (back_x - centre_x)
                         center_z = centre_z + u * (back_z - centre_z)
@@ -501,7 +519,9 @@ def _strip_coincident_lining_interfaces_in_blender(
             start_match = True
             end_match = True
             for local_y, _radius, alpha in samples:
-                v = (local_y + 0.5 * ring_width_m) / ring_width_m
+                v = (
+                    local_y + 0.5 * local_ring_width_m
+                ) / local_ring_width_m
                 v = min(1.0, max(0.0, v))
                 expected_start = fs + v * (bs - fs)
                 expected_end = fe + v * (be - fe)

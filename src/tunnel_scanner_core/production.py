@@ -428,6 +428,65 @@ def sample_alignment_station(
     )
 
 
+def _sample_alignment_station_with_terminal_extrapolation(
+    stations: Sequence[AlignmentStation],
+    chainage_m: float,
+    *,
+    max_extrapolation_m: float,
+) -> AlignmentStation:
+    """Sample alignment, allowing a tightly bounded terminal linear extension.
+
+    This is intentionally private and used only for transferred Stage-9
+    fastener meshes that physically protrude a few millimetres beyond the
+    first/last Moscow civil ring. The public sampler remains strict.
+    """
+    if not math.isfinite(max_extrapolation_m) or max_extrapolation_m < 0.0:
+        raise ValueError("max_extrapolation_m must be finite and non-negative")
+    try:
+        return sample_alignment_station(stations, chainage_m)
+    except ValueError:
+        pass
+
+    if len(stations) < 2:
+        raise ValueError("terminal alignment extrapolation needs two stations")
+
+    start = stations[0].chainage_m
+    end = stations[-1].chainage_m
+    scale = max(abs(start), abs(end), abs(chainage_m), 1.0)
+    tol = max(1e-12, 32.0 * math.ulp(scale))
+
+    if chainage_m < start:
+        overrun = start - chainage_m
+        a, b = stations[0], stations[1]
+        source = "terminal_extrapolated_before_start"
+    elif chainage_m > end:
+        overrun = chainage_m - end
+        a, b = stations[-2], stations[-1]
+        source = "terminal_extrapolated_after_end"
+    else:
+        # If the strict sampler failed for a value inside the closed interval,
+        # that is a real interpolation bug and must not be hidden here.
+        raise AssertionError("strict alignment sampler failed inside range")
+
+    if overrun > max_extrapolation_m + tol:
+        raise ValueError(
+            "terminal alignment extrapolation exceeds object overhang: "
+            f"{overrun:.17g} m > {max_extrapolation_m:.17g} m"
+        )
+
+    span = b.chainage_m - a.chainage_m
+    if span <= 0.0:
+        raise ValueError("terminal alignment stations are not increasing")
+    u = (chainage_m - a.chainage_m) / span
+    return AlignmentStation(
+        chainage_m=float(chainage_m),
+        world_y_m=a.world_y_m + u * (b.world_y_m - a.world_y_m),
+        offset_x_m=a.offset_x_m + u * (b.offset_x_m - a.offset_x_m),
+        offset_z_m=a.offset_z_m + u * (b.offset_z_m - a.offset_z_m),
+        source=source,
+    )
+
+
 def clipped_alignment_stations(
     stations: Sequence[AlignmentStation],
     *,
@@ -1640,6 +1699,23 @@ def stitch_ring_scene_object_to_alignment(
     props.update(
         {
             "productionRingAlignmentStitched": True,
+            "moscowCivilBoundaryFastenerAlignmentExtrapolated": (
+                extrapolated_vertex_count > 0
+            ),
+            "moscowCivilBoundaryFastenerExtrapolatedVertexCount": (
+                extrapolated_vertex_count
+            ),
+            "moscowCivilBoundaryFastenerMaxOverhangM": (
+                extrapolated_max_overhang_m
+            ),
+            "moscowCivilBoundaryFastenerExtrapolatedSides": tuple(
+                sorted(extrapolated_sides)
+            ),
+            "moscowCivilBoundaryFastenerExtrapolationMode": (
+                "terminal_linear_alignment_extension_preserve_stage9_mesh"
+                if extrapolated_vertex_count > 0
+                else "none"
+            ),
             "productionRingFrontOffsetX": float(front_station.offset_x_m),
             "productionRingFrontOffsetZ": float(front_station.offset_z_m),
             "productionRingCenterOffsetX": float(center_station.offset_x_m),
@@ -2869,6 +2945,7 @@ def _warp_civil_local_object_to_alignment(
     topology: str,
     civil_pose: RingPose,
     civil_rotation_seed: int | None,
+    civil_ring_count: int,
 ) -> SceneObject:
     midpoint = 0.5 * (start_chainage_m + end_chainage_m)
     source_ring_width = assembly.config.ring_width_m
@@ -2881,6 +2958,48 @@ def _warp_civil_local_object_to_alignment(
     rotation_cos = math.cos(rotation_rad)
     rotation_sin = math.sin(rotation_rad)
 
+    if civil_ring_count <= 0 or not (0 <= ring_index < civil_ring_count):
+        raise ValueError("invalid Moscow civil ring index/count")
+
+    local_ys = tuple(float(v[1]) for v in obj.vertices)
+    object_min_chainage = midpoint + min(local_ys)
+    object_max_chainage = midpoint + max(local_ys)
+    alignment_start = stations[0].chainage_m
+    alignment_end = stations[-1].chainage_m
+    start_overhang_m = max(0.0, alignment_start - object_min_chainage)
+    end_overhang_m = max(0.0, object_max_chainage - alignment_end)
+    is_boundary_fastener = obj.object_type in {
+        "bolt_pocket_cutter",
+        "bolt_head",
+    }
+    allow_start_extrapolation = (
+        is_boundary_fastener
+        and ring_index == 0
+        and start_overhang_m > 0.0
+    )
+    allow_end_extrapolation = (
+        is_boundary_fastener
+        and ring_index == civil_ring_count - 1
+        and end_overhang_m > 0.0
+    )
+
+    # The copied Stage-9 hardware is small relative to a 1 m civil ring.
+    # A larger excursion would indicate malformed geometry, not a crop-edge
+    # fastener overhang, so keep a hard safety guard.
+    max_boundary_fastener_overhang_m = 0.25 * profile.ring_pitch_m
+    if (
+        start_overhang_m > max_boundary_fastener_overhang_m
+        or end_overhang_m > max_boundary_fastener_overhang_m
+    ):
+        raise ValueError(
+            f"{obj.name}: transferred fastener/civil object overhang exceeds "
+            f"{max_boundary_fastener_overhang_m:g} m safety bound"
+        )
+
+    extrapolated_vertex_count = 0
+    extrapolated_max_overhang_m = 0.0
+    extrapolated_sides: set[str] = set()
+
     vertices: list[Vec3] = []
     for x, local_y, z in obj.vertices:
         # Literal Stage-7/9 axial ring rotation is applied to the complete
@@ -2891,12 +3010,41 @@ def _warp_civil_local_object_to_alignment(
         try:
             station = sample_alignment_station(stations, chainage)
         except ValueError as exc:
-            raise ValueError(
-                f"{obj.name}: Moscow civil warp chainage {chainage:.17g} m "
-                f"outside alignment while mapping ring {ring_index} "
-                f"[{start_chainage_m:.17g}, {end_chainage_m:.17g}] m, "
-                f"local_y={local_y:.17g} m, object_type={obj.object_type}"
-            ) from exc
+            before_start = chainage < alignment_start
+            after_end = chainage > alignment_end
+            if before_start and allow_start_extrapolation:
+                max_extra = start_overhang_m
+                side = "start"
+                overrun = alignment_start - chainage
+            elif after_end and allow_end_extrapolation:
+                max_extra = end_overhang_m
+                side = "end"
+                overrun = chainage - alignment_end
+            else:
+                raise ValueError(
+                    f"{obj.name}: Moscow civil warp chainage "
+                    f"{chainage:.17g} m outside alignment while mapping ring "
+                    f"{ring_index} [{start_chainage_m:.17g}, "
+                    f"{end_chainage_m:.17g}] m, local_y={local_y:.17g} m, "
+                    f"object_type={obj.object_type}"
+                ) from exc
+            try:
+                station = _sample_alignment_station_with_terminal_extrapolation(
+                    stations,
+                    chainage,
+                    max_extrapolation_m=max_extra,
+                )
+            except ValueError as extrapolation_exc:
+                raise ValueError(
+                    f"{obj.name}: failed bounded terminal fastener alignment "
+                    f"extrapolation at chainage {chainage:.17g} m"
+                ) from extrapolation_exc
+            extrapolated_vertex_count += 1
+            extrapolated_max_overhang_m = max(
+                extrapolated_max_overhang_m,
+                overrun,
+            )
+            extrapolated_sides.add(side)
         vertices.append(
             (
                 xr + station.offset_x_m,
@@ -3116,6 +3264,7 @@ def _build_stage10_4_rc_stage9_architecture_objects(
                 topology=topology,
                 civil_pose=civil_roll_assembly.poses[ring_index],
                 civil_rotation_seed=civil_roll_assembly.seed,
+                civil_ring_count=len(ranges),
             )
             if (
                 obj.object_type in {"bolt_pocket_cutter", "bolt_head"}

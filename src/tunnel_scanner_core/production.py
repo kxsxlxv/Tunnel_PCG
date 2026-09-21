@@ -125,6 +125,9 @@ def _copy_scene_object_with_stable_identity(
     namespace: str,
 ) -> SceneObject:
     key = _persistent_ring_key(namespace, obj)
+    front_station = sample_alignment_station(stations, start_chainage_m)
+    center_station = sample_alignment_station(stations, midpoint)
+    back_station = sample_alignment_station(stations, end_chainage_m)
     props = dict(obj.extra_properties)
     props.update(
         {
@@ -2802,11 +2805,33 @@ def _warp_civil_local_object_to_alignment(
             "moscowCivilRingStartChainageM": start_chainage_m,
             "moscowCivilRingEndChainageM": end_chainage_m,
             "eventChainageM": midpoint,
+            "liningRingIndex": ring_index,
+            "liningRingWidthM": end_chainage_m - start_chainage_m,
+            "liningRingCenterWorldYM": center_station.world_y_m,
+            "liningRingFrontWorldYM": front_station.world_y_m,
+            "liningRingBackWorldYM": back_station.world_y_m,
+            "ringTranslationX": center_station.offset_x_m,
+            "ringTranslationY": center_station.world_y_m,
+            "ringTranslationZ": center_station.offset_z_m,
+            "ringRotationDeg": 0.0,
+            "productionRingAlignmentStitched": True,
+            "productionRingFrontOffsetX": front_station.offset_x_m,
+            "productionRingFrontOffsetZ": front_station.offset_z_m,
+            "productionRingCenterOffsetX": center_station.offset_x_m,
+            "productionRingCenterOffsetZ": center_station.offset_z_m,
+            "productionRingBackOffsetX": back_station.offset_x_m,
+            "productionRingBackOffsetZ": back_station.offset_z_m,
             "chunkAssignmentDatum": "moscow_ring_midpoint_chainage",
             "civilFamily": profile.civil_family,
             "moscowCivilTopology": topology,
             "stage9SegmentJointFastenerArchitectureTransferred": True,
             "stage9FastenerVisualTransferNotHistoricalMoscowClaim": True,
+            "liningGlobalRingCount": len(
+                civil_ring_ranges(
+                    assembly.length_by_chainage_m,
+                    ring_pitch_m=profile.ring_pitch_m,
+                )
+            ),
             "moscowProfileID": profile.profile_id,
             "moscowProfileSHA256": profile.provenance.canonical_sha256,
         }

@@ -834,8 +834,9 @@ def test_stage10_5_rc_6100_5600_civil_archetype_adapts_geometry():
         ) is True
     ]
     assert len(segments) == 10 * ring_count
-    assert len(radial) == 10 * ring_count
-    assert len(circum) == 10 * (ring_count - 1)
+    assert radial == []
+    assert circum == []
+    assert meta["prescribedOuterJointSolidsRemoved"] is True
     assert meta["moscowCivilRenderedBlockCount"] == len(segments)
     assert meta["moscowCivilSegmentObjectCount"] == len(segments)
     assert meta["moscowCivilPrescribedRadialJointCount"] == len(radial)
@@ -1548,7 +1549,8 @@ def test_stage10_5_rc_kba_topology_reuses_stage9_fastener_pipeline():
             "stage9SegmentJointFastenerArchitectureTransferred"
         ) is True
     ]
-    assert len(radial) == 6 * ring_count
+    assert radial == []
+    assert meta["prescribedOuterJointSolidsRemoved"] is True
     assert all(
         obj.custom_properties["legacyPrescribedJointGeometry"] is True
         for obj in radial

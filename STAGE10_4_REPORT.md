@@ -15,8 +15,9 @@ Implemented Stage-10.4 civil framework:
 
 - source-sized Moscow 5.5/5.1 m cast-iron envelope, with exact tubing detail
   deliberately deferred;
-- selectable Moscow 6.1/5.6 m precast-RC family rendered as ten actual curved
-  blocks per 1.000 m ring;
+- selectable Moscow 6.1/5.6 m precast-RC family using the literal Stage-9
+  segment/joint/fastener pipeline, with either source-backed `ten_equal` or
+  user/photo-reference `kba` topology;
 - family-specific intrados/extrados radii;
 - lining axis profile z=+1.670 m / production-core z=0 transfer rule;
 - independent 1.000 m Moscow civil-ring rhythm;

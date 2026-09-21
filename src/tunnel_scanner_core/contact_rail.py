@@ -682,7 +682,7 @@ def build_modern_contact_support_meshes(
     lower_r = modern.bracket_lower_bend_radius_m
     upper_r = modern.bracket_upper_bend_radius_m
 
-    start_center_u = support_inboard_clearance_u + half_band
+    start_center_u = support_inboard_clearance_u
     lower_arc_center_u = outer_center_u - lower_r
     lower_arc_center_z = base_center_profile_z + lower_r
     upper_arc_center_u = outer_center_u - upper_r

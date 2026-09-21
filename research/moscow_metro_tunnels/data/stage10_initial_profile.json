@@ -886,7 +886,7 @@
       "circle_vertices": 8,
       "exact_route_schedule_resolved": false,
       "confidence": "C_visual_density_only",
-      "note": "R2K11 provides two cable places on each of 11 levels. Stage10.5 v4 occupies eight distributed levels with one cable per level on each wall (16 representative longitudinal cables total). Each 1 m support span receives a deterministic per-cable/per-span sag amplitude around 25 mm (+/-35%) and a peak phase jitter of +/-0.12 span, retaining one interior sag control point per span to keep polygon growth bounded.",
+      "note": "R2K11 provides two cable places on each of 11 levels. Stage10.5 v5 occupies eight distributed levels with one cable per level on each wall (16 representative longitudinal cables total). Each 1 m support span receives a deterministic per-cable/per-span sag amplitude around 25 mm (+/-35%) and a peak phase jitter of +/-0.12 span, retaining one interior sag control point per span to keep polygon growth bounded.",
       "occupied_places_per_horn": 1,
       "total_representative_cables": 16,
       "side_assignment": {

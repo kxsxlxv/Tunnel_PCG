@@ -55,6 +55,16 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--civil-archetype",
+        choices=["cast_iron_5500_5100", "rc_block_6100_5600"],
+        default="cast_iron_5500_5100",
+        help=(
+            "Civil tunnel envelope. Default is the 5.5/5.1 m cast-iron family; "
+            "rc_block_6100_5600 selects the researched Moscow 6.1/5.6 m "
+            "ten-block RC family while retaining the Stage-10 track/UGR datum."
+        ),
+    )
+    parser.add_argument(
         "--dense-continuous-sweeps",
         action="store_true",
         help=(
@@ -357,8 +367,18 @@ def _validate_stage10_build(
 
         if len(build.scene.objects_of_type("production_tube")) != 0:
             raise AssertionError("modern preset must remove Stage-8 tube previews")
-        if len(build.scene.objects_of_type("production_service_cable")) != 44:
-            raise AssertionError("modern preset requires 44 continuous service cables")
+        if len(build.scene.objects_of_type("production_service_cable")) != 16:
+            raise AssertionError("modern preset requires 16 continuous service cables")
+        for cable in build.scene.objects_of_type("production_service_cable"):
+            cp = cable.custom_properties
+            if cp.get("cableSagApplied") is not True:
+                raise AssertionError(f"{cable.name}: cable sag was not applied")
+            if not math.isclose(
+                float(cp.get("cableSagMidspanM", -1)),
+                0.025,
+                abs_tol=1e-12,
+            ):
+                raise AssertionError(f"{cable.name}: wrong cable sag")
         if len(build.scene.objects_of_type("production_water_main")) != 1:
             raise AssertionError("modern preset requires one tunnel water main")
         water_supports = build.scene.objects_of_type(
@@ -385,8 +405,8 @@ def _validate_stage10_build(
             raise AssertionError("modern preset requires one R2K11 rack per side per civil ring")
         if int(meta.get("serviceCablePlacesPerHorn", -1)) != 2:
             raise AssertionError("R2K11 double horn must expose two cable places")
-        if int(meta.get("serviceCableOccupiedPlacesPerHorn", -1)) != 2:
-            raise AssertionError("modern visual preset must populate both cable places")
+        if int(meta.get("serviceCableOccupiedPlacesPerHorn", -1)) != 1:
+            raise AssertionError("modern visual preset must occupy one cable place per used level")
 
     if domain_stage in {"10.4", "10.5"}:
         if meta.get("civilShellStatus") != (
@@ -420,10 +440,20 @@ def _validate_stage10_build(
             raise AssertionError("Stage 10.4 requires one Moscow walkway")
         for ring in civil:
             p = ring.custom_properties
-            if not math.isclose(float(p["intradosRadiusM"]), 2.55, abs_tol=2e-12):
+            if not math.isclose(
+                float(p["intradosRadiusM"]),
+                profile.intrados_radius_m,
+                abs_tol=2e-12,
+            ):
                 raise AssertionError(f"{ring.name}: wrong intrados radius")
-            if not math.isclose(float(p["extradosRadiusM"]), 2.75, abs_tol=2e-12):
+            if not math.isclose(
+                float(p["extradosRadiusM"]),
+                profile.extrados_radius_m,
+                abs_tol=2e-12,
+            ):
                 raise AssertionError(f"{ring.name}: wrong extrados radius")
+            if p.get("civilFamily") != profile.civil_family:
+                raise AssertionError(f"{ring.name}: wrong civil family")
             if p.get("seriesAccurateTubingLOD0") is not False:
                 raise AssertionError(f"{ring.name}: false LOD0 accuracy claim")
     return gauge, working_faces
@@ -431,7 +461,9 @@ def _validate_stage10_build(
 
 def main() -> None:
     args = parse_args()
-    profile = load_stage10_initial_moscow_profile()
+    profile = load_stage10_initial_moscow_profile(
+        civil_archetype=args.civil_archetype
+    )
     ring_cfg = RingConfig()
     if args.rings is not None:
         if args.rings <= 0:

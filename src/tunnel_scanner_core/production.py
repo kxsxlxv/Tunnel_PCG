@@ -5054,6 +5054,513 @@ def _event_chainage_chunk_index(
     return None
 
 
+@dataclass(frozen=True)
+class Stage105RCModernChunkPlan:
+    """Lightweight global state for chunk-first Stage-10.5 RC generation."""
+
+    source_build: ProceduralTunnelBuild
+    ancillary: AncillarySet
+    asset_specs: tuple[ContinuousAssetSpec, ...]
+    alignment_stations: tuple[AlignmentStation, ...]
+    config: ProductionConfig
+    surface_meshing: SurfaceMeshingConfig
+    chunks: tuple[ChunkDescriptor, ...]
+    civil_roll_assembly: TunnelAssembly
+    seed: int
+    metadata: Mapping[str, Any]
+
+    @property
+    def assembly(self) -> TunnelAssembly:
+        return self.source_build.assembly
+
+    @property
+    def scene_name(self) -> str:
+        return f"tunnel_production_{self.config.namespace}"
+
+
+def build_stage10_5_rc_modern_chunk_plan(
+    *,
+    chunk_length_m: float,
+    boundary_policy: ChunkBoundaryPolicy | str = ChunkBoundaryPolicy.RING_ALIGNED,
+    ring_config: RingConfig | None = None,
+    assembly_config: TunnelAssemblyConfig | None = None,
+    surface_meshing: SurfaceMeshingConfig | None = None,
+    include_bolts: bool = True,
+    label_policy: LabelPolicy = LabelPolicy.STSD_COARSE,
+    ancillary_config: AncillaryConfig | None = None,
+    ancillary_sampling_policy: AncillarySamplingPolicy | str = AncillarySamplingPolicy.REFERENCE,
+    production_config: ProductionConfig,
+    seed: int = 5812,
+) -> Stage105RCModernChunkPlan:
+    """Plan long RC Stage-10.5 export without materializing the full scene."""
+    ring_config = ring_config or RingConfig()
+    surface_meshing = surface_meshing or SurfaceMeshingConfig()
+    profile = production_config.moscow_profile
+    if (
+        profile is None
+        or production_config.moscow_stage != "10.5"
+        or production_config.resolved_moscow_service_preset != "modern"
+        or profile.civil_family
+        != "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+    ):
+        raise ValueError(
+            "chunk-first planner currently requires Stage 10.5 modern "
+            "rc_block_6100_5600"
+        )
+    production_config = replace(
+        production_config,
+        moscow_civil_bolts_enabled=bool(include_bolts),
+    )
+    if assembly_config is None:
+        assembly_config = TunnelAssemblyConfig(
+            ring_width_m=ring_config.width_m
+        )
+    if ancillary_config is None:
+        ancillary_config = sample_ancillary_config(
+            ring_config.inner_radius_m,
+            seed=seed,
+            policy=ancillary_sampling_policy,
+        )
+    ancillary = build_ancillary_set(
+        inner_radius_m=ring_config.inner_radius_m,
+        length_m=ring_config.width_m,
+        config=ancillary_config,
+    )
+    source = _build_stage10_replaced_source_skeleton(
+        ring_config=ring_config,
+        assembly_config=assembly_config,
+        label_policy=label_policy,
+        include_prescribed_joint_solids=(
+            production_config.keep_prescribed_outer_joint_solids
+        ),
+        seed=seed,
+    )
+    stations = production_alignment_stations(source.assembly)
+    specs = build_continuous_asset_specs(
+        namespace=production_config.namespace,
+        ancillary=ancillary,
+        label_policy=label_policy,
+        rail_profile=production_config.rail_profile,
+        moscow_profile=profile,
+        moscow_stage=production_config.moscow_stage,
+        moscow_service_preset=(
+            production_config.resolved_moscow_service_preset
+        ),
+    )
+    chunks = plan_chunks(
+        source.assembly,
+        chunk_length_m=chunk_length_m,
+        boundary_policy=boundary_policy,
+    )
+    civil_ranges = civil_ring_ranges(
+        source.assembly.length_by_chainage_m,
+        ring_pitch_m=profile.ring_pitch_m,
+    )
+    civil_roll_assembly = _sample_moscow_civil_roll_assembly(
+        source_assembly=source.assembly,
+        profile=profile,
+        civil_ring_count=len(civil_ranges),
+        master_seed=seed,
+    )
+
+    modern_pw = profile.modern_permanent_way
+    rail_centers = r65_rail_center_offsets_for_gauge(
+        profile.track.gauge_m,
+        profile=R65ProductionProfile(),
+        measurement_below_top_m=(
+            profile.track.gauge_measurement_below_ugr_m
+        ),
+    )
+    lvt_local = build_modern_lvt_local_event_meshes(
+        profile,
+        rail_centers_profile_x=rail_centers,
+    )
+    lvt_events = modern_lvt_chainages(
+        source.assembly.length_by_chainage_m,
+        profile,
+    )
+    lvt_block_count = len(lvt_events) * sum(
+        1 for mesh in lvt_local
+        if mesh.object_type == "production_lvt_block"
+    )
+    support_chainages = modern_contact_support_chainages(
+        source.assembly.length_by_chainage_m,
+        profile,
+        running_support_pitch_m=modern_pw.support_pitch_m,
+        running_support_phase_m=0.5 * modern_pw.support_pitch_m,
+    )
+    cover_spans = modern_cover_span_ranges(
+        source.assembly.length_by_chainage_m,
+        profile,
+        support_chainages=support_chainages,
+    )
+    rack_chainages = cable_rack_chainages(
+        source.assembly.length_by_chainage_m,
+        profile,
+    )
+    water_supports = water_main_support_chainages(
+        source.assembly.length_by_chainage_m,
+        profile,
+    )
+
+    civil_segment_count = (
+        6
+        if production_config.resolved_moscow_civil_topology == "kba"
+        else 10
+    )
+    full_bolt_rings = sum(
+        1
+        for _ring_index, start, end in civil_ranges
+        if end - start >= profile.ring_pitch_m - 1e-9
+    )
+    bolt_count = (
+        full_bolt_rings * civil_segment_count * 3
+        if include_bolts
+        else 0
+    )
+    production_meta = {
+        "namespace": production_config.namespace,
+        "tunnelInstanceID": stable_instance_id(
+            f"{production_config.namespace}/tunnel"
+        ),
+        "globalCoordinates": True,
+        "coordinatePrecisionIntent": (
+            "double/global; no mandatory rebasing"
+        ),
+        "domainStage": "10.5",
+        "moscowProfileID": profile.profile_id,
+        "moscowProfileSHA256": profile.provenance.canonical_sha256,
+        "servicePreset": "modern",
+        "servicePresetID": profile.default_service_preset,
+        "railProfile": "stage10_1_r65_gost_r51685_2022",
+        "sourceRingGeometryMaterialized": False,
+        "sourceRingGeometrySkippedAsFullyReplaced": True,
+        "chunking": "chunk_first_generation_without_full_scene",
+        "chunkFirstGeneration": True,
+        "continuousSweepAlignmentCompaction": (
+            "exact_zero_error_collinear"
+            if production_config.resolved_compact_exact_collinear_continuous_stations
+            else "disabled"
+        ),
+        "permanentWayStatus": "implemented_stage10_5_modern_LVT_M_APC4",
+        "permanentWayPresetID": modern_pw.preset_id,
+        "modernLVTSupportCount": lvt_block_count,
+        "modernLVTSupportPitchM": modern_pw.support_pitch_m,
+        "modernLVTBlocksPerEvent": 2,
+        "modernLVTBridgesCentralDrain": False,
+        "contactRailStatus": (
+            "implemented_stage10_5_modern_segmented_cover_and_dedicated_support"
+        ),
+        "contactRailPresetID": profile.modern_contact_rail.preset_id,
+        "contactRailSupportCount": len(support_chainages),
+        "contactRailCoverSpanCount": len(cover_spans),
+        "contactRailSupportHoodCount": len(support_chainages),
+        "contactRailTargetPitchM": (
+            profile.modern_contact_rail.support_target_pitch_m
+        ),
+        "contactRailSupportSeparateFromRunningSupport": True,
+        "civilShellStatus": (
+            "implemented_stage10_4_rc_stage9_architecture_"
+            f"{production_config.resolved_moscow_civil_topology}"
+        ),
+        "civilArchetypeID": profile.civil_family,
+        "walkwayStatus": "implemented_stage10_4_source_backed_geometry",
+        "moscowCivilTopology": (
+            production_config.resolved_moscow_civil_topology
+        ),
+        "moscowCivilRingCount": len(civil_ranges),
+        "moscowCivilRingPitchM": profile.ring_pitch_m,
+        "moscowCivilRenderedBlockCount": (
+            civil_segment_count * len(civil_ranges)
+        ),
+        "moscowCivilSegmentObjectCount": (
+            civil_segment_count * len(civil_ranges)
+        ),
+        "moscowCivilPrescribedRadialJointCount": (
+            civil_segment_count * len(civil_ranges)
+        ),
+        "moscowCivilPrescribedCircumferentialJointCount": (
+            civil_segment_count * max(0, len(civil_ranges) - 1)
+        ),
+        "moscowCivilBoltPocketCount": bolt_count,
+        "moscowCivilBoltHeadCount": bolt_count,
+        "moscowCivilBoltsEnabled": bool(include_bolts),
+        "moscowCivilLegacyBoltLayout": (
+            BoltLayoutType.TYPE1_CENTERED.value if include_bolts else None
+        ),
+        "moscowCivilLegacyBoltBooleanOverlapM": (
+            0.005 if include_bolts else 0.0
+        ),
+        "moscowCivilStage9ArchitectureTransferred": True,
+        "moscowCivilRotationStrategy": (
+            source.assembly.config.ring_rotation_strategy.value
+        ),
+        "moscowCivilRotationModel": (
+            "stage7_ring_pose_on_independent_moscow_civil_rhythm"
+        ),
+        "serviceCableCount": sum(
+            1
+            for spec in specs
+            if spec.object_type == "production_service_cable"
+        ),
+        "serviceCableRackCount": 2 * len(rack_chainages),
+        "serviceCableRackFamily": profile.cable_rack.family,
+        "serviceCableRackHornCount": profile.cable_rack.horn_count,
+        "serviceWaterMainCount": sum(
+            1
+            for spec in specs
+            if spec.object_type == "production_water_main"
+        ),
+        "serviceWaterMainSupportCount": len(water_supports),
+        "serviceWaterMainSupportMaxPitchM": (
+            profile.water_main.support_max_pitch_m
+        ),
+        "serviceWaterMainMinNominalDNmm": (
+            profile.water_main.min_nominal_dn_mm
+        ),
+        "continuousInfrastructureAssets": len(specs),
+    }
+    metadata = {
+        **dict(source.scene.metadata),
+        "sourceStage": 9,
+        "productionGeometry": production_meta,
+        "productionAlignmentStations": len(stations),
+    }
+    return Stage105RCModernChunkPlan(
+        source_build=source,
+        ancillary=ancillary,
+        asset_specs=specs,
+        alignment_stations=stations,
+        config=production_config,
+        surface_meshing=surface_meshing,
+        chunks=chunks,
+        civil_roll_assembly=civil_roll_assembly,
+        seed=int(seed),
+        metadata=metadata,
+    )
+
+
+def iter_stage10_5_rc_modern_chunk_scene_packages(
+    plan: Stage105RCModernChunkPlan,
+    *,
+    localize_coordinates: bool = False,
+) -> Iterator[ScenePackage]:
+    """Generate one Stage-10.5 RC chunk at a time from lightweight global state."""
+    profile = plan.config.moscow_profile
+    if profile is None:
+        raise AssertionError("Stage-10.5 RC chunk plan lost Moscow profile")
+    assembly = plan.assembly
+    total = assembly.length_by_chainage_m
+    modern_pw = profile.modern_permanent_way
+
+    for chunk in plan.chunks:
+        start = chunk.start_chainage_m
+        end = chunk.end_chainage_m
+        periodic: list[SceneObject] = []
+        periodic.extend(
+            _build_stage10_5_modern_permanent_way_scene_objects(
+                profile=profile,
+                namespace=plan.config.namespace,
+                assembly=assembly,
+                stations=plan.alignment_stations,
+                label_policy=plan.source_build.scene.label_policy,
+                start_chainage_m=start,
+                end_chainage_m=end,
+            )
+        )
+        periodic.extend(
+            _build_stage10_5_modern_contact_scene_objects(
+                profile=profile,
+                namespace=plan.config.namespace,
+                assembly=assembly,
+                stations=plan.alignment_stations,
+                label_policy=plan.source_build.scene.label_policy,
+                running_support_pitch_m=modern_pw.support_pitch_m,
+                running_support_phase_m=0.5 * modern_pw.support_pitch_m,
+                start_chainage_m=start,
+                end_chainage_m=end,
+            )
+        )
+        periodic.extend(
+            _build_stage10_5_service_rack_scene_objects(
+                profile=profile,
+                namespace=plan.config.namespace,
+                assembly=assembly,
+                stations=plan.alignment_stations,
+                label_policy=plan.source_build.scene.label_policy,
+                start_chainage_m=start,
+                end_chainage_m=end,
+            )
+        )
+        periodic.extend(
+            _build_stage10_5_water_main_support_scene_objects(
+                profile=profile,
+                namespace=plan.config.namespace,
+                assembly=assembly,
+                stations=plan.alignment_stations,
+                label_policy=plan.source_build.scene.label_policy,
+                start_chainage_m=start,
+                end_chainage_m=end,
+            )
+        )
+        periodic.extend(
+            _build_stage10_4_rc_stage9_architecture_objects(
+                profile=profile,
+                topology=plan.config.resolved_moscow_civil_topology,
+                namespace=plan.config.namespace,
+                assembly=assembly,
+                stations=plan.alignment_stations,
+                surface_meshing=plan.surface_meshing,
+                include_bolts=plan.config.moscow_civil_bolts_enabled,
+                seed=plan.seed,
+                start_chainage_m=start,
+                end_chainage_m=end,
+                civil_roll_assembly=plan.civil_roll_assembly,
+            )
+        )
+
+        chunk_prefix = ("Chunks", f"Chunk_{chunk.chunk_id:05d}")
+        objects: list[SceneObject] = [
+            _translate_scene_object(
+                obj,
+                dx=0.0,
+                dy=0.0,
+                dz=0.0,
+                collection_prefix=chunk_prefix,
+                extra_properties={
+                    "chunkID": chunk.chunk_id,
+                    "chunkStartChainageM": start,
+                    "chunkEndChainageM": end,
+                    "chunkAssignmentRule": "event_chainage",
+                },
+            )
+            for obj in periodic
+        ]
+
+        clipped = clipped_alignment_stations(
+            plan.alignment_stations,
+            start_chainage_m=start,
+            end_chainage_m=end,
+        )
+        representative_ring_id = (
+            chunk.ring_ids[0]
+            if chunk.ring_ids
+            else min(
+                assembly.config.n_rings - 1,
+                max(
+                    0,
+                    int(
+                        math.floor(
+                            0.5 * (start + end)
+                            / assembly.config.ring_width_m
+                        )
+                    ),
+                ),
+            )
+        )
+        for spec in plan.asset_specs:
+            piece_key = _chunk_piece_key(spec, chunk)
+            objects.append(
+                scene_object_from_continuous_asset(
+                    spec,
+                    clipped,
+                    namespace=plan.config.namespace,
+                    name_override=f"CH{chunk.chunk_id:05d}__{spec.name}",
+                    instance_id_override=stable_instance_id(piece_key),
+                    ring_id_override=representative_ring_id,
+                    cap_start=math.isclose(start, 0.0, abs_tol=1e-12),
+                    cap_end=math.isclose(end, total, abs_tol=1e-12),
+                    collection_prefix=chunk_prefix,
+                    compact_exact_collinear_stations=(
+                        plan.config.resolved_compact_exact_collinear_continuous_stations
+                    ),
+                    extra_properties={
+                        "chunkID": chunk.chunk_id,
+                        "chunkStartChainageM": start,
+                        "chunkEndChainageM": end,
+                        "chunkPieceKey": piece_key,
+                        "sourceInstanceID": spec.instance_id,
+                        "sourceInfrastructureID": spec.instance_id,
+                        "sourcePersistentKey": spec.persistent_key,
+                        "representativeRingID": representative_ring_id,
+                        "identityScope": "technical_chunk_piece",
+                    },
+                )
+            )
+
+        chunk_world_origin = (0.0, 0.0, 0.0)
+        if localize_coordinates:
+            midpoint = 0.5 * (start + end)
+            origin_station = sample_alignment_station(
+                plan.alignment_stations,
+                midpoint,
+            )
+            chunk_world_origin = (
+                origin_station.offset_x_m,
+                origin_station.world_y_m,
+                origin_station.offset_z_m,
+            )
+            ox, oy, oz = chunk_world_origin
+            objects = [
+                _translate_scene_object(
+                    obj,
+                    dx=-ox,
+                    dy=-oy,
+                    dz=-oz,
+                    extra_properties={
+                        "coordinatesLocalizedToChunk": True,
+                        "chunkWorldOriginX": ox,
+                        "chunkWorldOriginY": oy,
+                        "chunkWorldOriginZ": oz,
+                    },
+                )
+                for obj in objects
+            ]
+
+        yield ScenePackage(
+            name=f"{plan.scene_name}_chunk_{chunk.chunk_id:05d}",
+            mode=SceneMode.MULTI_RING_TUNNEL,
+            label_policy=plan.source_build.scene.label_policy,
+            objects=tuple(objects),
+            metadata={
+                **dict(plan.metadata),
+                "productionChunk": {
+                    "chunkID": chunk.chunk_id,
+                    "startChainageM": start,
+                    "endChainageM": end,
+                    "lengthM": chunk.length_m,
+                    "ringIDs": list(chunk.ring_ids),
+                    "boundaryPolicy": (
+                        ChunkBoundaryPolicy.EXACT_LENGTH.value
+                        if any(
+                            not math.isclose(
+                                ch.length_m,
+                                round(
+                                    ch.length_m
+                                    / assembly.config.ring_width_m
+                                )
+                                * assembly.config.ring_width_m,
+                                abs_tol=1e-12,
+                            )
+                            for ch in plan.chunks[:-1]
+                        )
+                        else ChunkBoundaryPolicy.RING_ALIGNED.value
+                    ),
+                    "vertexCoordinatesLocalized": bool(
+                        localize_coordinates
+                    ),
+                    "globalCoordinatesPreserved": not localize_coordinates,
+                    "chunkWorldOrigin": list(chunk_world_origin),
+                    "worldTransformRestoresGlobalCoordinates": True,
+                    "internalLongitudinalCaps": False,
+                    "sourceContinuousAssetIDsStableAcrossChunking": True,
+                    "periodicAssetsAssignedByEventChainage": True,
+                    "chunkFirstGeneration": True,
+                },
+            },
+        )
+
+
 def iter_chunk_scene_packages(
     production: ProductionTunnelBuild,
     *,

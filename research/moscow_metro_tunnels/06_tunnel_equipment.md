@@ -134,12 +134,14 @@ The R2K family increments vertically at 125 mm; R2K11 therefore uses ten
 125 mm intervals between eleven horn levels.
 
 Stage-10.5 geometry uses the exact component envelopes above. The precise
-stamped bend path/radii of K1350.002 are not yet available as factory CAD and
-remain a replaceable local preview. The 2026-09-21 user-supplied product
-drawing and 3D reference additionally constrain the local silhouette: the two
-open cradles are not supported by one continuous horizontal underbar. The
-production preview therefore keeps the two open semicircular seats and only a
-short wall-side neck into the upright.
+factory neutral-axis bend path/radii of K1350.002 are not yet available as CAD
+and remain a replaceable local preview. The 2026-09-21 user-supplied product
+drawing, 3D reference and follow-up Blender screenshot constrain the visible
+topology more tightly: each double horn is one continuous formed strip, with a
+rounded-W / omega-like profile. It leaves the upright directly, forms the first
+cradle, rises through the central crest, forms the second cradle and turns up
+at the free end. There is no separate horizontal shelf, neck or wall-side tab.
+The production mesh therefore uses one continuous low-poly ribbon per horn.
 
 Placement remains one rack per side at each 1.0 m Moscow civil ring for the
 selected archetype. That longitudinal pitch is a procedural archetype choice,
@@ -148,16 +150,20 @@ the lining-axis height for its upright midpoint in the visual preset; this
 side-specific elevation is a photo/reference-driven layout rule, not a
 manufacturer mounting dimension.
 
-For visual density the current v3 preset occupies eight distributed levels and
+For visual density the current v4 preset occupies eight distributed levels and
 one cable place on each occupied level:
 
 ```text
 8 occupied levels x 1 cable x 2 tunnel sides = 16 representative cables
 ```
 
-The cable routes use a restrained 25 mm midspan sag between the 1.0 m rack
-supports. Only one extra longitudinal midpoint is needed per support span, so
-the visible sag does not require a dense spline mesh.
+The cable routes use a restrained nominal 25 mm sag between the 1.0 m rack
+supports. To avoid a synthetic repeated sine-chain appearance, each cable/span
+gets deterministic variation: sag amplitude varies by +/-35% and the lowest
+point shifts by up to +/-0.12 of the support span. The values are hashed from
+the cable identity and span index, so repeated generation is stable. Only one
+interior sag control point is inserted per support span, keeping polygon growth
+bounded.
 
 This is explicitly a moderate-density visual preview. Do not describe it as
 the exact cable schedule of a named Moscow tunnel.

@@ -428,6 +428,119 @@ def sample_alignment_station(
     )
 
 
+def _sample_alignment_stations_sorted(
+    stations: Sequence[AlignmentStation],
+    chainages_m: Sequence[float],
+) -> tuple[AlignmentStation, ...]:
+    """Sample monotonic chainages with one forward pass over alignment stations.
+
+    This is the batch counterpart of sample_alignment_station(). It preserves
+    the same boundary snapping, local tolerance and interpolation arithmetic,
+    but replaces M independent binary searches with O(N + M) bracket walking.
+    """
+    if not stations:
+        raise ValueError("stations must not be empty")
+    if not chainages_m:
+        return ()
+
+    start = stations[0].chainage_m
+    end = stations[-1].chainage_m
+    result: list[AlignmentStation] = []
+    bracket = 0
+    previous = -math.inf
+
+    for raw_chainage in chainages_m:
+        chainage = float(raw_chainage)
+        if not math.isfinite(chainage):
+            raise ValueError("chainage must be finite")
+        if chainage < previous:
+            raise ValueError("batch alignment chainages must be non-decreasing")
+        previous = chainage
+
+        magnitude = max(abs(start), abs(end), abs(chainage), 1.0)
+        numerical_tol = max(1e-12, 32.0 * math.ulp(magnitude))
+        if chainage < start - numerical_tol or chainage > end + numerical_tol:
+            raise ValueError(
+                "chainage outside station range: "
+                f"{chainage:.17g} not in [{start:.17g}, {end:.17g}] "
+                f"(numerical tolerance {numerical_tol:.3g} m)"
+            )
+        if chainage < start:
+            chainage = start
+        elif chainage > end:
+            chainage = end
+
+        if math.isclose(
+            chainage,
+            start,
+            rel_tol=0.0,
+            abs_tol=numerical_tol,
+        ):
+            result.append(stations[0])
+            continue
+        if math.isclose(
+            chainage,
+            end,
+            rel_tol=0.0,
+            abs_tol=numerical_tol,
+        ):
+            result.append(stations[-1])
+            continue
+
+        while (
+            bracket + 1 < len(stations) - 1
+            and stations[bracket + 1].chainage_m <= chainage
+        ):
+            bracket += 1
+
+        a = stations[bracket]
+        b = stations[bracket + 1]
+        local_scale = max(
+            abs(a.chainage_m),
+            abs(b.chainage_m),
+            abs(chainage),
+            1.0,
+        )
+        local_tol = max(1e-12, 32.0 * math.ulp(local_scale))
+        if math.isclose(
+            chainage,
+            a.chainage_m,
+            rel_tol=0.0,
+            abs_tol=local_tol,
+        ):
+            result.append(a)
+            continue
+        if math.isclose(
+            chainage,
+            b.chainage_m,
+            rel_tol=0.0,
+            abs_tol=local_tol,
+        ):
+            result.append(b)
+            continue
+        if not (
+            a.chainage_m - local_tol
+            <= chainage
+            <= b.chainage_m + local_tol
+        ):
+            raise AssertionError(
+                "batch alignment bracket does not contain chainage"
+            )
+
+        u = (chainage - a.chainage_m) / (b.chainage_m - a.chainage_m)
+        result.append(
+            AlignmentStation(
+                chainage_m=float(chainage),
+                world_y_m=a.world_y_m + u * (b.world_y_m - a.world_y_m),
+                offset_x_m=a.offset_x_m + u * (b.offset_x_m - a.offset_x_m),
+                offset_z_m=a.offset_z_m + u * (b.offset_z_m - a.offset_z_m),
+                source="interpolated",
+            )
+        )
+
+    return tuple(result)
+
+
 def _sample_alignment_station_with_terminal_extrapolation(
     stations: Sequence[AlignmentStation],
     chainage_m: float,

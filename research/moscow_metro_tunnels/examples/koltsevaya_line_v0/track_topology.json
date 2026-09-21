@@ -490,7 +490,9 @@
     "selected_real_junction": "READY_AS_CONSTRAINED_ACTUAL",
     "exact_switch_xy_z": "UNKNOWN",
     "geometry_fallback_contract": "READY_WITH_EXPLICIT_FALLBACKS",
-    "two_main_route_relations": "READY_CURRENT_OSM: A=300607 inner; B=1462011 outer; master=1462012"
+    "two_main_route_relations": "READY_CURRENT_OSM: A=300607 inner; B=1462011 outer; master=1462012",
+    "station_track_development_inventory": "READY_FOR_CURRENT_12_STATION_OPERATING_STATE",
+    "future_dostoevskaya_transition": "CONSTRAINED_PLANNED_STATE_SEPARATE_FROM_CURRENT"
   },
   "alternate_well_documented_junctions": [
     {
@@ -516,5 +518,200 @@
       "recommended_use": "topology/visual validation; exact track number and geometry remain unresolved"
     }
   ],
-  "civil_archetype_registry": "../../data/moscow_junction_civil_archetypes.json"
+  "civil_archetype_registry": "../../data/moscow_junction_civil_archetypes.json",
+  "operating_topology_epoch": {
+    "id": "KOL5_OPERATING_2026_09_PRE_DOSTOEVSKAYA",
+    "date": "2026-09-21",
+    "rule": "Represents the normal operating Line-5 topology before Dostoevskaya opens. Construction/bypass works at Dostoevskaya are not silently inserted into the passenger-route graph.",
+    "future_transition_ref": "DOSTOEVSKAYA_2030_PLANNED_TOPOLOGY",
+    "source_id": "S114"
+  },
+  "station_track_development_inventory": [
+    {
+      "station": "Белорусская",
+      "current_station_track_development": true,
+      "classification": "TURNBACK_DEPOT_CONNECTION_SYSTEM",
+      "source_ids": [
+        "S086",
+        "S093"
+      ],
+      "facts": [
+        "three-switch turnback development on Krasnopresnenskaya side",
+        "continues toward Krasnaya Presnya depot connection"
+      ],
+      "nearby_nonstation_network_junction": false,
+      "status": "SOURCE_BACKED_B/C_PLUS_ACTUAL_SITE_PHOTO"
+    },
+    {
+      "station": "Новослободская",
+      "current_station_track_development": false,
+      "classification": "NONE_AT_STATION",
+      "source_ids": [
+        "S108"
+      ],
+      "nearby_nonstation_network_junction": false,
+      "status": "SOURCE_BACKED_B/C"
+    },
+    {
+      "station": "Проспект Мира",
+      "current_station_track_development": true,
+      "classification": "TURNBACK_PLUS_KRL_SERVICE_CONNECTION",
+      "source_ids": [
+        "S088"
+      ],
+      "facts": [
+        "3 turnouts",
+        "1 station reversing/storage track",
+        "track continues into service connection with Kaluzhsko-Rizhskaya line"
+      ],
+      "future_reassignment": "planned to become part of Dostoevskaya track development after project completion",
+      "future_source_id": "S114",
+      "status": "CURRENT_SOURCE_BACKED_B/C_FUTURE_CHANGE_PLANNED"
+    },
+    {
+      "station": "Комсомольская",
+      "current_station_track_development": false,
+      "classification": "NONE_AT_STATION",
+      "source_ids": [
+        "S109"
+      ],
+      "nearby_nonstation_network_junction": false,
+      "status": "SOURCE_BACKED_B/C"
+    },
+    {
+      "station": "Курская",
+      "current_station_track_development": true,
+      "classification": "TURNBACK_PLUS_LDL_SERVICE_CONNECTION",
+      "source_ids": [
+        "S089",
+        "S104"
+      ],
+      "facts": [
+        "5 turnouts in current station-development description",
+        "1 station reversing/storage track",
+        "service connection to Lyublinsko-Dmitrovskaya system",
+        "actual photo series identifies Track-II/outer-ring switch No.4 and later switch No.7 chamber"
+      ],
+      "status": "SOURCE_BACKED_B/C_WITH_ACTUAL_VISUAL_ANCHORS"
+    },
+    {
+      "station": "Таганская",
+      "current_station_track_development": false,
+      "classification": "NONE_AT_STATION_WITH_NEARBY_SERVICE_CONNECTION_SYSTEM",
+      "source_ids": [
+        "S110",
+        "S092"
+      ],
+      "nearby_nonstation_network_junction": true,
+      "nearby_system_id": "KOL5_TAGANSKAYA_SSV_SYSTEM",
+      "note": "Do not attach the nearby service-connection switch topology to the station object merely because it is in the Taganskaya area.",
+      "status": "SOURCE_BACKED_B/C"
+    },
+    {
+      "station": "Павелецкая",
+      "current_station_track_development": true,
+      "classification": "TURNBACK_PLUS_MULTI_LINE_SERVICE_CONNECTION",
+      "source_ids": [
+        "S090"
+      ],
+      "facts": [
+        "3 turnouts",
+        "1 station reversing/storage track",
+        "continues into service-connection system with Zamoskvoretskaya, Kaluzhsko-Rizhskaya and Serpukhovsko-Timiryazevskaya lines"
+      ],
+      "status": "SOURCE_BACKED_B/C"
+    },
+    {
+      "station": "Добрынинская",
+      "current_station_track_development": false,
+      "classification": "NONE_AT_STATION",
+      "source_ids": [
+        "S111"
+      ],
+      "nearby_nonstation_network_junction": false,
+      "status": "SOURCE_BACKED_B/C"
+    },
+    {
+      "station": "Октябрьская",
+      "current_station_track_development": false,
+      "classification": "NONE_AT_STATION",
+      "source_ids": [
+        "S112"
+      ],
+      "nearby_nonstation_network_junction": false,
+      "status": "SOURCE_BACKED_B/C"
+    },
+    {
+      "station": "Парк культуры",
+      "current_station_track_development": true,
+      "classification": "TURNBACK_PTO_PLUS_SOKOLNICHESKAYA_SERVICE_CONNECTION",
+      "source_ids": [
+        "S091",
+        "S105"
+      ],
+      "facts": [
+        "5 turnouts in current station-development description",
+        "1 station reversing/storage track",
+        "single-track service connection to Sokolnicheskaya line",
+        "actual photo caption identifies switch No.4 and right-hand service branch in the photographed orientation"
+      ],
+      "status": "SOURCE_BACKED_B/C_WITH_ACTUAL_VISUAL_ANCHOR"
+    },
+    {
+      "station": "Киевская",
+      "current_station_track_development": false,
+      "classification": "NONE_AT_STATION",
+      "source_ids": [
+        "S113"
+      ],
+      "nearby_nonstation_network_junction": false,
+      "status": "SOURCE_BACKED_B/C"
+    },
+    {
+      "station": "Краснопресненская",
+      "current_station_track_development": true,
+      "classification": "TURNBACK_DEPOT_CONNECTION_SYSTEM",
+      "source_ids": [
+        "S087",
+        "S084",
+        "S098",
+        "S106"
+      ],
+      "facts": [
+        "3 turnouts",
+        "1 reversing/storage track continuing to Krasnaya Presnya depot connection",
+        "depot serves both Line-5 directions",
+        "main depot connection is reported as two-track at C-confidence"
+      ],
+      "status": "SOURCE_BACKED_B/C_WITH_OFFICIAL_DEPOT_OPERATION_EVIDENCE"
+    }
+  ],
+  "future_topology_states": [
+    {
+      "id": "DOSTOEVSKAYA_2030_PLANNED_TOPOLOGY",
+      "status": "PLANNED_NOT_CURRENT_OPERATING_TOPOLOGY",
+      "station": "Достоевская",
+      "location_between": [
+        "Новослободская",
+        "Проспект Мира"
+      ],
+      "source_id": "S114",
+      "planned_opening_year": 2030,
+      "planned_station_track_development": {
+        "turnouts": 4,
+        "station_storage_tracks": 2
+      },
+      "planned_absorbed_from_current_prospekt_mira_system": {
+        "turnouts": 3,
+        "reversing_storage_tracks": 1,
+        "destination": "Kaluzhsko-Rizhskaya service connection"
+      },
+      "construction_state": {
+        "bypass_tunnels_exist_or_are_being_completed": true,
+        "switching_chambers_under_construction": true,
+        "ordinary_passenger_route_use": false,
+        "rule": "Construction/bypass geometry is a separate temporal topology state. Do not mix it into KOL5_OPERATING_2026_09_PRE_DOSTOEVSKAYA unless generating the construction scenario."
+      }
+    }
+  ]
 }

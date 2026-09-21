@@ -916,6 +916,28 @@
           "ordinary_independent_tunnel_inner_diameter_m": 5.14,
           "ordinary_independent_tunnel_outer_diameter_m": 5.64,
           "status": "GENERIC_REFERENCE_PLUS_EXPLICIT_FALLBACK_CONVENTION_NOT_BELORUSSKAYA_AS_BUILT"
+        },
+        "actual_depot_network_visual_transition": {
+          "source_id": "S120",
+          "photos": [
+            9,
+            10
+          ],
+          "status": "ACTUAL_NETWORK_MORPHOLOGY_BRANCH_LEG_IDENTITY_UNRESOLVED",
+          "source_backed_visual_sequence": [
+            "wider concrete/open-cut or transition civil section",
+            "beginning of closed-method construction",
+            "single physical track",
+            "circular/near-circular flanged-tubing tunnel downstream of a concrete transition"
+          ],
+          "exact_leg_id": null,
+          "exact_transition_chainage_m": null,
+          "exact_tunnel_inner_diameter_m": null,
+          "exact_tunnel_outer_diameter_m": null,
+          "exact_ring_pitch_m": null,
+          "exact_lining_series": null,
+          "relative_z_m": null,
+          "use_rule": "This proves that the real Krasnaya-Presnya depot network contains the required branch-exit morphology somewhere downstream. It does NOT prove that the selected Belorusskaya leg reaches that transition at a particular chainage or uses that exact shell."
         }
       },
       "contact_rail_relative_to_turnout_geometry": {
@@ -1401,7 +1423,12 @@
         ],
         "generic_fallback_archetype_id": "METRO_STEPWISE_BRANCH_CHAMBER_TUBING_2001_REFERENCE",
         "generic_fallback_rule": "May drive fallback transition only with actual_site_match=false/fallback=true. Chamber 6 is common-wall two-vault; fully independent tunnels start only after intertrack >6 m, exact chainage unknown.",
-        "selected_actual_branch_cut_rule": "Terminate the source-backed Belorusskaya single-track branch leg before the unresolved downstream depot-side multi-edge/two-track system."
+        "selected_actual_branch_cut_rule": "Terminate the source-backed Belorusskaya single-track branch leg before the unresolved downstream depot-side multi-edge/two-track system.",
+        "actual_network_level_evidence": {
+          "value": "S120 photos 9-10 show a real transition into an independent single-track circular/near-circular tubing tunnel in the depot-connection network",
+          "exact_selected_belorusskaya_leg_match": null,
+          "status": "ACTUAL_VISUAL_NETWORK_EVIDENCE_NOT_SELECTED_LEG_DIMENSION"
+        }
       }
     },
     "contact_rail": {

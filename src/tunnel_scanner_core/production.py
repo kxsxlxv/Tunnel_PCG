@@ -3454,6 +3454,9 @@ def _build_stage10_4_rc_stage9_architecture_objects(
     start_chainage_m: float | None = None,
     end_chainage_m: float | None = None,
     civil_roll_assembly: TunnelAssembly | None = None,
+    indexed_ranges: Sequence[
+        tuple[int, int, float, float]
+    ] | None = None,
 ) -> tuple[SceneObject, ...]:
     """Parameterize the old Stage-9 segment/joint/bolt pipeline for Moscow RC."""
     if profile.civil_family != "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000":
@@ -3461,11 +3464,45 @@ def _build_stage10_4_rc_stage9_architecture_objects(
     if topology not in {"ten_equal", "kba"}:
         raise ValueError("Moscow RC topology must be ten_equal or kba")
 
-    ranges = civil_ring_ranges(
-        assembly.length_by_chainage_m,
-        ring_pitch_m=profile.ring_pitch_m,
+    all_ranges = (
+        civil_ring_ranges(
+            assembly.length_by_chainage_m,
+            ring_pitch_m=profile.ring_pitch_m,
+        )
+        if indexed_ranges is None
+        else ()
     )
-    civil_ring_count = len(ranges)
+    civil_ring_count = (
+        len(all_ranges)
+        if indexed_ranges is None
+        else (
+            civil_roll_assembly.config.n_rings
+            if civil_roll_assembly is not None
+            else len(
+                civil_ring_ranges(
+                    assembly.length_by_chainage_m,
+                    ring_pitch_m=profile.ring_pitch_m,
+                )
+            )
+        )
+    )
+    range_events = (
+        tuple(indexed_ranges)
+        if indexed_ranges is not None
+        else tuple(
+            (
+                range_index,
+                ring_index,
+                start_chainage,
+                end_chainage,
+            )
+            for range_index, (
+                ring_index,
+                start_chainage,
+                end_chainage,
+            ) in enumerate(all_ranges)
+        )
+    )
     if civil_roll_assembly is None:
         civil_roll_assembly = _sample_moscow_civil_roll_assembly(
             source_assembly=assembly,
@@ -3477,13 +3514,14 @@ def _build_stage10_4_rc_stage9_architecture_objects(
         raise ValueError("civil_roll_assembly ring count mismatch")
     result: list[SceneObject] = []
     tunnel_instance_id = stable_instance_id(f"{namespace}/tunnel")
-    for range_index, (
+    for (
+        range_index,
         ring_index,
         start_chainage,
         end_chainage,
-    ) in enumerate(ranges):
+    ) in range_events:
         midpoint = 0.5 * (start_chainage + end_chainage)
-        if not _chainage_selected_for_window(
+        if indexed_ranges is None and not _chainage_selected_for_window(
             midpoint,
             total_length_m=assembly.length_by_chainage_m,
             start_chainage_m=start_chainage_m,

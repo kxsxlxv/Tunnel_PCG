@@ -70,11 +70,14 @@ def main() -> None:
     )
     assert not details
     assert not bolt_details
-    assert int(meta["moscowCivilDetailRibObjectCount"]) == 0
-    assert int(meta["moscowCivilBoltObjectCount"]) == 0
+    assert int(meta["moscowCivilSegmentObjectCount"]) == 0
+    assert int(meta["moscowCivilPrescribedRadialJointCount"]) == 0
+    assert int(meta["moscowCivilPrescribedCircumferentialJointCount"]) == 0
+    assert int(meta["moscowCivilBoltPocketCount"]) == 0
     assert int(meta["moscowCivilBoltHeadCount"]) == 0
     assert meta["moscowCivilBoltsEnabled"] is False
     assert int(meta["moscowCivilRenderedBlockCount"]) == 0
+    assert meta["moscowCivilTopology"] == "cast_iron_detail_deferred"
     assert len(walkway) == 1
     assert len(concrete) == 1
     assert int(meta["moscowCivilRingCount"]) == len(civil)

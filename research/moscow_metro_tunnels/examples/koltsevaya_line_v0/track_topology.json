@@ -24,7 +24,8 @@
       "direction": "clockwise",
       "direction_source_ids": [
         "S084",
-        "S096"
+        "S096",
+        "S134"
       ],
       "direction_status": "SOURCE_BACKED",
       "station_sequence": [
@@ -68,7 +69,8 @@
       "direction": "counterclockwise",
       "direction_source_ids": [
         "S084",
-        "S096"
+        "S096",
+        "S134"
       ],
       "direction_status": "SOURCE_BACKED",
       "station_sequence": [
@@ -157,7 +159,8 @@
         "S122",
         "S123",
         "S124",
-        "S125"
+        "S125",
+        "S134"
       ],
       "confirmed": [
         "depot serves Line 5",
@@ -167,7 +170,8 @@
         "an official infrastructure list explicitly identifies a tunnel-branch to Krasnaya Presnya depot",
         "actual photo sequence shows a two-track section of the depot branch",
         "a photographed downstream switch divides directions toward Belorusskaya and Krasnopresnenskaya",
-        "the depot connection therefore must be modelled as a multi-edge graph rather than a single branch polyline"
+        "the depot connection therefore must be modelled as a multi-edge graph rather than a single branch polyline",
+        "1983 engineering collection explicitly states that the Line-5 depot is connected by two single-track branches adjoining the crossover tracks at Belorusskaya and Krasnopresnenskaya"
       ],
       "crossover_between_main_tracks": "multi-switch turnback/depot system confirmed; exact direct main-to-main crossover semantics and switch-node decomposition remain unresolved",
       "exact_xy": null,
@@ -286,7 +290,7 @@
           "branch_role": "depot_connection",
           "line_attachment": "Белорусская side / selected left-hand divergence from Track B system",
           "track_count": 1,
-          "track_count_source_id": "S125",
+          "track_count_source_id": "S134",
           "operational_corroboration_source_id": "S084",
           "downstream_relation": "continues toward depot-side multi-track/switch system",
           "exact_osm_way_ids": null,
@@ -295,7 +299,9 @@
           "exact_xy": null,
           "exact_z": null,
           "civil_shell_section": null,
-          "status": "TOPOLOGY_SOURCE_BACKED_GEOMETRY_UNRESOLVED"
+          "status": "TOPOLOGY_SOURCE_BACKED_GEOMETRY_UNRESOLVED",
+          "track_count_corroboration_source_id": "S125",
+          "track_count_status": "SOURCE_BACKED_HISTORICAL_ENGINEERING_ACCOUNT_CORROBORATED_CURRENT_SECONDARY"
         },
         {
           "edge_contract_id": "BRANCH_KRP_KRASNOPRESNENSKAYA_LEG",
@@ -303,7 +309,7 @@
           "branch_role": "depot_connection",
           "line_attachment": "Краснопресненская side",
           "track_count": 1,
-          "track_count_source_id": "S125",
+          "track_count_source_id": "S134",
           "operational_corroboration_source_id": "S084",
           "downstream_relation": "continues toward depot-side multi-track/switch system; S121 supplies a crown-depth profile fragment on this side",
           "exact_osm_way_ids": null,
@@ -313,7 +319,9 @@
           "exact_z": null,
           "civil_shell_section": null,
           "profile_constraint_ref": "actual_krasnopresnenskaya_side_profile_fragment",
-          "status": "TOPOLOGY_SOURCE_BACKED_PROFILE_PARTIAL_GEOMETRY_UNRESOLVED"
+          "status": "TOPOLOGY_SOURCE_BACKED_PROFILE_PARTIAL_GEOMETRY_UNRESOLVED",
+          "track_count_corroboration_source_id": "S125",
+          "track_count_status": "SOURCE_BACKED_HISTORICAL_ENGINEERING_ACCOUNT_CORROBORATED_CURRENT_SECONDARY"
         }
       ],
       "local_depot_side_two_track_section": {
@@ -345,6 +353,18 @@
           "exact chainages/XY/Z of merge/split nodes"
         ],
         "conflict_note": "Tertiary sources sometimes summarize the whole connection as one 'two-track connecting branch'. Do not encode that wording as a single end-to-end two-track TRACK_EDGE; the more granular sources support two distinct Line-5 branch legs plus a local two-track section."
+      },
+      "historical_design_topology": {
+        "source_id": "S134",
+        "locator": "A.M. Gorkov article, exact web line 116",
+        "branch_count": 2,
+        "branch_track_count_each": 1,
+        "attachments": [
+          "Белорусская crossover-track system",
+          "Краснопресненская crossover-track system"
+        ],
+        "operation": "branches/crossovers allow depot trains to populate and clear the ring without reversing maneuvers",
+        "status": "SOURCE_BACKED_HISTORICAL_DESIGN_ACCOUNT"
       }
     },
     {
@@ -393,7 +413,8 @@
       "source_ids": [
         "S085",
         "S089",
-        "S104"
+        "S104",
+        "S134"
       ],
       "turnout_count": 5,
       "station_turnback_storage_tracks": 1,
@@ -431,6 +452,12 @@
         "qualitative": "SSV descends below the photographed turnback/main-track level after the divergence",
         "source_id": "S104",
         "status": "SOURCE_BACKED_QUALITATIVE_NO_NUMERIC_Z"
+      },
+      "historical_storage_track_direction": {
+        "ring": "outer",
+        "source_id": "S134",
+        "locator": "adjacent web line 117",
+        "status": "SOURCE_BACKED_HISTORICAL"
       }
     },
     {
@@ -508,7 +535,8 @@
       "source_ids": [
         "S085",
         "S091",
-        "S105"
+        "S105",
+        "S134"
       ],
       "turnout_count": 5,
       "station_turnback_storage_tracks": 1,
@@ -536,6 +564,12 @@
         "exact_chainage": null,
         "dimensions": null,
         "status": "ACTUAL_SITE_PHOTO_CAPTION_C_CONFIDENCE"
+      },
+      "historical_storage_track_direction": {
+        "ring": "inner",
+        "source_id": "S134",
+        "locator": "adjacent web line 117",
+        "status": "SOURCE_BACKED_HISTORICAL"
       }
     }
   ],
@@ -548,7 +582,8 @@
       "S085",
       "S086",
       "S093",
-      "S120"
+      "S120",
+      "S134"
     ],
     "main_track_id": "KOLTSEVAYA_TRACK_B",
     "main_track_number": "II",
@@ -597,7 +632,14 @@
     },
     "branch_edge_contract_id": "BRANCH_KRP_BELORUSSKAYA_LEG",
     "first_implementation_branch_track_count": 1,
-    "first_implementation_branch_track_count_source_id": "S125"
+    "first_implementation_branch_track_count_source_id": "S125",
+    "branch_track_count_evidence": {
+      "value": 1,
+      "source_id": "S134",
+      "locator": "1983 A.M. Gorkov design account, web line 116",
+      "semantics": "Belorusskaya is one of the two single-track depot-connection branches",
+      "status": "SOURCE_BACKED_HISTORICAL_DESIGN_ACCOUNT"
+    }
   },
   "global_unknowns": [
     "exact current OSM way IDs and node IDs inside child routes 300607 and 1462011 until relation/full or PBF bytes are acquired",

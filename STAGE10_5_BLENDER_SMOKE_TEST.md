@@ -10,9 +10,10 @@ It combines:
 - APC-4 fastening preview;
 - segmented modern contact-rail cover;
 - dedicated contact-rail supports;
-- R2K11/K1351.001-09 cable racks with open K1350.002 double cradles and no continuous underbar;
+- R2K11/K1351.001-09 cable racks with single continuous rounded-W / omega K1350.002 ribbons;
 - 16 representative service-cable routes using 8/11 levels per wall;
-- restrained 25 mm cable sag between 1.0 m rack supports;
+- nominal 25 mm deterministic irregular cable sag between 1.0 m rack supports;
+- source-sized civil shell with restored composite joint/rib detail and cast-iron bolt heads where applicable;
 - one DN80-minimum current tunnel water main with periodic supports;
 - raised Moscow walkway.
 
@@ -114,8 +115,10 @@ Expected:
 - each horn envelope is 169 x 40 x 87 mm at 4 mm steel;
 - each horn provides two physical cable places, but only one is occupied on a used level;
 - eight of eleven levels are populated per wall, producing 16 continuous cable routes total;
-- the long common horizontal underbar is absent; the double cradles remain open;
-- cables show a restrained sag of about 25 mm at midspan between 1.0 m supports;
+- each horn is one continuous formed strip: upright -> first cradle -> central crest -> second cradle -> upturned free end;
+- there is no separate horizontal shelf/neck/tab between the upright and first cradle;
+- cable sag is visibly non-uniform from span to span while remaining restrained around a nominal 25 mm;
+- sag amplitude varies deterministically by +/-35% and its low point can shift by +/-0.12 span;
 - cables remain visibly inside the tunnel intrados;
 - negative-X/contact-rail wall is tagged strong-current and its rack midpoint is at tunnel/lining mid-height;
 - positive-X/walkway wall is tagged weak-current;
@@ -143,8 +146,19 @@ With `--civil-archetype rc_block_6100_5600`, expect:
     ring pitch          1.000 m
     topology metadata   10 RC blocks
 
-The RC variant is currently rendered as a smooth source-sized envelope; exact
-block-edge/pin CAD remains deferred.
+The smooth source-sized envelope remains the physical boundary, but it should no
+longer read as a featureless cylinder. A separate open-backed detail layer is
+visible:
+
+- default cast iron: 11 coarse visual tubing divisions, joint/flange relief,
+  ring-boundary bands, circumferential stiffener and simplified M27 bolt heads;
+- RC 6.1/5.6: ten visible shallow block-joint divisions, without cast-iron M27
+  bolt-head/stiffener treatment.
+
+For cast iron, the 25 mm flange, M27 x 120 typical fastening and two working
+bolt rows are source-backed. Exact N/C/K angular geometry, drilling coordinates
+and factory bolt-head CAD remain unresolved, so the detail layer is not an
+exact tubing-series LOD0. Exact RC block-edge/pin CAD also remains deferred.
 
 ## 4. Polygon-count expectation
 
@@ -188,10 +202,11 @@ Useful screenshots:
 1. close contact-rail support + local hood;
 2. contact-cover span between two supports;
 3. LVT-M/APC-4 rail seat and central drain;
-4. one full civil ring showing both R2K11 racks;
-5. weak-current-side water main;
-6. 50-100 m perspective view showing service density;
-7. Blender statistics for a long scene.
+4. close R2K11 horn view proving the continuous omega/W ribbon has no shelf;
+5. one full cast-iron civil ring showing joint relief, stiffener and bolt heads;
+6. weak-current-side water main;
+7. 50-100 m perspective view showing varied cable sag and service density;
+8. Blender statistics for a long scene.
 
 Also send:
 

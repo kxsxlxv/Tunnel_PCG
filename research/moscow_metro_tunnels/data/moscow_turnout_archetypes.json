@@ -82,6 +82,85 @@
         "applicability": "current metro design geometry; use as a validator, not proof of 1950s as-built Belorusskaya chainage",
         "confidence": "A",
         "status": "SOURCE_BACKED_CONSTRAINT"
+      },
+      "plan_profile_placement": {
+        "straight_track_required": {
+          "value": true,
+          "source_id": "S022",
+          "locator": "SP 120.13330.2022 §5.3.5",
+          "era": "current",
+          "confidence": "A",
+          "status": "SOURCE_BACKED"
+        },
+        "max_longitudinal_grade_per_mille": {
+          "normal": 5,
+          "difficult": 10,
+          "source_id": "S022",
+          "locator": "SP 120.13330.2022 §5.3.5",
+          "confidence": "A",
+          "status": "SOURCE_BACKED"
+        },
+        "turnout_center_to_plan_or_vertical_curve_start_min_m": {
+          "value": 20,
+          "source_id": "S022",
+          "locator": "SP 120.13330.2022 §5.3.5",
+          "note": "This is a turnout-center constraint, not a direct front/rear joint straight-insert length.",
+          "confidence": "A",
+          "status": "SOURCE_BACKED"
+        },
+        "turnout_center_to_station_platform_start_min_m": {
+          "value": 25,
+          "source_id": "S022",
+          "locator": "SP 120.13330.2022 §5.3.5",
+          "confidence": "A",
+          "status": "SOURCE_BACKED"
+        },
+        "bridge_span_joint_forbidden": {
+          "value": true,
+          "source_id": "S022",
+          "locator": "SP 120.13330.2022 §5.3.5",
+          "confidence": "A",
+          "status": "SOURCE_BACKED"
+        }
+      },
+      "rail_inclination_in_turnout": {
+        "value": "no rail cant / no poduklonka",
+        "source_id": "S102",
+        "locator": "2005 Instruction §2.4.2, printed p.15",
+        "era": "2005 service rule",
+        "applicability": "turnouts, crossovers and single crossovers",
+        "confidence": "A/B",
+        "status": "SOURCE_BACKED_NEAR_SERVICE_ERA"
+      },
+      "frog_guardrail_clearance_constraints": {
+        "counterrail_to_frog_core_working_faces_min_mm": {
+          "value": 1472,
+          "source_id": "S102",
+          "locator": "§2.12.2, printed p.36 / Fig.25 context",
+          "confidence": "A/B",
+          "status": "SOURCE_BACKED"
+        },
+        "counterrail_to_wing_rail_working_faces_max_mm": {
+          "value": 1435,
+          "source_id": "S102",
+          "locator": "§2.12.2, printed p.36 / Fig.25 context",
+          "confidence": "A/B",
+          "status": "SOURCE_BACKED"
+        },
+        "exact_local_flangeway_profile": null
+      },
+      "turnout_trackbed_service_era_2005": {
+        "foundation": "ballast, not ordinary track-concrete embedment",
+        "source_id": "S102",
+        "locator": "§2.9.1 and §2.10.1-2.10.2, printed pp.29-32",
+        "track_concrete_omitted_under_turnout": true,
+        "track_concrete_omitted_adjacent_each_side_m": [
+          5,
+          25
+        ],
+        "compacted_ballast_thickness_under_each_rail_min_m": 0.24,
+        "confidence": "A/B",
+        "status": "SOURCE_BACKED_NEAR_SERVICE_ERA"
       }
     },
     {
@@ -276,7 +355,83 @@
         "status": "PARTIAL_SOURCE_BACKED",
         "total_bearers_derived": 68,
         "total_bearers_derivation": "17+10+8+4+6+5+6+4+4+4 from the source-backed length groups",
-        "total_bearers_status": "DERIVED_FROM_SOURCE_GROUP_COUNTS"
+        "total_bearers_status": "DERIVED_FROM_SOURCE_GROUP_COUNTS",
+        "independent_era_confirmation": {
+          "source_ids": [
+            "S102",
+            "S103"
+          ],
+          "instruction_2005": {
+            "single_turnout_length_range_m": [
+              3,
+              5.25
+            ],
+            "r65_upper_face_family": "widened/wide family wording in instruction",
+            "locator": "S102 §2.9.6, printed p.31"
+          },
+          "gost_8816_2003_A4": {
+            "rail_and_frog": "R65/R50/R43, 1:9",
+            "total_bearers": 68,
+            "type": "II",
+            "aggregate_length_counts": [
+              {
+                "length_m": 3,
+                "count": 17
+              },
+              {
+                "length_m": 3.25,
+                "count": 10
+              },
+              {
+                "length_m": 3.5,
+                "count": 8
+              },
+              {
+                "length_m": 3.75,
+                "count": 4
+              },
+              {
+                "length_m": 4,
+                "count": 6
+              },
+              {
+                "length_m": 4.25,
+                "count": 5
+              },
+              {
+                "length_m": 4.5,
+                "count": 6
+              },
+              {
+                "length_m": 4.75,
+                "count": 4
+              },
+              {
+                "length_m": 5,
+                "count": 4
+              },
+              {
+                "length_m": 5.25,
+                "count": 4
+              }
+            ],
+            "cross_section_options_mm": {
+              "nominal_thickness_h": 160,
+              "widened_upper_face_b": 220,
+              "normal_upper_face_b": 175,
+              "lower_face_b1": 250,
+              "lower_face_tolerance_plus_minus_mm": [
+                20,
+                5
+              ],
+              "sawn_side_height_h1_min": 120
+            },
+            "exact_width_class_by_longitudinal_position": null,
+            "locator": "S103 §4.3 Table 1 and §4.8 Table 2 A4"
+          },
+          "note": "The aggregate length-count distribution exactly matches the 68-piece manufacturer/project-2976 bearer inventory; this is independent dimensional confirmation. It still does not prove project 2976 was installed at Belorusskaya.",
+          "confidence": "A_for_standard_set_B_for_project_match"
+        }
       },
       "fastening": {
         "family": "separate fastening; high-flange plates/bridges and spring rail fasteners",
@@ -436,7 +591,32 @@
           }
         ],
         "note": "Do not infer y offsets, point-root coordinates, frog nose coordinates or guard-rail extents from these scalar x stations."
-      }
+      },
+      "plan_profile_placement_constraints_ref": "MOSCOW_METRO_MAIN_TURNOUT_1_9_CONSTRAINT.plan_profile_placement",
+      "rail_inclination": {
+        "value": "no rail cant / no poduklonka",
+        "source_id": "S102",
+        "locator": "2005 Instruction §2.4.2",
+        "status": "SOURCE_BACKED_NEAR_SERVICE_ERA"
+      },
+      "frog_guardrail_constraints": {
+        "counterrail_to_frog_core_working_faces_min_mm": {
+          "value": 1472,
+          "source_id": "S102",
+          "locator": "§2.12.2, printed p.36 / Fig.25 context",
+          "confidence": "A/B",
+          "status": "SOURCE_BACKED"
+        },
+        "counterrail_to_wing_rail_working_faces_max_mm": {
+          "value": 1435,
+          "source_id": "S102",
+          "locator": "§2.12.2, printed p.36 / Fig.25 context",
+          "confidence": "A/B",
+          "status": "SOURCE_BACKED"
+        },
+        "exact_local_flangeway_profile": null
+      },
+      "minimum_straight_insert_note": "Exact front/rear joint straight inserts remain unresolved. Apply the source-backed turnout-center >=20 m distance to nearby plan/vertical curve starts from SP 120 §5.3.5."
     },
     {
       "id": "MOSCOW_METRO_CROSSOVER_2_9_CONSTRAINT",

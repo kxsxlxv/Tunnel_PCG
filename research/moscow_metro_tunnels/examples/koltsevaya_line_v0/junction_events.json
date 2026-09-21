@@ -694,6 +694,45 @@
           "exit_event_end": "15 m after turnout zone when returning to ordinary legacy running-track construction",
           "exact_site_transition_chainages": null,
           "status": "SOURCE_BACKED_GENERIC_LEGACY_RULE_CHAINAGE_RELATIVE_TO_TURNOUT_ZONE_NOT_SITE_SURVEY"
+        },
+        "current_service_events": {
+          "applicability": "CURRENT_SP120_VALIDATOR_OR_MODERN_RETROFIT_ONLY; not evidence of 1950s/2001 Belorusskaya fit-out",
+          "turnout_point_lighting": {
+            "working_illuminance_lx_at_ugr": 20,
+            "separate_emergency_group": true,
+            "source_id": "S022",
+            "locators": [
+              "SP 120.13330.2022 Table 5.23",
+              "§5.10.6.20"
+            ],
+            "status": "SOURCE_BACKED_CURRENT_RULE"
+          },
+          "maintenance_power_box": {
+            "required_at_turnout": true,
+            "supply": "400/230 V maintenance line; local 230/12 V transformer/socket box at turnout/ATDP/gate",
+            "exact_box_model": null,
+            "exact_mount_xy_z": null,
+            "source_id": "S022",
+            "locators": [
+              "§5.10.5.5",
+              "§5.10.6.19"
+            ],
+            "status": "SOURCE_BACKED_CURRENT_RULE_GEOMETRY_SITE_SPECIFIC"
+          },
+          "turnout_parts_storage_pad": {
+            "level": "UGR",
+            "exact_dimensions": null,
+            "source_id": "S022",
+            "locator": "§5.7.1.17",
+            "status": "SOURCE_BACKED_CURRENT_RULE"
+          },
+          "limit_marker": {
+            "required": true,
+            "exact_local_position": null,
+            "source_id": "S022",
+            "locator": "§5.7.2.12",
+            "status": "SOURCE_BACKED_CURRENT_RULE"
+          }
         }
       },
       "branch_exit": {

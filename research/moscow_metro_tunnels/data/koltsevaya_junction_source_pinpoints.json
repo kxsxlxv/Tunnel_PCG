@@ -1421,6 +1421,42 @@
         ]
       },
       "confidence": "B_primary_historical_engineering_collection_via_text_reprint"
+    },
+    {
+      "id": "S135",
+      "title": "Я.А. Дорман — «Из опыта применения замораживания грунтов на строительстве метрополитена», in «Мы строим метро», 1983",
+      "url": "https://wiki.nashtransport.ru/wiki/%D0%9C%D1%8B_%D1%81%D1%82%D1%80%D0%BE%D0%B8%D0%BC_%D0%BC%D0%B5%D1%82%D1%80%D0%BE_(%D0%BA%D0%BD%D0%B8%D0%B3%D0%B0,_%D1%87%D0%B0%D1%81%D1%82%D1%8C_2)",
+      "locator": {
+        "article_start_web_lines": "287-291",
+        "exact_web_lines": [
+          {
+            "line": 298,
+            "supports": [
+              "a tunnel section at the exit toward Krasnopresnenskoye depot on Koltsevaya was constructed using artificial freezing of quicksand/unstable ground",
+              "water lowering was also used in some cases"
+            ]
+          },
+          {
+            "line": 300,
+            "supports": [
+              "more than 34 frozen-ground objects were built on Koltsevaya",
+              "the list explicitly includes two crossover chambers"
+            ]
+          },
+          {
+            "lines": "313-314",
+            "supports": [
+              "a modified freezing method was used on one of the branches connecting Koltsevaya with the depot",
+              "that branch is explicitly stated to be 256 m long",
+              "it passed beneath densely built residential/industrial territory in difficult hydrogeological conditions",
+              "freezing holes were arranged fan-like under buildings to form frozen-ground 'tents' over the tunnel",
+              "about 18,000 linear metres of freezing holes were drilled"
+            ]
+          }
+        ]
+      },
+      "limitation": "The article says 'one of the branches' and does not identify whether the 256 m branch is the Belorusskaya or Krasnopresnenskaya leg. Do not assign 256 m to a named leg without an independent map/chainage source.",
+      "confidence": "B_primary_historical_engineering_article_via_text_reprint"
     }
   ],
   "acquisition_targets": [

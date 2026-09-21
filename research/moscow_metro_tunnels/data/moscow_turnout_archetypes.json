@@ -662,12 +662,74 @@
         ],
         "note": "No y-coordinate or full rail path is implied by these stations."
       }
+    },
+    {
+      "id": "MOSCOW_METRO_R50_1_9_VNIR_1986_LEGACY_CONSTRAINT",
+      "status": "SOURCE_BACKED_CONSTRAINT_NO_EXACT_PROJECT_GEOMETRY",
+      "purpose": "era-aligned Soviet metro turnout construction family for legacy scenes; use when an R50 service-era preset is selected and the exact installed project is unknown",
+      "rail_type": "R50",
+      "gauge_mm": 1520,
+      "frog_mark": "1:9",
+      "source_ids": [
+        "S117",
+        "S118"
+      ],
+      "era": "1986-1987 documented construction practice",
+      "applicability": "main/service/connecting-track metro turnouts in tunnels; not proof of Belorusskaya installation",
+      "permanent_way": {
+        "bearer_material": "wood",
+        "bearer_family": "reinforced-type, antiseptic-treated",
+        "bearer_length_range_m": [
+          2.75,
+          6.75
+        ],
+        "ballast_below_sleeper_or_bearer_m": 0.3,
+        "ballast_approach_before_turnout_m": 15,
+        "ballast_approach_after_turnout_m": 15,
+        "foundation": "crushed-stone ballast over rectangular-section concrete trough",
+        "assembly_support": "turnout lifted on mounting concrete cubes during installation before ballast fill/tamping",
+        "source_ids": [
+          "S117",
+          "S118"
+        ],
+        "confidence": "A/B",
+        "status": "SOURCE_BACKED_LEGACY_FAMILY"
+      },
+      "fastening": {
+        "rail_joint": "joint bars, six bolts",
+        "rail_and_baseplate_to_bearer": "track screws",
+        "turnout_baseplate_cant": "uncanted in turnout",
+        "transition_to_canted_running_track": "special baseplate set with variable upper-seat inclination",
+        "exact_baseplate_geometry": null,
+        "exact_screw_coordinates": null,
+        "source_id": "S118",
+        "confidence": "A/B",
+        "status": "SOURCE_BACKED_TOPOLOGY_GEOMETRY_PARTIAL"
+      },
+      "bearer_orientation_rule": {
+        "before_turnout_center": "bearers under switch and connecting tracks perpendicular to straight-track axis",
+        "frog_zone": "bearers perpendicular to bisector of frog angle",
+        "exact_longitudinal_pitch_sequence": null,
+        "source_id": "S117",
+        "confidence": "B",
+        "status": "SOURCE_BACKED_RULE"
+      },
+      "exact_project_id": null,
+      "exact_total_length_mm": null,
+      "exact_point_radius_mm": null,
+      "exact_turnout_curve_radius_mm": null,
+      "exact_point_geometry": null,
+      "exact_frog_CAD": null,
+      "exact_guard_rail_chainages": null,
+      "mesh_use_rule": "Do not turn this construction constraint into an invented rail plan. For an explicit geometric fallback use a separately tagged metro product project such as 2891.00.000, while retaining installed_model_unconfirmed=true."
     }
   ],
   "source_pinpoints_file": "koltsevaya_junction_source_pinpoints.json",
   "service_era_selection": {
     "selected_koltsevaya_first_mesh": "R65 reference path remains the current first-mesh choice because the existing Stage-10 service preset is R65/KD65/2001-reference; this does not prove the Belorusskaya installed turnout.",
     "alternate_legacy_r50": "MOSCOW_METRO_R50_1_9_PROJECT_2891_REFERENCE_FALLBACK",
-    "rule": "Civil opening era does not select turnout rail type. The geometry agent must choose R50/R65 from an explicit service-era preset or site evidence."
+    "rule": "Civil opening era does not select turnout rail type. The geometry agent must choose R50/R65 from an explicit service-era preset or site evidence.",
+    "legacy_1986_r50_constraint": "MOSCOW_METRO_R50_1_9_VNIR_1986_LEGACY_CONSTRAINT",
+    "legacy_1986_note": "This family gives source-backed support/fastening/foundation morphology but not exact switch rail-plan geometry."
   }
 }

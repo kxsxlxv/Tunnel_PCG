@@ -582,6 +582,44 @@
         "source_id": "S022"
       },
       "use_rule": "May validate the generator's ability to represent an actual Line-5 branch that changes vertical level and passes through mixed civil construction. Not dimension-ready for as-built mesh."
+    },
+    {
+      "event_id": "DOSTOEVSKAYA_SWITCHOVER_CONSTRUCTION_2026",
+      "event_type": "TEMPORARY_BYPASS_SWITCHOVER_CHAMBER_SYSTEM",
+      "implementation_priority": "TEMPORAL_CONSTRUCTION_SCENARIO_ONLY",
+      "temporal_state": "2026 construction",
+      "source_ids": [
+        "S115",
+        "S116"
+      ],
+      "topology": {
+        "operating_main_tracks": [
+          "KOLTSEVAYA_TRACK_A",
+          "KOLTSEVAYA_TRACK_B"
+        ],
+        "bypass_tunnels": 2,
+        "switching_chambers": 4,
+        "technical_intertunnel_cross_passage": true,
+        "exact_graph_nodes": null,
+        "exact_xy": null,
+        "exact_z": null
+      },
+      "actual_civil": {
+        "chamber_no1_archetype_id": "DOSTOEVSKAYA_SWITCHING_CHAMBER_NO1_13M_2026_ACTUAL",
+        "chamber_no1_stated_diameter_m": 13,
+        "chamber_no1_upper_half_vault_constructed_over_operating_tunnel": true,
+        "remaining_chamber_diameters_m": null,
+        "chamber_lengths_m": null,
+        "axis_offsets_m": null,
+        "transition_lengths_m": null
+      },
+      "rail_topology": {
+        "exact_operational_switchover_turnout_project": null,
+        "exact_rail_centerlines": null,
+        "exact_switch_chainages": null,
+        "status": "UNKNOWN_UNTIL_PROJECT_OR_CURRENT_PBF_GRAPH"
+      },
+      "use_rule": "This event exists to preserve the real 2026 construction topology. It must not be merged into the normal-operating 2026 Line-5 graph or the final post-Dostoevskaya graph by default."
     }
   ],
   "known_constrained_unknown_summary": {
@@ -617,6 +655,9 @@
     "secondary_actual_visual_validation": [
       "JUNCTION_KOL5_KURSKAYA_LDL_1990S"
     ],
-    "rule": "Only the first event is the selected implementation archetype. Secondary events are retained to prevent overfitting one civil/junction morphology."
+    "rule": "Only the first event is the selected implementation archetype. Secondary events are retained to prevent overfitting one civil/junction morphology.",
+    "temporal_construction_events": [
+      "DOSTOEVSKAYA_SWITCHOVER_CONSTRUCTION_2026"
+    ]
   }
 }

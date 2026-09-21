@@ -66,8 +66,13 @@ def _rack_center_angle(
     if side_sign not in (-1, 1):
         raise ValueError("side_sign must be +/-1")
     rack = profile.cable_rack
+    center_profile_z = (
+        rack.negative_side_center_profile_z_m
+        if side_sign < 0
+        else rack.center_profile_z_m
+    )
     core_z = (
-        rack.center_profile_z_m
+        center_profile_z
         + profile.coordinate.profile_z_to_core_z_offset_m
     )
     r = profile.intrados_radius_m
@@ -299,25 +304,34 @@ def build_r2k11_local_rack_mesh(
             )
         )
 
-        # One continuous radial seat under both cable places.
-        arm_length = rack.horn_overall_length_m
-        arm_poly = _radial_arm_polygon(
-            wall_x_m=wall_x,
-            wall_z_m=wall_z,
-            inward_x=inward[0],
-            inward_z=inward[1],
-            up_x=up[0],
-            up_z=up[1],
-            length_m=arm_length,
-            thickness_m=rack.horn_thickness_m,
-            vertical_offset_m=-rack.horn_radius_m,
+        # The K1350.002 reference is a formed double cradle, not two
+        # semicircles sitting on a full-length horizontal shelf. Keep only a
+        # short wall-side tongue needed to join the upright to the first cup;
+        # there is deliberately no common underbar beneath both cable places.
+        neck_length = max(
+            0.0,
+            rack.first_cable_center_inward_m
+            - rack.horn_radius_m
+            - 0.5 * rack.horn_thickness_m,
         )
-        meshes.append(
-            _extrude_y_polygon(
-                arm_poly,
-                half_y_m=0.5 * rack.horn_longitudinal_width_m,
+        if neck_length > 1e-9:
+            neck_poly = _radial_arm_polygon(
+                wall_x_m=wall_x,
+                wall_z_m=wall_z,
+                inward_x=inward[0],
+                inward_z=inward[1],
+                up_x=up[0],
+                up_z=up[1],
+                length_m=neck_length,
+                thickness_m=rack.horn_thickness_m,
+                vertical_offset_m=0.0,
             )
-        )
+            meshes.append(
+                _extrude_y_polygon(
+                    neck_poly,
+                    half_y_m=0.5 * rack.horn_longitudinal_width_m,
+                )
+            )
 
         for slot_offset in (
             rack.first_cable_center_inward_m,
@@ -367,8 +381,14 @@ def build_r2k11_local_rack_mesh(
             "hornOverallHeightM": rack.horn_overall_height_m,
             "hornLongitudinalWidthM": rack.horn_longitudinal_width_m,
             "maxCableDiameterM": rack.max_cable_diameter_m,
-            "placementMode": "intrados_following_photo_constrained_elevation",
-            "centerProfileZM": rack.center_profile_z_m,
+            "placementMode": "intrados_following_side_specific_visual_elevation",
+            "centerProfileZM": (
+                rack.negative_side_center_profile_z_m
+                if side_sign < 0
+                else rack.center_profile_z_m
+            ),
+            "commonHorizontalUnderbar": False,
+            "hornGeometryMode": "open_double_cradle_no_common_underbar_v3",
             "shellClearanceInwardM": rack.shell_clearance_inward_m,
         },
     )
@@ -377,89 +397,96 @@ def build_r2k11_local_rack_mesh(
 def modern_cable_sections_core(
     profile: MoscowStage10Profile,
 ) -> tuple[tuple[str, tuple[tuple[float, float], ...], Mapping[str, Any]], ...]:
-    """Populate the dimensioned R2K11 cable places for the visual preset.
+    """Populate a moderate-density R2K11 cable preview.
 
-    R2K11/K1350.002 provides two cable places at each of 11 levels. Stage
-    10.5 v2 fills both places on both walls to match the observed dense tunnel
-    service appearance. This is a capacity/density preview, not a project
-    cable schedule.
+    The hardware exposes two cable places on each of 11 levels, but the
+    production visual preset deliberately occupies only eight distributed
+    levels per wall and one cable place on each occupied level. Cable routes
+    carry a small gravity sag between the 1 m rack supports; the longitudinal
+    sweep adds only one midpoint station per support span.
     """
     rack = profile.cable_rack
     radius = 0.5 * rack.representative_cable_diameter_m
     rack_radius = profile.intrados_radius_m - rack.shell_clearance_inward_m
-    result = []
     slot_offsets = (
         rack.first_cable_center_inward_m,
         rack.second_cable_center_inward_m,
-    )[: rack.occupied_places_per_horn]
+    )
+    result = []
     for side_sign in (-1, 1):
         side_class = (
             "strong_current_side_contact_rail_side"
             if side_sign < 0
             else "weak_current_side_walkway_side"
         )
-        for level in range(rack.horn_count):
+        for level in rack.occupied_level_indices:
             a = _horn_angle(profile, side_sign, level)
             sin_a = math.sin(a)
             cos_a = math.cos(a)
-            for place_index, slot_offset in enumerate(slot_offsets):
-                cable_center_r = rack_radius - slot_offset
-                cx = cable_center_r * sin_a
-                cz = cable_center_r * cos_a
-                points = tuple(
-                    (
-                        cx
-                        + radius
-                        * math.cos(
-                            2.0 * math.pi * i / rack.cable_circle_vertices
+            # Alternate the two physical cradle positions so the preview does
+            # not form an artificial perfectly aligned cable curtain.
+            place_index = level % rack.cable_places_per_horn
+            slot_offset = slot_offsets[place_index]
+            cable_center_r = rack_radius - slot_offset
+            cx = cable_center_r * sin_a
+            cz = cable_center_r * cos_a
+            points = tuple(
+                (
+                    cx
+                    + radius
+                    * math.cos(
+                        2.0 * math.pi * i / rack.cable_circle_vertices
+                    ),
+                    cz
+                    + radius
+                    * math.sin(
+                        2.0 * math.pi * i / rack.cable_circle_vertices
+                    ),
+                )
+                for i in range(rack.cable_circle_vertices)
+            )
+            name = (
+                f"cable_{'neg' if side_sign < 0 else 'pos'}_"
+                f"{level:02d}_{place_index}"
+            )
+            result.append(
+                (
+                    name,
+                    points,
+                    {
+                        "serviceFamily": "R2K11_supported_longitudinal_cable",
+                        "sideProfileXSign": side_sign,
+                        "serviceSideClass": side_class,
+                        "rackLevel": level,
+                        "representativeCableDiameterM": (
+                            rack.representative_cable_diameter_m
                         ),
-                        cz
-                        + radius
-                        * math.sin(
-                            2.0 * math.pi * i / rack.cable_circle_vertices
+                        "maxRackCableDiameterM": rack.max_cable_diameter_m,
+                        "exactCableScheduleResolved": False,
+                        "occupiedCablePlaceIndex": place_index,
+                        "availableCablePlacesPerHorn": (
+                            rack.cable_places_per_horn
                         ),
-                    )
-                    for i in range(rack.cable_circle_vertices)
+                        "occupiedCablePlacesPerHorn": (
+                            rack.occupied_places_per_horn
+                        ),
+                        "occupiedRackLevelCountPerSide": len(
+                            rack.occupied_level_indices
+                        ),
+                        "occupiedRackLevels": rack.occupied_level_indices,
+                        "cablePlaceCenterInwardM": slot_offset,
+                        "supportPitchM": rack.repeat_pitch_m,
+                        "supportPhaseM": rack.phase_m,
+                        "longitudinalSagM": rack.cable_sag_midspan_m,
+                        "sagShape": "piecewise_linear_support_midspan_support",
+                        "layoutRuleSource": "P10-SP-CABLE-LAYOUT",
+                        "occupancyMode": (
+                            "eight_levels_one_cable_each_per_side_visual_preview"
+                        ),
+                    },
                 )
-                name = (
-                    f"cable_{'neg' if side_sign < 0 else 'pos'}_"
-                    f"{level:02d}_{place_index}"
-                )
-                result.append(
-                    (
-                        name,
-                        points,
-                        {
-                            "serviceFamily": (
-                                "R2K11_supported_longitudinal_cable"
-                            ),
-                            "sideProfileXSign": side_sign,
-                            "serviceSideClass": side_class,
-                            "rackLevel": level,
-                            "representativeCableDiameterM": (
-                                rack.representative_cable_diameter_m
-                            ),
-                            "maxRackCableDiameterM": (
-                                rack.max_cable_diameter_m
-                            ),
-                            "exactCableScheduleResolved": False,
-                            "occupiedCablePlaceIndex": place_index,
-                            "availableCablePlacesPerHorn": (
-                                rack.cable_places_per_horn
-                            ),
-                            "occupiedCablePlacesPerHorn": (
-                                rack.occupied_places_per_horn
-                            ),
-                            "cablePlaceCenterInwardM": slot_offset,
-                            "layoutRuleSource": "P10-SP-CABLE-LAYOUT",
-                            "occupancyMode": (
-                                "full_capacity_visual_density_preview"
-                            ),
-                        },
-                    )
-                )
+            )
     return tuple(result)
-
 
 def water_main_support_chainages(
     total_length_m: float,

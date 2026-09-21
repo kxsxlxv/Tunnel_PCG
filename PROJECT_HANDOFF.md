@@ -1127,7 +1127,7 @@ Regression:
 
     pytest
 
-The current established production baseline is **195 tests passed** plus Stage-8/9 stress/topology checks and dedicated Stage-10.1–10.5 production gates.
+The current established production baseline is **197 tests passed** plus Stage-8/9 stress/topology checks and dedicated Stage-10.1–10.5 production gates.
 
 Research reference implementation has its own tests under:
 
@@ -2052,7 +2052,7 @@ all radius-dependent geometry is recomputed from the selected intrados.
 Current exact CI baseline:
 
 ```text
-195 tests passed
+197 tests passed
 Stage 10.1 CLI compatibility smoke          PASS
 Stage 10.2 CLI compatibility smoke          PASS
 Stage 10.3 CLI compatibility smoke          PASS

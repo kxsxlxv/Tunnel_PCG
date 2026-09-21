@@ -5343,209 +5343,227 @@ def build_stage10_5_rc_modern_chunk_plan(
     )
 
 
-def iter_stage10_5_rc_modern_chunk_scene_packages(
+def build_stage10_5_rc_modern_chunk_scene_package(
     plan: Stage105RCModernChunkPlan,
+    chunk_id: int,
     *,
     localize_coordinates: bool = False,
-) -> Iterator[ScenePackage]:
-    """Generate one Stage-10.5 RC chunk at a time from lightweight global state."""
+) -> ScenePackage:
+    """Build one deterministic Stage-10.5 RC chunk from lightweight global state."""
+    if not (0 <= int(chunk_id) < len(plan.chunks)):
+        raise IndexError("Stage-10.5 RC chunk_id outside planned range")
+    chunk = plan.chunks[int(chunk_id)]
+    if chunk.chunk_id != int(chunk_id):
+        raise AssertionError("Stage-10.5 RC chunk IDs must remain contiguous")
+
     profile = plan.config.moscow_profile
     if profile is None:
         raise AssertionError("Stage-10.5 RC chunk plan lost Moscow profile")
     assembly = plan.assembly
     total = assembly.length_by_chainage_m
     modern_pw = profile.modern_permanent_way
+    start = chunk.start_chainage_m
+    end = chunk.end_chainage_m
 
-    for chunk in plan.chunks:
-        start = chunk.start_chainage_m
-        end = chunk.end_chainage_m
-        periodic: list[SceneObject] = []
-        periodic.extend(
-            _build_stage10_5_modern_permanent_way_scene_objects(
-                profile=profile,
-                namespace=plan.config.namespace,
-                assembly=assembly,
-                stations=plan.alignment_stations,
-                label_policy=plan.source_build.scene.label_policy,
-                start_chainage_m=start,
-                end_chainage_m=end,
-            )
+    periodic: list[SceneObject] = []
+    periodic.extend(
+        _build_stage10_5_modern_permanent_way_scene_objects(
+            profile=profile,
+            namespace=plan.config.namespace,
+            assembly=assembly,
+            stations=plan.alignment_stations,
+            label_policy=plan.source_build.scene.label_policy,
+            start_chainage_m=start,
+            end_chainage_m=end,
         )
-        periodic.extend(
-            _build_stage10_5_modern_contact_scene_objects(
-                profile=profile,
-                namespace=plan.config.namespace,
-                assembly=assembly,
-                stations=plan.alignment_stations,
-                label_policy=plan.source_build.scene.label_policy,
-                running_support_pitch_m=modern_pw.support_pitch_m,
-                running_support_phase_m=0.5 * modern_pw.support_pitch_m,
-                start_chainage_m=start,
-                end_chainage_m=end,
-            )
+    )
+    periodic.extend(
+        _build_stage10_5_modern_contact_scene_objects(
+            profile=profile,
+            namespace=plan.config.namespace,
+            assembly=assembly,
+            stations=plan.alignment_stations,
+            label_policy=plan.source_build.scene.label_policy,
+            running_support_pitch_m=modern_pw.support_pitch_m,
+            running_support_phase_m=0.5 * modern_pw.support_pitch_m,
+            start_chainage_m=start,
+            end_chainage_m=end,
         )
-        periodic.extend(
-            _build_stage10_5_service_rack_scene_objects(
-                profile=profile,
-                namespace=plan.config.namespace,
-                assembly=assembly,
-                stations=plan.alignment_stations,
-                label_policy=plan.source_build.scene.label_policy,
-                start_chainage_m=start,
-                end_chainage_m=end,
-            )
+    )
+    periodic.extend(
+        _build_stage10_5_service_rack_scene_objects(
+            profile=profile,
+            namespace=plan.config.namespace,
+            assembly=assembly,
+            stations=plan.alignment_stations,
+            label_policy=plan.source_build.scene.label_policy,
+            start_chainage_m=start,
+            end_chainage_m=end,
         )
-        periodic.extend(
-            _build_stage10_5_water_main_support_scene_objects(
-                profile=profile,
-                namespace=plan.config.namespace,
-                assembly=assembly,
-                stations=plan.alignment_stations,
-                label_policy=plan.source_build.scene.label_policy,
-                start_chainage_m=start,
-                end_chainage_m=end,
-            )
+    )
+    periodic.extend(
+        _build_stage10_5_water_main_support_scene_objects(
+            profile=profile,
+            namespace=plan.config.namespace,
+            assembly=assembly,
+            stations=plan.alignment_stations,
+            label_policy=plan.source_build.scene.label_policy,
+            start_chainage_m=start,
+            end_chainage_m=end,
         )
-        periodic.extend(
-            _build_stage10_4_rc_stage9_architecture_objects(
-                profile=profile,
-                topology=plan.config.resolved_moscow_civil_topology,
-                namespace=plan.config.namespace,
-                assembly=assembly,
-                stations=plan.alignment_stations,
-                surface_meshing=plan.surface_meshing,
-                include_bolts=plan.config.moscow_civil_bolts_enabled,
-                seed=plan.seed,
-                start_chainage_m=start,
-                end_chainage_m=end,
-                civil_roll_assembly=plan.civil_roll_assembly,
-            )
+    )
+    periodic.extend(
+        _build_stage10_4_rc_stage9_architecture_objects(
+            profile=profile,
+            topology=plan.config.resolved_moscow_civil_topology,
+            namespace=plan.config.namespace,
+            assembly=assembly,
+            stations=plan.alignment_stations,
+            surface_meshing=plan.surface_meshing,
+            include_bolts=plan.config.moscow_civil_bolts_enabled,
+            seed=plan.seed,
+            start_chainage_m=start,
+            end_chainage_m=end,
+            civil_roll_assembly=plan.civil_roll_assembly,
         )
+    )
 
-        chunk_prefix = ("Chunks", f"Chunk_{chunk.chunk_id:05d}")
-        objects: list[SceneObject] = [
-            _translate_scene_object(
-                obj,
-                dx=0.0,
-                dy=0.0,
-                dz=0.0,
+    chunk_prefix = ("Chunks", f"Chunk_{chunk.chunk_id:05d}")
+    objects: list[SceneObject] = [
+        _translate_scene_object(
+            obj,
+            dx=0.0,
+            dy=0.0,
+            dz=0.0,
+            collection_prefix=chunk_prefix,
+            extra_properties={
+                "chunkID": chunk.chunk_id,
+                "chunkStartChainageM": start,
+                "chunkEndChainageM": end,
+                "chunkAssignmentRule": "event_chainage",
+            },
+        )
+        for obj in periodic
+    ]
+
+    clipped = clipped_alignment_stations(
+        plan.alignment_stations,
+        start_chainage_m=start,
+        end_chainage_m=end,
+    )
+    representative_ring_id = (
+        chunk.ring_ids[0]
+        if chunk.ring_ids
+        else min(
+            assembly.config.n_rings - 1,
+            max(
+                0,
+                int(
+                    math.floor(
+                        0.5 * (start + end)
+                        / assembly.config.ring_width_m
+                    )
+                ),
+            ),
+        )
+    )
+    for spec in plan.asset_specs:
+        piece_key = _chunk_piece_key(spec, chunk)
+        objects.append(
+            scene_object_from_continuous_asset(
+                spec,
+                clipped,
+                namespace=plan.config.namespace,
+                name_override=f"CH{chunk.chunk_id:05d}__{spec.name}",
+                instance_id_override=stable_instance_id(piece_key),
+                ring_id_override=representative_ring_id,
+                cap_start=math.isclose(start, 0.0, abs_tol=1e-12),
+                cap_end=math.isclose(end, total, abs_tol=1e-12),
                 collection_prefix=chunk_prefix,
+                compact_exact_collinear_stations=(
+                    plan.config.resolved_compact_exact_collinear_continuous_stations
+                ),
                 extra_properties={
                     "chunkID": chunk.chunk_id,
                     "chunkStartChainageM": start,
                     "chunkEndChainageM": end,
-                    "chunkAssignmentRule": "event_chainage",
+                    "chunkPieceKey": piece_key,
+                    "sourceInstanceID": spec.instance_id,
+                    "sourceInfrastructureID": spec.instance_id,
+                    "sourcePersistentKey": spec.persistent_key,
+                    "representativeRingID": representative_ring_id,
+                    "identityScope": "technical_chunk_piece",
                 },
             )
-            for obj in periodic
+        )
+
+    chunk_world_origin = (0.0, 0.0, 0.0)
+    if localize_coordinates:
+        midpoint = 0.5 * (start + end)
+        origin_station = sample_alignment_station(
+            plan.alignment_stations,
+            midpoint,
+        )
+        chunk_world_origin = (
+            origin_station.offset_x_m,
+            origin_station.world_y_m,
+            origin_station.offset_z_m,
+        )
+        ox, oy, oz = chunk_world_origin
+        objects = [
+            _translate_scene_object(
+                obj,
+                dx=-ox,
+                dy=-oy,
+                dz=-oz,
+                extra_properties={
+                    "coordinatesLocalizedToChunk": True,
+                    "chunkWorldOriginX": ox,
+                    "chunkWorldOriginY": oy,
+                    "chunkWorldOriginZ": oz,
+                },
+            )
+            for obj in objects
         ]
 
-        clipped = clipped_alignment_stations(
-            plan.alignment_stations,
-            start_chainage_m=start,
-            end_chainage_m=end,
-        )
-        representative_ring_id = (
-            chunk.ring_ids[0]
-            if chunk.ring_ids
-            else min(
-                assembly.config.n_rings - 1,
-                max(
-                    0,
-                    int(
-                        math.floor(
-                            0.5 * (start + end)
-                            / assembly.config.ring_width_m
-                        )
-                    ),
-                ),
-            )
-        )
-        for spec in plan.asset_specs:
-            piece_key = _chunk_piece_key(spec, chunk)
-            objects.append(
-                scene_object_from_continuous_asset(
-                    spec,
-                    clipped,
-                    namespace=plan.config.namespace,
-                    name_override=f"CH{chunk.chunk_id:05d}__{spec.name}",
-                    instance_id_override=stable_instance_id(piece_key),
-                    ring_id_override=representative_ring_id,
-                    cap_start=math.isclose(start, 0.0, abs_tol=1e-12),
-                    cap_end=math.isclose(end, total, abs_tol=1e-12),
-                    collection_prefix=chunk_prefix,
-                    compact_exact_collinear_stations=(
-                        plan.config.resolved_compact_exact_collinear_continuous_stations
-                    ),
-                    extra_properties={
-                        "chunkID": chunk.chunk_id,
-                        "chunkStartChainageM": start,
-                        "chunkEndChainageM": end,
-                        "chunkPieceKey": piece_key,
-                        "sourceInstanceID": spec.instance_id,
-                        "sourceInfrastructureID": spec.instance_id,
-                        "sourcePersistentKey": spec.persistent_key,
-                        "representativeRingID": representative_ring_id,
-                        "identityScope": "technical_chunk_piece",
-                    },
-                )
-            )
-
-        chunk_world_origin = (0.0, 0.0, 0.0)
-        if localize_coordinates:
-            midpoint = 0.5 * (start + end)
-            origin_station = sample_alignment_station(
-                plan.alignment_stations,
-                midpoint,
-            )
-            chunk_world_origin = (
-                origin_station.offset_x_m,
-                origin_station.world_y_m,
-                origin_station.offset_z_m,
-            )
-            ox, oy, oz = chunk_world_origin
-            objects = [
-                _translate_scene_object(
-                    obj,
-                    dx=-ox,
-                    dy=-oy,
-                    dz=-oz,
-                    extra_properties={
-                        "coordinatesLocalizedToChunk": True,
-                        "chunkWorldOriginX": ox,
-                        "chunkWorldOriginY": oy,
-                        "chunkWorldOriginZ": oz,
-                    },
-                )
-                for obj in objects
-            ]
-
-        yield ScenePackage(
-            name=f"{plan.scene_name}_chunk_{chunk.chunk_id:05d}",
-            mode=SceneMode.MULTI_RING_TUNNEL,
-            label_policy=plan.source_build.scene.label_policy,
-            objects=tuple(objects),
-            metadata={
-                **dict(plan.metadata),
-                "productionChunk": {
-                    "chunkID": chunk.chunk_id,
-                    "startChainageM": start,
-                    "endChainageM": end,
-                    "lengthM": chunk.length_m,
-                    "ringIDs": list(chunk.ring_ids),
-                    "boundaryPolicy": plan.boundary_policy.value,
-                    "vertexCoordinatesLocalized": bool(
-                        localize_coordinates
-                    ),
-                    "globalCoordinatesPreserved": not localize_coordinates,
-                    "chunkWorldOrigin": list(chunk_world_origin),
-                    "worldTransformRestoresGlobalCoordinates": True,
-                    "internalLongitudinalCaps": False,
-                    "sourceContinuousAssetIDsStableAcrossChunking": True,
-                    "periodicAssetsAssignedByEventChainage": True,
-                    "chunkFirstGeneration": True,
-                },
+    return ScenePackage(
+        name=f"{plan.scene_name}_chunk_{chunk.chunk_id:05d}",
+        mode=SceneMode.MULTI_RING_TUNNEL,
+        label_policy=plan.source_build.scene.label_policy,
+        objects=tuple(objects),
+        metadata={
+            **dict(plan.metadata),
+            "productionChunk": {
+                "chunkID": chunk.chunk_id,
+                "startChainageM": start,
+                "endChainageM": end,
+                "lengthM": chunk.length_m,
+                "ringIDs": list(chunk.ring_ids),
+                "boundaryPolicy": plan.boundary_policy.value,
+                "vertexCoordinatesLocalized": bool(localize_coordinates),
+                "globalCoordinatesPreserved": not localize_coordinates,
+                "chunkWorldOrigin": list(chunk_world_origin),
+                "worldTransformRestoresGlobalCoordinates": True,
+                "internalLongitudinalCaps": False,
+                "sourceContinuousAssetIDsStableAcrossChunking": True,
+                "periodicAssetsAssignedByEventChainage": True,
+                "chunkFirstGeneration": True,
             },
+        },
+    )
+
+
+def iter_stage10_5_rc_modern_chunk_scene_packages(
+    plan: Stage105RCModernChunkPlan,
+    *,
+    localize_coordinates: bool = False,
+) -> Iterator[ScenePackage]:
+    """Generate one Stage-10.5 RC chunk at a time from lightweight global state."""
+    for chunk in plan.chunks:
+        yield build_stage10_5_rc_modern_chunk_scene_package(
+            plan,
+            chunk.chunk_id,
+            localize_coordinates=localize_coordinates,
         )
 
 

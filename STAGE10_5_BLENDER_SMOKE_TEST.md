@@ -10,8 +10,9 @@ It combines:
 - APC-4 fastening preview;
 - segmented modern contact-rail cover;
 - dedicated contact-rail supports;
-- R2K11 cable racks and representative cables;
-- one DN80-minimum current tunnel water main;
+- R2K11/K1351.001-09 cable racks with K1350.002 double horns;
+- 44 representative full-capacity service-cable routes;
+- one DN80-minimum current tunnel water main with periodic supports;
 - raised Moscow walkway.
 
 The timber/KD-65 path is preserved as a selectable legacy preset.
@@ -97,14 +98,24 @@ If the modern scene contains the old single continuous
 Expected:
 
 - old six generic Stage-8 tube assets are absent;
-- R2K11 rack objects appear on both tunnel walls;
+- R2K11 curved rack objects appear on both tunnel walls;
 - there is one rack per side per 1.0 m Moscow civil ring;
-- each rack has 11 horn levels;
-- representative cables remain visibly inside the tunnel;
-- one water main is present on the weak-current side above UGR.
+- upright designation is K1351.001-09;
+- each rack has 11 K1350.002 double horns;
+- upright envelope is 1440 x 48 x 3 mm;
+- each horn envelope is 169 x 40 x 87 mm at 4 mm steel;
+- each horn provides two cable places;
+- the visual-density preset fills both places, producing 44 continuous cable routes;
+- cables remain visibly inside the tunnel intrados;
+- negative-X/contact-rail wall is tagged strong-current;
+- positive-X/walkway wall is tagged weak-current;
+- one DN80-class water main is present on the weak-current side above UGR;
+- its preview center is profile z=+0.600 m;
+- periodic water-main wall supports are visible at no more than 4.0 m spacing.
 
-The current representative cable occupancy is intentionally not a project
-cable schedule. Pipe placement is also explicitly fallback-constrained.
+The 44-cable population is intentionally a full-capacity visual-density preset,
+not a project-specific cable schedule. Exact pipe OD/wall thickness and support
+hardware remain explicit fallbacks.
 
 ### Civil geometry
 

@@ -1768,9 +1768,11 @@ def _build_stage10_5_modern_contact_scene_objects(
     modern = profile.modern_contact_rail
     folder_by_category = {
         "contact_rail_support_block": "SupportBlocks",
+        "contact_rail_base_plate": "BasePlates",
         "contact_rail_bracket": "Brackets",
         "contact_rail_insulator": "Insulators",
         "contact_rail_fastening_unit": "FasteningUnits",
+        "contact_rail_clamp_bolts": "ClampBolts",
         "contact_rail_attachment_dowels": "SupportDowels",
         "contact_rail_support_hood": "SupportHoods",
     }

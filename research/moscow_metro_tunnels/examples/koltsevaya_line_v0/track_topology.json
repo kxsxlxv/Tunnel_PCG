@@ -156,7 +156,20 @@
         "status": "SOURCE_BACKED_CONSTRAINT"
       },
       "actual_physical_branch_count_and_shell_arrangement": null,
-      "actual_branch_arrangement_status": "UNRESOLVED; current sources prove service access to both Line-5 directions but do not yet resolve every physical branch edge/tunnel shell"
+      "actual_branch_arrangement_status": "UNRESOLVED; current sources prove service access to both Line-5 directions but do not yet resolve every physical branch edge/tunnel shell",
+      "station_pk_context": [
+        {
+          "station": "Краснопресненская",
+          "value": "ПК115+08.2",
+          "source_id": "S087"
+        },
+        {
+          "station": "Белорусская",
+          "value": "ПК132+72.3",
+          "source_id": "S086"
+        }
+      ],
+      "station_pk_semantics": "station reference/chainage context only; not switch-node chainage"
     },
     {
       "id": "KOL5_PROSPEKT_MIRA_SSV_SYSTEM",
@@ -172,7 +185,15 @@
       "exact_main_track_attachment": null,
       "exact_xy": null,
       "exact_chainage": null,
-      "status": "TOPOLOGY_CONFIRMED_GEOMETRY_UNRESOLVED"
+      "status": "TOPOLOGY_CONFIRMED_GEOMETRY_UNRESOLVED",
+      "station_pk_context": [
+        {
+          "station": "Проспект Мира",
+          "value": "ПК163+79.1",
+          "source_id": "S088"
+        }
+      ],
+      "station_pk_semantics": "station reference/chainage context only; not switch-node chainage"
     },
     {
       "id": "KOL5_KURSKAYA_SSV_SYSTEM",
@@ -189,7 +210,15 @@
       "exact_main_track_attachment": null,
       "exact_xy": null,
       "exact_chainage": null,
-      "status": "TOPOLOGY_CONFIRMED_GEOMETRY_UNRESOLVED"
+      "status": "TOPOLOGY_CONFIRMED_GEOMETRY_UNRESOLVED",
+      "station_pk_context": [
+        {
+          "station": "Курская",
+          "value": "ПК9+52",
+          "source_id": "S089"
+        }
+      ],
+      "station_pk_semantics": "station reference/chainage context only; not switch-node chainage"
     },
     {
       "id": "KOL5_TAGANSKAYA_SSV_SYSTEM",
@@ -207,7 +236,15 @@
       "exact_main_track_attachment": null,
       "exact_xy": null,
       "exact_chainage": null,
-      "status": "TOPOLOGY_CONFIRMED_FROM_SCHEMATIC_AND_DESTINATION_SOURCE"
+      "status": "TOPOLOGY_CONFIRMED_FROM_SCHEMATIC_AND_DESTINATION_SOURCE",
+      "station_pk_context": [
+        {
+          "station": "Таганская",
+          "value": "ПК27+63.4",
+          "source_id": "S097"
+        }
+      ],
+      "station_pk_semantics": "station reference/chainage context only; not switch-node chainage"
     },
     {
       "id": "KOL5_PAVELETSKAYA_DOBRYNINSKAYA_SSV_SYSTEM",
@@ -227,7 +264,15 @@
       "exact_main_track_attachment": null,
       "exact_xy": null,
       "exact_chainage": null,
-      "status": "TOPOLOGY_CONFIRMED_GEOMETRY_UNRESOLVED"
+      "status": "TOPOLOGY_CONFIRMED_GEOMETRY_UNRESOLVED",
+      "station_pk_context": [
+        {
+          "station": "Павелецкая",
+          "value": "ПК40+98.9",
+          "source_id": "S090"
+        }
+      ],
+      "station_pk_semantics": "station reference/chainage context only; not switch-node chainage"
     },
     {
       "id": "KOL5_PARK_KULTURY_SSV_SYSTEM",
@@ -245,7 +290,15 @@
       "exact_main_track_attachment": null,
       "exact_xy": null,
       "exact_chainage": null,
-      "status": "TOPOLOGY_CONFIRMED_GEOMETRY_UNRESOLVED"
+      "status": "TOPOLOGY_CONFIRMED_GEOMETRY_UNRESOLVED",
+      "station_pk_context": [
+        {
+          "station": "Парк культуры",
+          "value": "ПК73+26.8",
+          "source_id": "S091"
+        }
+      ],
+      "station_pk_semantics": "station reference/chainage context only; not switch-node chainage"
     }
   ],
   "selected_first_junction": {

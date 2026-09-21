@@ -139,9 +139,11 @@ from .permanent_way import (
 from .services import (
     LocalServiceMesh,
     build_r2k11_local_rack_mesh,
+    build_water_main_support_local_mesh,
     cable_rack_chainages,
     modern_cable_sections_core,
     modern_water_main_section_core,
+    water_main_support_chainages,
 )
 from .civil import (
     CivilShellMesh,
@@ -334,9 +336,11 @@ __all__ = [
     "track_concrete_profile_xz",
     "LocalServiceMesh",
     "build_r2k11_local_rack_mesh",
+    "build_water_main_support_local_mesh",
     "cable_rack_chainages",
     "modern_cable_sections_core",
     "modern_water_main_section_core",
+    "water_main_support_chainages",
     "CivilShellMesh",
     "build_annular_shell_sweep",
     "civil_ring_ranges",

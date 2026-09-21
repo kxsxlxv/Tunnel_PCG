@@ -176,27 +176,47 @@ Still unresolved and explicitly tagged as fallback:
 
 ## R2K11 cable racks
 
-Modern Stage 10.5 removes the six Stage-8 tube previews.
+Modern Stage 10.5 removes the six Stage-8 generic tube previews.
 
-The implemented wall rack family is R2K11:
+The wall-rack assembly is now tied to current component designations:
 
+    assembly                       R2K11
+    curved upright                 K1351.001-09
+    double horn                    K1350.002
     horn count                     11
-    overall arc length             1.440 m
+    upright arc length             1.440 m
     upright longitudinal width     0.048 m
-    upright thickness              0.003 m
-    horn thickness                 0.004 m
-    horn radius                    0.0325 m
-    derived horn pitch             0.125 m
+    upright steel thickness        0.003 m
+    horn overall length            0.169 m
+    horn longitudinal width        0.040 m
+    horn overall height            0.087 m
+    horn steel thickness           0.004 m
+    cable places per horn          2
+    horn pitch                     0.125 m
     max cable diameter             0.065 m
 
-One rack is generated on each side of every 1.0 m Moscow civil ring.
+The former generic semicircular-horn preview is replaced by a
+K1350.002-envelope-constrained double-cradle mesh. The 169 x 40 x 87 mm
+component envelope is exact to the current product data; the detailed stamped
+bend path is still a replaceable preview.
 
-The v1 service preview places one representative cable on each of 11 rack
-levels per side, giving 22 continuous cable routes. The rack itself supports two
-cable places per level; exact project cable schedules remain unresolved.
+One R2K11 rack is generated on each wall at the midpoint of every 1.0 m Moscow
+civil ring.
 
-All modern cables/racks are checked to remain inside the 2.550 m physical
-intrados.
+Stage-10.5 v2 now populates both cable places on all 11 levels on both walls:
+
+    11 levels x 2 places x 2 sides = 44 representative cable routes
+
+The negative-X/contact-rail wall is tagged as the strong-current side and the
+positive-X/walkway wall as the weak-current side in accordance with the tunnel
+cable-layout rule.
+
+The 44 cables are deliberately a **full-capacity visual-density preset**, not a
+claim about the exact cable schedule of one named tunnel. Project-specific
+cable types, diameters and occupancy remain unresolved.
+
+All modern racks and representative cables are checked to remain inside the
+2.550 m physical intrados.
 
 ## Current water main
 
@@ -206,18 +226,27 @@ The current service preset generates one tunnel water main:
     quantity                       1 per single-track tunnel
     side                           weak-current side
     vertical rule                  above UGR
+    maximum support interval       4.000 m
 
-The exact project pipe schedule and wall thickness are unresolved for the
-selected archetype.
+The exact project pipe schedule, wall thickness and factory support hardware are
+not universal and remain unresolved for the selected archetype.
 
 The preview uses:
 
     outer-diameter visual proxy    0.089 m
-    profile center z               +0.700 m
+    profile center z               +0.600 m
     shell clearance inward         0.040 m
 
-Those exact placement/OD values are explicitly tagged as fallbacks; the
-normative DN80/quantity/side/above-UGR rules are source-backed.
+The center was moved from the former +0.700 m fallback to +0.600 m, the lower
+bound of the already recorded 0.6-0.8 m historical placement range. This keeps
+the water main below the lowest R2K11 cable/horn layer while retaining the
+current normative rule that the pipe remains above UGR on the weak-current
+side.
+
+The water main now also has periodic wall supports. Their spacing never exceeds
+4.0 m. The initial support is a simple wall standoff plus lower pipe saddle;
+support interval is source-backed, while the exact project bracket/strap CAD is
+explicitly marked unresolved.
 
 ## Polygon-count optimization
 
@@ -258,8 +287,10 @@ Source-backed/current:
 - APC-4 family and 14 mm rail pad;
 - contact-cover principal envelope;
 - contact support separation from running supports;
-- R2K11 principal rack dimensions;
-- one DN80 minimum tunnel water main on the weak-current side above UGR.
+- R2K11/K1351.001-09 upright dimensions and K1350.002 horn envelope;
+- two cable places per R2K11 horn and current strong/weak-current side ordering;
+- one DN80 minimum tunnel water main on the weak-current side above UGR;
+- tunnel water-main support spacing no greater than 4 m.
 
 Still explicit fallbacks:
 
@@ -269,8 +300,8 @@ Still explicit fallbacks:
 - modern cover corner radii;
 - exact support-hood product shape;
 - some support-bracket bend radii;
-- exact project cable occupancy/schedule;
-- exact current pipe OD/wall thickness and project mounting coordinates.
+- exact project cable occupancy/schedule (the current 44-cable layout is a visual-density preset);
+- exact current pipe OD/wall thickness and project support/bracket CAD.
 
 ## Verification
 
@@ -282,7 +313,7 @@ Stress/integration gate:
 
     python scripts/verify_stage10_5.py
 
-Profile schema is now **2.0** because the dimensioned support drawing is part of the typed machine contract.
+Profile schema is now **2.2** because the dimensioned support drawing is part of the typed machine contract.
 
 Latest fully green baseline before the v3 support-drawing update:
 
@@ -301,9 +332,10 @@ Latest fully green baseline before the v3 support-drawing update:
     modern LVT support events                67
     contact supports                          8
     contact cover spans                       9
-    service cables                           22
+    service cables                           44
     R2K11 rack objects                       82
     water mains                               1
+    periodic water-main supports              source-length dependent, <=4 m pitch
     duplicate modern face groups              0
     stable parent IDs across chunk sizes      true
     legacy timber variant selectable          true

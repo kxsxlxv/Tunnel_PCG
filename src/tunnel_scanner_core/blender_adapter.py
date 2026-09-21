@@ -29,6 +29,9 @@ class BlenderBuildResult:
     removed_tool_names: tuple[str, ...] = ()
     lining_cap_faces_removed: int = 0
     lining_interface_faces_removed: int = 0
+    mesh_prototype_count: int = 0
+    mesh_prototype_instance_count: int = 0
+    shared_mesh_data_blocks_saved: int = 0
 
 
 @dataclass(frozen=True)
@@ -161,15 +164,94 @@ def _set_custom_properties(blender_object, properties: dict[str, Any]) -> None:
             ) from exc
 
 
-def create_blender_object(scene_object: SceneObject, collection, *, validate_mesh: bool = True):
+def _mesh_prototype_payload(
+    scene_object: SceneObject,
+) -> tuple[str, tuple[float, float, float], tuple[tuple[float, float, float], ...]] | None:
+    """Recover exact local mesh coordinates for a declared translation instance."""
+    props = scene_object.extra_properties
+    key = props.get("meshPrototypeKey")
+    if key is None:
+        return None
+    if props.get("meshPrototypeMode") != "translation_only_shared_mesh_v1":
+        raise ValueError(
+            f"{scene_object.name}: unsupported meshPrototypeMode "
+            f"{props.get('meshPrototypeMode')!r}"
+        )
+    raw_translation = props.get("meshPrototypeTranslationM")
+    if (
+        not isinstance(raw_translation, (list, tuple))
+        or len(raw_translation) != 3
+    ):
+        raise ValueError(
+            f"{scene_object.name}: meshPrototypeTranslationM must contain 3 values"
+        )
+    tx, ty, tz = (float(value) for value in raw_translation)
+    if bool(props.get("coordinatesLocalizedToChunk", False)):
+        tx -= float(props.get("chunkWorldOriginX", 0.0))
+        ty -= float(props.get("chunkWorldOriginY", 0.0))
+        tz -= float(props.get("chunkWorldOriginZ", 0.0))
+    if not all(math.isfinite(value) for value in (tx, ty, tz)):
+        raise ValueError(f"{scene_object.name}: non-finite mesh prototype translation")
+
+    expected_vertices = int(
+        props.get("meshPrototypeVertexCount", len(scene_object.vertices))
+    )
+    expected_faces = int(
+        props.get("meshPrototypeFaceCount", len(scene_object.faces))
+    )
+    if expected_vertices != len(scene_object.vertices):
+        raise ValueError(
+            f"{scene_object.name}: mesh prototype vertex-count mismatch"
+        )
+    if expected_faces != len(scene_object.faces):
+        raise ValueError(
+            f"{scene_object.name}: mesh prototype face-count mismatch"
+        )
+
+    local_vertices = tuple(
+        (float(x) - tx, float(y) - ty, float(z) - tz)
+        for x, y, z in scene_object.vertices
+    )
+    return str(key), (tx, ty, tz), local_vertices
+
+
+def create_blender_object(
+    scene_object: SceneObject,
+    collection,
+    *,
+    validate_mesh: bool = True,
+    mesh_prototypes: dict[str, Any] | None = None,
+):
     bpy = _require_bpy()
-    mesh = bpy.data.meshes.new(f"{scene_object.name}_MESH")
-    mesh.from_pydata(scene_object.vertices, [], scene_object.faces)
-    if validate_mesh:
-        mesh.validate(verbose=False)
-    mesh.update(calc_edges=True)
+    prototype = (
+        _mesh_prototype_payload(scene_object)
+        if mesh_prototypes is not None
+        else None
+    )
+
+    if prototype is None:
+        mesh = bpy.data.meshes.new(f"{scene_object.name}_MESH")
+        mesh.from_pydata(scene_object.vertices, [], scene_object.faces)
+        object_translation = None
+    else:
+        prototype_key, object_translation, local_vertices = prototype
+        mesh = mesh_prototypes.get(prototype_key)
+        if mesh is None:
+            mesh = bpy.data.meshes.new(f"{scene_object.name}_PROTO_MESH")
+            mesh.from_pydata(local_vertices, [], scene_object.faces)
+            if validate_mesh:
+                mesh.validate(verbose=False)
+            mesh.update(calc_edges=True)
+            mesh_prototypes[prototype_key] = mesh
+
+    if prototype is None:
+        if validate_mesh:
+            mesh.validate(verbose=False)
+        mesh.update(calc_edges=True)
 
     obj = bpy.data.objects.new(scene_object.name, mesh)
+    if object_translation is not None:
+        obj.location = object_translation
     collection.objects.link(obj)
     _set_custom_properties(obj, scene_object.custom_properties)
     return obj
@@ -595,6 +677,7 @@ def build_scene_package_in_blender(
     apply_bolt_booleans: bool = True,
     strip_internal_lining_caps: bool = False,
     strip_coincident_lining_interfaces: bool = False,
+    reuse_mesh_prototypes: bool = True,
 ) -> BlenderBuildResult:
     bpy = _require_bpy()
 
@@ -620,11 +703,33 @@ def build_scene_package_in_blender(
 
     object_names: list[str] = []
     mesh_names: list[str] = []
+    mesh_prototypes: dict[str, Any] | None = (
+        {} if reuse_mesh_prototypes else None
+    )
+    mesh_prototype_instance_count = 0
     for scene_object in package.objects:
         target = _ensure_collection_path(bpy, root, scene_object.collection_path)
-        obj = create_blender_object(scene_object, target, validate_mesh=validate_mesh)
+        if (
+            mesh_prototypes is not None
+            and scene_object.extra_properties.get("meshPrototypeKey") is not None
+        ):
+            mesh_prototype_instance_count += 1
+        obj = create_blender_object(
+            scene_object,
+            target,
+            validate_mesh=validate_mesh,
+            mesh_prototypes=mesh_prototypes,
+        )
         object_names.append(obj.name)
         mesh_names.append(obj.data.name)
+
+    mesh_prototype_count = len(mesh_prototypes or {})
+    root["meshPrototypeReuseEnabled"] = bool(reuse_mesh_prototypes)
+    root["meshPrototypeCount"] = int(mesh_prototype_count)
+    root["meshPrototypeInstanceCount"] = int(mesh_prototype_instance_count)
+    root["sharedMeshDataBlocksSaved"] = int(
+        max(0, mesh_prototype_instance_count - mesh_prototype_count)
+    )
 
     boolean_count = 0
     removed_tools: tuple[str, ...] = ()
@@ -659,4 +764,10 @@ def build_scene_package_in_blender(
         removed_tool_names=removed_tools,
         lining_cap_faces_removed=lining_cap_faces_removed,
         lining_interface_faces_removed=lining_interface_faces_removed,
+        mesh_prototype_count=mesh_prototype_count,
+        mesh_prototype_instance_count=mesh_prototype_instance_count,
+        shared_mesh_data_blocks_saved=max(
+            0,
+            mesh_prototype_instance_count - mesh_prototype_count,
+        ),
     )

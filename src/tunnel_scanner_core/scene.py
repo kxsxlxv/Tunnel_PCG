@@ -106,6 +106,62 @@ class SceneObject:
         return props
 
 
+
+def scene_object_mesh_prototype_payload(
+    scene_object: SceneObject,
+) -> tuple[
+    str,
+    tuple[float, float, float],
+    tuple[tuple[float, float, float], ...],
+] | None:
+    """Recover a declared translation-only prototype in the object's coordinates."""
+    props = scene_object.extra_properties
+    key = props.get("meshPrototypeKey")
+    if key is None:
+        return None
+    if props.get("meshPrototypeMode") != "translation_only_shared_mesh_v1":
+        raise ValueError(
+            f"{scene_object.name}: unsupported meshPrototypeMode "
+            f"{props.get('meshPrototypeMode')!r}"
+        )
+    raw_translation = props.get("meshPrototypeTranslationM")
+    if (
+        not isinstance(raw_translation, (list, tuple))
+        or len(raw_translation) != 3
+    ):
+        raise ValueError(
+            f"{scene_object.name}: meshPrototypeTranslationM must contain 3 values"
+        )
+    tx, ty, tz = (float(value) for value in raw_translation)
+    if bool(props.get("coordinatesLocalizedToChunk", False)):
+        tx -= float(props.get("chunkWorldOriginX", 0.0))
+        ty -= float(props.get("chunkWorldOriginY", 0.0))
+        tz -= float(props.get("chunkWorldOriginZ", 0.0))
+    if not all(math.isfinite(value) for value in (tx, ty, tz)):
+        raise ValueError(f"{scene_object.name}: non-finite mesh prototype translation")
+
+    expected_vertices = int(
+        props.get("meshPrototypeVertexCount", len(scene_object.vertices))
+    )
+    expected_faces = int(
+        props.get("meshPrototypeFaceCount", len(scene_object.faces))
+    )
+    if expected_vertices != len(scene_object.vertices):
+        raise ValueError(
+            f"{scene_object.name}: mesh prototype vertex-count mismatch"
+        )
+    if expected_faces != len(scene_object.faces):
+        raise ValueError(
+            f"{scene_object.name}: mesh prototype face-count mismatch"
+        )
+
+    local_vertices = tuple(
+        (float(x) - tx, float(y) - ty, float(z) - tz)
+        for x, y, z in scene_object.vertices
+    )
+    return str(key), (tx, ty, tz), local_vertices
+
+
 @dataclass(frozen=True)
 class ScenePackage:
     """Serializable engine-neutral scene boundary for Blender/other back ends."""

@@ -148,6 +148,96 @@ def test_compact_scene_json_roundtrip_omits_only_redundant_custom_properties(tmp
     assert read_scene_package_json(compact_path) == package
 
 
+def test_prototype_scene_json_compacts_stage10_periodic_geometry(tmp_path):
+    from tunnel_scanner_core import (
+        ProductionConfig,
+        TunnelAssemblyConfig,
+        build_production_tunnel,
+        load_stage10_initial_moscow_profile,
+    )
+
+    profile = load_stage10_initial_moscow_profile()
+    build = build_production_tunnel(
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=4,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.0,
+        ),
+        include_bolts=False,
+        production_config=ProductionConfig(
+            namespace="scene-prototype-json",
+            moscow_profile=profile,
+            moscow_stage="10.5",
+        ),
+        seed=5812,
+    )
+    standard_path = tmp_path / "stage10_standard.json"
+    prototype_path = tmp_path / "stage10_prototypes.json"
+    write_scene_package_json(
+        build.scene,
+        standard_path,
+        compact=True,
+    )
+    write_scene_package_json(
+        build.scene,
+        prototype_path,
+        compact=True,
+        prototype_instances=True,
+    )
+
+    standard_data = json.loads(standard_path.read_text())
+    prototype_data = json.loads(prototype_path.read_text())
+    assert standard_data["schemaVersion"] == 1
+    assert prototype_data["schemaVersion"] == 2
+    encoding = prototype_data["geometryEncoding"]
+    assert encoding["mode"] == "translation_mesh_prototypes_v1"
+    assert int(encoding["prototypeCount"]) > 0
+    assert int(encoding["prototypeInstanceCount"]) > int(
+        encoding["prototypeCount"]
+    )
+    assert float(encoding["maxReconstructionErrorM"]) <= 1e-9
+    assert len(prototype_data["meshPrototypes"]) == int(
+        encoding["prototypeCount"]
+    )
+
+    encoded_instances = [
+        raw
+        for raw in prototype_data["objects"]
+        if "meshPrototypeRef" in raw
+    ]
+    assert encoded_instances
+    assert all("vertices" not in raw for raw in encoded_instances)
+    assert all("faces" not in raw for raw in encoded_instances)
+    assert all("meshTranslationM" in raw for raw in encoded_instances)
+    assert prototype_path.stat().st_size < standard_path.stat().st_size
+
+    restored = read_scene_package_json(prototype_path)
+    assert restored.name == build.scene.name
+    assert restored.mode == build.scene.mode
+    assert restored.label_policy == build.scene.label_policy
+    assert restored.metadata == build.scene.metadata
+    assert len(restored.objects) == len(build.scene.objects)
+    for actual, expected in zip(restored.objects, build.scene.objects):
+        assert actual.name == expected.name
+        assert actual.faces == expected.faces
+        assert actual.object_type == expected.object_type
+        assert actual.ring_id == expected.ring_id
+        assert actual.label_id == expected.label_id
+        assert actual.instance_id == expected.instance_id
+        assert json.loads(json.dumps(actual.extra_properties)) == json.loads(
+            json.dumps(expected.extra_properties)
+        )
+        assert len(actual.vertices) == len(expected.vertices)
+        error = max(
+            (
+                max(abs(a - b) for a, b in zip(av, ev))
+                for av, ev in zip(actual.vertices, expected.vertices)
+            ),
+            default=0.0,
+        )
+        assert error <= 1e-9
+
+
 def test_scene_dict_rejects_unknown_schema_version():
     _, _, _, _, deformed = _fixture()
     package = build_deformed_scene_package(deformed)

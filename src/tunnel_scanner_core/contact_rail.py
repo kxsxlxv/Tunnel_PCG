@@ -553,30 +553,46 @@ def _profile_xz_to_core(
 def build_modern_contact_support_meshes(
     profile: MoscowStage10Profile,
 ) -> tuple[LocalContactRailMesh, ...]:
-    """Build the modern dedicated-block contact-rail support assembly."""
+    """Build the dimensioned modern contact-rail support assembly.
+
+    The 2026-09-21 user-supplied drawing contributes readable 873/683/180 mm
+    horizontal and 373/155/90 mm vertical callouts. The authoritative
+    690 +/- 8 mm / +160 mm contact-rail placement remains unchanged; the
+    drawing dimensions constrain the hook-bracket envelope and clamp stack.
+    """
     cr = profile.contact_rail
     modern = profile.modern_contact_rail
     sign = cr.side_profile_x_sign
     axis_x = contact_rail_axis_profile_x(profile)
     axis_u = abs(axis_x)
 
-    rail_top_profile_z = (
-        cr.working_surface_z_m + cr.rail_overall_height_m
+    # The drawing's 683 mm axis callout independently cross-checks the
+    # authoritative 690 mm placement from the inner working face.
+    reference_u = 0.5 * profile.track.gauge_m
+    drawing_axis_u = reference_u + modern.drawing_reference_to_axis_m
+    outer_envelope_u = (
+        reference_u + modern.drawing_reference_to_outer_envelope_m
     )
-    plate_under_profile_z = (
-        rail_top_profile_z + modern.insulator_height_m
-    )
-    plate_top_profile_z = (
-        plate_under_profile_z + modern.bracket_top_plate_thickness_m
-    )
+    if abs(drawing_axis_u - axis_u) > cr.horizontal_tolerance_m + 1e-12:
+        raise ValueError("dimensioned support drawing axis conflicts with gauge datum")
 
-    # Dedicated support block sits in track concrete, between running supports.
-    block_center_u = max(1.08, axis_u - 0.26)
+    band = modern.bracket_channel_band_thickness_m
+    half_band = 0.5 * band
+    outer_center_u = outer_envelope_u - half_band
+    top_inner_edge_u = (
+        outer_envelope_u - modern.drawing_upper_return_m
+    )
+    top_inner_center_u = top_inner_edge_u + half_band
+
+    # Dedicated support block remains phase-separated from running supports.
+    # Its X position follows the drawing's running-rail reference rather than
+    # the former arbitrary 1.08 m fallback.
+    base_plate_center_u = reference_u + 0.5 * modern.base_plate_transverse_m
     concrete_top_profile_z = (
         profile.track_concrete.surface_reference_z_m
         + profile.track_concrete.surface_cross_slope_to_drain
         * (
-            block_center_u
+            base_plate_center_u
             - profile.track_concrete.surface_reference_abs_x_m
         )
     )
@@ -584,35 +600,99 @@ def build_modern_contact_support_meshes(
         0.0, concrete_top_profile_z
     )[1]
     block_bottom_core = block_top_core - modern.support_block_height_m
-    block_center_x = sign * block_center_u
+    block_center_x = sign * base_plate_center_u
 
-    # Plan dimensions are not published in RU214055U1; keep a compact,
-    # explicitly tagged preview footprint under the 100 mm bracket thickness.
     block_mesh = _box_mesh(
         center_x_m=block_center_x,
         center_y_m=0.0,
-        size_x_m=0.24,
-        size_y_m=0.18,
+        size_x_m=modern.base_plate_transverse_m + 0.040,
+        size_y_m=modern.base_plate_longitudinal_m + 0.040,
         z0_m=block_bottom_core,
         z1_m=block_top_core,
     )
 
-    base_u = block_center_u
-    base_z = concrete_top_profile_z + 0.015
-    end_u = axis_u
-    end_z = plate_under_profile_z
-    p0 = (base_u, base_z)
-    p1 = (base_u + 0.20, base_z + 0.06)
-    p2 = (axis_u + 0.20, end_z + 0.04)
-    p3 = (end_u, end_z)
-    centerline = tuple(
-        _bezier_point(p0, p1, p2, p3, i / 18.0)
-        for i in range(19)
+    base_plate_z0 = block_top_core
+    base_plate_z1 = base_plate_z0 + modern.base_plate_thickness_m
+    base_plate_mesh = _box_mesh(
+        center_x_m=block_center_x,
+        center_y_m=0.0,
+        size_x_m=modern.base_plate_transverse_m,
+        size_y_m=modern.base_plate_longitudinal_m,
+        z0_m=base_plate_z0,
+        z1_m=base_plate_z1,
     )
-    band_u_z = _ribbon_polygon(
-        centerline,
-        thickness_m=modern.bracket_channel_band_thickness_m,
+
+    # Four-anchor base pattern is visible in the dimensioned plan drawing.
+    dowels = []
+    for dx in (
+        -0.5 * modern.base_plate_anchor_pitch_transverse_m,
+        +0.5 * modern.base_plate_anchor_pitch_transverse_m,
+    ):
+        for dy in (
+            -0.5 * modern.base_plate_anchor_pitch_longitudinal_m,
+            +0.5 * modern.base_plate_anchor_pitch_longitudinal_m,
+        ):
+            dowels.append(
+                _cylinder_z_mesh(
+                    center_x_m=block_center_x + sign * dx,
+                    center_y_m=dy,
+                    radius_m=0.5 * 0.024,
+                    z0_m=block_top_core - modern.support_dowel_length_m,
+                    z1_m=base_plate_z1 + 0.010,
+                    sides=12,
+                )
+            )
+    dowel_mesh = _combine_meshes(dowels)
+
+    # Hook-channel side profile. 155 and 90 mm are used as the lower/upper
+    # bend construction callouts; exact factory neutral-axis radii are still
+    # marked as image-derived.
+    base_center_profile_z = (
+        concrete_top_profile_z
+        + modern.base_plate_thickness_m
+        + half_band
     )
+    top_center_profile_z = modern.drawing_top_above_ugr_m - half_band
+    lower_r = modern.bracket_lower_bend_radius_m
+    upper_r = modern.bracket_upper_bend_radius_m
+
+    start_center_u = reference_u + half_band
+    lower_arc_center_u = outer_center_u - lower_r
+    lower_arc_center_z = base_center_profile_z + lower_r
+    upper_arc_center_u = outer_center_u - upper_r
+    upper_arc_center_z = top_center_profile_z - upper_r
+
+    if lower_arc_center_u <= start_center_u:
+        raise ValueError("dimensioned contact-support lower arm collapsed")
+    if upper_arc_center_z <= lower_arc_center_z:
+        raise ValueError("dimensioned contact-support vertical hook collapsed")
+    if top_inner_center_u >= outer_center_u:
+        raise ValueError("dimensioned contact-support upper return collapsed")
+
+    centerline: list[tuple[float, float]] = [
+        (start_center_u, base_center_profile_z),
+        (lower_arc_center_u, base_center_profile_z),
+    ]
+    for i in range(1, 7):
+        a = -0.5 * math.pi + (0.5 * math.pi) * i / 6.0
+        centerline.append(
+            (
+                lower_arc_center_u + lower_r * math.cos(a),
+                lower_arc_center_z + lower_r * math.sin(a),
+            )
+        )
+    centerline.append((outer_center_u, upper_arc_center_z))
+    for i in range(1, 7):
+        a = (0.5 * math.pi) * i / 6.0
+        centerline.append(
+            (
+                upper_arc_center_u + upper_r * math.cos(a),
+                upper_arc_center_z + upper_r * math.sin(a),
+            )
+        )
+    centerline.append((top_inner_center_u, top_center_profile_z))
+
+    band_u_z = _ribbon_polygon(centerline, thickness_m=band)
     bracket_profile = tuple((sign * u, z) for u, z in band_u_z)
     bracket_core = _profile_xz_to_core(profile, bracket_profile)
     bracket_mesh = _extrude_y_from_xz(
@@ -620,88 +700,134 @@ def build_modern_contact_support_meshes(
         half_y_m=0.5 * modern.bracket_longitudinal_thickness_m,
     )
 
-    plate_center_core = profile.coordinate.research_xz_to_core_xz(
+    # The 180 mm upper dimension is also consistent with the visible top
+    # clamping plate width. The plate reinforces the hook arm directly above
+    # the contact-rail axis.
+    top_plate_z0_profile = (
+        modern.drawing_top_above_ugr_m
+        - modern.bracket_top_plate_thickness_m
+    )
+    top_plate_z1_profile = modern.drawing_top_above_ugr_m
+    top_plate_center_core = profile.coordinate.research_xz_to_core_xz(
         axis_x,
-        0.5 * (plate_under_profile_z + plate_top_profile_z),
+        0.5 * (top_plate_z0_profile + top_plate_z1_profile),
     )
     top_plate_mesh = _box_mesh(
-        center_x_m=plate_center_core[0],
+        center_x_m=top_plate_center_core[0],
         center_y_m=0.0,
         size_x_m=modern.bracket_top_plate_width_m,
         size_y_m=modern.bracket_longitudinal_thickness_m,
         z0_m=profile.coordinate.research_xz_to_core_xz(
-            0.0, plate_under_profile_z
+            0.0, top_plate_z0_profile
         )[1],
         z1_m=profile.coordinate.research_xz_to_core_xz(
-            0.0, plate_top_profile_z
+            0.0, top_plate_z1_profile
         )[1],
     )
     bracket_combined = _combine_meshes((bracket_mesh, top_plate_mesh))
 
-    # The modern/photographic topology has the insulator above the contact rail,
-    # hanging the rail from the over-rail bracket plate.
-    insulator_z0 = profile.coordinate.research_xz_to_core_xz(
+    rail_top_profile_z = (
+        cr.working_surface_z_m + cr.rail_overall_height_m
+    )
+    rail_top_core = profile.coordinate.research_xz_to_core_xz(
         0.0, rail_top_profile_z
     )[1]
-    insulator_z1 = profile.coordinate.research_xz_to_core_xz(
-        0.0, plate_under_profile_z
+    axis_core_x = profile.coordinate.research_xz_to_core_xz(axis_x, 0.0)[0]
+
+    # Two side jaws flank the 80 mm upper contact-rail flange while the bridge
+    # plate sits immediately above it. This makes the rail/support contact
+    # legible instead of letting the rail visually float inside the support.
+    rail_top_half = 0.5 * cr.rail_top_width_m
+    jaw_center_offset = (
+        rail_top_half
+        + 0.003
+        + 0.5 * modern.clamp_jaw_thickness_m
+    )
+    jaw_z1 = rail_top_core + 0.010
+    jaw_z0 = jaw_z1 - modern.clamp_jaw_height_m
+    clamp_parts = []
+    for sx in (-1.0, +1.0):
+        clamp_parts.append(
+            _box_mesh(
+                center_x_m=axis_core_x + sx * jaw_center_offset,
+                center_y_m=0.0,
+                size_x_m=modern.clamp_jaw_thickness_m,
+                size_y_m=0.090,
+                z0_m=jaw_z0,
+                z1_m=jaw_z1,
+            )
+        )
+    bridge_z0 = rail_top_core + 0.008
+    bridge_z1 = bridge_z0 + modern.clamp_bridge_thickness_m
+    clamp_parts.append(
+        _box_mesh(
+            center_x_m=axis_core_x,
+            center_y_m=0.0,
+            size_x_m=modern.clamp_bridge_width_m,
+            size_y_m=0.090,
+            z0_m=bridge_z0,
+            z1_m=bridge_z1,
+        )
+    )
+    clamp_mesh = _combine_meshes(clamp_parts)
+
+    # Short visible vertical insulator stack between the clamp bridge and the
+    # underside of the dimensioned hook arm. The old 150 mm cylinder caused
+    # the support to float unrealistically above the rail.
+    bracket_underside_profile_z = (
+        modern.drawing_top_above_ugr_m
+        - modern.bracket_channel_band_thickness_m
+    )
+    bracket_underside_core_z = profile.coordinate.research_xz_to_core_xz(
+        0.0, bracket_underside_profile_z
     )[1]
+    available_stack = bracket_underside_core_z - bridge_z1
+    if available_stack <= 0.0:
+        raise ValueError("dimensioned support leaves no room for insulator stack")
+    visible_insulator_height = min(
+        modern.insulator_height_m,
+        available_stack,
+    )
+    insulator_z0 = bracket_underside_core_z - visible_insulator_height
+    insulator_z1 = bracket_underside_core_z
     insulator_mesh = _cylinder_z_mesh(
-        center_x_m=profile.coordinate.research_xz_to_core_xz(axis_x, 0.0)[0],
+        center_x_m=axis_core_x,
         center_y_m=0.0,
         radius_m=0.5 * modern.insulator_diameter_m,
         z0_m=insulator_z0,
         z1_m=insulator_z1,
-        sides=16,
+        sides=20,
     )
 
-    # Rail-retaining saddle around the upper head, still explicitly topology
-    # only until a current factory assembly drawing resolves the clamp.
-    rail_half = 0.5 * cr.rail_top_width_m
-    saddle_center_x = profile.coordinate.research_xz_to_core_xz(axis_x, 0.0)[0]
-    rail_top_core = insulator_z0
-    saddle_parts = (
-        _box_mesh(
-            center_x_m=saddle_center_x - rail_half - 0.010,
-            center_y_m=0.0,
-            size_x_m=0.012,
-            size_y_m=0.085,
-            z0_m=rail_top_core - 0.030,
-            z1_m=rail_top_core + 0.014,
-        ),
-        _box_mesh(
-            center_x_m=saddle_center_x + rail_half + 0.010,
-            center_y_m=0.0,
-            size_x_m=0.012,
-            size_y_m=0.085,
-            z0_m=rail_top_core - 0.030,
-            z1_m=rail_top_core + 0.014,
-        ),
-        _box_mesh(
-            center_x_m=saddle_center_x,
-            center_y_m=0.0,
-            size_x_m=cr.rail_top_width_m + 0.032,
-            size_y_m=0.085,
-            z0_m=rail_top_core + 0.006,
-            z1_m=rail_top_core + 0.018,
-        ),
+    # Two through-bolts visible on the dimensioned clamp/top plate.
+    bolt_meshes = []
+    bolt_x_offset = min(
+        0.5 * modern.bracket_top_plate_width_m - 0.025,
+        0.5 * modern.clamp_bridge_width_m - 0.010,
     )
-    saddle_mesh = _combine_meshes(saddle_parts)
-
-    # Two 140 mm polymer-dowel/track-screw axes in the dedicated support block.
-    dowels = []
-    for dy in (-0.045, +0.045):
-        dowels.append(
-            _cylinder_z_mesh(
-                center_x_m=block_center_x,
-                center_y_m=dy,
-                radius_m=0.012,
-                z0_m=block_top_core - modern.support_dowel_length_m,
-                z1_m=block_top_core + 0.010,
-                sides=10,
-            )
+    bracket_top_core_z = profile.coordinate.research_xz_to_core_xz(
+        0.0, modern.drawing_top_above_ugr_m
+    )[1]
+    for sx in (-1.0, +1.0):
+        bx = axis_core_x + sx * bolt_x_offset
+        shaft = _cylinder_z_mesh(
+            center_x_m=bx,
+            center_y_m=0.0,
+            radius_m=0.5 * modern.clamp_bolt_diameter_m,
+            z0_m=jaw_z1,
+            z1_m=bracket_top_core_z,
+            sides=12,
         )
-    dowel_mesh = _combine_meshes(dowels)
+        head = _cylinder_z_mesh(
+            center_x_m=bx,
+            center_y_m=0.0,
+            radius_m=modern.clamp_bolt_head_radius_m,
+            z0_m=bracket_top_core_z,
+            z1_m=bracket_top_core_z + modern.clamp_bolt_head_height_m,
+            sides=12,
+        )
+        bolt_meshes.extend((shaft, head))
+    clamp_bolts_mesh = _combine_meshes(bolt_meshes)
 
     hood_profile = modern_protective_cover_core_xz(
         profile,
@@ -721,12 +847,32 @@ def build_modern_contact_support_meshes(
             vertices=block_mesh[0],
             faces=block_mesh[1],
             properties={
-                "geometryMode": "RU214055_dedicated_block_preview",
+                "geometryMode": "dimensioned_dedicated_block_v3",
                 "heightM": modern.support_block_height_m,
+                "planTransverseM": modern.base_plate_transverse_m + 0.040,
+                "planLongitudinalM": modern.base_plate_longitudinal_m + 0.040,
                 "polymerDowelLengthM": modern.support_dowel_length_m,
                 "separateFromRunningRailSupport": True,
                 "planGeometryResolved": False,
-                "source": "P10-RU214055-CONTACT-SUPPORT",
+                "source": "P10-RU214055-CONTACT-SUPPORT;P10-USER-CONTACT-SUPPORT-873",
+            },
+        ),
+        LocalContactRailMesh(
+            name_suffix="MODERN_CONTACT_SUPPORT_BASE_PLATE",
+            object_type="production_contact_rail_base_plate",
+            category="contact_rail_base_plate",
+            vertices=base_plate_mesh[0],
+            faces=base_plate_mesh[1],
+            properties={
+                "geometryMode": "four_anchor_base_plate_v3",
+                "transverseM": modern.base_plate_transverse_m,
+                "longitudinalM": modern.base_plate_longitudinal_m,
+                "thicknessM": modern.base_plate_thickness_m,
+                "anchorCount": modern.base_plate_anchor_count,
+                "anchorPitchTransverseM": modern.base_plate_anchor_pitch_transverse_m,
+                "anchorPitchLongitudinalM": modern.base_plate_anchor_pitch_longitudinal_m,
+                "exactHoleSlotGeometryResolved": False,
+                "source": "P10-USER-CONTACT-SUPPORT-873",
             },
         ),
         LocalContactRailMesh(
@@ -736,14 +882,26 @@ def build_modern_contact_support_meshes(
             vertices=bracket_combined[0],
             faces=bracket_combined[1],
             properties={
-                "geometryMode": "curved_channel_overrail_top_plate_v2",
+                "geometryMode": "dimensioned_hook_channel_873x373_v3",
                 "resourceEnvelopeM": cr.support_resource_envelope_m,
+                "drawingReferenceToAxisM": modern.drawing_reference_to_axis_m,
+                "drawingReferenceToOuterEnvelopeM": modern.drawing_reference_to_outer_envelope_m,
+                "drawingUpperReturnM": modern.drawing_upper_return_m,
+                "drawingTopAboveUGRM": modern.drawing_top_above_ugr_m,
+                "drawingLowerBendCalloutM": modern.drawing_lower_bend_callout_m,
+                "drawingUpperBendCalloutM": modern.drawing_upper_bend_callout_m,
+                "normativeAxisOffsetM": cr.horizontal_from_inner_working_face_m,
+                "normativeWorkingSurfaceProfileZM": cr.working_surface_z_m,
+                "outerEnvelopeProfileAbsXM": outer_envelope_u,
+                "topInnerEdgeProfileAbsXM": top_inner_edge_u,
                 "longitudinalThicknessM": modern.bracket_longitudinal_thickness_m,
                 "channelBandThicknessM": modern.bracket_channel_band_thickness_m,
                 "topPlateWidthM": modern.bracket_top_plate_width_m,
                 "topPlateThicknessM": modern.bracket_top_plate_thickness_m,
                 "legacySleeperAttachment": False,
                 "dedicatedConcreteSupportBlock": True,
+                "source": "P10-USER-CONTACT-SUPPORT-873",
+                "dimensionConfidence": "B_readable_callouts_C_bend_interpretation",
             },
         ),
         LocalContactRailMesh(
@@ -753,23 +911,45 @@ def build_modern_contact_support_meshes(
             vertices=insulator_mesh[0],
             faces=insulator_mesh[1],
             properties={
-                "geometryMode": "vertical_cylindrical_envelope_v2",
-                "heightM": modern.insulator_height_m,
+                "geometryMode": "short_vertical_stack_under_hook_arm_v3",
+                "catalogEnvelopeHeightM": modern.insulator_height_m,
+                "visibleHeightM": visible_insulator_height,
                 "diameterM": modern.insulator_diameter_m,
-                "orientation": "vertical_above_contact_rail",
+                "orientation": "vertical_between_contact_clamp_and_upper_hook_arm",
                 "exactPorcelainProfileResolved": False,
             },
         ),
         LocalContactRailMesh(
-            name_suffix="MODERN_CONTACT_RAIL_FASTENING",
+            name_suffix="MODERN_CONTACT_RAIL_CLAMP",
             object_type="production_contact_rail_fastening_unit",
             category="contact_rail_fastening_unit",
-            vertices=saddle_mesh[0],
-            faces=saddle_mesh[1],
+            vertices=clamp_mesh[0],
+            faces=clamp_mesh[1],
             properties={
-                "geometryMode": "upper_head_saddle_v2",
-                "confidence": "C_topology_only",
-                "exactBoltClipGeometryResolved": False,
+                "geometryMode": "upper_flange_saddle_insulated_two_bolt_v3",
+                "bridgeWidthM": modern.clamp_bridge_width_m,
+                "bridgeThicknessM": modern.clamp_bridge_thickness_m,
+                "jawThicknessM": modern.clamp_jaw_thickness_m,
+                "jawHeightM": modern.clamp_jaw_height_m,
+                "boltCount": modern.clamp_bolt_count,
+                "railTopProfileZM": rail_top_profile_z,
+                "exactClampCastingResolved": False,
+                "source": "P10-USER-CONTACT-SUPPORT-873;P10-FROLOV-CONTACT",
+            },
+        ),
+        LocalContactRailMesh(
+            name_suffix="MODERN_CONTACT_RAIL_CLAMP_BOLTS",
+            object_type="production_contact_rail_clamp_bolts",
+            category="contact_rail_clamp_bolts",
+            vertices=clamp_bolts_mesh[0],
+            faces=clamp_bolts_mesh[1],
+            properties={
+                "quantity": modern.clamp_bolt_count,
+                "diameterM": modern.clamp_bolt_diameter_m,
+                "headRadiusM": modern.clamp_bolt_head_radius_m,
+                "headHeightM": modern.clamp_bolt_head_height_m,
+                "geometryMode": "two_visible_through_bolts_v3",
+                "source": "P10-USER-CONTACT-SUPPORT-873",
             },
         ),
         LocalContactRailMesh(
@@ -779,10 +959,10 @@ def build_modern_contact_support_meshes(
             vertices=dowel_mesh[0],
             faces=dowel_mesh[1],
             properties={
-                "quantity": 2,
+                "quantity": modern.base_plate_anchor_count,
                 "dowelLengthM": modern.support_dowel_length_m,
-                "source": "P10-RU214055-CONTACT-SUPPORT",
-                "countConfidence": "C_figure_interpretation",
+                "source": "P10-USER-CONTACT-SUPPORT-873;P10-RU214055-CONTACT-SUPPORT",
+                "countConfidence": "B_dimensioned_plan_topology",
             },
         ),
         LocalContactRailMesh(
@@ -792,16 +972,17 @@ def build_modern_contact_support_meshes(
             vertices=hood_mesh[0],
             faces=hood_mesh[1],
             properties={
-                "geometryMode": "rounded_local_fastening_hood_v1",
+                "geometryMode": "rounded_local_fastening_hood_v2",
                 "longitudinalLengthM": modern.support_hood_length_m,
                 "widthExtraM": modern.support_hood_extra_width_m,
                 "heightExtraM": modern.support_hood_extra_height_m,
-                "confidence": "C_photo_topology_only",
+                "dimensionedBracketTopProfileZM": modern.drawing_top_above_ugr_m,
+                "confidence": "B_height_envelope_C_exact_hood_shape",
                 "mainCoverInterruptedHere": True,
+                "coversClampAndBoltHeads": True,
             },
         ),
     )
-
 
 def build_stage10_3_local_support_meshes(
     profile: MoscowStage10Profile,

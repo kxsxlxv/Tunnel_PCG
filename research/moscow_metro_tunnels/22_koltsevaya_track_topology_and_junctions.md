@@ -658,6 +658,31 @@ Again: none of these generic dimensions are assigned to the actual Belorusskaya 
 
 ---
 
+### What is now implementable for the selected depot leg
+
+The topology contract is now stronger than the first draft:
+
+- the **Belorusskaya-side Line-5 depot leg is source-backed as a single-track connection** (S125);
+- the **Krasnopresnenskaya-side Line-5 depot leg is a separate single-track connection** (S125);
+- S120 proves that farther depot-side there is a **local two-track section** and then a switch dividing directions toward Belorusskaya/Krasnopresnenskaya;
+- therefore the first PCG implementation may safely instantiate one `BRANCH_EDGE` from the Belorusskaya divergence and terminate it at an `END_NODE` **before** the unresolved downstream depot-side merge/two-track/switch system;
+- this resolves **track count/topology only**. It does not prove a circular single-track civil shell, its diameter, or the chainage where such a shell begins.
+
+The Krasnopresnenskaya-side leg additionally has S121 archival crown-profile constraints. They must not be copied onto the Belorusskaya leg merely because both serve the same depot.
+
+### Highest-value remaining source acquisition
+
+S121 names several 2024 technical reports that are likely to contain the missing actual geometry:
+
+- `ИСП-24-147` — geotechnical calculation of the lining of existing Moscow Metro structures at the Klimashkina site;
+- `Б1210/ОР-24-ИГИ3` — GEOCON engineering-geology **graphical** volume;
+- `Б1210/ОР-24-ИГИ1/2` — associated text volumes;
+- `24-392-П-КР1` — structural-design volume.
+
+Public search has so far located only the Moscow expertise document that **references** them, not standalone copies. They are recorded as acquisition targets rather than silently treated as available sources.
+
+A second high-value target is Dorman 1971 (S123): RSL marks the complete volume as openly viewable, and S120 specifically says it describes construction of this Krasnaya Presnya branch section. Exact relevant pages are still unresolved.
+
 ## 11. Definition of Done A–D
 
 ### A. Как построить две независимые physical centerline Кольцевой?

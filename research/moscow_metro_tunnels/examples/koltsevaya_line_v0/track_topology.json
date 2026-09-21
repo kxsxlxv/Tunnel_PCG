@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "research_date": "2026-09-21",
+  "research_date": "2026-09-22",
   "line": {
     "id": "MOSCOW_METRO_LINE_5",
     "name_ru": "Кольцевая линия",
@@ -354,7 +354,8 @@
       "destination": "Калужско-Рижская линия",
       "source_ids": [
         "S085",
-        "S088"
+        "S088",
+        "S133"
       ],
       "turnout_count": 3,
       "station_turnback_storage_tracks": 1,
@@ -369,7 +370,20 @@
           "source_id": "S088"
         }
       ],
-      "station_pk_semantics": "station reference/chainage context only; not switch-node chainage"
+      "station_pk_semantics": "station reference/chainage context only; not switch-node chainage",
+      "switch_number_evidence": {
+        "switch_numbers": [
+          5,
+          6,
+          7
+        ],
+        "source_id": "S133",
+        "locator": "Koltsevaya section, Prospekt Mira entry",
+        "semantics": "switches/signals of the service connection to the Kaluzhsko-Rizhskaya line; historically controlled from the KRL Prospekt Mira interlocking until 2023",
+        "exact_mapping_each_switch_to_main_or_branch_edge": null,
+        "exact_main_track_attachment": null,
+        "status": "SOURCE_BACKED_SWITCH_SET_GEOMETRY_UNRESOLVED"
+      }
     },
     {
       "id": "KOL5_KURSKAYA_SSV_SYSTEM",
@@ -429,10 +443,11 @@
       ],
       "source_ids": [
         "S085",
-        "S092"
+        "S092",
+        "S133"
       ],
       "exact_turnout_count": null,
-      "exact_main_track_attachment": null,
+      "exact_main_track_attachment": "at least one source-backed network switch anchor is on Track A / I: switch No.5 before Taganskaya; complete TKL/KalL branch decomposition remains unresolved",
       "exact_xy": null,
       "exact_chainage": null,
       "status": "TOPOLOGY_CONFIRMED_FROM_SCHEMATIC_AND_DESTINATION_SOURCE",
@@ -443,7 +458,19 @@
           "source_id": "S097"
         }
       ],
-      "station_pk_semantics": "station reference/chainage context only; not switch-node chainage"
+      "station_pk_semantics": "station reference/chainage context only; not switch-node chainage",
+      "main_track_switch_anchor": {
+        "switch_number": 5,
+        "main_track_id": "KOLTSEVAYA_TRACK_A",
+        "operational_track_number": "I",
+        "location_semantics": "before Taganskaya in Track-A/clockwise travel, as described by the signal/interlocking naming source",
+        "source_id": "S133",
+        "historical_control": "until 2023 the switch/signals were controlled from the TKL Taganskaya interlocking",
+        "exact_xy": null,
+        "exact_chainage": null,
+        "exact_destination_branch_mapping": null,
+        "status": "SOURCE_BACKED_MAIN_TRACK_SWITCH_ANCHOR_ONLY"
+      }
     },
     {
       "id": "KOL5_PAVELETSKAYA_DOBRYNINSKAYA_SSV_SYSTEM",

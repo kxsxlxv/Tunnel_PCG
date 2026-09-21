@@ -547,6 +547,7 @@ class MoscowModernContactRailProfile:
     drawing_upper_bend_callout_m: float
     bracket_lower_bend_radius_m: float
     bracket_upper_bend_radius_m: float
+    minimum_clearance_to_lvt_block_m: float
     base_plate_transverse_m: float
     base_plate_longitudinal_m: float
     base_plate_thickness_m: float
@@ -594,6 +595,7 @@ class MoscowModernContactRailProfile:
             self.drawing_upper_bend_callout_m,
             self.bracket_lower_bend_radius_m,
             self.bracket_upper_bend_radius_m,
+            self.minimum_clearance_to_lvt_block_m,
             self.base_plate_transverse_m,
             self.base_plate_longitudinal_m,
             self.base_plate_thickness_m,
@@ -1313,6 +1315,9 @@ class MoscowStage10Profile:
             ),
             bracket_upper_bend_radius_m=float(
                 modern_bracket_raw["preview_upper_bend_radius_m"]
+            ),
+            minimum_clearance_to_lvt_block_m=float(
+                modern_bracket_raw["minimum_clearance_to_lvt_block_m"]
             ),
             base_plate_transverse_m=float(
                 modern_bracket_raw["base_plate_transverse_m"]

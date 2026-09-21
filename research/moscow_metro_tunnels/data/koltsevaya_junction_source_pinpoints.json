@@ -887,6 +887,34 @@
           "right/left project-track labels are not automatically mapped to KOLTSEVAYA_TRACK_A/B without a separate orientation reference",
           "existing main-tunnel lining type is not asserted from the bypass lining specification",
           "no inter-tunnel axis spacing or relative Z is stated in the exposed text"
+        ],
+        "exact_text_pinpoints": [
+          {
+            "pdf_pages": "25-26",
+            "supports": [
+              "existing right main track affected interval PK147+48.991 to PK157+01.926",
+              "existing left main track affected interval PK147+46.010 to PK157+02.021",
+              "derived right-track chainage span 952.935 m",
+              "derived left-track chainage span 956.011 m",
+              "derived span difference 3.076 m"
+            ],
+            "derivation_rule": "PK N+xx.xxx is interpreted as N*100 + xx.xxx metres within each source track's own project chainage. The derived spans are track-local chainage differences, not inter-track spacing."
+          },
+          {
+            "pdf_page": 28,
+            "source_page_label": 28,
+            "supports": [
+              "future Dostoevskaya station is deep-level pylon type",
+              "future station intertrack width/axis-spacing callout = 25.4 m"
+            ],
+            "limitation": "25.4 m is a future station-zone intertrack value. It is not a running-tunnel spacing and is not transferred to ordinary Line-5 tunnels."
+          },
+          {
+            "pdf_pages": "41-42",
+            "supports": [
+              "project volume IMIP-MKL1-P-G0201-PPO.02.01.00.TRM Tom 02.02.01 contains plan 1:2000, plan 1:500, and longitudinal profile 1:2000 horizontal / 1:200 vertical"
+            ]
+          }
         ]
       },
       "confidence": "A_for_project_PK_and_bypass_dimensions_B_for_context",

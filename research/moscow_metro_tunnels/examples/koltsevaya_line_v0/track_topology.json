@@ -141,14 +141,22 @@
         "depot serves Line 5",
         "trains can leave depot onto Track A/first track and Track B/second track",
         "Belorusskaya has a 3-switch turnback siding continuing to depot connection",
-        "Krasnopresnenskaya has 3 turnouts and one turnback/storage track continuing to depot connection",
-        "the line-to-own-depot connecting branch is a double-track design class under metro design rules"
+        "Krasnopresnenskaya has 3 turnouts and one turnback/storage track continuing to depot connection"
       ],
       "crossover_between_main_tracks": "multi-switch turnback/depot system confirmed; exact direct main-to-main crossover semantics and switch-node decomposition remain unresolved",
       "exact_xy": null,
       "exact_chainage": null,
       "z_ugr_m": null,
-      "status": "TOPOLOGY_CONFIRMED_GEOMETRY_UNRESOLVED"
+      "status": "TOPOLOGY_CONFIRMED_GEOMETRY_UNRESOLVED",
+      "current_normative_constraint": {
+        "value": "a line is to be connected to its own depot by a two-track connecting branch",
+        "source_id": "S022",
+        "locator": "SP 120.13330.2022 §4.7",
+        "applicability": "current design rule; not proof that every historical physical segment at Krasnaya Presnya is a single two-track tunnel",
+        "status": "SOURCE_BACKED_CONSTRAINT"
+      },
+      "actual_physical_branch_count_and_shell_arrangement": null,
+      "actual_branch_arrangement_status": "UNRESOLVED; current sources prove service access to both Line-5 directions but do not yet resolve every physical branch edge/tunnel shell"
     },
     {
       "id": "KOL5_PROSPEKT_MIRA_SSV_SYSTEM",

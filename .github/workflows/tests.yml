@@ -89,6 +89,15 @@ jobs:
           --civil-archetype rc_block_6100_5600
           --axis-noise-sigma 0
           --output /tmp/stage10_5_rc6100_scene.json
+      - name: Stage 10.5 CLI 6.1-5.6 RC KBA visual-topology smoke
+        run: >-
+          python examples/generate_stage10_production_tunnel.py
+          --rings 4
+          --namespace stage10-5-rc-kba-ci
+          --civil-archetype rc_block_6100_5600
+          --civil-topology kba
+          --axis-noise-sigma 0
+          --output /tmp/stage10_5_rc_kba_scene.json
       - name: Stage 10.5 CLI legacy-service compatibility smoke
         run: >-
           python examples/generate_stage10_production_tunnel.py

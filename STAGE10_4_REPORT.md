@@ -54,35 +54,63 @@ transitional geometry.
 
 ## Civil geometry policy
 
-The machine profile schema is 1.6.
+The machine profile schema is 2.2.
 
-The initial civil geometry mode is:
+The physical civil envelope remains authoritative and source-sized:
 
     smooth_concentric_ringwise_shell_v1
 
-The shell uses:
+For the default cast-iron family:
 
     intrados diameter        5.100 m
     extrados diameter        5.500 m
     structural depth         0.200 m
     ring pitch               1.000 m
 
-The 11-piece DZMO-family rhythm remains metadata/reference only:
+Stage 10.4+ now restores the close-range composite appearance that was lost
+when the old Stage-9 shell was replaced. This is implemented as a separate
+open-backed visual-detail overlay on the correct Moscow intrados, rather than
+by bringing back the old Stage-9 ring dimensions.
+
+For the documented 5.5/5.1 cast-iron variant, the overlay uses:
+
+    visual tubing rhythm                  11
+    source-backed flange width            0.025 m
+    ring-boundary flange/band              visible
+    one circumferential stiffener/ring     visible
+    typical fastening                     M27 x 120
+    working bolt rows / longitudinal joint 2
+    visible bolt heads / full ring         22
+
+The 25 mm flange thickness, M27 x 120 fastening and two working bolt rows are
+source-backed by P10-FROLOV-RING. The precise inward relief and bolt-head solid
+are visual meshes, not factory CAD.
+
+The distinction is important:
 
     coarseSegmentCountReference = 11
     coarseSegmentCountIsGeometry = false
+    visualSegmentCountIsLOD0 = false
     seriesAccurateTubingLOD0 = false
 
-Stage 10.4 does not fabricate:
+The current visual overlay uses an evenly distributed 11-piece rhythm so that
+the tunnel again reads as a composite bolted lining at Blender/LiDAR distance.
+It does **not** claim the exact N/C/K central angles or key geometry of a
+specific factory series.
 
-- N/C/K central angles;
-- key-wedge geometry;
-- rib positions;
-- bolt-hole positions;
+Still unresolved and therefore not represented as exact series CAD:
+
+- exact N/C/K central angles and key-wedge geometry;
+- exact radial/circumferential stiffening-rib positions for a named tubing
+  series;
+- bolt-hole drilling coordinates and recess geometry;
 - grout-plug location;
-- flange/rebate/falts profile.
+- detailed flange/rebate/falts section;
+- exact bolt-head/nut/washer casting geometry.
 
-Those fields remain blocked by the public-source boundary.
+For the selectable 6.1/5.6 m ten-block RC family the same detail layer exposes
+the source-backed ten-block joint rhythm with shallow joint relief. Cast-iron
+M27 bolt heads and cast-iron stiffener bands are not applied to that RC family.
 
 ## Ring construction
 

@@ -14,6 +14,7 @@ from tunnel_scanner_core import (
     audit_exact_coincident_faces,
     build_chunk_scene_packages,
     build_production_tunnel,
+    clipped_alignment_stations,
     build_procedural_nominal_tunnel,
     finalize_production_render_scene,
     plan_chunks,
@@ -152,6 +153,53 @@ def test_alignment_sampling_snaps_only_ulp_scale_fuzz_at_3000_ring_end():
         assert "chainage outside station range" in str(exc)
     else:
         raise AssertionError("material chainage overrun was incorrectly accepted")
+
+
+def test_clipped_alignment_stations_matches_legacy_scan_without_full_iteration():
+    assembly = sample_tunnel_assembly(
+        TunnelAssemblyConfig(
+            n_rings=3000,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.0,
+        ),
+        seed=5812,
+    )
+    stations = production_alignment_stations(assembly)
+    start = 1234.125
+    end = 1267.875
+    tol = 1e-10
+
+    expected = (
+        sample_alignment_station(stations, start),
+        *tuple(
+            station
+            for station in stations
+            if (
+                station.chainage_m > start + tol
+                and station.chainage_m < end - tol
+            )
+        ),
+        sample_alignment_station(stations, end),
+    )
+
+    class IndexedOnlyStations:
+        def __len__(self):
+            return len(stations)
+
+        def __getitem__(self, index):
+            if isinstance(index, slice):
+                raise AssertionError("clipped lookup must not slice the full station set")
+            return stations[index]
+
+        def __iter__(self):
+            raise AssertionError("clipped lookup must not scan every alignment station")
+
+    actual = clipped_alignment_stations(
+        IndexedOnlyStations(),
+        start_chainage_m=start,
+        end_chainage_m=end,
+    )
+    assert actual == expected
 
 
 def test_stage8_ring_local_ancillary_contains_duplicate_internal_caps_but_stage9_does_not():

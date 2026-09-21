@@ -487,6 +487,25 @@ def _sample_alignment_station_with_terminal_extrapolation(
     )
 
 
+def _alignment_station_insertion_index(
+    stations: Sequence[AlignmentStation],
+    chainage_m: float,
+    *,
+    right: bool,
+) -> int:
+    """Return a binary-search insertion point for monotonic station chainage."""
+    lo = 0
+    hi = len(stations)
+    while lo < hi:
+        mid = (lo + hi) // 2
+        value = stations[mid].chainage_m
+        if value < chainage_m or (right and value == chainage_m):
+            lo = mid + 1
+        else:
+            hi = mid
+    return lo
+
+
 def clipped_alignment_stations(
     stations: Sequence[AlignmentStation],
     *,
@@ -498,13 +517,19 @@ def clipped_alignment_stations(
     first = sample_alignment_station(stations, start_chainage_m)
     last = sample_alignment_station(stations, end_chainage_m)
     tol = 1e-10
+    first_middle = _alignment_station_insertion_index(
+        stations,
+        start_chainage_m + tol,
+        right=True,
+    )
+    last_middle = _alignment_station_insertion_index(
+        stations,
+        end_chainage_m - tol,
+        right=False,
+    )
     middle = tuple(
-        station
-        for station in stations
-        if (
-            station.chainage_m > start_chainage_m + tol
-            and station.chainage_m < end_chainage_m - tol
-        )
+        stations[index]
+        for index in range(first_middle, last_middle)
     )
     result = (first, *middle, last)
     if any(
@@ -2983,51 +3008,69 @@ def _warp_civil_local_object_to_alignment(
     extrapolated_max_overhang_m = 0.0
     extrapolated_sides: set[str] = set()
 
+    # Segment, joint and bolt meshes contain many vertices on the same local-Y
+    # planes. Sampling the global alignment once per unique plane preserves the
+    # exact piecewise-linear map while avoiding repeated O(log N) searches.
+    station_cache: dict[
+        float,
+        tuple[AlignmentStation, str | None, float],
+    ] = {}
+
     vertices: list[Vec3] = []
     for x, local_y, z in obj.vertices:
         # Literal Stage-7/9 axial ring rotation is applied to the complete
         # lining object in its local XZ frame before Stage-10 alignment warp.
         xr = rotation_cos * x + rotation_sin * z
         zr = -rotation_sin * x + rotation_cos * z
-        chainage = midpoint + local_y
-        try:
-            station = sample_alignment_station(stations, chainage)
-        except ValueError as exc:
-            before_start = chainage < alignment_start
-            after_end = chainage > alignment_end
-            if before_start and allow_start_extrapolation:
-                max_extra = start_overhang_m
-                side = "start"
-                overrun = alignment_start - chainage
-            elif after_end and allow_end_extrapolation:
-                max_extra = end_overhang_m
-                side = "end"
-                overrun = chainage - alignment_end
-            else:
-                raise ValueError(
-                    f"{obj.name}: Moscow civil warp chainage "
-                    f"{chainage:.17g} m outside alignment while mapping ring "
-                    f"{ring_index} [{start_chainage_m:.17g}, "
-                    f"{end_chainage_m:.17g}] m, local_y={local_y:.17g} m, "
-                    f"object_type={obj.object_type}"
-                ) from exc
+        local_y_key = float(local_y)
+        cached_station = station_cache.get(local_y_key)
+        if cached_station is None:
+            chainage = midpoint + local_y
+            extrapolated_side: str | None = None
+            overrun = 0.0
             try:
-                station = _sample_alignment_station_with_terminal_extrapolation(
-                    stations,
-                    chainage,
-                    max_extrapolation_m=max_extra,
-                )
-            except ValueError as extrapolation_exc:
-                raise ValueError(
-                    f"{obj.name}: failed bounded terminal fastener alignment "
-                    f"extrapolation at chainage {chainage:.17g} m"
-                ) from extrapolation_exc
+                station = sample_alignment_station(stations, chainage)
+            except ValueError as exc:
+                before_start = chainage < alignment_start
+                after_end = chainage > alignment_end
+                if before_start and allow_start_extrapolation:
+                    max_extra = start_overhang_m
+                    extrapolated_side = "start"
+                    overrun = alignment_start - chainage
+                elif after_end and allow_end_extrapolation:
+                    max_extra = end_overhang_m
+                    extrapolated_side = "end"
+                    overrun = chainage - alignment_end
+                else:
+                    raise ValueError(
+                        f"{obj.name}: Moscow civil warp chainage "
+                        f"{chainage:.17g} m outside alignment while mapping ring "
+                        f"{ring_index} [{start_chainage_m:.17g}, "
+                        f"{end_chainage_m:.17g}] m, local_y={local_y:.17g} m, "
+                        f"object_type={obj.object_type}"
+                    ) from exc
+                try:
+                    station = _sample_alignment_station_with_terminal_extrapolation(
+                        stations,
+                        chainage,
+                        max_extrapolation_m=max_extra,
+                    )
+                except ValueError as extrapolation_exc:
+                    raise ValueError(
+                        f"{obj.name}: failed bounded terminal fastener alignment "
+                        f"extrapolation at chainage {chainage:.17g} m"
+                    ) from extrapolation_exc
+            cached_station = (station, extrapolated_side, overrun)
+            station_cache[local_y_key] = cached_station
+
+        station, extrapolated_side, overrun = cached_station
+        if extrapolated_side is not None:
             extrapolated_vertex_count += 1
             extrapolated_max_overhang_m = max(
                 extrapolated_max_overhang_m,
                 overrun,
             )
-            extrapolated_sides.add(side)
+            extrapolated_sides.add(extrapolated_side)
         vertices.append(
             (
                 xr + station.offset_x_m,
@@ -3111,12 +3154,7 @@ def _warp_civil_local_object_to_alignment(
             "moscowCivilTopology": topology,
             "stage9SegmentJointFastenerArchitectureTransferred": True,
             "stage9FastenerVisualTransferNotHistoricalMoscowClaim": True,
-            "liningGlobalRingCount": len(
-                civil_ring_ranges(
-                    assembly.length_by_chainage_m,
-                    ring_pitch_m=profile.ring_pitch_m,
-                )
-            ),
+            "liningGlobalRingCount": civil_ring_count,
             "moscowProfileID": profile.profile_id,
             "moscowProfileSHA256": profile.provenance.canonical_sha256,
         }
@@ -3176,6 +3214,7 @@ def _build_stage10_4_rc_stage9_architecture_objects(
     namespace: str,
     assembly: TunnelAssembly,
     stations: Sequence[AlignmentStation],
+    surface_meshing: SurfaceMeshingConfig,
     include_bolts: bool,
     seed: int,
 ) -> tuple[SceneObject, ...]:
@@ -3189,10 +3228,11 @@ def _build_stage10_4_rc_stage9_architecture_objects(
         assembly.length_by_chainage_m,
         ring_pitch_m=profile.ring_pitch_m,
     )
+    civil_ring_count = len(ranges)
     civil_roll_assembly = _sample_moscow_civil_roll_assembly(
         source_assembly=assembly,
         profile=profile,
-        civil_ring_count=len(ranges),
+        civil_ring_count=civil_ring_count,
         master_seed=seed,
     )
     result: list[SceneObject] = []
@@ -3244,10 +3284,10 @@ def _build_stage10_4_rc_stage9_architecture_objects(
             include_radial_joints=True,
             include_circumferential_front=False,
             include_circumferential_back=(
-                range_index < len(ranges) - 1
+                range_index < civil_ring_count - 1
             ),
             label_policy=LabelPolicy.STSD_COARSE,
-            surface_meshing=SurfaceMeshingConfig(),
+            surface_meshing=surface_meshing,
             bolts=bolts,
             bolt_boolean_overlap_m=0.005,
         )
@@ -3264,7 +3304,7 @@ def _build_stage10_4_rc_stage9_architecture_objects(
                 topology=topology,
                 civil_pose=civil_roll_assembly.poses[ring_index],
                 civil_rotation_seed=civil_roll_assembly.seed,
-                civil_ring_count=len(ranges),
+                civil_ring_count=civil_ring_count,
             )
             if (
                 obj.object_type in {"bolt_pocket_cutter", "bolt_head"}
@@ -3509,9 +3549,11 @@ def build_production_scene(
     source_build: ProceduralTunnelBuild,
     *,
     ancillary: AncillarySet,
+    surface_meshing: SurfaceMeshingConfig | None = None,
     config: ProductionConfig | None = None,
 ) -> ProductionTunnelBuild:
     config = config or ProductionConfig()
+    surface_meshing = surface_meshing or SurfaceMeshingConfig()
     source_scene = source_build.scene
     stations = production_alignment_stations(source_build.assembly)
     specs = build_continuous_asset_specs(
@@ -3712,6 +3754,7 @@ def build_production_scene(
                     namespace=config.namespace,
                     assembly=source_build.assembly,
                     stations=stations,
+                    surface_meshing=surface_meshing,
                     include_bolts=config.moscow_civil_bolts_enabled,
                     seed=master_seed,
                 )
@@ -4406,6 +4449,7 @@ def build_production_tunnel(
     seed: int = 5812,
 ) -> ProductionTunnelBuild:
     ring_config = ring_config or RingConfig()
+    surface_meshing = surface_meshing or SurfaceMeshingConfig()
     if (
         production_config is not None
         and production_config.moscow_profile is not None
@@ -4451,6 +4495,7 @@ def build_production_tunnel(
     return build_production_scene(
         source,
         ancillary=ancillary,
+        surface_meshing=surface_meshing,
         config=production_config,
     )
 

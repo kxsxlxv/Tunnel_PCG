@@ -1,5 +1,7 @@
 import math
 
+import tunnel_scanner_core.production as production_module
+
 from tunnel_scanner_core import (
     AlignmentStation,
     ChunkBoundaryPolicy,
@@ -7,6 +9,7 @@ from tunnel_scanner_core import (
     ProductionConfig,
     R65ProductionProfile,
     RingRotationStrategy,
+    SurfaceMeshingConfig,
     TunnelAssemblyConfig,
     audit_exact_coincident_faces,
     build_chunk_scene_packages,
@@ -885,6 +888,91 @@ def test_stage10_5_rc_6100_5600_civil_archetype_adapts_geometry():
             math.hypot(x, z)
             for x, _y, z in local_rack.vertices
         ) < profile.intrados_radius_m
+
+
+def test_stage10_5_rc_transfer_uses_requested_surface_meshing_tolerance():
+    profile = load_stage10_initial_moscow_profile(
+        civil_archetype="rc_block_6100_5600"
+    )
+    requested = SurfaceMeshingConfig(max_sagitta_m=0.010)
+    build = build_production_tunnel(
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=2,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.0,
+        ),
+        surface_meshing=requested,
+        include_bolts=False,
+        production_config=ProductionConfig(
+            namespace="stage10-5-rc-sagitta-contract",
+            moscow_profile=profile,
+            moscow_stage="10.5",
+            moscow_civil_topology="kba",
+        ),
+        seed=5812,
+    )
+    segments = build.scene.objects_of_type("lining_segment")
+    assert segments
+    assert all(
+        math.isclose(
+            float(obj.custom_properties["surfaceToleranceM"]),
+            requested.max_sagitta_m,
+            abs_tol=1e-12,
+        )
+        for obj in segments
+    )
+
+
+def test_stage10_5_rc_civil_ring_ranges_are_not_rebuilt_per_scene_object(monkeypatch):
+    profile = load_stage10_initial_moscow_profile(
+        civil_archetype="rc_block_6100_5600"
+    )
+    original = production_module.civil_ring_ranges
+    call_count = 0
+
+    def counted_ranges(*args, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(
+        production_module,
+        "civil_ring_ranges",
+        counted_ranges,
+    )
+    build = build_production_tunnel(
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=4,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.0,
+        ),
+        include_bolts=True,
+        production_config=ProductionConfig(
+            namespace="stage10-5-rc-range-complexity",
+            moscow_profile=profile,
+            moscow_stage="10.5",
+            moscow_civil_topology="kba",
+        ),
+        seed=5812,
+    )
+    civil_count = int(
+        build.scene.metadata["productionGeometry"]["moscowCivilRingCount"]
+    )
+    assert civil_count > 1
+    assert call_count == 2
+
+    transferred = [
+        obj
+        for obj in build.scene.objects
+        if obj.custom_properties.get(
+            "stage9SegmentJointFastenerArchitectureTransferred"
+        ) is True
+    ]
+    assert transferred
+    assert all(
+        int(obj.custom_properties["liningGlobalRingCount"]) == civil_count
+        for obj in transferred
+    )
 
 
 def test_stage10_5_rc_kba_cap_strip_uses_moscow_civil_ring_datums():

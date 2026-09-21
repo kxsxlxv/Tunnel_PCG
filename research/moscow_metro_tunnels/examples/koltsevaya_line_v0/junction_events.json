@@ -68,7 +68,8 @@
             "branch_tunnel_lining_type": null,
             "relative_track_z_m": null
           }
-        }
+        },
+        "civil_chamber_archetype_id": "BELORUSSKAYA_CAST_IRON_DEPOT_JUNCTION_ACTUAL_CONSTRAINT"
       },
       "turnout_geometry": {
         "required_frog_mark": "1:9",
@@ -215,7 +216,8 @@
           "source_id": "S058",
           "locator": "Frolov 2001 printed p.150, text after Fig.4.35",
           "status": "SOURCE_BACKED_GENERIC_RULE"
-        }
+        },
+        "registry_id": "METRO_STEPWISE_BRANCH_CHAMBER_TUBING_2001_REFERENCE"
       },
       "contact_rail_events": [
         {
@@ -492,7 +494,8 @@
           "transition_length_m": null
         },
         "status": "SOURCE_BACKED_GENERIC_HISTORICAL_REFERENCE",
-        "pcg_use_rule": "May inform cast-iron ring/chamber morphology only. Do not copy 8.75 m, 6.0 m, 0.75 m ring pitch or the 11-piece set into Belorusskaya as-built geometry without site-specific evidence."
+        "pcg_use_rule": "May inform cast-iron ring/chamber morphology only. Do not copy 8.75 m, 6.0 m, 0.75 m ring pitch or the 11-piece set into Belorusskaya as-built geometry without site-specific evidence.",
+        "registry_id": "CAST_IRON_CROSSOVER_CHAMBER_8750_1987_REFERENCE"
       },
       "moscow_hybrid_crossover_morphology_reference": {
         "archetype_id": "MOSCOW_CAST_IRON_CROWN_MONOLITHIC_WALL_INVERT_REFERENCE",
@@ -509,7 +512,8 @@
         ],
         "dimensions_for_selected_belorusskaya": null,
         "confidence": "C_secondary",
-        "pcg_use_rule": "Use only as a morphology prior/visual validation class. It does not turn the reported 14 m span into a Belorusskaya dimension."
+        "pcg_use_rule": "Use only as a morphology prior/visual validation class. It does not turn the reported 14 m span into a Belorusskaya dimension.",
+        "registry_id": "MOSCOW_CAST_IRON_CROWN_MONOLITHIC_WALL_INVERT_REFERENCE"
       }
     }
   ],
@@ -539,5 +543,6 @@
       "site-specific drainage/walkway/cable/lighting/signalling placement"
     ]
   },
-  "source_pinpoints_file": "../../data/koltsevaya_junction_source_pinpoints.json"
+  "source_pinpoints_file": "../../data/koltsevaya_junction_source_pinpoints.json",
+  "civil_archetype_registry": "../../data/moscow_junction_civil_archetypes.json"
 }

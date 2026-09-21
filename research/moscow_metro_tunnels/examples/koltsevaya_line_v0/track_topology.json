@@ -21,8 +21,8 @@
       "ring_position": "inner",
       "direction": "clockwise",
       "direction_source_ids": [
-        "S070",
-        "S071"
+        "S084",
+        "S096"
       ],
       "direction_status": "SOURCE_BACKED",
       "station_sequence": [
@@ -61,8 +61,8 @@
       "ring_position": "outer",
       "direction": "counterclockwise",
       "direction_source_ids": [
-        "S070",
-        "S071"
+        "S084",
+        "S096"
       ],
       "direction_status": "SOURCE_BACKED",
       "station_sequence": [
@@ -130,11 +130,11 @@
       "kind": "DEPOT_CONNECTION_AND_TURNBACK_SYSTEM",
       "area": "Краснопресненская — Белорусская / электродепо Красная Пресня",
       "source_ids": [
-        "S071",
-        "S072",
-        "S073",
-        "S074",
-        "S075",
+        "S084",
+        "S085",
+        "S086",
+        "S087",
+        "S093",
         "S022"
       ],
       "confirmed": [
@@ -144,7 +144,7 @@
         "Krasnopresnenskaya has 3 turnouts and one turnback/storage track continuing to depot connection",
         "the line-to-own-depot connecting branch is a double-track design class under metro design rules"
       ],
-      "crossover_between_main_tracks": "present in the multi-switch station/depot system per schematic topology; exact OSM node set unresolved",
+      "crossover_between_main_tracks": "multi-switch turnback/depot system confirmed; exact direct main-to-main crossover semantics and switch-node decomposition remain unresolved",
       "exact_xy": null,
       "exact_chainage": null,
       "z_ugr_m": null,
@@ -156,8 +156,8 @@
       "area": "Проспект Мира",
       "destination": "Калужско-Рижская линия",
       "source_ids": [
-        "S072",
-        "S076"
+        "S085",
+        "S088"
       ],
       "turnout_count": 3,
       "station_turnback_storage_tracks": 1,
@@ -172,8 +172,8 @@
       "area": "Курская",
       "destination": "Люблинско-Дмитровская линия",
       "source_ids": [
-        "S072",
-        "S077"
+        "S085",
+        "S089"
       ],
       "turnout_count": 5,
       "station_turnback_storage_tracks": 1,
@@ -192,8 +192,8 @@
         "Калининская линия / Марксистская"
       ],
       "source_ids": [
-        "S072",
-        "S085"
+        "S085",
+        "S092"
       ],
       "exact_turnout_count": null,
       "exact_main_track_attachment": null,
@@ -211,8 +211,8 @@
         "Серпуховско-Тимирязевская линия"
       ],
       "source_ids": [
-        "S072",
-        "S078"
+        "S085",
+        "S090"
       ],
       "turnout_count_at_paveletskaya": 3,
       "station_turnback_storage_tracks": 1,
@@ -227,8 +227,8 @@
       "area": "Парк культуры",
       "destination": "Сокольническая линия / в сторону Фрунзенской",
       "source_ids": [
-        "S072",
-        "S079"
+        "S085",
+        "S091"
       ],
       "turnout_count": 5,
       "station_turnback_storage_tracks": 1,
@@ -245,10 +245,10 @@
     "reason": "Actual Koltsevaya junction has a published construction photograph/caption plus a track-development schematic and station operating description.",
     "area": "Белорусская, со стороны Краснопресненской",
     "source_ids": [
-      "S071",
-      "S072",
-      "S073",
-      "S074"
+      "S084",
+      "S085",
+      "S086",
+      "S093"
     ],
     "main_track_id": "KOLTSEVAYA_TRACK_B",
     "main_track_number": "II",
@@ -257,14 +257,14 @@
     "diverging_outgoing": "left toward turnback siding and the Krasnaya Presnya depot connection system",
     "handedness": "left",
     "branch_system_kind": "multi-switch turnback/depot system, not an isolated turnout",
-    "crossover_between_main_tracks": "system-level connection exists in the published schematic; exact switch-node decomposition requires OSM/project graph",
+    "crossover_between_main_tracks": "multi-switch turnback/depot system is source-backed; an exact direct main-to-main crossover decomposition is not asserted until the physical OSM/project graph is resolved",
     "switch_world_xy": null,
     "switch_engineering_xy": null,
     "z_ugr_m": null,
     "station_pk_context": {
       "value": "ПК132+72.3",
       "meaning": "Belorusskaya station reference only; NOT switch chainage",
-      "source_id": "S074"
+      "source_id": "S086"
     },
     "exact_switch_chainage": null,
     "turnout_archetype_id": "MOSCOW_METRO_R65_1_9_PROJECT_2976_REFERENCE_FALLBACK",

@@ -86,7 +86,19 @@
           "length_m": 9.75,
           "section": "large circular or elongated/elliptical alternative",
           "internal_diameter_m": 9,
-          "axis_parameter_m": 4.46
+          "axis_parameter_m": 4.46,
+          "section_1_1_axis_decomposition": {
+            "raw_horizontal_callouts_m": [
+              2.46,
+              2
+            ],
+            "sum_m": 4.46,
+            "relation_to_axis_parameter": "2.46 + 2.00 = M4 = 4.46 m",
+            "track_assignment_to_left_right_callout": null,
+            "source_id": "S058",
+            "locator": "printed p.148, Fig.4.34, section 1-1",
+            "status": "SOURCE_BACKED_FROM_FIGURE_WITH_UNRESOLVED_TRACK_IDENTITY"
+          }
         },
         {
           "chamber": 6,
@@ -97,7 +109,19 @@
           "lining_axis_above_ugr_m": 1.7,
           "common_wall": "concrete or reinforced concrete",
           "exact_wall_thickness_m": null,
-          "exact_axis_separation_m": null
+          "exact_axis_separation_m": null,
+          "section_2_2_horizontal_callouts": {
+            "raw_axis_to_central_wall_zone_m": [
+              2.05,
+              2.05
+            ],
+            "exact_dimension_datum_on_central_wall": "ambiguous in the available scan",
+            "derived_track_axis_separation_m": null,
+            "reason_for_null": "do not sum the two 2.05 m callouts until the central-wall dimension datum is unambiguously resolved from a higher-quality drawing",
+            "source_id": "S058",
+            "locator": "printed p.148, Fig.4.34, section 2-2",
+            "status": "SOURCE_BACKED_RAW_CALLOUTS_NO_UNSAFE_DERIVATION"
+          }
         }
       ],
       "derived_chainage_from_chamber2_start_m": {

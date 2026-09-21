@@ -1162,7 +1162,7 @@ Any new Stage-10 Blender smoke test should preserve that backend behaviour.
 - **Stage 10.1 — Moscow profile/data integration + R65/gauge/UGR contract**;
 - **Stage 10.2 — legacy timber/KD-65 permanent way + track concrete/drainage**;
 - **Stage 10.3 — legacy RK contact rail / sleeper-mounted support chain**;
-- **Stage 10.4 — smooth Moscow 5.5/5.1 civil shell + raised walkway**;
+- **Stage 10.4 — source-sized Moscow civil shell framework + raised walkway; 6.1/5.6 RC ten-block geometry implemented, cast-iron detail deferred**;
 - **Stage 10.5 — modern LVT-M/APC-4 service preset, segmented contact cover,
   dedicated contact supports, R2K11 cable racks, DN80 water main and
   zero-error sweep optimization**.
@@ -1930,11 +1930,13 @@ Placement:
 one rack per side per 1.0 m Moscow civil ring
 ```
 
-The current v4 preview follows the supplied R2K11/K1350.002 drawing, 3D
+The current v5 preview follows the supplied R2K11/K1350.002 drawing, 3D
 reference and Blender feedback. Each horn is one continuous rounded-W /
 omega-like formed ribbon that starts directly on the upright, passes through
 both cable cradles and the central crest, then turns up at the free end. There
-is no separate horizontal shelf, neck or wall-side tab.
+is no separate horizontal shelf, neck or wall-side tab. The v5 mesh uses four
+sparse interpolation samples per anchor span instead of two, making the bends
+visibly rounder while preserving a modest polygon count.
 
 The preset occupies eight distributed levels per wall with one cable per
 occupied level, for 16 representative service cables total. Cable sag is
@@ -1998,33 +2000,49 @@ substantially reduced without changing the rail surface.
 
 ### Selectable Stage-10 civil envelope
 
-The generator now accepts:
+The generator accepts:
 
 ```text
 --civil-archetype cast_iron_5500_5100
 --civil-archetype rc_block_6100_5600
 ```
 
-The first is the existing 5.5/5.1 m classic cast-iron envelope. Its Stage-10
-physical shell remains source-sized and smooth, but a separate visual-detail
-overlay has been restored so the tunnel no longer reads as a featureless tube:
-11 coarse tubing divisions, longitudinal joint/flange relief, ring-boundary
-bands, one circumferential stiffener and low-poly bolt heads. P10-FROLOV-RING
-supports 25 mm flanges, typical M27 x 120 bolts and two working bolt rows in
-longitudinal joints. Exact N/C/K angles, rib coordinates and bolt drilling are
-still unresolved; the visual 11-piece rhythm is explicitly not exact series
-LOD0.
+The 5.5/5.1 m cast-iron family remains the compatibility default. Its principal
+diameters and 1.0 m ring rhythm are retained, but detailed N/C/K tubing geometry
+is deliberately **deferred**. Do not restore the previous provisional
+11-division rib/flange/M27 visual overlay: the exact cast-iron segment angles,
+ribs, drilling, rebates and fastening geometry are not sufficiently resolved.
 
-The second uses research archetype
-`RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000`: 6.1 m OD, 5.6 m ID, 0.25 m
-structural depth, 1.0 m ring pitch and ten identical RC blocks. The ten-block
-rhythm now appears as shallow visual joint relief, but exact block-edge/pin CAD
-remains unresolved and cast-iron M27 fastening detail is not applied.
+The implementation focus is now the researched Moscow precast-RC archetype
+`RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000`:
 
-S026 does not provide a separate UGR-to-lining-axis placement for this family.
-Until a project cross-section resolves it, the larger envelope explicitly
-inherits the Stage-10 reference track/UGR datum and all radius-dependent
-geometry is recomputed from the selected intrados.
+```text
+outer / inner diameter         6.100 / 5.600 m
+structural depth               0.250 m
+ring pitch                     1.000 m
+blocks                         10 identical curved RC blocks
+block volume                   0.46 m3
+block mass                     1.15 t
+historical concrete grade      400
+working reinforcement          16 mm
+erection pins                  22 mm
+permanent bolted block joints  false
+```
+
+Each generated RC ring now consists of ten **disconnected full-depth curved
+annular block meshes**, following the useful Stage-9 segment topology but using
+the Moscow dimensions/topology above. Radial block end faces are explicit.
+The current 8 mm inter-block gap is only a visibility fallback; it is not a
+source-backed joint width.
+
+Exact radial-end chamfers, pin holes/seats and reinforcement-mesh CAD remain
+unresolved and must not be invented. The generated annulus gives about
+4.60 m3/ring, or 0.46 m3 per ten equal blocks, independently matching the S026
+block-volume datum.
+
+S026 does not provide a separate UGR-to-lining-axis placement for this family,
+so the larger RC archetype explicitly inherits the Stage-10 track/UGR datum and
+all radius-dependent geometry is recomputed from the selected intrados.
 
 ### Verification
 

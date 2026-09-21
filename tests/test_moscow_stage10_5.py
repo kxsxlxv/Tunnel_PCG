@@ -6,6 +6,7 @@ from tunnel_scanner_core import (
     LabelPolicy,
     ProductionConfig,
     R65ProductionProfile,
+    RingRotationStrategy,
     TunnelAssemblyConfig,
     audit_exact_coincident_faces,
     build_chunk_scene_packages,
@@ -1035,6 +1036,7 @@ def test_stage10_5_rc_kba_topology_reuses_stage9_fastener_pipeline():
             n_rings=4,
             ring_width_m=1.35,
             axis_noise_sigma_m=0.0,
+            ring_rotation_strategy=RingRotationStrategy.RINGWISE_GAUSSIAN,
         ),
         include_bolts=True,
         production_config=ProductionConfig(
@@ -1077,6 +1079,58 @@ def test_stage10_5_rc_kba_topology_reuses_stage9_fastener_pipeline():
         "A3",
         "B2",
     ]
+
+    assert meta["moscowCivilRotationStrategy"] == "ringwise_gaussian"
+    assert meta["moscowCivilRotationModel"] == (
+        "stage7_ring_pose_on_independent_moscow_civil_rhythm"
+    )
+    assert meta["moscowCivilRotationAppliedOnlyToLining"] is True
+
+    rotation_by_ring = {}
+    for segment in segments:
+        p = segment.custom_properties
+        ring_index = int(p["moscowCivilRingIndex"])
+        rotation = float(p["ringRotationDeg"])
+        rotation_by_ring.setdefault(ring_index, set()).add(round(rotation, 12))
+        assert p["moscowCivilRotationStrategy"] == "ringwise_gaussian"
+        assert p["moscowCivilIndependentRingPoseStream"] is True
+        assert p["stage7RingAxialStaggerTransferred"] is True
+        assert math.isclose(
+            rotation,
+            float(p["ringNominalRotationDeg"])
+            + float(p["ringAngularImperfectionDeg"]),
+            abs_tol=1e-12,
+        )
+        assert p["moscowCivilRotationFrame"] == (
+            "local_cross_section_before_stage10_alignment"
+        )
+
+    assert all(len(values) == 1 for values in rotation_by_ring.values())
+    ring_rotations = [
+        next(iter(rotation_by_ring[index]))
+        for index in sorted(rotation_by_ring)
+    ]
+    assert any(abs(value) > 1e-9 for value in ring_rotations)
+    assert len(set(ring_rotations)) > 1
+
+    # K must move around the lining with its complete ring, rather than staying
+    # pinned to the crown. Compare its world XZ direction to the alignment
+    # centre for multiple rings.
+    k_angles = []
+    for ring_index in sorted(rotation_by_ring):
+        k = next(
+            obj
+            for obj in segments
+            if int(obj.custom_properties["moscowCivilRingIndex"]) == ring_index
+            and obj.segment_name == "K"
+        )
+        p = k.custom_properties
+        cx = float(p["productionRingCenterOffsetX"])
+        cz = float(p["productionRingCenterOffsetZ"])
+        mean_x = sum(v[0] for v in k.vertices) / len(k.vertices)
+        mean_z = sum(v[2] for v in k.vertices) / len(k.vertices)
+        k_angles.append(math.degrees(math.atan2(mean_x - cx, mean_z - cz)))
+    assert max(k_angles) - min(k_angles) > 10.0
 
     radial = [
         obj

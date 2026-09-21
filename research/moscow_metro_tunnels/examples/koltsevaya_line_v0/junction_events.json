@@ -567,20 +567,39 @@
       "moscow_hybrid_crossover_morphology_reference": {
         "archetype_id": "MOSCOW_CAST_IRON_CROWN_MONOLITHIC_WALL_INVERT_REFERENCE",
         "actual_site_match": false,
-        "source_id": "S103",
-        "locator": "secondary historical engineering overview, lines 39-52",
-        "era": "historical",
-        "applicability": "Moscow metro morphology context only",
+        "locator": "S119: Samoilov et al. 1975 printed pp.68-69; S103: secondary corroboration",
+        "era": "historical Moscow engineering reference",
+        "applicability": "Moscow metro crossover/bellmouth morphology context only; not selected-site dimensions",
         "source_backed_morphology": [
-          "cast-iron tubing crown with monolithic-concrete walls and invert was widespread on Moscow sections with high water inflow",
-          "reported spans reach up to 14 m in that construction family",
-          "station/escalator-tunnel tubings and wedge spacers could be reused to form large chamber crowns",
-          "for prefabricated-element bellmouth/chamber ends accepting two single-track tunnels, the end wall is monolithic reinforced concrete"
+          "deep separate single-track running tunnels are gradually widened through crossover chambers to accept a connecting tunnel",
+          "Moscow widely used cast-iron tubing crowns bearing on monolithic concrete foundations with concrete inverts",
+          "reported spans in that construction family reach up to 14 m",
+          "standard station/escalator-tunnel tubings plus wedge-shaped cast-iron spacers are used for large crowns",
+          "bellmouth morphology is used for two-track-to-two-single-track transitions and at connecting-tunnel junctions",
+          "deep turnback-track junctions use chamber types analogous to crossover chambers"
         ],
         "dimensions_for_selected_belorusskaya": null,
-        "confidence": "C_secondary",
-        "pcg_use_rule": "Use only as a morphology prior/visual validation class. It does not turn the reported 14 m span into a Belorusskaya dimension.",
-        "registry_id": "MOSCOW_CAST_IRON_CROWN_MONOLITHIC_WALL_INVERT_REFERENCE"
+        "confidence": "B_primary_textbook_morphology_C_secondary_corroboration",
+        "pcg_use_rule": "Use only as Moscow-specific historical morphology prior. Do not turn 14 m or generic deep-turnback dimensions into Belorusskaya values.",
+        "registry_id": "MOSCOW_CAST_IRON_CROWN_MONOLITHIC_WALL_INVERT_REFERENCE",
+        "source_ids": [
+          "S119",
+          "S103"
+        ],
+        "generic_deep_turnback_context": {
+          "track_axis_spacing_m": 12,
+          "inspection_ditch_m": {
+            "width": 1.2,
+            "depth": 1.2,
+            "length": 155
+          },
+          "service_platform": {
+            "height_above_ugr_m": 1.2,
+            "length_m": 155
+          },
+          "source_id": "S119",
+          "site_transfer": "FORBIDDEN_WITHOUT_SITE_EVIDENCE"
+        }
       },
       "service_era_contract": {
         "civil_era": "original Koltsevaya deep-level cast-iron civil structure; exact construction-year detail is separate from service fit-out",

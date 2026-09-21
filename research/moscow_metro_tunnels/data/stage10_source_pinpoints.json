@@ -480,6 +480,21 @@
       ],
       "confidence": "B_readable_callouts_C_exact_referent_interpretation",
       "note": "The 683 and 155 mm callouts closely cross-check the already authoritative 690±8 mm horizontal and +160 mm vertical contact-rail placement. They do not replace those normative datums."
+    },
+    {
+      "id": "P10-USER-CONTACT-SUPPORT-CLEARANCE-35",
+      "title": "User visual review: minimum clearance between LVT block and contact-rail support lower leg",
+      "url": null,
+      "locator": {
+        "conversation_date": "2026-09-21",
+        "requirement": "minimum 35 mm clear horizontal gap from contact-side LVT block outer envelope to the nearest inboard edge of the contact-rail support lower assembly"
+      },
+      "supports": [
+        "minimum 35 mm horizontal clearance from LVT block outer envelope to support lower leg",
+        "clearance applies to the concrete/base/bracket lower assembly nearest the running rail"
+      ],
+      "confidence": "B_user_visual_reference",
+      "note": "Used as an explicit production-layout constraint. It does not alter the established contact-rail 690/+160 placement."
     }
   ]
 }

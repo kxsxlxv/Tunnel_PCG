@@ -461,20 +461,33 @@ def modern_cable_sections_core(
     return tuple(result)
 
 
-def modern_water_main_section_core(
+def water_main_support_chainages(
+    total_length_m: float,
     profile: MoscowStage10Profile,
-    *,
-    circle_vertices: int = 16,
-) -> tuple[tuple[tuple[float, float], ...], Mapping[str, Any]]:
-    """Build one current tunnel water-main preview inside the physical intrados.
+) -> tuple[float, ...]:
+    """Deterministic support chain with no unsupported interval over 4 m."""
+    if not math.isfinite(total_length_m) or total_length_m <= 0.0:
+        raise ValueError("total_length_m must be finite and positive")
+    pitch = profile.water_main.support_max_pitch_m
+    if total_length_m <= pitch:
+        return (0.5 * total_length_m,)
+    result: list[float] = []
+    x = 0.5 * pitch
+    while x < total_length_m - 1e-12:
+        result.append(x)
+        x += pitch
+    if not result:
+        result.append(0.5 * total_length_m)
+    if result[0] > pitch + 1e-12:
+        raise AssertionError("water-main first support exceeds maximum interval")
+    if total_length_m - result[-1] > pitch + 1e-12:
+        raise AssertionError("water-main final support exceeds maximum interval")
+    return tuple(result)
 
-    The current metro code fixes one main per single-track tunnel, minimum DN80,
-    above UGR and normally on the weak-current side. Exact project coordinates
-    and pipe OD/wall thickness are not universal, so those remain explicit
-    preview fallbacks in the machine profile.
-    """
-    if circle_vertices < 8:
-        raise ValueError("water-main circle requires at least 8 vertices")
+
+def _water_main_center_core(
+    profile: MoscowStage10Profile,
+) -> tuple[float, float, float]:
     water = profile.water_main
     radius = 0.5 * water.preview_outer_diameter_m
     core_z = (
@@ -492,7 +505,102 @@ def modern_water_main_section_core(
     )
     if center_x_abs <= 0.0:
         raise ValueError("water-main fallback placement has no wall clearance")
-    center_x = water.side_profile_x_sign * center_x_abs
+    return water.side_profile_x_sign * center_x_abs, core_z, radius
+
+
+def build_water_main_support_local_mesh(
+    profile: MoscowStage10Profile,
+) -> LocalServiceMesh:
+    """Initial wall standoff + lower saddle for the DN80 tunnel main.
+
+    The <=4 m support interval is normative. Exact project bracket/strap CAD is
+    unresolved, so the local solid is deliberately simple and tagged as such.
+    """
+    water = profile.water_main
+    cx, cz, pipe_radius = _water_main_center_core(profile)
+    center_r = math.hypot(cx, cz)
+    if center_r <= 0.0:
+        raise ValueError("water-main center cannot lie on tunnel axis")
+
+    outward = (cx / center_r, cz / center_r)
+    inward = (-outward[0], -outward[1])
+    up = (-outward[1], outward[0])
+
+    wall_r = profile.intrados_radius_m - 0.006
+    wall_x = outward[0] * wall_r
+    wall_z = outward[1] * wall_r
+    pipe_outer_x = cx + outward[0] * pipe_radius
+    pipe_outer_z = cz + outward[1] * pipe_radius
+    standoff = (
+        (wall_x - pipe_outer_x) * inward[0]
+        + (wall_z - pipe_outer_z) * inward[1]
+    )
+    if standoff <= 0.0:
+        raise ValueError("water-main support standoff collapsed")
+
+    arm = _radial_arm_polygon(
+        wall_x_m=wall_x,
+        wall_z_m=wall_z,
+        inward_x=inward[0],
+        inward_z=inward[1],
+        up_x=up[0],
+        up_z=up[1],
+        length_m=standoff,
+        thickness_m=0.018,
+        vertical_offset_m=-(pipe_radius + 0.012),
+    )
+    clamp = _ribbon_u_cup_polygon(
+        center_x_m=cx,
+        center_z_m=cz,
+        inward_x=inward[0],
+        inward_z=inward[1],
+        up_x=up[0],
+        up_z=up[1],
+        radius_m=pipe_radius + 0.006,
+        thickness_m=0.006,
+        segments=8,
+    )
+    vertices, faces = _combine(
+        (
+            _extrude_y_polygon(arm, half_y_m=0.030),
+            _extrude_y_polygon(clamp, half_y_m=0.030),
+        )
+    )
+    return LocalServiceMesh(
+        name_suffix="WATER_MAIN_SUPPORT",
+        object_type="production_water_main_support",
+        category="water_main_support",
+        vertices=vertices,
+        faces=faces,
+        properties={
+            "serviceFamily": "tunnel_water_main_support",
+            "geometryMode": water.support_geometry_mode,
+            "supportMaxPitchM": water.support_max_pitch_m,
+            "pipePreviewOuterDiameterM": water.preview_outer_diameter_m,
+            "exactProjectSupportCADResolved": False,
+            "normativeSupportIntervalResolved": True,
+            "insideMoscowIntrados": True,
+        },
+    )
+
+
+def modern_water_main_section_core(
+    profile: MoscowStage10Profile,
+    *,
+    circle_vertices: int = 16,
+) -> tuple[tuple[tuple[float, float], ...], Mapping[str, Any]]:
+    """Build one current tunnel water-main preview inside the physical intrados.
+
+    The current metro code fixes one main per single-track tunnel, minimum DN80,
+    above UGR and normally on the weak-current side. Exact project coordinates
+    and pipe OD/wall thickness are not universal, so those remain explicit
+    preview fallbacks in the machine profile.
+    """
+    if circle_vertices < 8:
+        raise ValueError("water-main circle requires at least 8 vertices")
+    water = profile.water_main
+    center_x, core_z, radius = _water_main_center_core(profile)
+    r = profile.intrados_radius_m
     points = tuple(
         (
             center_x + radius * math.cos(2.0 * math.pi * i / circle_vertices),

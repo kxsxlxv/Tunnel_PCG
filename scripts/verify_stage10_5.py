@@ -181,6 +181,13 @@ def main() -> None:
     assert not build.scene.objects_of_type(
         "production_moscow_civil_bolt_heads"
     )
+    assert not [
+        obj
+        for obj in build.scene.objects_of_type("lining_segment")
+        if obj.custom_properties.get(
+            "stage9SegmentJointFastenerArchitectureTransferred"
+        ) is True
+    ]
     assert int(meta["moscowCivilSegmentObjectCount"]) == 0
     assert int(meta["moscowCivilPrescribedRadialJointCount"]) == 0
     assert int(meta["moscowCivilPrescribedCircumferentialJointCount"]) == 0
@@ -303,6 +310,8 @@ def main() -> None:
     assert rm["moscowCivilCompositeDetailStatus"] == (
         "stage9_segment_joint_bolt_architecture_transferred"
     )
+    assert rm["moscowCivilLegacyObjectTypesPreserved"] is True
+    assert rm["moscowCivilLegacyPrescribedJointSolidsIncluded"] is True
     assert math.isclose(
         float(rm["moscowCivilIntradosRadiusM"]),
         2.800,
@@ -324,15 +333,27 @@ def main() -> None:
         "moscow_5600_intrados"
     )
 
-    rc_segments = rc_build.scene.objects_of_type(
-        "production_moscow_civil_segment"
-    )
-    rc_radial = rc_build.scene.objects_of_type(
-        "production_moscow_civil_prescribed_radial_joint"
-    )
-    rc_circ = rc_build.scene.objects_of_type(
-        "production_moscow_civil_prescribed_circumferential_joint"
-    )
+    rc_segments = [
+        obj
+        for obj in rc_build.scene.objects_of_type("lining_segment")
+        if obj.custom_properties.get(
+            "stage9SegmentJointFastenerArchitectureTransferred"
+        ) is True
+    ]
+    rc_radial = [
+        obj
+        for obj in rc_build.scene.objects_of_type("prescribed_radial_joint")
+        if obj.custom_properties.get(
+            "stage9SegmentJointFastenerArchitectureTransferred"
+        ) is True
+    ]
+    rc_circ = [
+        obj
+        for obj in rc_build.scene.objects_of_type("prescribed_circumferential_joint")
+        if obj.custom_properties.get(
+            "stage9SegmentJointFastenerArchitectureTransferred"
+        ) is True
+    ]
     rc_ring_count = int(rm["moscowCivilRingCount"])
     assert len(rc_segments) == 10 * rc_ring_count
     assert len(rc_radial) == 10 * rc_ring_count
@@ -368,9 +389,13 @@ def main() -> None:
         "implemented_stage10_4_rc_stage9_architecture_kba"
     )
     kba_ring_count = int(km["moscowCivilRingCount"])
-    kba_segments = kba_build.scene.objects_of_type(
-        "production_moscow_civil_segment"
-    )
+    kba_segments = [
+        obj
+        for obj in kba_build.scene.objects_of_type("lining_segment")
+        if obj.custom_properties.get(
+            "stage9SegmentJointFastenerArchitectureTransferred"
+        ) is True
+    ]
     assert len(kba_segments) == 6 * kba_ring_count
     first_kba = [
         obj
@@ -380,8 +405,20 @@ def main() -> None:
     assert [obj.segment_name for obj in sorted(first_kba, key=lambda o: o.segment_id)] == [
         "K", "B1", "A1", "A2", "A3", "B2"
     ]
-    heads = kba_build.scene.objects_of_type("bolt_head")
-    cutters = kba_build.scene.objects_of_type("bolt_pocket_cutter")
+    heads = [
+        obj
+        for obj in kba_build.scene.objects_of_type("bolt_head")
+        if obj.custom_properties.get(
+            "stage9SegmentJointFastenerArchitectureTransferred"
+        ) is True
+    ]
+    cutters = [
+        obj
+        for obj in kba_build.scene.objects_of_type("bolt_pocket_cutter")
+        if obj.custom_properties.get(
+            "stage9SegmentJointFastenerArchitectureTransferred"
+        ) is True
+    ]
     assert heads
     assert len(heads) == len(cutters)
     assert int(km["moscowCivilBoltHeadCount"]) == len(heads)

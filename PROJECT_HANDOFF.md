@@ -1217,8 +1217,12 @@ but its detailed tubing geometry is intentionally unresolved. The current
 visual-development target is the source-backed 6.1/5.6 m ten-block RC family.
 
 The next authoritative gate is a real Blender 5.2.2 visual/runtime review of
-the modern preset with `--civil-archetype rc_block_6100_5600`. Keep
-unresolved factory/project-specific details explicit.
+the modern preset with `--civil-archetype rc_block_6100_5600`. For K/B/A,
+regenerate the JSON with the default `--rotation-strategy ringwise_gaussian`
+and verify that the K segment changes circumferential position from ring to
+ring. The complete civil ring (segments, prescribed joints and fasteners)
+shares one roll, while track/walkway/contact rail/services remain unrolled.
+Keep unresolved factory/project-specific details explicit.
 
 
 ---
@@ -2032,9 +2036,10 @@ erection pins                  22 mm
 permanent bolted block joints  false
 ```
 
-Each generated RC ring now consists of ten **disconnected full-depth curved
-annular block meshes**, following the useful Stage-9 segment topology but using
-the Moscow dimensions/topology above. Radial block end faces are explicit.
+Each generated RC ring uses the literal old Stage-9
+SegmentMesh/CurvedSegmentMesh + prescribed-joint + bolt-pocket/head pipeline,
+parameterized to the Moscow dimensions. The selectable topology is either
+source-backed `ten_equal` or user/photo-reference `kba`.
 The current 8 mm inter-block gap is only a visibility fallback; it is not a
 source-backed joint width.
 
@@ -2143,6 +2148,7 @@ python examples/generate_stage10_production_tunnel.py \
   --namespace stage10-5-rc-kba-v6 \
   --civil-archetype rc_block_6100_5600 \
   --civil-topology kba \
+  --rotation-strategy ringwise_gaussian \
   --output examples/stage10_production_scene_rc6100_kba.json
 ```
 

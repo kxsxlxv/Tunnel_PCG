@@ -766,6 +766,64 @@
       "era": "1975 design/construction textbook",
       "applicability": "Moscow metro historical civil morphology and generic deep-junction design logic; not a site-specific Belorusskaya dimensional drawing",
       "confidence": "B"
+    },
+    {
+      "id": "S120",
+      "title": "Александр Попов (Russos). Станция «Белорусская» Кольцевой линии и ветка в депо",
+      "url": "https://russos.livejournal.com/1324979.html",
+      "locator": {
+        "publication_date": "2016-07-11",
+        "photo_captions": [
+          {
+            "number": 2,
+            "supports": [
+              "left = beginning of depot branch; straight = running tunnel toward Krasnopresnenskaya"
+            ]
+          },
+          {
+            "number": 3,
+            "supports": [
+              "actual depot branch visual reference"
+            ]
+          },
+          {
+            "number": 7,
+            "supports": [
+              "explicitly captioned two-track section of the depot branch"
+            ]
+          },
+          {
+            "number": 8,
+            "supports": [
+              "switch where the branch directions divide: left toward Belorusskaya, right toward Krasnopresnenskaya"
+            ]
+          },
+          {
+            "number": 9,
+            "supports": [
+              "start of closed-method tunnel construction on the depot branch"
+            ]
+          },
+          {
+            "number": 16,
+            "supports": [
+              "crossover chamber behind the station"
+            ]
+          },
+          {
+            "number": 20,
+            "supports": [
+              "panorama of the crossover chamber"
+            ]
+          }
+        ],
+        "text_supports": [
+          "Belorusskaya station opened in 1952; Krasnaya Presnya depot and its branch entered service in 1954",
+          "branch construction crossed severe water-bearing/quicksand conditions using ground freezing"
+        ]
+      },
+      "limitation": "Actual-site photographic topology/visual evidence. No absolute dimensions, grades, radii or engineering coordinates may be inferred without independent scale.",
+      "confidence": "C_actual_site_visual"
     }
   ]
 }

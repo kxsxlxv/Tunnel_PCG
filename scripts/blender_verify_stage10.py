@@ -495,6 +495,13 @@ def main() -> None:
                 errors.append(f"{base_plate.name}: expected four base anchors")
             if not _close(pp.get("transverseM", -1), 0.220):
                 errors.append(f"{base_plate.name}: wrong base-plate transverse size")
+            if not _close(
+                pp.get("actualInboardClearanceToLVTBlockM", -1),
+                0.035,
+            ):
+                errors.append(
+                    f"{base_plate.name}: LVT clearance is not 35 mm"
+                )
 
         for bracket in [
             o for o in production
@@ -515,6 +522,8 @@ def main() -> None:
                 "drawingLowerBendCalloutM": 0.155,
                 "drawingUpperBendCalloutM": 0.090,
                 "outerEnvelopeProfileAbsXM": 1.633,
+                "minimumClearanceToLVTBlockM": 0.035,
+                "actualLowerLegClearanceToLVTBlockM": 0.035,
             }
             for key, expected in bracket_checks.items():
                 if not _close(bp.get(key, -1), expected, 2e-9):

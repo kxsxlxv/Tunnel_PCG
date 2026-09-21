@@ -149,7 +149,14 @@ def test_stage10_5_profile_contains_modern_default_and_legacy_alternative():
     assert math.isclose(rack.horn_overall_length_m, 0.169, abs_tol=1e-12)
     assert math.isclose(rack.horn_overall_height_m, 0.087, abs_tol=1e-12)
     assert rack.cable_places_per_horn == 2
-    assert rack.occupied_places_per_horn == 2
+    assert rack.occupied_places_per_horn == 1
+    assert rack.occupied_level_indices == (1, 2, 3, 4, 6, 7, 8, 9)
+    assert math.isclose(rack.cable_sag_midspan_m, 0.025, abs_tol=1e-12)
+    assert math.isclose(
+        rack.negative_side_center_profile_z_m,
+        profile.datums.lining_axis_z_m,
+        abs_tol=1e-12,
+    )
     assert math.isclose(rack.horn_pitch_m, 0.125, abs_tol=1e-12)
     assert math.isclose(rack.first_cable_center_inward_m, 0.070, abs_tol=1e-12)
     assert math.isclose(rack.second_cable_center_inward_m, 0.125, abs_tol=1e-12)
@@ -171,6 +178,16 @@ def test_stage10_5_r2k11_racks_repeat_on_both_walls_and_stay_inside_shell():
         assert math.isclose(rack.properties["hornOverallLengthM"], 0.169, abs_tol=1e-12)
         assert math.isclose(rack.properties["hornOverallHeightM"], 0.087, abs_tol=1e-12)
         assert math.isclose(rack.properties["hornLongitudinalWidthM"], 0.040, abs_tol=1e-12)
+        assert rack.properties["commonHorizontalUnderbar"] is False
+        assert rack.properties["hornGeometryMode"] == (
+            "open_double_cradle_no_common_underbar_v3"
+        )
+        if side < 0:
+            assert math.isclose(
+                rack.properties["centerProfileZM"],
+                profile.datums.lining_axis_z_m,
+                abs_tol=1e-12,
+            )
         assert rack.vertices
         max_radius = max(
             math.hypot(x, z)
@@ -179,11 +196,23 @@ def test_stage10_5_r2k11_racks_repeat_on_both_walls_and_stay_inside_shell():
         assert max_radius < profile.intrados_radius_m
 
     cables = modern_cable_sections_core(profile)
-    assert len(cables) == 44
+    assert len(cables) == 16
+    assert {
+        props["rackLevel"]
+        for _name, _section, props in cables
+    } == set(profile.cable_rack.occupied_level_indices)
     assert {
         props["occupiedCablePlaceIndex"]
         for _name, _section, props in cables
     } == {0, 1}
+    assert all(
+        props["occupiedCablePlacesPerHorn"] == 1
+        for _name, _section, props in cables
+    )
+    assert all(
+        math.isclose(props["longitudinalSagM"], 0.025, abs_tol=1e-12)
+        for _name, _section, props in cables
+    )
     assert {
         props["serviceSideClass"]
         for _name, _section, props in cables
@@ -518,14 +547,22 @@ def test_stage10_5_modern_is_default_and_legacy_remains_selectable():
     ) == support_count
     assert mm["contactRailSupportSeparateFromRunningSupport"] is True
     assert len(modern.scene.objects_of_type("production_tube")) == 0
-    assert len(modern.scene.objects_of_type("production_service_cable")) == 44
+    assert len(modern.scene.objects_of_type("production_service_cable")) == 16
     rack_count = len(
         modern.scene.objects_of_type("production_cable_rack_r2k11")
     )
     assert rack_count == 22
-    assert mm["serviceCableCount"] == 44
+    assert mm["serviceCableCount"] == 16
     assert mm["serviceCablePlacesPerHorn"] == 2
-    assert mm["serviceCableOccupiedPlacesPerHorn"] == 2
+    assert mm["serviceCableOccupiedPlacesPerHorn"] == 1
+    for cable in modern.scene.objects_of_type("production_service_cable"):
+        assert cable.custom_properties["cableSagApplied"] is True
+        assert math.isclose(
+            cable.custom_properties["cableSagMidspanM"],
+            0.025,
+            abs_tol=1e-12,
+        )
+        assert cable.custom_properties["cableSagControlStationsAdded"] > 0
     assert mm["serviceCableRackCount"] == rack_count
     assert mm["serviceCableRackFamily"] == "R2K11"
     assert mm["serviceCableRackHornCount"] == 11
@@ -583,6 +620,71 @@ def test_stage10_5_modern_is_default_and_legacy_remains_selectable():
     assert len(legacy.scene.objects_of_type("production_tube")) == 6
     assert len(legacy.scene.objects_of_type("production_service_cable")) == 0
     assert len(legacy.scene.objects_of_type("production_water_main")) == 0
+
+
+def test_stage10_5_rc_6100_5600_civil_archetype_adapts_geometry():
+    profile = load_stage10_initial_moscow_profile(
+        civil_archetype="rc_block_6100_5600"
+    )
+    assert profile.civil_family == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+    assert math.isclose(profile.intrados_radius_m, 2.800, abs_tol=1e-12)
+    assert math.isclose(profile.extrados_radius_m, 3.050, abs_tol=1e-12)
+    assert math.isclose(profile.ring_pitch_m, 1.0, abs_tol=1e-12)
+
+    expected_walkway_outer = math.sqrt(
+        profile.intrados_radius_m**2
+        - (
+            profile.walkway.top_z_m
+            - profile.datums.lining_axis_z_m
+        ) ** 2
+    )
+    assert math.isclose(
+        profile.walkway.outer_edge_x_m,
+        expected_walkway_outer,
+        abs_tol=1e-9,
+    )
+
+    build = build_production_tunnel(
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=4,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.0,
+        ),
+        include_bolts=False,
+        production_config=ProductionConfig(
+            namespace="stage10-5-rc6100",
+            moscow_profile=profile,
+            moscow_stage="10.5",
+        ),
+        seed=5812,
+    )
+    meta = build.scene.metadata["productionGeometry"]
+    assert meta["civilArchetypeID"] == profile.civil_family
+    civil = build.scene.objects_of_type("production_moscow_civil_shell_ring")
+    assert civil
+    assert all(
+        math.isclose(
+            obj.custom_properties["intradosRadiusM"],
+            2.800,
+            abs_tol=1e-12,
+        )
+        for obj in civil
+    )
+    assert all(
+        obj.custom_properties["coarseSegmentCountReference"] == 10
+        for obj in civil
+    )
+    concrete = build.scene.objects_of_type("production_track_concrete")
+    assert len(concrete) == 1
+    assert concrete[0].custom_properties["physicalBottomSurface"] == (
+        "moscow_5600_intrados"
+    )
+    assert len(build.scene.objects_of_type("production_service_cable")) == 16
+    for rack in build.scene.objects_of_type("production_cable_rack_r2k11"):
+        assert max(
+            math.hypot(x, z)
+            for x, _y, z in rack.vertices
+        ) < profile.intrados_radius_m + 1e-9
 
 
 def test_stage10_5_modern_objects_have_no_exact_duplicate_faces_and_stable_ids():

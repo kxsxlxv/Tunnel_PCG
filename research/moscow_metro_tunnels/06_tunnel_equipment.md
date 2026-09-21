@@ -135,20 +135,31 @@ The R2K family increments vertically at 125 mm; R2K11 therefore uses ten
 
 Stage-10.5 geometry uses the exact component envelopes above. The precise
 stamped bend path/radii of K1350.002 are not yet available as factory CAD and
-remain a replaceable local preview.
+remain a replaceable local preview. The 2026-09-21 user-supplied product
+drawing and 3D reference additionally constrain the local silhouette: the two
+open cradles are not supported by one continuous horizontal underbar. The
+production preview therefore keeps the two open semicircular seats and only a
+short wall-side neck into the upright.
 
 Placement remains one rack per side at each 1.0 m Moscow civil ring for the
 selected archetype. That longitudinal pitch is a procedural archetype choice,
-not a universal normative R2K11 pitch.
+not a universal normative R2K11 pitch. The contact-rail / negative-X rack uses
+the lining-axis height for its upright midpoint in the visual preset; this
+side-specific elevation is a photo/reference-driven layout rule, not a
+manufacturer mounting dimension.
 
-For visual density the current preset fills both cable places on all 11 levels
-on both sides:
+For visual density the current v3 preset occupies eight distributed levels and
+one cable place on each occupied level:
 
 ```text
-11 levels x 2 places x 2 tunnel sides = 44 representative cables
+8 occupied levels x 1 cable x 2 tunnel sides = 16 representative cables
 ```
 
-This is explicitly a maximum-density/capacity preview. Do not describe it as
+The cable routes use a restrained 25 mm midspan sag between the 1.0 m rack
+supports. Only one extra longitudinal midpoint is needed per support span, so
+the visible sag does not require a dense spline mesh.
+
+This is explicitly a moderate-density visual preview. Do not describe it as
 the exact cable schedule of a named Moscow tunnel.
 
 Side semantics follow the current tunnel-layout rule:

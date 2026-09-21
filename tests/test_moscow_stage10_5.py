@@ -725,12 +725,6 @@ def test_stage10_5_rc_6100_5600_civil_archetype_adapts_geometry():
     assert math.isclose(profile.intrados_radius_m, 2.800, abs_tol=1e-12)
     assert math.isclose(profile.extrados_radius_m, 3.050, abs_tol=1e-12)
     assert math.isclose(profile.ring_pitch_m, 1.0, abs_tol=1e-12)
-    assert profile.civil_geometry_mode == (
-        "segmented_rc_6100_5600_10block_stage9_like_v1"
-    )
-    assert profile.civil_segment_surface_mode == (
-        "source_backed_equal_10block_curved_segments_v1"
-    )
 
     expected_walkway_outer = math.sqrt(
         profile.intrados_radius_m**2
@@ -761,26 +755,66 @@ def test_stage10_5_rc_6100_5600_civil_archetype_adapts_geometry():
     )
     meta = build.scene.metadata["productionGeometry"]
     assert meta["civilArchetypeID"] == profile.civil_family
+    assert meta["moscowCivilTopology"] == "ten_equal"
     assert meta["civilShellStatus"] == (
-        "implemented_stage10_4_segmented_rc_10block_shell"
+        "implemented_stage10_4_rc_stage9_architecture_ten_equal"
     )
     assert meta["moscowCivilCompositeDetailStatus"] == (
-        "implemented_rc_10block_geometry_stage9_like"
+        "stage9_segment_joint_bolt_architecture_transferred"
     )
-    civil = build.scene.objects_of_type("production_moscow_civil_shell_ring")
-    assert civil
-    assert not build.scene.objects_of_type(
-        "production_moscow_civil_detail_ribs"
+    assert meta["moscowCivilStage9ArchitectureTransferred"] is True
+    assert meta["moscowCivilTopologyEvidenceStatus"] == (
+        "S026_source_backed_10_identical_blocks"
     )
-    assert not build.scene.objects_of_type(
-        "production_moscow_civil_bolt_heads"
+
+    ring_count = int(meta["moscowCivilRingCount"])
+    segments = build.scene.objects_of_type(
+        "production_moscow_civil_segment"
     )
-    assert meta["moscowCivilRenderedBlockCount"] == 10 * len(civil)
-    assert math.isclose(
-        meta["moscowCivilRCVisualSeamWidthM"],
-        0.008,
-        abs_tol=1e-12,
+    radial = build.scene.objects_of_type(
+        "production_moscow_civil_prescribed_radial_joint"
     )
+    circum = build.scene.objects_of_type(
+        "production_moscow_civil_prescribed_circumferential_joint"
+    )
+    assert len(segments) == 10 * ring_count
+    assert len(radial) == 10 * ring_count
+    assert len(circum) == 10 * (ring_count - 1)
+    assert meta["moscowCivilRenderedBlockCount"] == len(segments)
+    assert meta["moscowCivilSegmentObjectCount"] == len(segments)
+    assert meta["moscowCivilPrescribedRadialJointCount"] == len(radial)
+    assert meta["moscowCivilPrescribedCircumferentialJointCount"] == len(circum)
+
+    assert not build.scene.objects_of_type("bolt_head")
+    assert not build.scene.objects_of_type("bolt_pocket_cutter")
+    assert meta["moscowCivilBoltHeadCount"] == 0
+    assert meta["moscowCivilBoltPocketCount"] == 0
+    assert meta["moscowCivilBoltsEnabled"] is False
+
+    by_ring = {}
+    for segment in segments:
+        p = segment.custom_properties
+        assert p["civilFamily"] == profile.civil_family
+        assert p["moscowCivilTopology"] == "ten_equal"
+        assert p["stage9SegmentJointFastenerArchitectureTransferred"] is True
+        assert p["stage9FastenerVisualTransferNotHistoricalMoscowClaim"] is True
+        by_ring.setdefault(p["moscowCivilRingIndex"], []).append(segment)
+    assert sorted(len(v) for v in by_ring.values()) == [10] * ring_count
+
+    first_ring = sorted(
+        by_ring[min(by_ring)],
+        key=lambda obj: int(obj.segment_id),
+    )
+    assert [obj.segment_name for obj in first_ring] == [
+        f"RC{i:02d}" for i in range(1, 11)
+    ]
+    for segment in first_ring:
+        extent = segment.custom_properties
+        assert extent["surfaceToleranceM"] > 0.0
+        assert segment.reconstruction.startswith(
+            "stage5_1_adaptive_cylindrical_surface"
+        )
+
     assert math.isclose(
         meta["moscowCivilRCWorkingRebarDiameterM"],
         0.016,
@@ -791,79 +825,106 @@ def test_stage10_5_rc_6100_5600_civil_archetype_adapts_geometry():
         0.022,
         abs_tol=1e-12,
     )
-    for obj in civil:
-        p = obj.custom_properties
-        assert math.isclose(p["intradosRadiusM"], 2.800, abs_tol=1e-12)
-        assert math.isclose(p["extradosRadiusM"], 3.050, abs_tol=1e-12)
-        assert p["coarseSegmentCountReference"] == 10
-        assert p["coarseSegmentCountIsGeometry"] is True
-        assert p["stage9LikeCurvedSegmentConstruction"] is True
-        assert p["renderedRCBlockCount"] == 10
-        assert math.isclose(
-            p["renderedRCVisualSeamWidthM"],
-            0.008,
-            abs_tol=1e-12,
-        )
-        assert math.isclose(
-            p["renderedRCBlockNominalAngularSpanDeg"],
-            36.0,
-            abs_tol=1e-12,
-        )
-        assert p["rcBlocksIdenticalBySource"] is True
-        assert p["rcPermanentBoltedBlockJoints"] is False
-        assert math.isclose(p["rcWorkingRebarDiameterM"], 0.016, abs_tol=1e-12)
-        assert math.isclose(p["rcBlockVolumeSourceM3"], 0.46, abs_tol=1e-12)
-        assert math.isclose(p["rcBlockMassSourceT"], 1.15, abs_tol=1e-12)
-        assert p["rcConcreteGradeHistorical"] == "400"
-        assert math.isclose(p["rcAssemblyPinDiameterM"], 0.022, abs_tol=1e-12)
-        assert p["rcAssemblyPinGeometryResolved"] is False
-        assert p["rcExactBlockEdgeChamferResolved"] is False
-        assert p["angularSegments"] == 80
+    assert meta["moscowCivilRCPermanentBoltedBlockJointsSource"] is False
 
-    # The rendered ring is genuinely composite: ten disconnected curved
-    # annular block components, not a smooth shell with metadata-only seams.
-    first_ring = civil[0]
-    adjacency = {i: set() for i in range(len(first_ring.vertices))}
-    used = set()
-    for face in first_ring.faces:
-        used.update(face)
-        for ia, ib in zip(face, (*face[1:], face[0])):
-            adjacency[ia].add(ib)
-            adjacency[ib].add(ia)
-    components = 0
-    unseen = set(used)
-    while unseen:
-        components += 1
-        stack = [unseen.pop()]
-        while stack:
-            current = stack.pop()
-            neighbours = adjacency[current] & unseen
-            unseen.difference_update(neighbours)
-            stack.extend(neighbours)
-    assert components == 10
-
-    nominal_block_volume = (
-        math.pi
-        * (profile.extrados_radius_m**2 - profile.intrados_radius_m**2)
-        * profile.ring_pitch_m
-        / 10.0
-    )
-    assert math.isclose(nominal_block_volume, 0.46, abs_tol=7e-4)
     concrete = build.scene.objects_of_type("production_track_concrete")
     assert len(concrete) == 1
     assert concrete[0].custom_properties["physicalBottomSurface"] == (
         "moscow_5600_intrados"
     )
     assert len(build.scene.objects_of_type("production_service_cable")) == 16
-    # Periodic scene objects include the production alignment translation, so
-    # containment must be checked in the rack-local XZ frame rather than
-    # against the global origin.
     for side in (-1, 1):
         local_rack = build_r2k11_local_rack_mesh(profile, side_sign=side)
         assert max(
             math.hypot(x, z)
             for x, _y, z in local_rack.vertices
         ) < profile.intrados_radius_m
+
+
+def test_stage10_5_rc_kba_topology_reuses_stage9_fastener_pipeline():
+    profile = load_stage10_initial_moscow_profile(
+        civil_archetype="rc_block_6100_5600"
+    )
+    build = build_production_tunnel(
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=4,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.0,
+        ),
+        include_bolts=True,
+        production_config=ProductionConfig(
+            namespace="stage10-5-rc-kba",
+            moscow_profile=profile,
+            moscow_stage="10.5",
+            moscow_civil_topology="kba",
+        ),
+        seed=5812,
+    )
+    meta = build.scene.metadata["productionGeometry"]
+    assert meta["moscowCivilTopology"] == "kba"
+    assert meta["moscowCivilTopologyEvidenceStatus"] == (
+        "user_reported_Moscow_photo_reference_pending_research_pinpoint"
+    )
+    assert meta["civilShellStatus"] == (
+        "implemented_stage10_4_rc_stage9_architecture_kba"
+    )
+    ring_count = int(meta["moscowCivilRingCount"])
+
+    segments = build.scene.objects_of_type(
+        "production_moscow_civil_segment"
+    )
+    assert len(segments) == 6 * ring_count
+    first_ring = [
+        obj
+        for obj in segments
+        if obj.custom_properties["moscowCivilRingIndex"] == 0
+    ]
+    assert {obj.segment_kind for obj in first_ring} == {"K", "B", "A"}
+    assert [obj.segment_name for obj in sorted(first_ring, key=lambda o: o.segment_id)] == [
+        "K",
+        "B1",
+        "A1",
+        "A2",
+        "A3",
+        "B2",
+    ]
+
+    radial = build.scene.objects_of_type(
+        "production_moscow_civil_prescribed_radial_joint"
+    )
+    assert len(radial) == 6 * ring_count
+    assert all(
+        obj.custom_properties["legacyPrescribedJointGeometry"] is True
+        for obj in radial
+    )
+
+    heads = build.scene.objects_of_type("bolt_head")
+    cutters = build.scene.objects_of_type("bolt_pocket_cutter")
+    assert heads
+    assert len(heads) == len(cutters)
+    assert meta["moscowCivilBoltHeadCount"] == len(heads)
+    assert meta["moscowCivilBoltPocketCount"] == len(cutters)
+    assert meta["moscowCivilBoltsEnabled"] is True
+    assert meta["moscowCivilLegacyBoltLayout"] == "type1_centered"
+    assert math.isclose(
+        meta["moscowCivilLegacyBoltBooleanOverlapM"],
+        0.005,
+        abs_tol=1e-12,
+    )
+    for head, cutter in zip(
+        sorted(heads, key=lambda o: o.custom_properties["boltIndex"]),
+        sorted(cutters, key=lambda o: o.custom_properties["boltIndex"]),
+    ):
+        hp = head.custom_properties
+        cp = cutter.custom_properties
+        assert hp["booleanTarget"] == cp["booleanTarget"]
+        assert hp["boltIndex"] == cp["boltIndex"]
+        assert hp["legacyBoltLayout"] == "type1_centered"
+        assert cp["legacyBoltLayout"] == "type1_centered"
+        assert hp["stage9FastenerVisualTransferNotHistoricalMoscowClaim"] is True
+        assert cp["stage9FastenerVisualTransferNotHistoricalMoscowClaim"] is True
+        assert cp["booleanOperation"] == "DIFFERENCE"
+        assert cp["removeAfterBoolean"] is True
 
 
 def test_stage10_5_modern_objects_have_no_exact_duplicate_faces_and_stable_ids():

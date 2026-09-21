@@ -370,12 +370,15 @@ class MoscowCableRackProfile:
     repeat_pitch_m: float
     phase_m: float
     center_profile_z_m: float
+    negative_side_center_profile_z_m: float
     shell_clearance_inward_m: float
     horn_longitudinal_width_m: float
     first_cable_center_inward_m: float
     second_cable_center_inward_m: float
     representative_cable_diameter_m: float
     cable_circle_vertices: int
+    occupied_level_indices: tuple[int, ...]
+    cable_sag_midspan_m: float
 
     def __post_init__(self) -> None:
         positive = (
@@ -399,6 +402,21 @@ class MoscowCableRackProfile:
             raise ValueError("cable-rack dimensions must be finite and positive")
         if self.horn_count <= 0 or self.cable_circle_vertices < 6:
             raise ValueError("cable-rack horn/circle counts are invalid")
+        if not math.isfinite(self.negative_side_center_profile_z_m):
+            raise ValueError("negative-side cable-rack center must be finite")
+        if self.cable_sag_midspan_m < 0.0 or not math.isfinite(
+            self.cable_sag_midspan_m
+        ):
+            raise ValueError("cable sag must be finite and non-negative")
+        if (
+            not self.occupied_level_indices
+            or len(set(self.occupied_level_indices)) != len(self.occupied_level_indices)
+            or any(
+                level < 0 or level >= self.horn_count
+                for level in self.occupied_level_indices
+            )
+        ):
+            raise ValueError("occupied R2K11 levels must be unique valid horn indices")
         if self.cable_places_per_horn != 2:
             raise ValueError("R2K11 double horn must expose two cable places")
         if not (1 <= self.occupied_places_per_horn <= self.cable_places_per_horn):
@@ -1515,6 +1533,12 @@ class MoscowStage10Profile:
             center_profile_z_m=float(
                 cable_rack_place_raw["center_profile_z_m"]
             ),
+            negative_side_center_profile_z_m=float(
+                cable_rack_place_raw.get(
+                    "negative_side_center_profile_z_m",
+                    cable_rack_place_raw["center_profile_z_m"],
+                )
+            ),
             shell_clearance_inward_m=float(
                 cable_rack_place_raw["shell_clearance_inward_m"]
             ),
@@ -1531,6 +1555,15 @@ class MoscowStage10Profile:
                 cable_preview_raw["representative_diameter_m"]
             ),
             cable_circle_vertices=int(cable_preview_raw["circle_vertices"]),
+            occupied_level_indices=tuple(
+                int(v) for v in cable_preview_raw.get(
+                    "occupied_level_indices",
+                    range(int(cable_rack_raw["horn_count"])),
+                )
+            ),
+            cable_sag_midspan_m=float(
+                cable_preview_raw.get("midspan_sag_m", 0.0)
+            ),
         )
 
 
@@ -1589,18 +1622,32 @@ class MoscowStage10Profile:
             raise ValueError(
                 "initial Moscow lining axis must be +1.670 m above UGR"
             )
+        supported_civil_radii = {
+            "CAST_IRON_5500_R1000": (2.550, 2.750),
+            "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000": (2.800, 3.050),
+        }
+        civil_family = str(civil["family"])
+        if civil_family not in supported_civil_radii:
+            raise ValueError(
+                f"unsupported Stage-10 civil family {civil_family!r}"
+            )
+        expected_intrados, expected_extrados = supported_civil_radii[civil_family]
         if not math.isclose(
             float(intrados["radius_m"]),
-            2.550,
+            expected_intrados,
             abs_tol=1e-12,
         ):
-            raise ValueError("initial Moscow intrados radius must be 2.550 m")
+            raise ValueError(
+                f"{civil_family} intrados radius must be {expected_intrados:.3f} m"
+            )
         if not math.isclose(
             float(extrados["radius_m"]),
-            2.750,
+            expected_extrados,
             abs_tol=1e-12,
         ):
-            raise ValueError("initial Moscow extrados radius must be 2.750 m")
+            raise ValueError(
+                f"{civil_family} extrados radius must be {expected_extrados:.3f} m"
+            )
 
         support_gap = (
             datums.ugr_z_m
@@ -1730,8 +1777,131 @@ def repository_stage10_initial_profile_path() -> Path:
     )
 
 
+STAGE10_CIVIL_ARCHETYPES = (
+    "cast_iron_5500_5100",
+    "rc_block_6100_5600",
+)
+
+
+def _apply_stage10_civil_archetype(
+    mapping: Mapping[str, Any],
+    civil_archetype: str,
+) -> dict[str, Any]:
+    raw = deepcopy(dict(mapping))
+    if civil_archetype not in STAGE10_CIVIL_ARCHETYPES:
+        raise ValueError(
+            f"unsupported Stage-10 civil archetype {civil_archetype!r}; "
+            f"expected one of {STAGE10_CIVIL_ARCHETYPES!r}"
+        )
+    if civil_archetype == "cast_iron_5500_5100":
+        return raw
+
+    civil = raw["civil_lining"]
+    axis_z = float(civil["vertical_landmarks"]["lining_axis_z_m"])
+    intrados_radius = 2.800
+    extrados_radius = 3.050
+
+    raw["profile_id"] = (
+        "stage10_profile_RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+    )
+    civil["family"] = "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+    civil["shape"] = (
+        "concentric circular smooth envelope for 6.1/5.6 m Moscow RC block family"
+    )
+    civil["intrados"].update(
+        {
+            "radius_m": intrados_radius,
+            "diameter_m": 2.0 * intrados_radius,
+            "source": "S026",
+        }
+    )
+    civil["extrados"].update(
+        {
+            "radius_m": extrados_radius,
+            "diameter_m": 2.0 * extrados_radius,
+            "basis": (
+                "S026 documented Moscow 6.1/5.6 m ten-block RC lining; "
+                "smooth concentric envelope used until block-edge CAD is implemented"
+            ),
+            "confidence": "C",
+        }
+    )
+    landmarks = civil["vertical_landmarks"]
+    landmarks.update(
+        {
+            "intrados_crown_z_m": axis_z + intrados_radius,
+            "intrados_invert_z_m": axis_z - intrados_radius,
+            "extrados_crown_z_m": axis_z + extrados_radius,
+            "extrados_invert_z_m": axis_z - extrados_radius,
+            "lining_axis_to_intrados_invert_m": intrados_radius,
+            "ugr_to_intrados_invert_m": intrados_radius - axis_z,
+        }
+    )
+    civil["ring_pitch_m"] = 1.0
+    civil["coarse_ring_topology"] = {
+        "total_segments": 10,
+        "identical_blocks": 10,
+        "source": "S026",
+        "confidence": "C",
+        "warning": (
+            "S026 fixes the ten-block family and principal dimensions. "
+            "Stage-10 currently renders a smooth envelope rather than fabricated "
+            "block joints/pins."
+        ),
+    }
+    civil["initial_geometry"].update(
+        {
+            "mode": "smooth_concentric_rc_6100_5600_ringwise_shell_v1",
+            "ring_pitch_m": 1.0,
+            "circumferential_segment_surface_mode": (
+                "disabled_source_backed_10_block_topology_geometry_deferred"
+            ),
+            "coarse_segment_count_reference": 10,
+            "coarse_segment_count_is_geometry": False,
+            "confidence": "C_source_family_dimensions",
+            "reason": (
+                "Expose the researched 6.1/5.6 m Moscow RC family without "
+                "inventing detailed block-edge/pin CAD."
+            ),
+        }
+    )
+
+    walkway = raw["walkway"]
+    outer_x = math.sqrt(
+        intrados_radius * intrados_radius
+        - (float(walkway["top_z_m"]) - axis_z) ** 2
+    )
+    walkway["outer_edge"].update(
+        {
+            "x_m": round(outer_x, 9),
+            "basis": (
+                "intersection with selected civil intrados at walkway top; "
+                "track/UGR-to-lining-axis datum transferred from the Stage-10 "
+                "reference profile because S026 does not publish a separate UGR datum"
+            ),
+            "confidence": "C_transfer_rule",
+        }
+    )
+    walkway["top_clear_width_m"].update(
+        {
+            "value": round(
+                outer_x - float(walkway["inner_edge_x_m"]),
+                9,
+            ),
+            "derivation": (
+                "selected physical intrados intersection minus retained "
+                "Stage-10 walkway inner-edge datum"
+            ),
+            "confidence": "C_transfer_rule",
+        }
+    )
+    return raw
+
+
 def load_stage10_initial_moscow_profile(
     path: str | Path | None = None,
+    *,
+    civil_archetype: str = "cast_iron_5500_5100",
 ) -> MoscowStage10Profile:
     source = (
         Path(path)
@@ -1740,7 +1910,8 @@ def load_stage10_initial_moscow_profile(
     )
     with source.open("r", encoding="utf-8") as fh:
         mapping = json.load(fh)
-    return MoscowStage10Profile.from_mapping(mapping, source_path=source)
+    resolved = _apply_stage10_civil_archetype(mapping, civil_archetype)
+    return MoscowStage10Profile.from_mapping(resolved, source_path=source)
 
 
 @dataclass(frozen=True)

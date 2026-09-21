@@ -25,7 +25,8 @@
           "S084",
           "S085",
           "S086",
-          "S093"
+          "S093",
+          "S120"
         ],
         "civil_shell": {
           "known": [
@@ -69,7 +70,22 @@
             "relative_track_z_m": null
           }
         },
-        "civil_chamber_archetype_id": "BELORUSSKAYA_CAST_IRON_DEPOT_JUNCTION_ACTUAL_CONSTRAINT"
+        "civil_chamber_archetype_id": "BELORUSSKAYA_CAST_IRON_DEPOT_JUNCTION_ACTUAL_CONSTRAINT",
+        "downstream_depot_branch_visual_topology": {
+          "source_id": "S120",
+          "source_backed": [
+            "from the selected Belorusskaya view, the depot branch begins to the left while the Krasnopresnenskaya running tunnel continues straight",
+            "the actual depot connection includes a photographed two-track section",
+            "a photographed switch farther along divides directions toward Belorusskaya and Krasnopresnenskaya",
+            "a closed-method tunnel segment is photographed on the depot branch"
+          ],
+          "exact_sequence_of_all_switch_nodes": null,
+          "exact_track_edge_count_by_chainage": null,
+          "exact_xy": null,
+          "exact_z": null,
+          "exact_civil_shell_arrangement": null,
+          "status": "ACTUAL_VISUAL_TOPOLOGY_PARTIAL"
+        }
       },
       "turnout_geometry": {
         "required_frog_mark": "1:9",
@@ -484,7 +500,7 @@
           "lining_type": null,
           "z_ugr_m": null,
           "cut_marker_xy": null,
-          "status": "UNKNOWN_PUBLICLY",
+          "status": "PARTIAL_TOPOLOGY_KNOWN_CIVIL_GEOMETRY_UNKNOWN",
           "tunnel_branch_existence": {
             "value": true,
             "source_id": "S098",
@@ -500,7 +516,22 @@
             "confidence": "C",
             "limitation": "Track count does not define the underground civil-shell arrangement or the selected single branch edge's independent-tunnel start."
           },
-          "shell_arrangement_unknown": true
+          "shell_arrangement_unknown": true,
+          "two_track_depot_section_confirmed": {
+            "value": true,
+            "source_id": "S120",
+            "status": "ACTUAL_SITE_PHOTO_CAPTION"
+          },
+          "downstream_direction_split": {
+            "toward": [
+              "Belorusskaya",
+              "Krasnopresnenskaya"
+            ],
+            "source_id": "S120",
+            "exact_switch_xy": null,
+            "exact_chainage_m": null
+          },
+          "independent_single_track_modeling_note": "The selected Belorusskaya local branch must be cut before any unresolved downstream merge/two-track depot system if the first implementation contract requires a single-track BRANCH_EDGE. Do not pretend the whole depot connection remains one single-track tunnel."
         },
         "first_geometry_fallback": {
           "source_archetype": "METRO_STEPWISE_BRANCH_CHAMBER_RC_TUBING_2001_REFERENCE",

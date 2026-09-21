@@ -157,8 +157,11 @@ def main() -> None:
             "production_contact_rail_clamp_bolts": support_count,
             "production_contact_rail_attachment_dowels": support_count,
             "production_contact_rail_support_hood": support_count,
-            "production_service_cable": 22,
+            "production_service_cable": 44,
             "production_water_main": 1,
+            "production_water_main_support": int(
+                production_meta.get("serviceWaterMainSupportCount", 0)
+            ),
             "production_cable_rack_r2k11": int(
                 production_meta.get("serviceCableRackCount", 0)
             ),
@@ -451,12 +454,29 @@ def main() -> None:
             errors.append("Stage 10.5 cable-rack family is not R2K11")
         if int(production_meta.get("serviceCableRackHornCount", -1)) != 11:
             errors.append("Stage 10.5 R2K11 horn count is not 11")
+        if production_meta.get("serviceCableRackUprightDesignation") != "K1351.001-09":
+            errors.append("Stage 10.5 wrong R2K11 upright designation")
+        if production_meta.get("serviceCableRackHornDesignation") != "K1350.002":
+            errors.append("Stage 10.5 wrong R2K11 horn designation")
+        if int(production_meta.get("serviceCablePlacesPerHorn", -1)) != 2:
+            errors.append("Stage 10.5 R2K11 must expose two cable places per horn")
+        if int(production_meta.get("serviceCableOccupiedPlacesPerHorn", -1)) != 2:
+            errors.append("Stage 10.5 modern visual preset must populate both cable places")
+        if int(production_meta.get("serviceCableCount", -1)) != 44:
+            errors.append("Stage 10.5 modern service cable count must be 44")
         if production_meta.get("servicePipeStatus") != (
             "implemented_normative_DN80_with_explicit_placement_fallback"
         ):
             errors.append("Stage 10.5 modern water-main status mismatch")
         if int(production_meta.get("serviceWaterMainCount", -1)) != 1:
             errors.append("Stage 10.5 must contain one tunnel water main")
+        if int(production_meta.get("serviceWaterMainSupportCount", -1)) <= 0:
+            errors.append("Stage 10.5 water main has no periodic supports")
+        if not _close(
+            production_meta.get("serviceWaterMainSupportMaxPitchM", -1),
+            4.0,
+        ):
+            errors.append("Stage 10.5 water-main support pitch must be 4 m max")
         if int(production_meta.get("serviceWaterMainMinNominalDNmm", -1)) != 80:
             errors.append("Stage 10.5 water main must remain at least DN80")
         water = [
@@ -473,6 +493,10 @@ def main() -> None:
                 )
             if not _close(wp.get("previewOuterDiameterM", -1), 0.089):
                 errors.append(f"{water[0].name}: wrong DN80-class preview diameter")
+            if not _close(wp.get("centerProfileZM", -1), 0.600):
+                errors.append(f"{water[0].name}: wrong collision-free water-main z")
+            if not _close(wp.get("supportMaxPitchM", -1), 4.0):
+                errors.append(f"{water[0].name}: wrong water-main support pitch")
 
         for block in [
             o for o in production if o.object_type == "production_lvt_block"
@@ -750,9 +774,27 @@ def main() -> None:
         "serviceCableCount": production_meta.get("serviceCableCount"),
         "serviceCableRackCount": production_meta.get("serviceCableRackCount"),
         "serviceCableRackFamily": production_meta.get("serviceCableRackFamily"),
+        "serviceCableRackUprightDesignation": production_meta.get(
+            "serviceCableRackUprightDesignation"
+        ),
+        "serviceCableRackHornDesignation": production_meta.get(
+            "serviceCableRackHornDesignation"
+        ),
+        "serviceCablePlacesPerHorn": production_meta.get(
+            "serviceCablePlacesPerHorn"
+        ),
+        "serviceCableOccupiedPlacesPerHorn": production_meta.get(
+            "serviceCableOccupiedPlacesPerHorn"
+        ),
         "servicePipeStatus": production_meta.get("servicePipeStatus"),
         "serviceWaterMainCount": production_meta.get(
             "serviceWaterMainCount"
+        ),
+        "serviceWaterMainSupportCount": production_meta.get(
+            "serviceWaterMainSupportCount"
+        ),
+        "serviceWaterMainSupportMaxPitchM": production_meta.get(
+            "serviceWaterMainSupportMaxPitchM"
         ),
         "serviceWaterMainMinNominalDNmm": production_meta.get(
             "serviceWaterMainMinNominalDNmm"

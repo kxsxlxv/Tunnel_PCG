@@ -137,6 +137,19 @@ def main() -> None:
         1.633,
         abs_tol=2e-9,
     )
+    assert math.isclose(
+        float(bp["minimumClearanceToLVTBlockM"]),
+        0.035,
+        abs_tol=1e-12,
+    )
+    assert math.isclose(
+        float(bp["actualLowerLegClearanceToLVTBlockM"]),
+        0.035,
+        abs_tol=1e-12,
+    )
+    assert float(bp["lowerLegInboardProfileAbsXM"]) > float(
+        bp["lvtBlockOutboardProfileAbsXM"]
+    )
     clamp = build.scene.objects_of_type(
         "production_contact_rail_fastening_unit"
     )[0]
@@ -242,6 +255,7 @@ def main() -> None:
                 "contact_support_count": support_count,
                 "contact_bracket_outer_envelope_profile_abs_x_m": 1.633,
                 "contact_bracket_top_profile_z_m": 0.373,
+                "contact_support_min_clearance_to_lvt_m": 0.035,
                 "contact_clamp_bolt_count": 2,
                 "contact_base_anchor_count": 4,
                 "contact_cover_span_count": meta["contactRailCoverSpanCount"],

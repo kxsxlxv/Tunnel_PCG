@@ -1,5 +1,5 @@
 {
-  "schema_version": "2.1",
+  "schema_version": "2.2",
   "profile_id": "stage10_initial_profile_CAST_IRON_5500_R1000_R65_TIMBER_LEGACY",
   "purpose": "first deterministic XZ profile for Blender/LiDAR implementation",
   "readiness": {
@@ -836,7 +836,10 @@
       },
       "sources": [
         "P10-R2K11-CATALOG",
-        "P10-R2V11-R2K11-OSKOL"
+        "P10-R2V11-R2K11-OSKOL",
+        "P10-R2K11-KZEMI-2026",
+        "P10-K1350-002-KZEMI-2026",
+        "P10-SP-CABLE-LAYOUT"
       ],
       "placement": {
         "sides": "both_profile_x_sides",
@@ -849,21 +852,43 @@
         "reason": "catalog fixes bracket geometry but public project drawings inspected so far do not fix the rack elevation for this exact running-tunnel family"
       },
       "initial_horn_mesh": {
-        "mode": "double_cradle_ribbon_v1",
-        "longitudinal_width_m": 0.03,
+        "mode": "K1350_002_dimensioned_double_cradle_v2",
+        "longitudinal_width_m": 0.04,
         "first_cable_center_inward_m": 0.07,
-        "second_cable_center_inward_m": 0.14,
-        "confidence": "B_radius_C_projection_and_slot_offsets",
-        "note": "Two cable places are source-backed; local radial projection and exact horn-strip width remain preview fallbacks."
-      }
+        "second_cable_center_inward_m": 0.125,
+        "confidence": "A_envelope_B_center_callouts_C_exact_bend_path",
+        "note": "K1350.002 current manufacturer envelope is 169x40x87 mm at 4 mm steel. Catalog drawing provides 70/125 mm local callouts used as the two cable-place center offsets; exact stamped bend radii remain unresolved.",
+        "overall_length_m": 0.169,
+        "overall_height_m": 0.087,
+        "cable_places_per_horn": 2
+      },
+      "assembly_designation": "R2K11 / K1351.001-09 + 11xK1350.002",
+      "upright_designation": "K1351.001-09",
+      "upright_source": "P10-R2K11-KZEMI-2026",
+      "upright_confidence": "A_current_manufacturer_dimensions",
+      "horn_designation": "K1350.002",
+      "horn_overall_length_m": 0.169,
+      "horn_longitudinal_width_m": 0.04,
+      "horn_overall_height_m": 0.087,
+      "cable_places_per_horn": 2,
+      "horn_source": "P10-K1350-002-KZEMI-2026",
+      "horn_confidence": "A_current_manufacturer_dimensions",
+      "horn_radius_mode": "max_cable_radius_preview_exact_factory_bend_path_unresolved"
     },
     "cable_preview": {
-      "occupancy": "one_cable_per_horn_level_per_side",
+      "occupancy": "two_cables_per_horn_level_per_side_full_capacity_visual_preview",
       "representative_diameter_m": 0.04,
       "circle_vertices": 8,
       "exact_route_schedule_resolved": false,
       "confidence": "C_visual_density_only",
-      "note": "The rack capacity is two cable places per level; v1 populates one representative longitudinal cable on each of 11 levels per side until a project-specific cable schedule is sourced."
+      "note": "R2K11 provides two cable places on each of 11 levels. Stage10.5 v2 populates both places on both sides to match the observed dense tunnel-service appearance; this is a capacity/density preview, not a project cable schedule.",
+      "occupied_places_per_horn": 2,
+      "total_representative_cables": 44,
+      "side_assignment": {
+        "negative_profile_x": "strong_current_side_contact_rail_side",
+        "positive_profile_x": "weak_current_side_walkway_side"
+      },
+      "ordering_source": "P10-SP-CABLE-LAYOUT"
     },
     "pipes": {
       "status": "source_backed_tunnel_water_main_with_explicit_placement_fallback",
@@ -874,9 +899,9 @@
         "position_rule": "above_UGR",
         "preview_outer_diameter_m": 0.089,
         "preview_outer_diameter_mode": "DN80_class_visual_proxy_exact_project_pipe_schedule_unresolved",
-        "center_profile_z_m": 0.7,
+        "center_profile_z_m": 0.6,
         "shell_clearance_inward_m": 0.04,
-        "placement_mode": "weak_current_side_historical_0.6_0.8m_height_midpoint_fallback",
+        "placement_mode": "weak_current_side_historical_0.6_0.8m_lower_bound_selected_for_R2K11_clearance",
         "material_family": "corrosion_resistant_steel",
         "normative_source": "P10-SP-WATER-MAIN",
         "normative_clauses": [
@@ -885,7 +910,11 @@
           "5.9.4.1(a)"
         ],
         "confidence": "A_normative_DN_side_and_above_UGR_C_exact_XZ_and_outer_diameter",
-        "note": "SP fixes minimum DN80, one main per single-track tunnel, above rail head and normally weak-current side. Exact project pipe OD/wall thickness and mounting coordinates are not fixed for this archetype; 89 mm is a visual DN80-class proxy and z=+0.70 m is the midpoint of the historical 0.6-0.8 m reference range already recorded in tunnel_equipment.json."
+        "note": "SP fixes minimum DN80, one main per single-track tunnel, above rail head and normally weak-current side. Preview z is revised from +0.70 to +0.60 m, the documented historical range lower bound, to keep the pipe clear of the lowest R2K11 cable/horn layer. 89 mm OD remains a visual DN80-class proxy.",
+        "support_max_pitch_m": 4,
+        "support_rule": "wall support intervals not greater than 4 m; exact support hardware geometry unresolved",
+        "support_source": "P10-SP-WATER-MAIN-SUPPORT",
+        "support_geometry_mode": "wall_standoff_and_pipe_clamp_preview_v1"
       }
     }
   }

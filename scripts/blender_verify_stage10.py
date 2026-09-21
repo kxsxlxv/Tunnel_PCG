@@ -831,6 +831,65 @@ def main() -> None:
                 ):
                     errors.append(f"{segment.name}: wrong lining ring width")
 
+            rotation_strategy = production_meta.get(
+                "moscowCivilRotationStrategy"
+            )
+            if production_meta.get("moscowCivilRotationModel") != (
+                "stage7_ring_pose_on_independent_moscow_civil_rhythm"
+            ):
+                errors.append("Moscow civil ring rotation model mismatch")
+            if production_meta.get(
+                "moscowCivilRotationAppliedOnlyToLining"
+            ) is not True:
+                errors.append("Moscow civil roll is not lining-only")
+
+            rotations_by_ring: dict[int, set[float]] = {}
+            for obj in transferred:
+                op = obj.custom_properties
+                ring_index = int(op.get("moscowCivilRingIndex", -1))
+                rotation = float(op.get("ringRotationDeg", 0.0))
+                rotations_by_ring.setdefault(ring_index, set()).add(
+                    round(rotation, 10)
+                )
+                if op.get("moscowCivilRotationStrategy") != rotation_strategy:
+                    errors.append(
+                        f"{obj.name}: civil rotation strategy metadata mismatch"
+                    )
+                if op.get("moscowCivilIndependentRingPoseStream") is not True:
+                    errors.append(
+                        f"{obj.name}: independent civil ring pose marker missing"
+                    )
+                if op.get("stage7RingAxialStaggerTransferred") is not True:
+                    errors.append(
+                        f"{obj.name}: Stage-7 axial stagger marker missing"
+                    )
+                nominal = float(op.get("ringNominalRotationDeg", 0.0))
+                imperfection = float(
+                    op.get("ringAngularImperfectionDeg", 0.0)
+                )
+                if not _close(rotation, nominal + imperfection, 1e-9):
+                    errors.append(
+                        f"{obj.name}: civil ring rotation decomposition mismatch"
+                    )
+
+            if any(len(values) != 1 for values in rotations_by_ring.values()):
+                errors.append(
+                    "Moscow civil objects within one ring do not share one roll"
+                )
+            civil_rotations = [
+                next(iter(rotations_by_ring[index]))
+                for index in sorted(rotations_by_ring)
+                if rotations_by_ring[index]
+            ]
+            if rotation_strategy == "ringwise_gaussian":
+                if not any(abs(value) > 1e-8 for value in civil_rotations):
+                    errors.append("ringwise civil rotation produced only zero rolls")
+                if len(set(civil_rotations)) <= 1:
+                    errors.append("ringwise civil rotation did not vary by ring")
+            elif rotation_strategy == "continuous":
+                if any(abs(value) > 1e-8 for value in civil_rotations):
+                    errors.append("continuous civil rotation produced nonzero roll")
+
             if civil_topology == "ten_equal":
                 by_ring: dict[int, list] = {}
                 for segment in transferred_segments:
@@ -1068,6 +1127,12 @@ def main() -> None:
             "moscowCivilCompositeDetailStatus"
         ),
         "civilTopology": production_meta.get("moscowCivilTopology"),
+        "civilRotationStrategy": production_meta.get(
+            "moscowCivilRotationStrategy"
+        ),
+        "civilRotationModel": production_meta.get(
+            "moscowCivilRotationModel"
+        ),
         "civilRenderedBlockCount": production_meta.get(
             "moscowCivilRenderedBlockCount"
         ),

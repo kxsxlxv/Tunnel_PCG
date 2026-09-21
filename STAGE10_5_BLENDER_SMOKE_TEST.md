@@ -150,7 +150,16 @@ For the 6.1/5.6 m RC family, select the topology independently:
         Moscow applicability currently user/photo-reference constrained
 
 Both modes must visibly use the **old Stage-9 construction**, not the removed
-simplified sector sweep:
+simplified sector sweep. For the K/B/A visual review, keep the Stage-9 default
+ring stagger enabled:
+
+    --rotation-strategy ringwise_gaussian
+
+The narrow K segment should move around the circumference from ring to ring; it
+must not form one continuous line at the crown. The roll applies to the complete
+civil-ring assembly only. Track, walkway, contact rail and service equipment
+must stay in the gravity/alignment frame.
+
 
 - each block is an individual `lining_segment` built through
   `SegmentMesh -> CurvedSegmentMesh`;
@@ -215,11 +224,12 @@ Useful screenshots:
 2. contact-cover span between two supports;
 3. LVT-M/APC-4 rail seat and central drain;
 4. close R2K11 horn view showing two literal U cradles and no W/omega crest;
-5. one full 6.1/5.6 m RC ring clearly showing ten separate curved blocks;
-6. close RC block joint showing the radial end faces / visual seam;
-7. weak-current-side water main;
-8. 50-100 m perspective view showing varied cable sag and service density;
-9. Blender statistics for a long scene.
+5. K/B/A longitudinal view showing the K segment at different circumferential positions on adjacent rings;
+6. one full 6.1/5.6 m RC ring showing the selected segment topology and transferred joint/fastener geometry;
+7. close RC block joint showing the radial end faces / transferred prescribed-joint geometry;
+8. weak-current-side water main;
+9. 50-100 m perspective view showing varied cable sag and service density;
+10. Blender statistics for a long scene.
 
 Also send:
 

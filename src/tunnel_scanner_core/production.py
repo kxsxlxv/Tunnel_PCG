@@ -46,7 +46,7 @@ from .bolts import (
 )
 from .config import RingConfig
 from .curved_mesh import SurfaceMeshingConfig
-from .joints import build_prescribed_joint_set, sample_joint_config
+from .joints import PrescribedJointSet, build_prescribed_joint_set, sample_joint_config
 from .mesh import (
     Face,
     RingMesh,
@@ -3399,6 +3399,7 @@ def _build_stage10_4_rc_stage9_architecture_objects(
     stations: Sequence[AlignmentStation],
     surface_meshing: SurfaceMeshingConfig,
     include_bolts: bool,
+    include_prescribed_outer_joint_solids: bool = False,
     seed: int,
     start_chainage_m: float | None = None,
     end_chainage_m: float | None = None,
@@ -3447,11 +3448,18 @@ def _build_stage10_4_rc_stage9_architecture_objects(
             width_m=width,
             seed=seed,
         )
-        joints = build_prescribed_joint_set(
-            ring,
-            sample_joint_config(
-                seed=_stage9_child_seed(seed, ring_index, 2)
-            ),
+        joint_config = sample_joint_config(
+            seed=_stage9_child_seed(seed, ring_index, 2)
+        )
+        joints = (
+            build_prescribed_joint_set(ring, joint_config)
+            if include_prescribed_outer_joint_solids
+            else PrescribedJointSet(
+                config=joint_config,
+                radial=(),
+                circumferential_front=(),
+                circumferential_back=(),
+            )
         )
 
         # Stage 9 uses TYPE1_CENTERED by default: three pockets/heads per
@@ -3491,10 +3499,11 @@ def _build_stage10_4_rc_stage9_architecture_objects(
             ring,
             joints,
             ring_id=ring_index,
-            include_radial_joints=True,
+            include_radial_joints=include_prescribed_outer_joint_solids,
             include_circumferential_front=False,
             include_circumferential_back=(
-                range_index < civil_ring_count - 1
+                include_prescribed_outer_joint_solids
+                and range_index < civil_ring_count - 1
             ),
             label_policy=LabelPolicy.STSD_COARSE,
             surface_meshing=surface_meshing,
@@ -3961,6 +3970,9 @@ def build_production_scene(
                     stations=stations,
                     surface_meshing=surface_meshing,
                     include_bolts=config.moscow_civil_bolts_enabled,
+                    include_prescribed_outer_joint_solids=(
+                        config.keep_prescribed_outer_joint_solids
+                    ),
                     seed=master_seed,
                 )
             )
@@ -5421,6 +5433,9 @@ def build_stage10_5_rc_modern_chunk_scene_package(
             stations=plan.alignment_stations,
             surface_meshing=plan.surface_meshing,
             include_bolts=plan.config.moscow_civil_bolts_enabled,
+            include_prescribed_outer_joint_solids=(
+                plan.config.keep_prescribed_outer_joint_solids
+            ),
             seed=plan.seed,
             start_chainage_m=start,
             end_chainage_m=end,

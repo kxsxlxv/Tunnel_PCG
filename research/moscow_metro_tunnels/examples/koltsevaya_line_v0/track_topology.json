@@ -5,8 +5,10 @@
     "id": "MOSCOW_METRO_LINE_5",
     "name_ru": "Кольцевая линия",
     "master_osm_relation_id": 1462012,
-    "relation_role": "discovery seed only; may contain nested route relations",
-    "physical_model_rule": "Two independent physical centerlines must be extracted from OSM/project ways. Track B must never be produced by a constant lateral offset from Track A."
+    "relation_role": "current OSM route_master; exact child direction routes are 300607 Inner and 1462011 Outer",
+    "physical_model_rule": "Two independent physical centerlines must be extracted from OSM/project ways. Track B must never be produced by a constant lateral offset from Track A.",
+    "master_osm_relation_source_id": "S099",
+    "osm_route_hierarchy_status": "SOURCE_BACKED_CURRENT_OSM"
   },
   "coordinate_policy": {
     "horizontal": "OSM WGS84 may be transformed to engineering CRS for a plan approximation, but is not an engineering survey.",
@@ -41,10 +43,12 @@
         "Белорусская"
       ],
       "station_order_source_id": "S050",
-      "osm_route_relation_ids": null,
+      "osm_route_relation_ids": [
+        300607
+      ],
       "osm_way_ids": null,
       "physical_centerline_file": null,
-      "centerline_status": "UNRESOLVED_PENDING_RELATION_FULL_OR_PBF_GRAPH_EXTRACTION",
+      "centerline_status": "ROUTE_RELATION_RESOLVED_WAYS_AND_CENTERLINE_PENDING_RELATION_FULL_OR_PBF_EXTRACTION",
       "z_profile_file": null,
       "tunnel_axis_spacing_to_other_track_m": null,
       "relative_z_to_other_track_m": null,
@@ -52,7 +56,9 @@
       "notes": [
         "Current Moscow Transport independently states that trains leave Krasnaya Presnya depot onto the first track and that first-track travel is clockwise.",
         "Historical metro track literature explicitly calls the clockwise inner track the first track."
-      ]
+      ],
+      "osm_route_relation_source_id": "S100",
+      "osm_route_relation_name": "Circle line (Inner)"
     },
     {
       "id": "KOLTSEVAYA_TRACK_B",
@@ -81,10 +87,12 @@
         "Белорусская"
       ],
       "station_order_source_id": "S050",
-      "osm_route_relation_ids": null,
+      "osm_route_relation_ids": [
+        1462011
+      ],
       "osm_way_ids": null,
       "physical_centerline_file": null,
-      "centerline_status": "UNRESOLVED_PENDING_RELATION_FULL_OR_PBF_GRAPH_EXTRACTION",
+      "centerline_status": "ROUTE_RELATION_RESOLVED_WAYS_AND_CENTERLINE_PENDING_RELATION_FULL_OR_PBF_EXTRACTION",
       "z_profile_file": null,
       "tunnel_axis_spacing_to_other_track_m": null,
       "relative_z_to_other_track_m": null,
@@ -92,14 +100,17 @@
       "notes": [
         "Current Moscow Transport states that depot trains entering the second track take their first passengers at Krasnopresnenskaya, consistent with counterclockwise travel.",
         "This track is not a generated offset of Track A."
-      ]
+      ],
+      "osm_route_relation_source_id": "S101",
+      "osm_route_relation_name": "Circle line (Outer)"
     }
   ],
   "osm_graph_extraction_contract": {
     "extractor": "reference_impl/tunnel_pcg_ref/osm_track_graph.py::extract_physical_track_graph",
     "inputs": [
-      "current OSM relation/full export for relation 1462012 and any nested route relations",
-      "or current Moscow PBF member-way export"
+      "current OSM route relation 300607 (Inner) and relation/full or Moscow PBF objects",
+      "current OSM route relation 1462011 (Outer) and relation/full or Moscow PBF objects",
+      "route_master 1462012 only as hierarchy/discovery root"
     ],
     "accepted_physical_tag": "railway=subway",
     "preserves": [
@@ -119,8 +130,11 @@
       "assigning Z from OSM"
     ],
     "classification_after_extraction": [
-      "match two closed main cycles to the independently sourced clockwise/counterclockwise station sequences",
-      "annotate remaining edges from researched junction semantics",
+      "extract route 300607 and 1462011 independently; never merge them",
+      "verify physical railway=subway chain continuity and retain original OSM way/node IDs",
+      "map relation 300607 to KOLTSEVAYA_TRACK_A only because independent sources identify Track A as inner/clockwise/I",
+      "map relation 1462011 to KOLTSEVAYA_TRACK_B only because independent sources identify Track B as outer/counterclockwise/II",
+      "annotate remaining non-route/depot/crossover edges from researched junction semantics",
       "retain unclassified edges rather than guessing"
     ]
   },
@@ -343,7 +357,7 @@
     "branch_end_model": "cut before depot; exact cut XY unresolved"
   },
   "global_unknowns": [
-    "exact OSM way IDs and node IDs for the two main physical cycles until current relation/full or PBF bytes are acquired",
+    "exact current OSM way IDs and node IDs inside child routes 300607 and 1462011 until relation/full or PBF bytes are acquired",
     "as-built inter-tunnel axis spacing by chainage",
     "local relative Z of the two running tunnels",
     "line-wide lining type assignment by physical edge",
@@ -422,9 +436,10 @@
   "readiness": {
     "topology_semantics": "READY_WITH_UNRESOLVED_OSM_IDS",
     "two_main_track_identity": "READY",
-    "two_main_physical_centerlines": "BLOCKED_PENDING_CURRENT_OSM_OR_PROJECT_BYTES",
+    "two_main_physical_centerlines": "BLOCKED_PENDING_RELATION_FULL_OR_PBF_WAY_NODE_EXTRACTION",
     "selected_real_junction": "READY_AS_CONSTRAINED_ACTUAL",
     "exact_switch_xy_z": "UNKNOWN",
-    "geometry_fallback_contract": "READY_WITH_EXPLICIT_FALLBACKS"
+    "geometry_fallback_contract": "READY_WITH_EXPLICIT_FALLBACKS",
+    "two_main_route_relations": "READY_CURRENT_OSM: A=300607 inner; B=1462011 outer; master=1462012"
   }
 }

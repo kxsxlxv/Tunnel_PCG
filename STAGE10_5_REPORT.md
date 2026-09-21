@@ -116,20 +116,63 @@ The support schedule uses independent nominal 5.0 m targets within the
 4.5-5.4 m normative family and snaps each target to a midpoint between running
 supports.
 
-The modern assembly contains:
+A user-supplied dimensioned support drawing reviewed on 2026-09-21 adds the
+following readable callouts:
+
+    running reference -> contact-axis region      0.683 m
+    running reference -> outer bracket envelope   0.873 m
+    upper return / top-plate callout               0.180 m
+    top above UGR/reference line                   0.373 m
+    lower hook/bend callout                        0.155 m
+    upper hook/bend callout                        0.090 m
+
+The established 690 +/- 8 mm horizontal and +160 mm vertical contact-rail
+datums remain authoritative. The drawing's 683 and 155 mm callouts independently
+fall inside those tolerances and are used as a geometry cross-check rather than
+to move the contact rail.
+
+The v3 support bracket is now a dimension-constrained J/C-shaped hook channel.
+Its outboard envelope is fixed at:
+
+    |x| = gauge/2 + 0.873 = 1.633 m
+
+and its top is fixed at:
+
+    profile z = +0.373 m
+
+The 155 and 90 mm callouts drive the lower and upper hook-bend construction in
+the initial mesh. Exact neutral-axis bend radii remain an image-derived
+interpretation, not a factory-CAD claim.
+
+The modern assembly now contains:
 
 - dedicated reinforced-concrete support block;
-- curved-channel bracket;
-- vertical insulator envelope;
-- fastening unit;
-- polymer attachment dowels;
-- local protective hood.
+- separate four-anchor steel base plate;
+- dimensioned hook-channel bracket;
+- explicit upper-flange clamp/saddle around the contact rail;
+- short vertical insulator stack under the upper hook arm;
+- two visible clamp through-bolts;
+- four support-block dowels/anchors;
+- local protective hood over the clamp/support zone.
+
+The contact rail no longer visually floats inside the support: side jaws flank
+the 80 mm upper flange, a bridge plate bears above the rail, and the insulator
+stack closes the load path up to the bracket arm.
 
 The current support-block height is 0.040 m and the polymer-dowel length is
 0.140 m.
 
-The exact current support-hood product shape and some bracket bend radii remain
-explicit visualization fallbacks.
+The support hood was raised to enclose the dimensioned +0.373 m bracket/clamp
+top and bolt heads while retaining the same rounded-wrap language as the main
+cover.
+
+Still unresolved and explicitly tagged as fallback:
+
+- exact production bend radii/neutral axis of the hook channel;
+- exact base-plate slot/hole geometry;
+- exact clamp casting;
+- exact current insulator profile;
+- exact local hood product CAD.
 
 ## R2K11 cable racks
 
@@ -239,7 +282,9 @@ Stress/integration gate:
 
     python scripts/verify_stage10_5.py
 
-Latest fully green baseline:
+Profile schema is now **2.0** because the dimensioned support drawing is part of the typed machine contract.
+
+Latest fully green baseline before the v3 support-drawing update:
 
     192 tests passed
     Stage 10.1 CLI compatibility smoke       PASS

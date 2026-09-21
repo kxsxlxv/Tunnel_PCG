@@ -28,7 +28,8 @@
           "S093",
           "S120",
           "S124",
-          "S125"
+          "S125",
+          "S134"
         ],
         "civil_shell": {
           "known": [
@@ -97,17 +98,20 @@
           "separate_line5_branch_legs": {
             "belorusskaya_track_count": 1,
             "krasnopresnenskaya_track_count": 1,
-            "source_id": "S125",
-            "status": "SOURCE_BACKED_TOPOLOGY"
+            "source_id": "S134",
+            "status": "SOURCE_BACKED_HISTORICAL_ENGINEERING_ACCOUNT",
+            "primary_source_id": "S134",
+            "corroboration_source_id": "S125"
           },
           "reconciliation": "Model distinct single-track line-attachment legs plus an unresolved downstream local two-track section. Do not model one end-to-end double-track branch."
         },
         "selected_branch_edge": {
           "edge_contract_id": "BRANCH_KRP_BELORUSSKAYA_LEG",
           "track_count": 1,
-          "source_id": "S125",
-          "status": "SOURCE_BACKED_TOPOLOGY",
-          "rule": "The first implementation may model this one single-track branch leg and terminate it before the downstream depot-side two-track/switch system."
+          "source_id": "S134",
+          "status": "SOURCE_BACKED_HISTORICAL_ENGINEERING_ACCOUNT",
+          "rule": "The first implementation may model this one single-track branch leg and terminate it before the downstream depot-side two-track/switch system.",
+          "corroboration_source_id": "S125"
         },
         "actual_equipment_visual_events": [
           {
@@ -785,8 +789,20 @@
           },
           "selected_local_branch_edge_id": "BRANCH_KRP_BELORUSSKAYA_LEG",
           "selected_local_branch_track_count": 1,
-          "selected_local_branch_track_count_source_id": "S125",
-          "first_implementation_cut_rule": "END_NODE must be placed on the Belorusskaya single-track branch leg before the unresolved downstream switch/two-track depot-side section; exact cut XY/chainage remains null."
+          "selected_local_branch_track_count_source_id": "S134",
+          "first_implementation_cut_rule": "END_NODE must be placed on the Belorusskaya single-track branch leg before the unresolved downstream switch/two-track depot-side section; exact cut XY/chainage remains null.",
+          "selected_local_branch_track_count_corroboration_source_id": "S125",
+          "historical_design_topology": {
+            "branch_count_to_line5": 2,
+            "each_branch_track_count": 1,
+            "attachment_stations": [
+              "Белорусская",
+              "Краснопресненская"
+            ],
+            "source_id": "S134",
+            "locator": "A.M. Gorkov, 1983, exact web line 116",
+            "status": "SOURCE_BACKED"
+          }
         },
         "first_geometry_fallback": {
           "source_archetype": "METRO_STEPWISE_BRANCH_CHAMBER_TUBING_2001_REFERENCE",
@@ -1169,7 +1185,8 @@
       "Moscow metro ordinary main/turnback turnout rule uses 1:9 frogs; project 2976 provides a dimensioned metro-specific R65 1:9 fallback.",
       "Contact rail must be interrupted/sectioned as an event at the turnout rather than swept continuously.",
       "Generic chamber 6 is a two-vault common-wall structure, not yet two independent circular running tunnels.",
-      "Current rules require event-specific evacuation passage, drainage, power boxes, emergency point lighting and clearance markers around turnouts."
+      "Current rules require event-specific evacuation passage, drainage, power boxes, emergency point lighting and clearance markers around turnouts.",
+      "A 1983 engineering collection explicitly documents two single-track depot branches, one adjoining the Belorusskaya crossover-track system and one the Krasnopresnenskaya system."
     ],
     "CONSTRAINED": [
       "The depot/turnback area is a multi-switch system shown by published Line-5 track-development sources.",

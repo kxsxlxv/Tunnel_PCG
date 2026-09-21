@@ -1,0 +1,286 @@
+{
+  "schema_version": "1.0",
+  "research_date": "2026-09-21",
+  "scope": "Moscow Metro turnout geometry for Koltsevaya Line physical-junction PCG",
+  "provenance_rule": "A field marked FALLBACK is not asserted as the as-built turnout at the selected Belorusskaya/Krasnaya Presnya junction.",
+  "archetypes": [
+    {
+      "id": "MOSCOW_METRO_MAIN_TURNOUT_1_9_CONSTRAINT",
+      "status": "CONSTRAINED",
+      "purpose": "minimum source-backed rule for a main-track Moscow metro turnout when exact project/model is unknown",
+      "rail_type": {
+        "value": null,
+        "constraint": "must match the rail type laid at the site",
+        "source_id": "S081",
+        "locator": "SP 120.13330.2022 §5.7.1.16",
+        "era": "current",
+        "applicability": "Moscow/Russian metro design rule; exact site rail type must be sourced separately",
+        "confidence": "A",
+        "status": "SOURCE_BACKED_CONSTRAINT"
+      },
+      "gauge_mm": {
+        "value": 1520,
+        "source_id": "S058",
+        "locator": "Frolov 2001 §1.4 / Table 1.2 and Stage-10 running-track contract",
+        "era": "2001 reference",
+        "applicability": "Moscow metro running track",
+        "confidence": "A",
+        "status": "SOURCE_BACKED"
+      },
+      "frog_mark": {
+        "value": "1:9",
+        "source_ids": [
+          "S080",
+          "S081"
+        ],
+        "locators": [
+          "Frolov 2001 printed p.146, text before Fig.4.33",
+          "SP 120.13330.2022 §5.7.1.16"
+        ],
+        "era": "historical 2001 + current",
+        "applicability": "ordinary turnout on main and turnback tracks",
+        "confidence": "A",
+        "status": "SOURCE_BACKED"
+      },
+      "superelevation_in_turnout_zone": {
+        "value_mm": 0,
+        "source_id": "S080",
+        "locator": "Frolov 2001 printed p.146, text preceding Fig.4.33",
+        "era": "2001",
+        "applicability": "crossover/turnout zone described in the textbook",
+        "confidence": "A",
+        "status": "SOURCE_BACKED"
+      },
+      "transition_curve_in_turnout_zone": {
+        "value": false,
+        "source_id": "S080",
+        "locator": "Frolov 2001 printed p.146, text preceding Fig.4.33",
+        "era": "2001",
+        "applicability": "crossover/turnout zone described in the textbook",
+        "confidence": "A",
+        "status": "SOURCE_BACKED"
+      },
+      "exact_project_id": null,
+      "exact_radius_mm": null,
+      "exact_length_mm": null,
+      "exact_point_geometry": null,
+      "exact_bearer_layout": null,
+      "exact_fastening_family": null,
+      "note": "Do not synthesize these null fields from generic railway practice."
+    },
+    {
+      "id": "MOSCOW_METRO_R65_1_9_PROJECT_2976_REFERENCE_FALLBACK",
+      "status": "FALLBACK_NOT_PROVEN_AT_BELORUSSKAYA",
+      "purpose": "dimensioned metro-specific R65 1:9 mesh archetype usable only when the selected junction's exact installed turnout cannot be identified",
+      "manufacturer_context": "Murom Switch Plant product catalogue",
+      "project_id": "2976.00.000",
+      "turnout_kind": "ordinary",
+      "handedness": "mirrorable left/right; chosen junction is left-diverging by S073, but installed project remains unconfirmed",
+      "rail_type": "R65",
+      "gauge_mm": 1520,
+      "frog_mark": "1:9",
+      "frog_angle": {
+        "degrees_decimal": 6.3401917459,
+        "dms": "6°20′24.69″",
+        "derivation": "atan(1/9)",
+        "source_id": "S082",
+        "locator": "project 2976.00.000 product identification + frog mark 1:9",
+        "era": "catalogue product",
+        "applicability": "geometry reconstruction only",
+        "confidence": "A for derivation from mark",
+        "status": "RECONSTRUCTED"
+      },
+      "total_length_mm": {
+        "value": 31035,
+        "source_id": "S082",
+        "locator": "project 2976.00.000 technical characteristics / geometric-dimensions drawing",
+        "era": "catalogue product",
+        "applicability": "project 2976 only",
+        "confidence": "A/B",
+        "status": "SOURCE_BACKED"
+      },
+      "geometry": {
+        "point_tip_from_front_joint_mm": {
+          "value": 2765,
+          "derivation": "31035 - 26180 - 2090",
+          "source_id": "S082",
+          "locator": "geometric-dimensions drawing",
+          "confidence": "A/B",
+          "status": "RECONSTRUCTED_FROM_DRAWING_DIMENSIONS"
+        },
+        "point_tip_to_turnout_center_mm": {
+          "value": 12458,
+          "source_id": "S082",
+          "locator": "geometric-dimensions drawing",
+          "confidence": "A/B",
+          "status": "SOURCE_BACKED"
+        },
+        "turnout_center_to_mathematical_frog_center_mm": {
+          "value": 13722,
+          "source_id": "S082",
+          "locator": "geometric-dimensions drawing",
+          "confidence": "A/B",
+          "status": "SOURCE_BACKED"
+        },
+        "point_tip_to_mathematical_frog_center_mm": {
+          "value": 26180,
+          "source_id": "S082",
+          "locator": "geometric-dimensions drawing",
+          "confidence": "A/B",
+          "status": "SOURCE_BACKED"
+        },
+        "mathematical_frog_center_to_rear_joint_mm": {
+          "value": 2090,
+          "source_id": "S082",
+          "locator": "geometric-dimensions drawing",
+          "confidence": "A/B",
+          "status": "SOURCE_BACKED"
+        },
+        "point_initial_radius_mm": {
+          "value": 300000,
+          "source_id": "S082",
+          "locator": "geometric-dimensions drawing / technical characteristics",
+          "confidence": "A/B",
+          "status": "SOURCE_BACKED"
+        },
+        "turnout_curve_radius_mm": {
+          "value": 200060,
+          "source_ids": [
+            "S082",
+            "S083"
+          ],
+          "locators": [
+            "geometric-dimensions drawing",
+            "product technical characteristics"
+          ],
+          "confidence": "A/B",
+          "status": "SOURCE_BACKED"
+        },
+        "point_initial_angle": {
+          "value": "0°27′19.57″",
+          "source_id": "S082",
+          "locator": "geometric-dimensions drawing, βn",
+          "confidence": "A/B",
+          "status": "SOURCE_BACKED"
+        }
+      },
+      "rail_components": {
+        "stock_and_point_assemblies": [
+          "1 straight stock/frame rail with curved point",
+          "1 curved stock/frame rail with straight point"
+        ],
+        "frog": "1 assembled frog",
+        "guard_rail_assemblies": "2 rails with independent guard rails",
+        "connecting_strip": "1",
+        "additional_rail_lengths_mm": [
+          6027,
+          7433,
+          7373,
+          5912,
+          7994,
+          7994
+        ],
+        "source_ids": [
+          "S082",
+          "S083"
+        ],
+        "confidence": "B",
+        "status": "SOURCE_BACKED"
+      },
+      "bearer_layout": {
+        "foundation": "wooden switch bearers",
+        "length_groups_m": [
+          {
+            "count": 17,
+            "length_m": 3
+          },
+          {
+            "count": 10,
+            "length_m": 3.25
+          },
+          {
+            "count": 8,
+            "length_m": 3.5
+          },
+          {
+            "count": 4,
+            "length_m": 3.75
+          },
+          {
+            "count": 6,
+            "length_m": 4
+          },
+          {
+            "count": 5,
+            "length_m": 4.25
+          },
+          {
+            "count": 6,
+            "length_m": 4.5
+          },
+          {
+            "count": 4,
+            "length_m": 4.75
+          },
+          {
+            "count": 4,
+            "length_m": 5
+          },
+          {
+            "count": 4,
+            "length_m": 5.25
+          }
+        ],
+        "visible_longitudinal_spacing_groups_mm": [
+          2600,
+          4725,
+          7070,
+          5775
+        ],
+        "complete_longitudinal_spacing_sequence": null,
+        "source_id": "S082",
+        "locator": "project 2976.00.000 laying diagram",
+        "confidence": "B for bearer length inventory; C for partial spacing transcription",
+        "status": "PARTIAL_SOURCE_BACKED"
+      },
+      "fastening": {
+        "family": "separate fastening; high-flange plates/bridges and spring rail fasteners",
+        "exact_plate_sku": null,
+        "conflict": "public product lists differ between SK65/117-piece and SKL65/208-piece package descriptions; do not encode either as the installed Belorusskaya set",
+        "source_ids": [
+          "S082",
+          "S083"
+        ],
+        "confidence": "B for topology, UNKNOWN for exact package variant",
+        "status": "CONSTRAINED"
+      },
+      "speeds_kmh": {
+        "straight": 100,
+        "diverging": 40,
+        "source_ids": [
+          "S082",
+          "S083"
+        ],
+        "applicability": "product capability, not an assertion of actual operating speed at Belorusskaya",
+        "confidence": "B",
+        "status": "SOURCE_BACKED_PRODUCT"
+      },
+      "minimum_straight_insert_before_m": null,
+      "minimum_straight_insert_after_m": null,
+      "point_machine_model": null,
+      "mesh_use_rule": "May be mirrored to the left for a first visual fallback at the chosen junction, but every mesh/object must carry fallback=true and installed_model_unconfirmed=true."
+    },
+    {
+      "id": "MOSCOW_METRO_CROSSOVER_2_9_CONSTRAINT",
+      "status": "CONSTRAINED",
+      "frog_mark": "2:9",
+      "source_id": "S081",
+      "locator": "SP 120.13330.2022 §5.7.1.16",
+      "era": "current",
+      "applicability": "crossovers",
+      "confidence": "A",
+      "exact_project_id": null,
+      "exact_geometry": null
+    }
+  ]
+}

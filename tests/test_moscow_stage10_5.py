@@ -680,11 +680,15 @@ def test_stage10_5_rc_6100_5600_civil_archetype_adapts_geometry():
         "moscow_5600_intrados"
     )
     assert len(build.scene.objects_of_type("production_service_cable")) == 16
-    for rack in build.scene.objects_of_type("production_cable_rack_r2k11"):
+    # Periodic scene objects include the production alignment translation, so
+    # containment must be checked in the rack-local XZ frame rather than
+    # against the global origin.
+    for side in (-1, 1):
+        local_rack = build_r2k11_local_rack_mesh(profile, side_sign=side)
         assert max(
             math.hypot(x, z)
-            for x, _y, z in rack.vertices
-        ) < profile.intrados_radius_m + 1e-9
+            for x, _y, z in local_rack.vertices
+        ) < profile.intrados_radius_m
 
 
 def test_stage10_5_modern_objects_have_no_exact_duplicate_faces_and_stable_ids():

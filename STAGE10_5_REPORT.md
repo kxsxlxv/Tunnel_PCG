@@ -36,6 +36,26 @@ It replaces the legacy service-era hardware with:
 - representative wall-supported service cables;
 - one current tunnel water main, minimum DN80, on the weak-current side.
 
+## Selectable civil envelope
+
+Stage 10.5 now supports two researched circular Moscow civil envelopes through
+`--civil-archetype`:
+
+    cast_iron_5500_5100
+        D_in 5.100 m / D_out 5.500 m / ring pitch 1.000 m
+
+    rc_block_6100_5600
+        D_in 5.600 m / D_out 6.100 m / ring pitch 1.000 m
+        source-backed topology: 10 identical RC blocks
+
+The classic 5.5/5.1 family remains the default. For the 6.1/5.6 family, source
+S026 fixes the diameters, pitch and ten-block topology but does not provide a
+separate UGR-to-lining-axis datum. The generator therefore explicitly transfers
+the established Stage-10 track/UGR datum and recomputes shell closure, walkway
+width and intrados-following service placement from the selected radius. Exact
+RC block-edge/pin CAD is not fabricated; the current rendering remains a
+smooth source-sized envelope with the ten-block topology carried as metadata.
+
 ## Modern permanent way
 
 Preset:
@@ -203,20 +223,30 @@ bend path is still a replaceable preview.
 One R2K11 rack is generated on each wall at the midpoint of every 1.0 m Moscow
 civil ring.
 
-Stage-10.5 v2 now populates both cable places on all 11 levels on both walls:
+Stage-10.5 v3 follows the supplied product drawing/3D references more closely:
+the two K1350.002 open cradle seats no longer sit on a continuous horizontal
+underbar. Only a short wall-side neck remains between the upright and first
+cradle.
 
-    11 levels x 2 places x 2 sides = 44 representative cable routes
+The visual cable preset occupies eight distributed levels per wall and one
+cable place on each occupied level:
 
-The negative-X/contact-rail wall is tagged as the strong-current side and the
-positive-X/walkway wall as the weak-current side in accordance with the tunnel
-cable-layout rule.
+    8 levels x 1 cable x 2 sides = 16 representative cable routes
 
-The 44 cables are deliberately a **full-capacity visual-density preset**, not a
-claim about the exact cable schedule of one named tunnel. Project-specific
-cable types, diameters and occupancy remain unresolved.
+The routes use a restrained 0.025 m midspan sag between the 1.0 m rack
+supports. The sweep inserts one sag midpoint per support span rather than a
+dense spline tessellation.
+
+The negative-X/contact-rail wall is tagged as the strong-current side and its
+rack midpoint is raised to the lining-axis height to match the supplied visual
+reference. The positive-X/walkway wall remains the weak-current side.
+
+This remains a visual-density preset, not a claim about the exact cable schedule
+of one named tunnel. Project-specific cable types, diameters and occupancy
+remain unresolved.
 
 All modern racks and representative cables are checked to remain inside the
-2.550 m physical intrados.
+selected physical intrados.
 
 ## Current water main
 
@@ -300,7 +330,7 @@ Still explicit fallbacks:
 - modern cover corner radii;
 - exact support-hood product shape;
 - some support-bracket bend radii;
-- exact project cable occupancy/schedule (the current 44-cable layout is a visual-density preset);
+- exact project cable occupancy/schedule (the current 16-cable layout is a visual-density preset);
 - exact current pipe OD/wall thickness and project support/bracket CAD.
 
 ## Verification
@@ -332,7 +362,7 @@ Latest fully green baseline before the v3 support-drawing update:
     modern LVT support events                67
     contact supports                          8
     contact cover spans                       9
-    service cables                           44
+    service cables                           16
     R2K11 rack objects                       82
     water mains                               1
     periodic water-main supports              source-length dependent, <=4 m pitch
@@ -355,6 +385,13 @@ Equivalent explicit form:
         --service-preset modern \
         --rings 20 \
         --namespace stage10-5-modern
+
+Larger 6.1/5.6 m RC-envelope alternative:
+
+    python examples/generate_stage10_production_tunnel.py \
+        --rings 20 \
+        --namespace stage10-5-rc6100 \
+        --civil-archetype rc_block_6100_5600
 
 Legacy timber/KD-65 alternative:
 

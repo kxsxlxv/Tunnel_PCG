@@ -59,9 +59,11 @@ from .contact_rail import (
 )
 from .services import (
     build_r2k11_local_rack_mesh,
+    build_water_main_support_local_mesh,
     cable_rack_chainages,
     modern_cable_sections_core,
     modern_water_main_section_core,
+    water_main_support_chainages,
 )
 from .civil import (
     build_annular_shell_sweep,
@@ -2039,6 +2041,80 @@ def _build_stage10_5_service_rack_scene_objects(
     return tuple(result)
 
 
+def _build_stage10_5_water_main_support_scene_objects(
+    *,
+    profile: MoscowStage10Profile,
+    namespace: str,
+    assembly: TunnelAssembly,
+    stations: Sequence[AlignmentStation],
+    label_policy: LabelPolicy,
+) -> tuple[SceneObject, ...]:
+    local = build_water_main_support_local_mesh(profile)
+    chainages = water_main_support_chainages(
+        assembly.length_by_chainage_m,
+        profile,
+    )
+    label_id, semantic = _ancillary_semantics(label_policy, "tube")
+    result: list[SceneObject] = []
+    source_ring_width = assembly.config.ring_width_m
+
+    for event_index, chainage in enumerate(chainages):
+        station = sample_alignment_station(stations, chainage)
+        source_ring_id = min(
+            assembly.config.n_rings - 1,
+            max(0, int(math.floor(chainage / source_ring_width))),
+        )
+        key = f"{namespace}/services/water-main-support/{event_index:06d}"
+        iid = stable_instance_id(key)
+        vertices = tuple(
+            (
+                x + station.offset_x_m,
+                y + station.world_y_m,
+                z + station.offset_z_m,
+            )
+            for x, y, z in local.vertices
+        )
+        result.append(
+            SceneObject(
+                name=f"PROD_WATER_MAIN_SUPPORT_{event_index:06d}",
+                vertices=vertices,
+                faces=local.faces,
+                object_type=local.object_type,
+                ring_id=source_ring_id,
+                label_id=label_id,
+                instance_id=iid,
+                semantic_class=semantic,
+                reconstruction="stage10_5_water_main_wall_support",
+                collection_path=(
+                    "Tunnel",
+                    namespace,
+                    "Services",
+                    "WaterMain",
+                    "Supports",
+                ),
+                extra_properties={
+                    **dict(local.properties),
+                    "persistentKey": key,
+                    "persistentInstanceID": iid,
+                    "tunnelInstanceID": stable_instance_id(
+                        f"{namespace}/tunnel"
+                    ),
+                    "identityScope": "periodic_modern_service_asset",
+                    "domainGeometryStage": "10.5",
+                    "servicePreset": profile.default_service_preset,
+                    "periodicEventIndex": event_index,
+                    "eventChainageM": chainage,
+                    "alignmentOffsetX": station.offset_x_m,
+                    "alignmentOffsetZ": station.offset_z_m,
+                    "alignmentWorldY": station.world_y_m,
+                    "moscowProfileID": profile.profile_id,
+                    "moscowProfileSHA256": profile.provenance.canonical_sha256,
+                },
+            )
+        )
+    return tuple(result)
+
+
 def _build_stage10_4_civil_shell_objects(
     *,
     profile: MoscowStage10Profile,
@@ -2385,6 +2461,23 @@ def build_production_scene(
         )
         objects.extend(stage10_5_service_racks)
 
+    stage10_5_water_supports: tuple[SceneObject, ...] = ()
+    if (
+        config.moscow_profile is not None
+        and config.moscow_stage == "10.5"
+        and config.resolved_moscow_service_preset == "modern"
+    ):
+        stage10_5_water_supports = (
+            _build_stage10_5_water_main_support_scene_objects(
+                profile=config.moscow_profile,
+                namespace=config.namespace,
+                assembly=source_build.assembly,
+                stations=stations,
+                label_policy=source_scene.label_policy,
+            )
+        )
+        objects.extend(stage10_5_water_supports)
+
     stage10_4_civil_rings: tuple[SceneObject, ...] = ()
     if (
         config.moscow_profile is not None
@@ -2573,7 +2666,7 @@ def build_production_scene(
                     else "deferred_to_stage10_4"
                 ),
                 "nonRailInfrastructureStatus": (
-                    "r2k11_cable_racks_implemented_pipes_unresolved"
+                    "r2k11_cable_racks_and_dn80_water_main_with_supports_implemented"
                     if (
                         config.moscow_stage == "10.5"
                         and config.resolved_moscow_service_preset == "modern"
@@ -2608,6 +2701,31 @@ def build_production_scene(
                     if stage10_5_service_racks
                     else 0
                 ),
+                "serviceCableRackAssemblyDesignation": (
+                    config.moscow_profile.cable_rack.assembly_designation
+                    if stage10_5_service_racks
+                    else None
+                ),
+                "serviceCableRackUprightDesignation": (
+                    config.moscow_profile.cable_rack.upright_designation
+                    if stage10_5_service_racks
+                    else None
+                ),
+                "serviceCableRackHornDesignation": (
+                    config.moscow_profile.cable_rack.horn_designation
+                    if stage10_5_service_racks
+                    else None
+                ),
+                "serviceCablePlacesPerHorn": (
+                    config.moscow_profile.cable_rack.cable_places_per_horn
+                    if stage10_5_service_racks
+                    else 0
+                ),
+                "serviceCableOccupiedPlacesPerHorn": (
+                    config.moscow_profile.cable_rack.occupied_places_per_horn
+                    if stage10_5_service_racks
+                    else 0
+                ),
                 "serviceCableRacksPerCivilRing": (
                     2 if stage10_5_service_racks else 0
                 ),
@@ -2626,6 +2744,14 @@ def build_production_scene(
                     1
                     for obj in objects
                     if obj.object_type == "production_water_main"
+                ),
+                "serviceWaterMainSupportCount": len(
+                    stage10_5_water_supports
+                ),
+                "serviceWaterMainSupportMaxPitchM": (
+                    config.moscow_profile.water_main.support_max_pitch_m
+                    if stage10_5_water_supports
+                    else None
                 ),
                 "serviceWaterMainMinNominalDNmm": (
                     config.moscow_profile.water_main.min_nominal_dn_mm

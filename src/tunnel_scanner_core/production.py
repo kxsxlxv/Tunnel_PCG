@@ -67,6 +67,7 @@ from .services import (
 )
 from .civil import (
     build_annular_shell_sweep,
+    build_segmented_rc_ring_sweep,
     civil_ring_ranges,
     walkway_core_xz,
 )
@@ -2684,6 +2685,10 @@ def _build_stage10_4_civil_shell_objects(
     label_id, semantic = _civil_semantics(label_policy)
     result: list[SceneObject] = []
     source_ring_width = assembly.config.ring_width_m
+    is_rc_10block = (
+        profile.civil_family
+        == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+    )
 
     ranges = civil_ring_ranges(
         total,
@@ -2695,20 +2700,48 @@ def _build_stage10_4_civil_shell_objects(
             start_chainage_m=start_chainage,
             end_chainage_m=end_chainage,
         )
-        mesh = build_annular_shell_sweep(
-            profile,
-            tuple(
-                (
-                    station.offset_x_m,
-                    station.world_y_m,
-                    station.offset_z_m,
-                )
-                for station in clipped
-            ),
-            angular_segments=96,
-            cap_start=math.isclose(start_chainage, 0.0, abs_tol=1e-12),
-            cap_end=math.isclose(end_chainage, total, abs_tol=1e-12),
+        station_xyz = tuple(
+            (
+                station.offset_x_m,
+                station.world_y_m,
+                station.offset_z_m,
+            )
+            for station in clipped
         )
+        cap_start = math.isclose(start_chainage, 0.0, abs_tol=1e-12)
+        cap_end = math.isclose(end_chainage, total, abs_tol=1e-12)
+
+        if is_rc_10block:
+            mesh = build_segmented_rc_ring_sweep(
+                profile,
+                station_xyz,
+                segment_count=10,
+                seam_width_m=0.008,
+                angular_subdivisions_per_segment=8,
+                cap_start=cap_start,
+                cap_end=cap_end,
+            )
+            reconstruction = (
+                "stage10_4_moscow_rc_10block_stage9_like_segmented_ring_v1"
+            )
+            coarse_count_is_geometry = True
+            civil_render_mode = "source_backed_10_equal_curved_rc_blocks"
+        else:
+            mesh = build_annular_shell_sweep(
+                profile,
+                station_xyz,
+                angular_segments=96,
+                cap_start=cap_start,
+                cap_end=cap_end,
+            )
+            reconstruction = (
+                "stage10_4_moscow_cast_iron_smooth_envelope_detail_deferred"
+            )
+            coarse_count_is_geometry = False
+            civil_render_mode = (
+                "source_sized_smooth_cast_iron_envelope_detail_deferred"
+            )
+
         midpoint = 0.5 * (start_chainage + end_chainage)
         representative_ring_id = min(
             assembly.config.n_rings - 1,
@@ -2726,7 +2759,7 @@ def _build_stage10_4_civil_shell_objects(
                 label_id=label_id,
                 instance_id=iid,
                 semantic_class=semantic,
-                reconstruction="stage10_4_moscow_smooth_concentric_shell",
+                reconstruction=reconstruction,
                 collection_path=(
                     "Tunnel",
                     namespace,
@@ -2753,18 +2786,40 @@ def _build_stage10_4_civil_shell_objects(
                     ),
                     "civilFamily": profile.civil_family,
                     "civilGeometryMode": profile.civil_geometry_mode,
+                    "civilRenderMode": civil_render_mode,
                     "circumferentialSegmentSurfaceMode": (
                         profile.civil_segment_surface_mode
                     ),
                     "coarseSegmentCountReference": (
-                        10
-                        if profile.civil_family
-                        == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
-                        else 11
+                        10 if is_rc_10block else 11
                     ),
-                    "coarseSegmentCountIsGeometry": False,
+                    "coarseSegmentCountIsGeometry": (
+                        coarse_count_is_geometry
+                    ),
                     "seriesAccurateTubingLOD0": False,
                     "seriesAccurateCivilLOD0": False,
+                    "stage9LikeCurvedSegmentConstruction": is_rc_10block,
+                    "renderedRCBlockCount": 10 if is_rc_10block else 0,
+                    "renderedRCVisualSeamWidthM": (
+                        0.008 if is_rc_10block else 0.0
+                    ),
+                    "renderedRCBlockNominalAngularSpanDeg": (
+                        36.0 if is_rc_10block else 0.0
+                    ),
+                    "rcBlocksIdenticalBySource": (
+                        True if is_rc_10block else False
+                    ),
+                    "rcPermanentBoltedBlockJoints": (
+                        False if is_rc_10block else False
+                    ),
+                    "rcWorkingRebarDiameterM": (
+                        0.016 if is_rc_10block else 0.0
+                    ),
+                    "rcAssemblyPinDiameterM": (
+                        0.022 if is_rc_10block else 0.0
+                    ),
+                    "rcAssemblyPinGeometryResolved": False,
+                    "rcExactBlockEdgeChamferResolved": False,
                     "intradosRadiusM": profile.intrados_radius_m,
                     "intradosDiameterM": 2.0 * profile.intrados_radius_m,
                     "extradosRadiusM": profile.extrados_radius_m,
@@ -3055,16 +3110,8 @@ def build_production_scene(
             stations=stations,
             label_policy=source_scene.label_policy,
         )
-        stage10_4_civil_details = _build_stage10_4_civil_detail_objects(
-            profile=config.moscow_profile,
-            namespace=config.namespace,
-            assembly=source_build.assembly,
-            stations=stations,
-            label_policy=source_scene.label_policy,
-            include_bolts=config.moscow_civil_bolts_enabled,
-        )
+        stage10_4_civil_details = ()
         objects.extend(stage10_4_civil_rings)
-        objects.extend(stage10_4_civil_details)
 
     metadata = dict(source_scene.metadata)
     metadata.update(
@@ -3230,7 +3277,15 @@ def build_production_scene(
                     )
                 ),
                 "civilShellStatus": (
-                    "implemented_stage10_4_smooth_concentric_shell"
+                    (
+                        "implemented_stage10_4_segmented_rc_10block_shell"
+                        if config.moscow_profile.civil_family
+                        == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                        else (
+                            "implemented_stage10_4_cast_iron_smooth_envelope_"
+                            "detail_deferred"
+                        )
+                    )
                     if config.moscow_stage in {"10.4", "10.5"}
                     else "deferred_to_stage10_4"
                 ),
@@ -3437,40 +3492,66 @@ def build_production_scene(
                     config.moscow_stage in {"10.4", "10.5"}
                 ),
                 "moscowCivilCompositeDetailStatus": (
-                    "implemented_source_sized_visual_joint_rib_bolt_overlay"
+                    (
+                        "implemented_rc_10block_geometry_stage9_like"
+                        if config.moscow_profile.civil_family
+                        == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                        else "cast_iron_detail_deferred_pending_research"
+                    )
                     if config.moscow_stage in {"10.4", "10.5"}
                     else "deferred_to_stage10_4"
                 ),
-                "moscowCivilDetailRibObjectCount": sum(
-                    1
-                    for obj in stage10_4_civil_details
-                    if obj.object_type
-                    == "production_moscow_civil_detail_ribs"
+                "moscowCivilDetailRibObjectCount": 0,
+                "moscowCivilBoltObjectCount": 0,
+                "moscowCivilBoltHeadCount": 0,
+                "moscowCivilBoltsEnabled": False,
+                "moscowCivilRenderedBlockCount": (
+                    10 * len(stage10_4_civil_rings)
+                    if (
+                        config.moscow_stage in {"10.4", "10.5"}
+                        and config.moscow_profile.civil_family
+                        == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                    )
+                    else 0
                 ),
-                "moscowCivilBoltObjectCount": sum(
-                    1
-                    for obj in stage10_4_civil_details
-                    if obj.object_type
-                    == "production_moscow_civil_bolt_heads"
+                "moscowCivilRCVisualSeamWidthM": (
+                    0.008
+                    if (
+                        config.moscow_stage in {"10.4", "10.5"}
+                        and config.moscow_profile.civil_family
+                        == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                    )
+                    else 0.0
                 ),
-                "moscowCivilBoltHeadCount": sum(
-                    int(obj.custom_properties.get("boltHeadCount", 0))
-                    for obj in stage10_4_civil_details
-                    if obj.object_type
-                    == "production_moscow_civil_bolt_heads"
+                "moscowCivilRCWorkingRebarDiameterM": (
+                    0.016
+                    if (
+                        config.moscow_stage in {"10.4", "10.5"}
+                        and config.moscow_profile.civil_family
+                        == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                    )
+                    else 0.0
                 ),
-                "moscowCivilBoltsEnabled": (
-                    config.moscow_civil_bolts_enabled
-                    if config.moscow_stage in {"10.4", "10.5"}
-                    else False
+                "moscowCivilRCAssemblyPinDiameterM": (
+                    0.022
+                    if (
+                        config.moscow_stage in {"10.4", "10.5"}
+                        and config.moscow_profile.civil_family
+                        == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                    )
+                    else 0.0
                 ),
                 "moscowCivilDetailAccuracyBoundary": (
-                    "source_backed_anatomy_and_principal_dimensions;"
-                    "visual_joint_positions_not_series_CAD"
+                    (
+                        "RC: principal radii, 1m pitch, ten identical blocks, "
+                        "16mm working reinforcement and 22mm erection pins are "
+                        "source-backed; visual seam width and exact edge/pin-hole "
+                        "CAD remain unresolved. Cast iron: detail deferred."
+                    )
                     if config.moscow_stage in {"10.4", "10.5"}
                     else None
                 ),
-                "moscowCivilRingCount": (
+                                "moscowCivilRingCount": (
                     len(stage10_4_civil_rings)
                     if config.moscow_stage in {"10.4", "10.5"}
                     else 0

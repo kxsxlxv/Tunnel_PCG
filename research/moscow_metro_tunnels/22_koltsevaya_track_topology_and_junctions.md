@@ -140,6 +140,15 @@ S096 — учебный материал по пути метрополитен�
 
 ---
 
+### Route-member graph is not enough for junction discovery
+
+The current route relations resolve the two passenger directions, but a depot or service branch can be a physical `railway=subway` way that is not a member of either passenger route. Therefore the reference acquisition pipeline has two layers:
+
+1. `300607 Inner` and `1462011 Outer` seed the two main-track candidate sets;
+2. `tools_extract_connected_subway_graph.py` expands through shared OSM nodes into connected off-route physical subway ways.
+
+The expansion hop count is only an acquisition boundary. It does not assign `BRANCH_EDGE`, `CROSSOVER`, straight/diverging, or depot semantics. Those are applied only from the researched source contract.
+
 ## 3. Подтверждённые track-development systems Line 5
 
 Это **топологические** подтверждения. Точные OSM/engineering XY требуют дальнейшего извлечения physical graph.

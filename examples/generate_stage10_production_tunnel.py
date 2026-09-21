@@ -357,10 +357,23 @@ def _validate_stage10_build(
 
         if len(build.scene.objects_of_type("production_tube")) != 0:
             raise AssertionError("modern preset must remove Stage-8 tube previews")
-        if len(build.scene.objects_of_type("production_service_cable")) != 22:
-            raise AssertionError("modern preset requires 22 continuous service cables")
+        if len(build.scene.objects_of_type("production_service_cable")) != 44:
+            raise AssertionError("modern preset requires 44 continuous service cables")
         if len(build.scene.objects_of_type("production_water_main")) != 1:
             raise AssertionError("modern preset requires one tunnel water main")
+        water_supports = build.scene.objects_of_type(
+            "production_water_main_support"
+        )
+        if not water_supports:
+            raise AssertionError("modern preset requires periodic water-main supports")
+        if len(water_supports) != int(meta.get("serviceWaterMainSupportCount", -1)):
+            raise AssertionError("water-main support metadata mismatch")
+        if not math.isclose(
+            float(meta.get("serviceWaterMainSupportMaxPitchM", -1)),
+            4.0,
+            abs_tol=1e-12,
+        ):
+            raise AssertionError("water-main support pitch must remain <=4 m")
         if meta.get("servicePipeStatus") != (
             "implemented_normative_DN80_with_explicit_placement_fallback"
         ):
@@ -370,6 +383,10 @@ def _validate_stage10_build(
         civil_count = int(meta.get("moscowCivilRingCount", 0))
         if len(build.scene.objects_of_type("production_cable_rack_r2k11")) != 2 * civil_count:
             raise AssertionError("modern preset requires one R2K11 rack per side per civil ring")
+        if int(meta.get("serviceCablePlacesPerHorn", -1)) != 2:
+            raise AssertionError("R2K11 double horn must expose two cable places")
+        if int(meta.get("serviceCableOccupiedPlacesPerHorn", -1)) != 2:
+            raise AssertionError("modern visual preset must populate both cable places")
 
     if domain_stage in {"10.4", "10.5"}:
         if meta.get("civilShellStatus") != (
@@ -547,6 +564,9 @@ def main() -> None:
         "productionServiceCables": len(
             build.scene.objects_of_type("production_service_cable")
         ),
+        "productionWaterMainSupports": len(
+            build.scene.objects_of_type("production_water_main_support")
+        ),
         "productionR2K11Racks": len(
             build.scene.objects_of_type("production_cable_rack_r2k11")
         ),
@@ -657,6 +677,21 @@ def main() -> None:
         "serviceCableCount": production_meta.get("serviceCableCount"),
         "serviceCableRackCount": production_meta.get("serviceCableRackCount"),
         "serviceCableRackFamily": production_meta.get("serviceCableRackFamily"),
+        "serviceCableRackAssemblyDesignation": production_meta.get(
+            "serviceCableRackAssemblyDesignation"
+        ),
+        "serviceCablePlacesPerHorn": production_meta.get(
+            "serviceCablePlacesPerHorn"
+        ),
+        "serviceCableOccupiedPlacesPerHorn": production_meta.get(
+            "serviceCableOccupiedPlacesPerHorn"
+        ),
+        "serviceWaterMainSupportCount": production_meta.get(
+            "serviceWaterMainSupportCount"
+        ),
+        "serviceWaterMainSupportMaxPitchM": production_meta.get(
+            "serviceWaterMainSupportMaxPitchM"
+        ),
         "servicePipeStatus": production_meta.get("servicePipeStatus"),
         "serviceWaterMainCount": production_meta.get(
             "serviceWaterMainCount"

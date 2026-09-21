@@ -154,7 +154,16 @@
             "locator": "Frolov 2001 printed pp.148-149, Fig.4.34 and adjacent text",
             "era": "2001 engineering reference",
             "applicability": "generic closed-method metro branch-chamber reference; not Belorusskaya as-built",
-            "confidence": "A_for_printed_dimensions_B_for_transfer_to_generic_PCG"
+            "confidence": "A_for_printed_dimensions_B_for_transfer_to_generic_PCG",
+            "section_1_1_axis_decomposition": {
+              "raw_callouts_m": [
+                2.46,
+                2
+              ],
+              "sum_m": 4.46,
+              "status": "SOURCE_BACKED_FROM_FIGURE",
+              "source_id": "S058"
+            }
           },
           {
             "chamber": 6,
@@ -177,7 +186,15 @@
               "exact_wall_thickness_m": null,
               "exact_track_axis_separation_m": null
             },
-            "note": "Printed p.150 explicitly states that chamber 6 consists of two single-track tunnels whose open linings bear on a concrete/RC wall. Independent single-track tunnels occur only after inter-track spacing exceeds 6 m."
+            "note": "Printed p.150 explicitly states that chamber 6 consists of two single-track tunnels whose open linings bear on a concrete/RC wall. Independent single-track tunnels occur only after inter-track spacing exceeds 6 m.",
+            "section_2_2_horizontal_callouts": {
+              "raw_axis_to_central_wall_zone_m": [
+                2.05,
+                2.05
+              ],
+              "exact_track_axis_separation_m": null,
+              "status": "RAW_SOURCE_CALLOUTS_DATUM_AMBIGUOUS"
+            }
           }
         ],
         "derived_landmarks": {

@@ -153,7 +153,6 @@ Files:
 - `data/moscow_turnout_archetypes.json`
 - `data/moscow_junction_civil_archetypes.json`
 - `data/koltsevaya_junction_source_pinpoints.json`;
-- `data/koltsevaya_junction_source_pinpoints.json`;
 - `reference_impl/tunnel_pcg_ref/osm_track_graph.py`.
 
 The sourced identity is:
@@ -161,3 +160,6 @@ The sourced identity is:
 - `KOLTSEVAYA_TRACK_B` = II main / outer / counterclockwise.
 
 The selected first real junction is the Belorusskaya/Krasnaya-Presnya depot-side divergence. Direction-level OSM route IDs are resolved (Inner 300607 / Outer 1462011); exact current member way/node IDs, site Z, installed turnout project and actual chamber dimensions remain deliberately unresolved where no source was obtained. No second tunnel is produced by lateral offset.
+
+
+The 1983 engineering collection now provides primary historical confirmation that the Krasnaya Presnya depot was connected to Line 5 by **two single-track branches**, one at the Belorusskaya crossover system and one at the Krasnopresnenskaya system (S134). A Dorman article in the same collection additionally states that **one of those branches is 256 m long**, but does not identify which leg, so that length remains an unassigned constraint (S135).

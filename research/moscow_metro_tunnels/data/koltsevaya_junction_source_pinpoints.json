@@ -217,6 +217,83 @@
         ]
       },
       "confidence": "B/C"
+    },
+    {
+      "id": "S087",
+      "title": "Краснопресненская Line 5 track development",
+      "url": "https://www.nashtransport.ru/russia/moscow/metro/lines/line_5/krasnopresnenskaya/",
+      "locator": {
+        "section": "Путевое развитие / station technical data",
+        "supports": [
+          "3 turnouts and one turnback/storage track continuing to Krasnaya Presnya depot connection",
+          "station reference PK115+08.2; not switch chainage"
+        ]
+      },
+      "confidence": "B/C_station_context"
+    },
+    {
+      "id": "S088",
+      "title": "Проспект Мира Line 5 track development",
+      "url": "https://www.nashtransport.ru/russia/moscow/metro/lines/line_5/prospekt_mira/",
+      "locator": {
+        "section": "station technical data / Line-5 schematic context",
+        "supports": [
+          "Line-5 SSV system with Kaluzhsko-Rizhskaya",
+          "station reference PK163+79.1; not switch chainage"
+        ]
+      },
+      "confidence": "B/C_station_context"
+    },
+    {
+      "id": "S089",
+      "title": "Курская Line 5 track development",
+      "url": "https://www.nashtransport.ru/russia/moscow/metro/lines/line_5/kurskaya/",
+      "locator": {
+        "section": "Путевое развитие / station technical data",
+        "supports": [
+          "5 turnouts and one turnback/storage track continuing to Lyublinsko-Dmitrovskaya service connection",
+          "station reference PK9+52; not switch chainage"
+        ]
+      },
+      "confidence": "B/C_station_context"
+    },
+    {
+      "id": "S090",
+      "title": "Павелецкая Line 5 track development",
+      "url": "https://www.nashtransport.ru/russia/moscow/metro/lines/line_5/paveletskaya/",
+      "locator": {
+        "section": "Путевое развитие / station technical data",
+        "supports": [
+          "3 turnouts and one turnback/storage track continuing to service-connection system",
+          "station reference PK40+98.9; not switch chainage"
+        ]
+      },
+      "confidence": "B/C_station_context"
+    },
+    {
+      "id": "S091",
+      "title": "Парк культуры Line 5 track development",
+      "url": "https://www.nashtransport.ru/russia/moscow/metro/lines/line_5/park_kultury/page/5/",
+      "locator": {
+        "section": "station technical data / track-development page",
+        "supports": [
+          "turnback/service-connection system to Sokolnicheskaya",
+          "station reference PK73+26.8; not switch chainage"
+        ]
+      },
+      "confidence": "B/C_station_context"
+    },
+    {
+      "id": "S097",
+      "title": "Таганская Line 5 station PK context",
+      "url": "https://www.nashtransport.ru/russia/moscow/metro/lines/line_5/taganskaya/",
+      "locator": {
+        "section": "station technical data",
+        "supports": [
+          "station reference PK27+63.4; not switch chainage"
+        ]
+      },
+      "confidence": "B/C_station_context"
     }
   ]
 }

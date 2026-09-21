@@ -107,8 +107,9 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help=(
             "When --chunk-m is set, skip writing the monolithic full-scene JSON. "
-            "The geometry is still generated in global coordinates internally; only "
-            "the serialized output is partitioned."
+            "Stage 10.5 modern RC uses true chunk-first generation and never "
+            "materializes the full scene; other compatibility modes retain the "
+            "legacy partitioning path."
         ),
     )
     parser.add_argument(

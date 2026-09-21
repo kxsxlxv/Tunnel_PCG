@@ -431,7 +431,38 @@
           },
           "note": "The aggregate length-count distribution exactly matches the 68-piece manufacturer/project-2976 bearer inventory; this is independent dimensional confirmation. It still does not prove project 2976 was installed at Belorusskaya.",
           "confidence": "A_for_standard_set_B_for_project_match"
-        }
+        },
+        "visible_longitudinal_spacing_groups": [
+          {
+            "count_intervals": 5,
+            "pitch_mm": 520,
+            "total_mm": 2600,
+            "source_id": "S130",
+            "status": "VISIBLE_DRAWING_GROUP"
+          },
+          {
+            "count_intervals": 9,
+            "pitch_mm": 525,
+            "total_mm": 4725,
+            "source_id": "S130",
+            "status": "VISIBLE_DRAWING_GROUP"
+          },
+          {
+            "count_intervals": 14,
+            "pitch_mm": 505,
+            "total_mm": 7070,
+            "source_id": "S130",
+            "status": "VISIBLE_DRAWING_GROUP"
+          },
+          {
+            "count_intervals": 11,
+            "pitch_mm": 525,
+            "total_mm": 5775,
+            "source_id": "S130",
+            "status": "VISIBLE_DRAWING_GROUP"
+          }
+        ],
+        "visible_longitudinal_spacing_groups_rule": "These are only explicitly legible grouped spans in the high-resolution laying diagram. They do not constitute the complete 67-interval bearer sequence; preserve complete_longitudinal_spacing_sequence=null."
       },
       "fastening": {
         "family": "separate fastening; high-flange plates/bridges and spring rail fasteners",
@@ -510,7 +541,14 @@
           "exact_wing_rail_geometry": null,
           "exact_frog_nose_profile": null,
           "exact_frog_start_end_chainage": null,
-          "confidence": "B_for_type_UNKNOWN_for_mesh_detail"
+          "confidence": "B_for_type_UNKNOWN_for_mesh_detail",
+          "component_length_mm": {
+            "value": 4590,
+            "source_id": "S131",
+            "status": "SOURCE_BACKED_MANUFACTURER_FAMILY",
+            "exact_front_rear_chainage_from_math_center": null,
+            "note": "Overall assembled frog length is known; exact split around mathematical center is not given by S131."
+          }
         },
         "guard_rails": {
           "value": "two crossing-rail assemblies with independent guard rails; guard rail not tied to running rail",
@@ -527,24 +565,66 @@
           "exact_point_root_chainage_mm": null,
           "exact_stock_rail_joint_chainages_mm": null,
           "exact_switch_opening_profile_mm": null,
-          "note": "Only the point-tip station can currently be reconstructed from the published overall/frog dimensions. Do not infer point root/opening dimensions."
+          "note": "Only the point-tip station can currently be reconstructed from the published overall/frog dimensions. Do not infer point root/opening dimensions.",
+          "point_component_length_mm": {
+            "value": 8300,
+            "source_id": "S131",
+            "status": "SOURCE_BACKED_MANUFACTURER_FAMILY"
+          },
+          "point_longitudinal_projection_mm": {
+            "value": 8298,
+            "source_id": "S130",
+            "locator": "high-resolution project-2976 geometry drawing; horizontal callout adjacent to 8300 point component",
+            "confidence": "C_visual_transcription_secondary_mirror",
+            "status": "SOURCE_BACKED_DRAWING_CALLOUT_WITH_COMPONENT_CROSSCHECK"
+          },
+          "point_root_x_from_front_joint_mm": {
+            "value": 11063,
+            "derivation": "2765 + 8298",
+            "source_ids": [
+              "S094",
+              "S130"
+            ],
+            "status": "RECONSTRUCTED_FROM_DRAWING_DIMENSIONS"
+          },
+          "point_root_opening_mm": {
+            "value": 68.4,
+            "source_id": "S130",
+            "locator": "high-resolution project-2976 geometry drawing; vertical callout '68,4' at point heel/root",
+            "confidence": "C_visual_transcription_secondary_mirror",
+            "status": "SOURCE_BACKED_DRAWING_CALLOUT",
+            "semantic_note": "Treat as local point/stock-rail opening callout, not as track-centerline offset."
+          }
         },
         "drive": {
-          "supplier_page_lists_optional": "SP-6 electric point machine with fitting set 16737-00-00",
+          "compatibility": {
+            "point_machine_family": "SP-6",
+            "fitting_project": "16760-00-00 / 16760Dn.00.000",
+            "turnout_family": "R65 1:9 1520 mm metro project 2976Dn",
+            "fitting_mass_kg": 132,
+            "source_id": "S132",
+            "locator": "Dnipro Switch Plant fittings catalogue, PDF p.4, Group I row 7",
+            "status": "SOURCE_BACKED_PRODUCT_COMPATIBILITY"
+          },
           "installed_at_selected_junction": null,
-          "source_id": "S095",
-          "status": "PRODUCT_COMPATIBILITY_ONLY"
+          "installed_model_status": "UNKNOWN"
+        },
+        "stock_rail_component_length_mm": {
+          "value": 12500,
+          "source_id": "S131",
+          "status": "SOURCE_BACKED_MANUFACTURER_FAMILY"
         }
       },
       "mesh_unknowns": [
-        "exact point length and root pivot geometry",
         "exact point opening/gauge-face offsets along chainage",
         "exact stock-rail joint coordinates",
         "exact frog nose and wing-rail CAD",
         "exact guard-rail start/end chainages and flangeway",
         "complete bearer longitudinal spacing sequence",
         "exact turnout plate/baseplate SKU variant",
-        "exact point-machine and rods geometry at Belorusskaya"
+        "exact point-machine and rods geometry at Belorusskaya",
+        "exact point root pivot hardware geometry despite source-backed 8.3 m point component length and 8298 mm longitudinal projection",
+        "exact frog front/rear extent relative to mathematical center despite known 4.59 m assembled length"
       ],
       "straight_insert_note": "No main-line source found that gives a universal distance from the project-2976 stock-rail front joint or frog tail to the next curve. Current SP instead constrains curve/vertical-curve starts to be >=20 m from turnout center (§5.3.5). The 2.9 m value in SP Table 5.30 is for depot park tracks and is not transferred to this tunnel junction.",
       "current_metro_placement_validator": {
@@ -630,6 +710,23 @@
           "bearer_image": "https://www.vsp74.ru/upload/resize_cache/webp/medialibrary/7bf/n89s2iyugcm11wzqq0yidky2b3qauhzy.webp",
           "warning": "supplier page contains inconsistent LPTP marketing codes; do not override S094 numeric values"
         }
+      },
+      "official_component_length_crosscheck": {
+        "source_id": "S131",
+        "manufacturer": "Dnipro Switch Plant",
+        "project_family": "2976Dn.00.000 / analogue 2976",
+        "stock_or_frame_rail_length_mm": 12500,
+        "rotating_point_length_mm": 8300,
+        "assembled_frog_length_mm": 4590,
+        "turnout_total_length_mm": 31035,
+        "radii_m": [
+          300,
+          200.06
+        ],
+        "handed_variants": "paired right/left project designations .00.000 and (-01)",
+        "confidence": "B",
+        "status": "SOURCE_BACKED_MANUFACTURER_CROSSCHECK_NOT_SITE_PROOF",
+        "note": "These component lengths close visible labels in the project-2976 drawing family but do not identify the installed Belorusskaya project."
       }
     },
     {

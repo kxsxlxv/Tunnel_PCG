@@ -18,6 +18,8 @@ from tunnel_scanner_core import (
     finalize_production_render_scene,
     plan_chunks,
     production_alignment_stations,
+    sample_tunnel_assembly,
+    sample_alignment_station,
     stable_instance_id,
     strip_exact_coincident_lining_interface_faces,
     strip_internal_lining_cap_faces,
@@ -119,6 +121,37 @@ def test_alignment_has_front_center_boundaries_and_end_with_exact_total_length()
     assert math.isclose(stations[-1].chainage_m, 5 * 1.35, abs_tol=1e-12)
     assert math.isclose(stations[0].world_y_m, -0.675, abs_tol=1e-12)
     assert math.isclose(stations[-1].world_y_m, 5.4 + 0.675, abs_tol=1e-12)
+
+
+def test_alignment_sampling_snaps_only_ulp_scale_fuzz_at_3000_ring_end():
+    assembly = sample_tunnel_assembly(
+        TunnelAssemblyConfig(
+            n_rings=3000,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.0,
+        ),
+        seed=5812,
+    )
+    stations = production_alignment_stations(assembly)
+    end = stations[-1].chainage_m
+    assert end > 4000.0
+
+    # Reproduce the scale of the Stage-10 Moscow civil-ring composition bug:
+    # a mathematically identical tunnel-end chainage may land a handful of
+    # floating-point ulps outside the station range.
+    fuzzed_end = end
+    for _ in range(8):
+        fuzzed_end = math.nextafter(fuzzed_end, math.inf)
+    sampled = sample_alignment_station(stations, fuzzed_end)
+    assert sampled is stations[-1]
+
+    # The tolerance is numerical only; a material overrun must still fail.
+    try:
+        sample_alignment_station(stations, end + 1e-6)
+    except ValueError as exc:
+        assert "chainage outside station range" in str(exc)
+    else:
+        raise AssertionError("material chainage overrun was incorrectly accepted")
 
 
 def test_stage8_ring_local_ancillary_contains_duplicate_internal_caps_but_stage9_does_not():

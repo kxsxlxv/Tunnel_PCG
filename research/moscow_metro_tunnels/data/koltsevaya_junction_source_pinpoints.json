@@ -1005,6 +1005,44 @@
     },
     {
       "id": "S126",
+      "title": "Метрострой, 1972 №6 — Краснопресненский радиус в строю действующих",
+      "url": "https://www.metro.ru/f/1/library/metrostroy/ms-1972-06.pdf",
+      "locator": {
+        "article": "Р. Васюков, Краснопресненский радиус в строю действующих",
+        "article_pages": "2-4",
+        "pdf_page": 3,
+        "web_text_lines": "182-183",
+        "supports": [
+          "to connect Krasnaya Presnya depot with the Krasnopresnensky radius, a single-track tunnel branch was constructed between Ploshchad 1905 Goda and Begovaya",
+          "the source is contemporary with construction/opening of this connection"
+        ]
+      },
+      "limitation": "Actual topology/existence evidence only; no branch diameter, lining section, turnout chamber dimensions, transition length or Z are given.",
+      "confidence": "A/B_contemporary_industry_source"
+    },
+    {
+      "id": "S127",
+      "title": "MosDay — Krasnaya Presnya depot service-branch / crossover-chamber photo series",
+      "url": "https://mosday.ru/photos/gallery.php?alt=10&page=2&region=moscow_presnenskiy&rows=all&size=9",
+      "locator": {
+        "date": "2011-03-08 photo set",
+        "captions": [
+          "ССВ — view through open hermetic gates on the branch between Begovaya/Ulitsa 1905 Goda and Krasnaya Presnya depot",
+          "Гермоворота — hermetic-gate detail",
+          "Камера съездов — view of the crossover/divergence chamber where the service branch meets the running line",
+          "В движении — train passage through the crossover chamber"
+        ],
+        "supports": [
+          "actual service-branch/crossover-chamber morphology",
+          "actual hermetic-gate event on the branch",
+          "branch exists as a physical tunnel connection"
+        ]
+      },
+      "limitation": "Photographic/caption evidence only. No absolute dimensions are extracted.",
+      "confidence": "C_actual_site_visual"
+    },
+    {
+      "id": "S128",
       "title": "Инструкция по текущему содержанию пути и контактного рельса метрополитенов",
       "url": "https://wiki.nashtransport.ru/images/e/e5/%D0%98%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BA%D1%86%D0%B8%D1%8F_%D0%BF%D0%BE_%D1%81%D0%BE%D0%B4%D0%B5%D1%80%D0%B6%D0%B0%D0%BD%D0%B8%D1%8E_%D0%BF%D1%83%D1%82%D0%B8_%D0%B8_%D0%9A%D0%A0_%D0%BC%D0%B5%D1%82%D1%80%D0%BE%D0%BF%D0%BE%D0%BB%D0%B8%D1%82%D0%B5%D0%BD%D0%BE%D0%B2.pdf",
       "edition": "2005",
@@ -1066,7 +1104,7 @@
       "confidence": "A/B_historical_operational_instruction"
     },
     {
-      "id": "S127",
+      "id": "S129",
       "title": "ГОСТ 8816-2003 — Брусья деревянные для стрелочных переводов железных дорог широкой колеи",
       "url": "https://files.stroyinf.ru/Data1/43/43320/index.htm",
       "locators": [

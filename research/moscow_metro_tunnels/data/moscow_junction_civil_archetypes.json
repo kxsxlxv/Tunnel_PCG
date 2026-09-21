@@ -17,7 +17,9 @@
         "selected_branch_track_count": 1,
         "selected_branch_track_count_source_id": "S125",
         "downstream_local_two_track_section_source_id": "S120",
-        "topology_note": "The Belorusskaya attachment leg is a single-track service connection. Farther depot-side, S120 shows a local two-track section and a switch separating directions to Belorusskaya/Krasnopresnenskaya. Civil-shell sharing in that downstream section is unresolved."
+        "topology_note": "The Belorusskaya attachment leg is a single-track service connection. Farther depot-side, S120 shows a local two-track section and a switch separating directions to Belorusskaya/Krasnopresnenskaya. Civil-shell sharing in that downstream section is unresolved.",
+        "first_implementation_edge_id": "BRANCH_KRP_BELORUSSKAYA_LEG",
+        "first_implementation_cut_rule": "Model the source-backed single-track Belorusskaya attachment leg only; terminate before the unresolved downstream local two-track/switch system unless physical graph evidence is acquired."
       },
       "civil": {
         "primary_lining_material": "cast-iron tubings",
@@ -26,7 +28,9 @@
         "source_id": "S093",
         "locator": "Metrostroy historical album, pp.78-79, caption to Belorusskaya Koltsevaya tunnel node",
         "confidence": "A/B",
-        "status": "SOURCE_BACKED"
+        "status": "SOURCE_BACKED",
+        "actual_site_dimension_status": "UNKNOWN_PUBLICLY_IN_INSPECTED_SET",
+        "actual_site_dimension_use_rule": "Do not infer chamber width/height/length from the photo. Preserve null dimensions until a scaled plan/section is found."
       },
       "geometry": {
         "chamber_length_m": null,
@@ -62,28 +66,36 @@
           "length_m": 5,
           "section": "approach/reference",
           "internal_diameter_m": null,
-          "axis_parameter_m": null
+          "axis_parameter_m": null,
+          "source_id": "S058",
+          "status": "SOURCE_BACKED"
         },
         {
           "chamber": 2,
           "length_m": 10,
           "section": "circular",
           "internal_diameter_m": 5.56,
-          "axis_parameter_m": 0.7
+          "axis_parameter_m": 0.7,
+          "source_id": "S058",
+          "status": "SOURCE_BACKED"
         },
         {
           "chamber": 3,
           "length_m": 15,
           "section": "circular",
           "internal_diameter_m": 7.2,
-          "axis_parameter_m": 2.22
+          "axis_parameter_m": 2.22,
+          "source_id": "S058",
+          "status": "SOURCE_BACKED"
         },
         {
           "chamber": 4,
           "length_m": 11.25,
           "section": "circular",
           "internal_diameter_m": 7.7,
-          "axis_parameter_m": 3.36
+          "axis_parameter_m": 3.36,
+          "source_id": "S058",
+          "status": "SOURCE_BACKED"
         },
         {
           "chamber": 5,
@@ -102,12 +114,14 @@
             "source_id": "S058",
             "locator": "printed p.148, Fig.4.34, section 1-1",
             "status": "SOURCE_BACKED_FROM_FIGURE_WITH_UNRESOLVED_TRACK_IDENTITY"
-          }
+          },
+          "source_id": "S058",
+          "status": "SOURCE_BACKED"
         },
         {
           "chamber": 6,
           "length_m": 15,
-          "section": "two-vault common-wall chamber",
+          "section": "two-vault common-wall transition chamber",
           "lining_arc_inner_radius_m": 2.57,
           "lining_arc_outer_radius_m": 2.82,
           "lining_axis_above_ugr_m": 1.7,
@@ -125,7 +139,13 @@
             "source_id": "S058",
             "locator": "printed p.148, Fig.4.34, section 2-2",
             "status": "SOURCE_BACKED_RAW_CALLOUTS_NO_UNSAFE_DERIVATION"
-          }
+          },
+          "source_id": "S058",
+          "status": "SOURCE_BACKED",
+          "function": "two open single-track circular linings bearing on a concrete/reinforced-concrete central wall",
+          "independent_tunnels": false,
+          "source_locator": "printed p.150 text after Fig.4.35; Fig.4.34 section 2-2",
+          "note": "Do not model two detached circular shells inside chamber 6."
         }
       ],
       "derived_chainage_from_chamber2_start_m": {
@@ -134,17 +154,31 @@
         "independent_single_track_start": null
       },
       "independent_single_track_rule": {
-        "condition": "inter-track spacing > 6 m",
+        "condition": "inter-track axis spacing > 6 m",
         "exact_transition_chainage_m": null,
-        "exact_independent_tunnel_diameter_m": null
+        "exact_independent_tunnel_diameter_m": null,
+        "source_id": "S058",
+        "locator": "printed p.150 text after Fig.4.35"
       },
       "construction_notes": [
         "large circular chamber 5 can be replaced by an elongated/elliptical form",
         "additional adjacent/key tubings and wedge spacers may be used",
-        "gaps between chambers of different spans are filled with monolithic concrete and waterproofed as required"
+        "gaps between chambers of different spans are filled with monolithic concrete and waterproofed as required",
+        "chamber 6 uses two open single-track linings bearing on a common concrete/reinforced-concrete wall",
+        "independent one-track tunnels begin only when inter-track spacing exceeds 6 m"
       ],
       "confidence": "A for printed dimensions/text; B for generic PCG transfer",
-      "mesh_rule": "May drive a generic transition algorithm only. Tag generated geometry generic_reference=true and actual_site_match=false."
+      "mesh_rule": "May drive a generic transition algorithm only. Tag generated geometry generic_reference=true and actual_site_match=false.",
+      "alias_ids": [
+        "METRO_STEPWISE_BRANCH_CHAMBER_RC_TUBING_2001_REFERENCE"
+      ],
+      "pcg_fallback_transition": {
+        "convention": "if an exact project split point is unavailable, end the common-wall transition at the end of chamber 6 and start independent circular tunnels after it",
+        "chainage_from_chamber2_start_m": 61,
+        "status": "FALLBACK_CONVENTION",
+        "confidence": "C",
+        "reason": "source gives >6 m separation condition but not exact threshold chainage"
+      }
     },
     {
       "id": "CAST_IRON_CROSSOVER_CHAMBER_8750_1987_REFERENCE",

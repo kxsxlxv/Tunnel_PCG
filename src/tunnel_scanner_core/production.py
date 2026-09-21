@@ -5143,6 +5143,78 @@ def _event_chainage_chunk_index(
     return None
 
 
+def _bucket_indexed_chainages(
+    chunks: Sequence[ChunkDescriptor],
+    *,
+    total_length_m: float,
+    chainages: Sequence[float],
+) -> tuple[tuple[tuple[int, float], ...], ...]:
+    buckets: list[list[tuple[int, float]]] = [[] for _ in chunks]
+    for event_index, chainage in enumerate(chainages):
+        chunk_id = _event_chainage_chunk_index(
+            chainage,
+            chunks,
+            total_length_m=total_length_m,
+        )
+        if chunk_id is not None:
+            buckets[chunk_id].append((event_index, float(chainage)))
+    return tuple(tuple(bucket) for bucket in buckets)
+
+
+def _bucket_indexed_cover_spans(
+    chunks: Sequence[ChunkDescriptor],
+    *,
+    total_length_m: float,
+    spans: Sequence[tuple[float, float]],
+) -> tuple[tuple[tuple[int, float, float], ...], ...]:
+    buckets: list[list[tuple[int, float, float]]] = [
+        [] for _ in chunks
+    ]
+    for span_index, (start, end) in enumerate(spans):
+        midpoint = 0.5 * (start + end)
+        chunk_id = _event_chainage_chunk_index(
+            midpoint,
+            chunks,
+            total_length_m=total_length_m,
+        )
+        if chunk_id is not None:
+            buckets[chunk_id].append(
+                (span_index, float(start), float(end))
+            )
+    return tuple(tuple(bucket) for bucket in buckets)
+
+
+def _bucket_indexed_civil_ranges(
+    chunks: Sequence[ChunkDescriptor],
+    *,
+    total_length_m: float,
+    ranges: Sequence[tuple[int, float, float]],
+) -> tuple[
+    tuple[tuple[int, int, float, float], ...],
+    ...,
+]:
+    buckets: list[list[tuple[int, int, float, float]]] = [
+        [] for _ in chunks
+    ]
+    for range_index, (ring_index, start, end) in enumerate(ranges):
+        midpoint = 0.5 * (start + end)
+        chunk_id = _event_chainage_chunk_index(
+            midpoint,
+            chunks,
+            total_length_m=total_length_m,
+        )
+        if chunk_id is not None:
+            buckets[chunk_id].append(
+                (
+                    range_index,
+                    int(ring_index),
+                    float(start),
+                    float(end),
+                )
+            )
+    return tuple(tuple(bucket) for bucket in buckets)
+
+
 @dataclass(frozen=True)
 class Stage105RCModernChunkPlan:
     """Lightweight global state for chunk-first Stage-10.5 RC generation."""
@@ -5156,6 +5228,20 @@ class Stage105RCModernChunkPlan:
     chunks: tuple[ChunkDescriptor, ...]
     boundary_policy: ChunkBoundaryPolicy
     civil_roll_assembly: TunnelAssembly
+    lvt_events_by_chunk: tuple[tuple[tuple[int, float], ...], ...]
+    contact_support_events_by_chunk: tuple[
+        tuple[tuple[int, float], ...], ...
+    ]
+    contact_cover_spans_by_chunk: tuple[
+        tuple[tuple[int, float, float], ...], ...
+    ]
+    rack_events_by_chunk: tuple[tuple[tuple[int, float], ...], ...]
+    water_support_events_by_chunk: tuple[
+        tuple[tuple[int, float], ...], ...
+    ]
+    civil_ranges_by_chunk: tuple[
+        tuple[tuple[int, int, float, float], ...], ...
+    ]
     seed: int
     metadata: Mapping[str, Any]
 
@@ -5293,6 +5379,37 @@ def build_stage10_5_rc_modern_chunk_plan(
         source.assembly.length_by_chainage_m,
         profile,
     )
+    total_length_m = source.assembly.length_by_chainage_m
+    lvt_events_by_chunk = _bucket_indexed_chainages(
+        chunks,
+        total_length_m=total_length_m,
+        chainages=lvt_events,
+    )
+    contact_support_events_by_chunk = _bucket_indexed_chainages(
+        chunks,
+        total_length_m=total_length_m,
+        chainages=support_chainages,
+    )
+    contact_cover_spans_by_chunk = _bucket_indexed_cover_spans(
+        chunks,
+        total_length_m=total_length_m,
+        spans=cover_spans,
+    )
+    rack_events_by_chunk = _bucket_indexed_chainages(
+        chunks,
+        total_length_m=total_length_m,
+        chainages=rack_chainages,
+    )
+    water_support_events_by_chunk = _bucket_indexed_chainages(
+        chunks,
+        total_length_m=total_length_m,
+        chainages=water_supports,
+    )
+    civil_ranges_by_chunk = _bucket_indexed_civil_ranges(
+        chunks,
+        total_length_m=total_length_m,
+        ranges=civil_ranges,
+    )
 
     civil_segment_count = (
         6
@@ -5328,6 +5445,7 @@ def build_stage10_5_rc_modern_chunk_plan(
         "sourceRingGeometrySkippedAsFullyReplaced": True,
         "chunking": "chunk_first_generation_without_full_scene",
         "chunkFirstGeneration": True,
+        "chunkSchedulesPrebucketed": True,
         "continuousSweepAlignmentCompaction": (
             "exact_zero_error_collinear"
             if production_config.resolved_compact_exact_collinear_continuous_stations
@@ -5427,6 +5545,12 @@ def build_stage10_5_rc_modern_chunk_plan(
         chunks=chunks,
         boundary_policy=resolved_boundary_policy,
         civil_roll_assembly=civil_roll_assembly,
+        lvt_events_by_chunk=lvt_events_by_chunk,
+        contact_support_events_by_chunk=contact_support_events_by_chunk,
+        contact_cover_spans_by_chunk=contact_cover_spans_by_chunk,
+        rack_events_by_chunk=rack_events_by_chunk,
+        water_support_events_by_chunk=water_support_events_by_chunk,
+        civil_ranges_by_chunk=civil_ranges_by_chunk,
         seed=int(seed),
         metadata=metadata,
     )

@@ -467,8 +467,24 @@ def _validate_stage10_build(
             "closed_by_stage10_4_moscow_shell"
         ):
             raise AssertionError("Stage 10.4 civil gap is not marked closed")
-        if build.scene.objects_of_type("lining_segment"):
-            raise AssertionError("Stage 10.4 retained source Stage-9 lining segments")
+        transferred_segments = [
+            obj
+            for obj in build.scene.objects_of_type("lining_segment")
+            if obj.custom_properties.get(
+                "stage9SegmentJointFastenerArchitectureTransferred"
+            ) is True
+        ]
+        untransferred_segments = [
+            obj
+            for obj in build.scene.objects_of_type("lining_segment")
+            if obj.custom_properties.get(
+                "stage9SegmentJointFastenerArchitectureTransferred"
+            ) is not True
+        ]
+        if untransferred_segments:
+            raise AssertionError(
+                "Stage 10.4 retained source Stage-9 lining segments"
+            )
         if build.scene.objects_of_type("production_walkway"):
             raise AssertionError("Stage 10.4 retained Stage-8/9 walkway")
         if build.scene.objects_of_type("production_moscow_civil_detail_ribs"):
@@ -485,9 +501,7 @@ def _validate_stage10_build(
         if is_rc:
             if topology not in {"ten_equal", "kba"}:
                 raise AssertionError("Stage 10.4 RC topology is unresolved")
-            civil_segments = build.scene.objects_of_type(
-                "production_moscow_civil_segment"
-            )
+            civil_segments = transferred_segments
             expected_per_ring = 10 if topology == "ten_equal" else 6
             expected_segments = (
                 expected_per_ring * int(meta.get("moscowCivilRingCount", -1))
@@ -514,8 +528,20 @@ def _validate_stage10_build(
                     raise AssertionError(
                         f"{segment.name}: Stage-9 architecture marker missing"
                     )
-            heads = build.scene.objects_of_type("bolt_head")
-            cutters = build.scene.objects_of_type("bolt_pocket_cutter")
+            heads = [
+                obj
+                for obj in build.scene.objects_of_type("bolt_head")
+                if obj.custom_properties.get(
+                    "stage9SegmentJointFastenerArchitectureTransferred"
+                ) is True
+            ]
+            cutters = [
+                obj
+                for obj in build.scene.objects_of_type("bolt_pocket_cutter")
+                if obj.custom_properties.get(
+                    "stage9SegmentJointFastenerArchitectureTransferred"
+                ) is True
+            ]
             if bool(meta.get("moscowCivilBoltsEnabled", False)):
                 if not heads or len(heads) != len(cutters):
                     raise AssertionError(

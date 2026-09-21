@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from concurrent.futures import ProcessPoolExecutor
 import json
 import math
 from pathlib import Path
@@ -22,11 +23,69 @@ from tunnel_scanner_core import (
     TunnelAssemblyConfig,
     build_production_tunnel,
     build_stage10_5_rc_modern_chunk_plan,
+    build_stage10_5_rc_modern_chunk_scene_package,
     iter_chunk_scene_packages,
     iter_stage10_5_rc_modern_chunk_scene_packages,
     load_stage10_initial_moscow_profile,
 )
 from tunnel_scanner_core.scene_io import write_scene_package_json
+
+
+_PARALLEL_CHUNK_PLAN = None
+_PARALLEL_CHUNK_LOCALIZE = False
+_PARALLEL_CHUNK_COMPACT = False
+_PARALLEL_CHUNK_PROTOTYPE = False
+_PARALLEL_CHUNK_DIR: Path | None = None
+
+
+def _init_parallel_chunk_worker(
+    plan,
+    localize_coordinates: bool,
+    compact_json: bool,
+    prototype_json: bool,
+    chunk_dir: Path,
+) -> None:
+    global _PARALLEL_CHUNK_PLAN
+    global _PARALLEL_CHUNK_LOCALIZE
+    global _PARALLEL_CHUNK_COMPACT
+    global _PARALLEL_CHUNK_PROTOTYPE
+    global _PARALLEL_CHUNK_DIR
+    _PARALLEL_CHUNK_PLAN = plan
+    _PARALLEL_CHUNK_LOCALIZE = bool(localize_coordinates)
+    _PARALLEL_CHUNK_COMPACT = bool(compact_json)
+    _PARALLEL_CHUNK_PROTOTYPE = bool(prototype_json)
+    _PARALLEL_CHUNK_DIR = Path(chunk_dir)
+
+
+def _write_parallel_chunk_worker(chunk_id: int) -> dict:
+    if _PARALLEL_CHUNK_PLAN is None or _PARALLEL_CHUNK_DIR is None:
+        raise RuntimeError("parallel Stage-10 chunk worker was not initialized")
+    package = build_stage10_5_rc_modern_chunk_scene_package(
+        _PARALLEL_CHUNK_PLAN,
+        int(chunk_id),
+        localize_coordinates=_PARALLEL_CHUNK_LOCALIZE,
+    )
+    chunk_meta = package.metadata["productionChunk"]
+    resolved_id = int(chunk_meta["chunkID"])
+    chunk_path = _PARALLEL_CHUNK_DIR / f"chunk_{resolved_id:05d}.json"
+    write_scene_package_json(
+        package,
+        chunk_path,
+        compact=_PARALLEL_CHUNK_COMPACT,
+        prototype_instances=_PARALLEL_CHUNK_PROTOTYPE,
+    )
+    return {
+        "chunkID": resolved_id,
+        "path": chunk_path.name,
+        "startChainageM": chunk_meta["startChainageM"],
+        "endChainageM": chunk_meta["endChainageM"],
+        "ringIDs": chunk_meta["ringIDs"],
+        "objectCount": len(package.objects),
+        "vertexCoordinatesLocalized": chunk_meta[
+            "vertexCoordinatesLocalized"
+        ],
+        "chunkWorldOrigin": chunk_meta["chunkWorldOrigin"],
+    }
 
 
 def parse_args() -> argparse.Namespace:
@@ -102,6 +161,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--axis-noise-sigma", type=float, default=0.005)
     parser.add_argument("--sagitta-mm", type=float, default=2.0)
     parser.add_argument("--chunk-m", type=float, default=None)
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        help=(
+            "Parallel worker processes for Stage 10.5 modern RC chunk-first "
+            "generation. Each worker holds only lightweight global state plus "
+            "one chunk's geometry. Default: 1."
+        ),
+    )
     parser.add_argument(
         "--chunks-only",
         action="store_true",
@@ -726,36 +795,60 @@ def _write_chunk_first_rc_outputs(
     production_meta = plan.metadata["productionGeometry"]
     chunk_dir = output.with_name(output.stem + "_chunks")
     chunk_dir.mkdir(parents=True, exist_ok=True)
+    if args.workers < 1:
+        raise ValueError("--workers must be >= 1")
+    effective_workers = min(args.workers, max(1, len(plan.chunks)))
     manifest = []
-    chunk_object_total = 0
-    for package in iter_stage10_5_rc_modern_chunk_scene_packages(
-        plan,
-        localize_coordinates=args.localize_chunks_for_blender,
-    ):
-        chunk_meta = package.metadata["productionChunk"]
-        chunk_id = int(chunk_meta["chunkID"])
-        chunk_path = chunk_dir / f"chunk_{chunk_id:05d}.json"
-        write_scene_package_json(
-            package,
-            chunk_path,
-            compact=args.compact_json,
-            prototype_instances=args.prototype_json,
-        )
-        chunk_object_total += len(package.objects)
-        manifest.append(
-            {
-                "chunkID": chunk_id,
-                "path": chunk_path.name,
-                "startChainageM": chunk_meta["startChainageM"],
-                "endChainageM": chunk_meta["endChainageM"],
-                "ringIDs": chunk_meta["ringIDs"],
-                "objectCount": len(package.objects),
-                "vertexCoordinatesLocalized": chunk_meta[
-                    "vertexCoordinatesLocalized"
-                ],
-                "chunkWorldOrigin": chunk_meta["chunkWorldOrigin"],
-            }
-        )
+    if effective_workers == 1:
+        for package in iter_stage10_5_rc_modern_chunk_scene_packages(
+            plan,
+            localize_coordinates=args.localize_chunks_for_blender,
+        ):
+            chunk_meta = package.metadata["productionChunk"]
+            chunk_id = int(chunk_meta["chunkID"])
+            chunk_path = chunk_dir / f"chunk_{chunk_id:05d}.json"
+            write_scene_package_json(
+                package,
+                chunk_path,
+                compact=args.compact_json,
+                prototype_instances=args.prototype_json,
+            )
+            manifest.append(
+                {
+                    "chunkID": chunk_id,
+                    "path": chunk_path.name,
+                    "startChainageM": chunk_meta["startChainageM"],
+                    "endChainageM": chunk_meta["endChainageM"],
+                    "ringIDs": chunk_meta["ringIDs"],
+                    "objectCount": len(package.objects),
+                    "vertexCoordinatesLocalized": chunk_meta[
+                        "vertexCoordinatesLocalized"
+                    ],
+                    "chunkWorldOrigin": chunk_meta["chunkWorldOrigin"],
+                }
+            )
+    else:
+        with ProcessPoolExecutor(
+            max_workers=effective_workers,
+            initializer=_init_parallel_chunk_worker,
+            initargs=(
+                plan,
+                args.localize_chunks_for_blender,
+                args.compact_json,
+                args.prototype_json,
+                chunk_dir,
+            ),
+        ) as executor:
+            manifest.extend(
+                executor.map(
+                    _write_parallel_chunk_worker,
+                    range(len(plan.chunks)),
+                )
+            )
+    chunk_object_total = sum(
+        int(entry["objectCount"])
+        for entry in manifest
+    )
 
     manifest_path = chunk_dir / "manifest.json"
     manifest_path.write_text(
@@ -770,6 +863,7 @@ def _write_chunk_first_rc_outputs(
                 "boundaryPolicy": args.chunk_policy,
                 "chunkFirstGeneration": True,
                 "fullSceneMaterialized": False,
+                "parallelChunkWorkers": effective_workers,
                 "localizedForBlender": args.localize_chunks_for_blender,
                 "prototypeSceneJson": bool(args.prototype_json),
                 "globalCoordinatesAreCanonical": True,
@@ -803,6 +897,7 @@ def _write_chunk_first_rc_outputs(
         "civilTopology": production_meta["moscowCivilTopology"],
         "includeBolts": not args.no_bolts,
         "chunkFirstGeneration": True,
+        "parallelChunkWorkers": effective_workers,
         "fullSceneMaterialized": False,
         "fullSceneSerialized": False,
         "globalSceneObjectCount": 0,

@@ -2166,13 +2166,24 @@ def _build_stage10_5_modern_contact_scene_objects(
     running_support_phase_m: float,
     start_chainage_m: float | None = None,
     end_chainage_m: float | None = None,
+    indexed_support_chainages: Sequence[tuple[int, float]] | None = None,
+    indexed_cover_spans: Sequence[tuple[int, float, float]] | None = None,
 ) -> tuple[SceneObject, ...]:
     local_meshes = build_modern_contact_support_meshes(profile)
-    chainages = modern_contact_support_chainages(
-        assembly.length_by_chainage_m,
-        profile,
-        running_support_pitch_m=running_support_pitch_m,
-        running_support_phase_m=running_support_phase_m,
+    all_support_chainages = (
+        modern_contact_support_chainages(
+            assembly.length_by_chainage_m,
+            profile,
+            running_support_pitch_m=running_support_pitch_m,
+            running_support_phase_m=running_support_phase_m,
+        )
+        if indexed_support_chainages is None or indexed_cover_spans is None
+        else ()
+    )
+    support_events = (
+        tuple(indexed_support_chainages)
+        if indexed_support_chainages is not None
+        else tuple(enumerate(all_support_chainages))
     )
     label_id, semantic = _ancillary_semantics(label_policy, "rail")
     result: list[SceneObject] = []
@@ -2189,8 +2200,8 @@ def _build_stage10_5_modern_contact_scene_objects(
         "contact_rail_support_hood": "SupportHoods",
     }
 
-    for event_index, chainage in enumerate(chainages):
-        if not _chainage_selected_for_window(
+    for event_index, chainage in support_events:
+        if indexed_support_chainages is None and not _chainage_selected_for_window(
             chainage,
             total_length_m=assembly.length_by_chainage_m,
             start_chainage_m=start_chainage_m,
@@ -2292,14 +2303,27 @@ def _build_stage10_5_modern_contact_scene_objects(
     cover_section = _ensure_ccw_xz(
         modern_protective_cover_core_xz(profile)
     )
-    spans = modern_cover_span_ranges(
-        assembly.length_by_chainage_m,
-        profile,
-        support_chainages=chainages,
+    cover_span_events = (
+        tuple(indexed_cover_spans)
+        if indexed_cover_spans is not None
+        else tuple(
+            (
+                span_index,
+                start_chainage,
+                end_chainage,
+            )
+            for span_index, (start_chainage, end_chainage) in enumerate(
+                modern_cover_span_ranges(
+                    assembly.length_by_chainage_m,
+                    profile,
+                    support_chainages=all_support_chainages,
+                )
+            )
+        )
     )
-    for span_index, (start_chainage, end_chainage) in enumerate(spans):
+    for span_index, start_chainage, end_chainage in cover_span_events:
         midpoint = 0.5 * (start_chainage + end_chainage)
-        if not _chainage_selected_for_window(
+        if indexed_cover_spans is None and not _chainage_selected_for_window(
             midpoint,
             total_length_m=assembly.length_by_chainage_m,
             start_chainage_m=start_chainage_m,

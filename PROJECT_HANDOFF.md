@@ -1127,7 +1127,7 @@ Regression:
 
     pytest
 
-The current established production baseline is **193 tests passed** plus Stage-8/9 stress/topology checks and dedicated Stage-10.1–10.5 production gates.
+The current established production baseline is **194 tests passed** plus Stage-8/9 stress/topology checks and dedicated Stage-10.1–10.5 production gates.
 
 Research reference implementation has its own tests under:
 
@@ -1930,12 +1930,17 @@ Placement:
 one rack per side per 1.0 m Moscow civil ring
 ```
 
-The current v3 preview follows the supplied R2K11/K1350.002 references: there
-is no full-length horizontal underbar beneath the two cradle seats. The preset
-occupies eight distributed levels per wall with one cable per occupied level,
-for 16 representative service cables total. Each route uses a restrained
-25 mm midspan sag between 1.0 m supports with one extra longitudinal midpoint
-per span.
+The current v4 preview follows the supplied R2K11/K1350.002 drawing, 3D
+reference and Blender feedback. Each horn is one continuous rounded-W /
+omega-like formed ribbon that starts directly on the upright, passes through
+both cable cradles and the central crest, then turns up at the free end. There
+is no separate horizontal shelf, neck or wall-side tab.
+
+The preset occupies eight distributed levels per wall with one cable per
+occupied level, for 16 representative service cables total. Cable sag is
+nominally 25 mm but is deterministic and irregular per cable/span: amplitude
+varies by +/-35% and the low point shifts by up to +/-0.12 of the 1.0 m span.
+Only one interior sag control point is added per span.
 
 The negative-X/contact-rail-side rack midpoint is placed at the lining-axis
 height to match the supplied visual reference. This remains a visual placement
@@ -2000,11 +2005,21 @@ The generator now accepts:
 --civil-archetype rc_block_6100_5600
 ```
 
-The first is the existing 5.5/5.1 m classic cast-iron envelope. The second uses
-research archetype `RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000`: 6.1 m OD,
-5.6 m ID, 0.25 m structural depth, 1.0 m ring pitch and ten identical RC
-blocks. Exact block-edge/pin CAD remains unresolved, so the current rendering
-is a smooth envelope carrying the source-backed ten-block topology as metadata.
+The first is the existing 5.5/5.1 m classic cast-iron envelope. Its Stage-10
+physical shell remains source-sized and smooth, but a separate visual-detail
+overlay has been restored so the tunnel no longer reads as a featureless tube:
+11 coarse tubing divisions, longitudinal joint/flange relief, ring-boundary
+bands, one circumferential stiffener and low-poly bolt heads. P10-FROLOV-RING
+supports 25 mm flanges, typical M27 x 120 bolts and two working bolt rows in
+longitudinal joints. Exact N/C/K angles, rib coordinates and bolt drilling are
+still unresolved; the visual 11-piece rhythm is explicitly not exact series
+LOD0.
+
+The second uses research archetype
+`RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000`: 6.1 m OD, 5.6 m ID, 0.25 m
+structural depth, 1.0 m ring pitch and ten identical RC blocks. The ten-block
+rhythm now appears as shallow visual joint relief, but exact block-edge/pin CAD
+remains unresolved and cast-iron M27 fastening detail is not applied.
 
 S026 does not provide a separate UGR-to-lining-axis placement for this family.
 Until a project cross-section resolves it, the larger envelope explicitly
@@ -2016,7 +2031,7 @@ geometry is recomputed from the selected intrados.
 Current exact CI baseline:
 
 ```text
-193 tests passed
+194 tests passed
 Stage 10.1 CLI compatibility smoke          PASS
 Stage 10.2 CLI compatibility smoke          PASS
 Stage 10.3 CLI compatibility smoke          PASS
@@ -2065,7 +2080,7 @@ STAGE10_5_BLENDER_SMOKE_TEST.md
 
 Still intentionally unresolved rather than fabricated:
 
-- exact cast-iron N/C/K tubing ribs, bolts, rebates and grout plugs;
+- exact cast-iron N/C/K angles, rib coordinates, bolt drilling, rebates and grout plugs;
 - exact LVT rubber-boot outer section;
 - exact APC-4 small hardware CAD;
 - exact current contact-cover corner radii;

@@ -1027,6 +1027,106 @@ def test_stage10_5_rc_ten_equal_topology_reuses_stage9_fastener_pipeline():
         assert cp["removeAfterBoolean"] is True
 
 
+def test_stage10_5_rc_kba_preserves_boundary_fastener_mesh_at_exact_scene_end():
+    profile = load_stage10_initial_moscow_profile(
+        civil_archetype="rc_block_6100_5600"
+    )
+    # 20 * 1.35 m = exactly 27.0 m, so the final Moscow 1 m civil ring is
+    # complete. This reproduces the same crop-edge condition as 3000 rings
+    # (4050 m) without constructing a multi-kilometre unit-test scene.
+    build = build_production_tunnel(
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=20,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.0,
+            ring_rotation_strategy=RingRotationStrategy.RINGWISE_GAUSSIAN,
+        ),
+        include_bolts=True,
+        production_config=ProductionConfig(
+            namespace="stage10-5-rc-kba-boundary-fastener",
+            moscow_profile=profile,
+            moscow_stage="10.5",
+            moscow_civil_topology="kba",
+        ),
+        seed=5812,
+    )
+    assert math.isclose(
+        build.assembly.length_by_chainage_m,
+        27.0,
+        abs_tol=1e-12,
+    )
+    meta = build.scene.metadata["productionGeometry"]
+    civil_count = int(meta["moscowCivilRingCount"])
+    assert civil_count == 27
+
+    fasteners = [
+        obj
+        for object_type in ("bolt_head", "bolt_pocket_cutter")
+        for obj in build.scene.objects_of_type(object_type)
+    ]
+    assert fasteners
+
+    boundary = [
+        obj
+        for obj in fasteners
+        if int(obj.custom_properties["moscowCivilRingIndex"])
+        in {0, civil_count - 1}
+    ]
+    assert boundary
+
+    extrapolated = [
+        obj
+        for obj in boundary
+        if obj.custom_properties[
+            "moscowCivilBoundaryFastenerAlignmentExtrapolated"
+        ]
+        is True
+    ]
+    assert extrapolated
+    assert any(
+        "end"
+        in tuple(
+            obj.custom_properties[
+                "moscowCivilBoundaryFastenerExtrapolatedSides"
+            ]
+        )
+        for obj in extrapolated
+    )
+    assert all(
+        obj.custom_properties[
+            "moscowCivilBoundaryFastenerExtrapolationMode"
+        ]
+        == "terminal_linear_alignment_extension_preserve_stage9_mesh"
+        for obj in extrapolated
+    )
+    assert all(
+        0.0
+        < float(
+            obj.custom_properties[
+                "moscowCivilBoundaryFastenerMaxOverhangM"
+            ]
+        )
+        < 0.1
+        for obj in extrapolated
+    )
+
+    # Interior transferred hardware must never use terminal extrapolation.
+    interior = [
+        obj
+        for obj in fasteners
+        if int(obj.custom_properties["moscowCivilRingIndex"])
+        not in {0, civil_count - 1}
+    ]
+    assert interior
+    assert all(
+        obj.custom_properties[
+            "moscowCivilBoundaryFastenerAlignmentExtrapolated"
+        ]
+        is False
+        for obj in interior
+    )
+
+
 def test_stage10_5_rc_kba_topology_reuses_stage9_fastener_pipeline():
     profile = load_stage10_initial_moscow_profile(
         civil_archetype="rc_block_6100_5600"

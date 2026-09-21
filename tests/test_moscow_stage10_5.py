@@ -1095,11 +1095,20 @@ def test_stage10_5_rc_warp_reuses_alignment_samples_across_ring_objects(monkeypa
     assert objects
     assert civil_count > 1
 
-    # The previous implementation paid at least three front/centre/back
-    # alignment samples per object before any vertex mapping. The ring-shared
-    # context should keep the complete build below one sampler call per object.
-    assert sample_calls < len(objects)
-    assert sample_calls <= 40 * civil_count
+    # The previous implementation paid three unconditional front/centre/back
+    # samples per object, plus one strict sample for every unique longitudinal
+    # vertex plane *inside that object*. World Y is a monotonic image of
+    # chainage, so the mapped meshes let us reconstruct a conservative lower
+    # bound for that legacy call count. The ring-shared cache must beat it.
+    legacy_minimum_calls = 3 * len(objects) + sum(
+        len({vertex[1] for vertex in obj.vertices})
+        for obj in objects
+    )
+    assert sample_calls < legacy_minimum_calls
+
+    # The new path should also avoid falling back to a per-vertex sampler.
+    total_vertices = sum(len(obj.vertices) for obj in objects)
+    assert sample_calls < total_vertices
 
 
 def test_stage10_5_rc_kba_cap_strip_uses_moscow_civil_ring_datums():

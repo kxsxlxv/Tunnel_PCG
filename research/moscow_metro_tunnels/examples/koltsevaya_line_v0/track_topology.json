@@ -279,5 +279,82 @@
     "line-wide lining type assignment by physical edge",
     "exact engineering XY/Z of Line-5 switch nodes",
     "exact installed turnout project/model at the selected Belorusskaya depot junction"
-  ]
+  ],
+  "graph_entity_contracts": {
+    "TRACK_EDGE": {
+      "required_fields": [
+        "edge_id",
+        "physical_centerline",
+        "from_node",
+        "to_node"
+      ],
+      "optional_fields": [
+        "osm_way_id",
+        "osm_node_refs",
+        "track_id",
+        "service_role",
+        "z_profile_ref"
+      ],
+      "rule": "one physical rail path with its own centerline; never synthesized by offsetting another TRACK_EDGE"
+    },
+    "SWITCH_NODE": {
+      "required_fields": [
+        "node_id",
+        "world_or_engineering_xy",
+        "z_ugr_m",
+        "incoming_edge",
+        "straight_outgoing_edge",
+        "diverging_outgoing_edge",
+        "turnout_archetype_id",
+        "handedness",
+        "orientation",
+        "civil_chamber_archetype_id"
+      ],
+      "null_policy": "fields may remain null until source-backed annotation resolves them; graph extractor supplies only node/degree/OSM XY"
+    },
+    "CROSSOVER": {
+      "required_fields": [
+        "crossover_id",
+        "switch_node_ids",
+        "track_a_edge_ids",
+        "track_b_edge_ids"
+      ],
+      "rule": "semantic object added only after source-backed topology annotation; not inferred from proximity"
+    },
+    "BRANCH_EDGE": {
+      "required_fields": [
+        "edge_id",
+        "parent_switch_node_id",
+        "branch_role",
+        "physical_centerline"
+      ],
+      "allowed_branch_roles": [
+        "depot_connection",
+        "turnback_siding",
+        "service_connection",
+        "other_confirmed"
+      ],
+      "rule": "role must come from researched topology, never from geometric convenience"
+    },
+    "END_NODE": {
+      "required_fields": [
+        "node_id",
+        "reason"
+      ],
+      "allowed_reasons": [
+        "model_cut",
+        "physical_dead_end",
+        "unresolved_boundary"
+      ],
+      "rule": "PCG may terminate a depot/service branch here without modelling the depot"
+    }
+  },
+  "readiness": {
+    "topology_semantics": "READY_WITH_UNRESOLVED_OSM_IDS",
+    "two_main_track_identity": "READY",
+    "two_main_physical_centerlines": "BLOCKED_PENDING_CURRENT_OSM_OR_PROJECT_BYTES",
+    "selected_real_junction": "READY_AS_CONSTRAINED_ACTUAL",
+    "exact_switch_xy_z": "UNKNOWN",
+    "geometry_fallback_contract": "READY_WITH_EXPLICIT_FALLBACKS"
+  }
 }

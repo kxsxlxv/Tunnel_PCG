@@ -413,19 +413,47 @@ def compact_exact_collinear_alignment_stations(
     return tuple(kept)
 
 
+def _stable_unit_fraction(*parts: object) -> float:
+    payload = "|".join(str(part) for part in parts).encode("utf-8")
+    digest = hashlib.blake2b(payload, digest_size=8).digest()
+    return int.from_bytes(digest, "big") / float((1 << 64) - 1)
+
+
+def _cable_span_sag_parameters(
+    *,
+    asset_key: str,
+    span_index: int,
+    base_sag_m: float,
+    variation_fraction: float,
+    peak_phase_jitter_fraction: float,
+) -> tuple[float, float]:
+    amp_u = _stable_unit_fraction(asset_key, span_index, "amp")
+    phase_u = _stable_unit_fraction(asset_key, span_index, "phase")
+    amplitude = base_sag_m * (
+        1.0 + variation_fraction * (2.0 * amp_u - 1.0)
+    )
+    peak_fraction = 0.5 + peak_phase_jitter_fraction * (
+        2.0 * phase_u - 1.0
+    )
+    return amplitude, peak_fraction
+
+
 def _periodic_cable_sag_alignment_stations(
     stations: Sequence[AlignmentStation],
     *,
     support_pitch_m: float,
     support_phase_m: float,
     midspan_sag_m: float,
+    variation_fraction: float = 0.0,
+    peak_phase_jitter_fraction: float = 0.0,
+    asset_key: str = "cable",
 ) -> tuple[AlignmentStation, ...]:
-    """Add one low-poly sag control point between periodic cable supports.
+    """Add one deterministic irregular sag peak between periodic supports.
 
-    Sag is gravity-fixed in core Z. Existing alignment breakpoints are retained,
-    while rack supports and span midpoints are inserted only where necessary.
-    The parabola is sampled at those sparse stations, keeping cable polygon
-    growth bounded.
+    Every cable/span receives a stable amplitude and a slightly shifted peak
+    position derived from the asset key and support-span index. Supports stay
+    at zero sag. Only one new interior control station is inserted per span,
+    so visual irregularity does not require dense spline tessellation.
     """
     base = tuple(stations)
     if len(base) < 2:
@@ -436,6 +464,10 @@ def _periodic_cable_sag_alignment_stations(
         or not math.isfinite(support_phase_m)
         or not math.isfinite(midspan_sag_m)
         or midspan_sag_m < 0.0
+        or not math.isfinite(variation_fraction)
+        or not (0.0 <= variation_fraction <= 0.75)
+        or not math.isfinite(peak_phase_jitter_fraction)
+        or not (0.0 <= peak_phase_jitter_fraction <= 0.25)
     ):
         raise ValueError("invalid periodic cable-sag parameters")
     if midspan_sag_m <= 0.0:
@@ -443,24 +475,44 @@ def _periodic_cable_sag_alignment_stations(
 
     start = base[0].chainage_m
     end = base[-1].chainage_m
-    chainages = {float(s.chainage_m) for s in base}
+    chainages = {float(station.chainage_m) for station in base}
 
     k0 = int(math.floor((start - support_phase_m) / support_pitch_m)) - 1
     k1 = int(math.ceil((end - support_phase_m) / support_pitch_m)) + 1
     for k in range(k0, k1 + 1):
         support = support_phase_m + k * support_pitch_m
-        midpoint = support + 0.5 * support_pitch_m
+        _, peak_fraction = _cable_span_sag_parameters(
+            asset_key=asset_key,
+            span_index=k,
+            base_sag_m=midspan_sag_m,
+            variation_fraction=variation_fraction,
+            peak_phase_jitter_fraction=peak_phase_jitter_fraction,
+        )
+        peak = support + peak_fraction * support_pitch_m
         if start + 1e-12 < support < end - 1e-12:
             chainages.add(float(support))
-        if start + 1e-12 < midpoint < end - 1e-12:
-            chainages.add(float(midpoint))
+        if start + 1e-12 < peak < end - 1e-12:
+            chainages.add(float(peak))
 
     result: list[AlignmentStation] = []
     for chainage in sorted(chainages):
         base_station = sample_alignment_station(base, chainage)
         phase = (chainage - support_phase_m) / support_pitch_m
-        fraction = phase - math.floor(phase)
-        sag_factor = 4.0 * fraction * (1.0 - fraction)
+        span_index = int(math.floor(phase))
+        fraction = phase - span_index
+        amplitude, peak_fraction = _cable_span_sag_parameters(
+            asset_key=asset_key,
+            span_index=span_index,
+            base_sag_m=midspan_sag_m,
+            variation_fraction=variation_fraction,
+            peak_phase_jitter_fraction=peak_phase_jitter_fraction,
+        )
+        if fraction <= peak_fraction:
+            local = fraction / peak_fraction
+        else:
+            local = (1.0 - fraction) / (1.0 - peak_fraction)
+        local = max(0.0, min(1.0, local))
+        sag_factor = math.sin(0.5 * math.pi * local)
         result.append(
             AlignmentStation(
                 chainage_m=base_station.chainage_m,
@@ -468,9 +520,9 @@ def _periodic_cable_sag_alignment_stations(
                 offset_x_m=base_station.offset_x_m,
                 offset_z_m=(
                     base_station.offset_z_m
-                    - midspan_sag_m * sag_factor
+                    - amplitude * sag_factor
                 ),
-                source=f"{base_station.source}|cable_sag",
+                source=f"{base_station.source}|cable_sag_irregular",
             )
         )
     return tuple(result)
@@ -1350,12 +1402,24 @@ def scene_object_from_continuous_asset(
         else tuple(stations)
     )
     sag_m = float(spec.properties.get("longitudinalSagM", 0.0))
+    sag_variation = float(
+        spec.properties.get("longitudinalSagVariationFraction", 0.0)
+    )
+    sag_peak_jitter = float(
+        spec.properties.get(
+            "longitudinalSagPeakPhaseJitterFraction",
+            0.0,
+        )
+    )
     if spec.category == "cable" and sag_m > 0.0:
         sweep_stations = _periodic_cable_sag_alignment_stations(
             base_sweep_stations,
             support_pitch_m=float(spec.properties["supportPitchM"]),
             support_phase_m=float(spec.properties["supportPhaseM"]),
             midspan_sag_m=sag_m,
+            variation_fraction=sag_variation,
+            peak_phase_jitter_fraction=sag_peak_jitter,
+            asset_key=spec.persistent_key,
         )
     else:
         sweep_stations = base_sweep_stations
@@ -1383,6 +1447,15 @@ def scene_object_from_continuous_asset(
         ),
         "cableSagApplied": spec.category == "cable" and sag_m > 0.0,
         "cableSagMidspanM": sag_m if spec.category == "cable" else 0.0,
+        "cableSagVariationFraction": (
+            sag_variation if spec.category == "cable" else 0.0
+        ),
+        "cableSagPeakPhaseJitterFraction": (
+            sag_peak_jitter if spec.category == "cable" else 0.0
+        ),
+        "cableSagDeterministicKey": (
+            spec.persistent_key if spec.category == "cable" else None
+        ),
         "cableSagControlStationsAdded": (
             len(sweep_stations) - len(base_sweep_stations)
             if spec.category == "cable"

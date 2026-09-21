@@ -75,6 +75,21 @@ S096 — учебный материал по пути метрополитен�
 
 Наличие двух отдельных текущих route relations является ещё одним независимым основанием не сводить Line 5 к одной оси.
 
+### Local project evidence that the two main tracks have independent chainage
+
+S054, the 2024 Moscow project/expertise for the future Dostoevskaya insertion zone, gives separate existing-Line-5 project PK intervals:
+
+- **right main track:** PK147+48.991 → PK157+01.926, derived track-local span **952.935 m**;
+- **left main track:** PK147+46.010 → PK157+02.021, derived track-local span **956.011 m**.
+
+The derived span difference is **3.076 m** over this project zone.
+
+This is useful evidence for the PCG contract because the two physical tracks are already handled as separate project alignments with separate chainage ranges. It is **not** an inter-track spacing measurement. The project labels `right` / `left` are also **not yet mapped** to `KOLTSEVAYA_TRACK_A/B`; that mapping remains null until a project orientation/track-number source resolves it.
+
+The same source gives **25.4 m intertrack spacing** for the **future Dostoevskaya deep pylon station**. That is a station-zone civil value and must not be reused as ordinary running-tunnel spacing.
+
+The referenced project set explicitly contains a 1:500 line plan and a 1:200 vertical longitudinal profile, but those sheets themselves are not included in the published expertise PDF. They remain a high-value acquisition target.
+
 ### Межосевое расстояние, взаимный Z и обделка
 
 Для Line 5 целиком пока не найден публичный исполнительный источник, который давал бы функции:

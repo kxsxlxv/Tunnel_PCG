@@ -849,18 +849,20 @@
         "center_profile_z_m": 1.25,
         "shell_clearance_inward_m": 0.02,
         "confidence": "C_photo_constrained_placement",
-        "reason": "catalog fixes bracket geometry but public project drawings inspected so far do not fix the rack elevation for this exact running-tunnel family"
+        "reason": "Catalog fixes bracket geometry but public project drawings inspected so far do not fix the rack elevation for this exact running-tunnel family. The negative/contact-rail-side rack is raised so its upright midpoint coincides with the lining-axis height, matching the 2026-09-21 user-supplied visual references.",
+        "negative_side_center_profile_z_m": 1.67
       },
       "initial_horn_mesh": {
-        "mode": "K1350_002_dimensioned_double_cradle_v2",
+        "mode": "K1350_002_open_double_cradle_v3_no_common_underbar",
         "longitudinal_width_m": 0.04,
         "first_cable_center_inward_m": 0.07,
         "second_cable_center_inward_m": 0.125,
         "confidence": "A_envelope_B_center_callouts_C_exact_bend_path",
-        "note": "K1350.002 current manufacturer envelope is 169x40x87 mm at 4 mm steel. Catalog drawing provides 70/125 mm local callouts used as the two cable-place center offsets; exact stamped bend radii remain unresolved.",
+        "note": "K1350.002 current manufacturer envelope is 169x40x87 mm at 4 mm steel. The 2026-09-21 user-supplied drawing/3D references show two open semicircular cradles without a continuous horizontal underbar; the preview therefore removes the former full-length radial seat while retaining a short wall-side neck. Exact stamped bend radii remain unresolved.",
         "overall_length_m": 0.169,
         "overall_height_m": 0.087,
-        "cable_places_per_horn": 2
+        "cable_places_per_horn": 2,
+        "common_horizontal_underbar": false
       },
       "assembly_designation": "R2K11 / K1351.001-09 + 11xK1350.002",
       "upright_designation": "K1351.001-09",
@@ -876,19 +878,32 @@
       "horn_radius_mode": "max_cable_radius_preview_exact_factory_bend_path_unresolved"
     },
     "cable_preview": {
-      "occupancy": "two_cables_per_horn_level_per_side_full_capacity_visual_preview",
+      "occupancy": "eight_of_eleven_levels_one_cable_each_per_side_visual_preview",
       "representative_diameter_m": 0.04,
       "circle_vertices": 8,
       "exact_route_schedule_resolved": false,
       "confidence": "C_visual_density_only",
-      "note": "R2K11 provides two cable places on each of 11 levels. Stage10.5 v2 populates both places on both sides to match the observed dense tunnel-service appearance; this is a capacity/density preview, not a project cable schedule.",
-      "occupied_places_per_horn": 2,
-      "total_representative_cables": 44,
+      "note": "R2K11 provides two cable places on each of 11 levels. Stage10.5 v3 occupies eight distributed levels with one cable per level on each wall (16 representative longitudinal cables total), matching the requested moderate service density rather than the former full-capacity 44-cable preview.",
+      "occupied_places_per_horn": 1,
+      "total_representative_cables": 16,
       "side_assignment": {
         "negative_profile_x": "strong_current_side_contact_rail_side",
         "positive_profile_x": "weak_current_side_walkway_side"
       },
-      "ordering_source": "P10-SP-CABLE-LAYOUT"
+      "ordering_source": "P10-SP-CABLE-LAYOUT",
+      "occupied_level_indices": [
+        1,
+        2,
+        3,
+        4,
+        6,
+        7,
+        8,
+        9
+      ],
+      "midspan_sag_m": 0.025,
+      "sag_shape": "piecewise_linear_support_midspan_support",
+      "sag_stations_per_support_span": 3
     },
     "pipes": {
       "status": "source_backed_tunnel_water_main_with_explicit_placement_fallback",

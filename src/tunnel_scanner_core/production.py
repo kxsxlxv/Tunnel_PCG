@@ -2695,6 +2695,271 @@ def _build_stage10_4_civil_detail_objects(
             )
     return tuple(result)
 
+
+def _stage9_child_seed(master_seed: int, ring_id: int, stream: int) -> int:
+    """Reproduce the old Stage-9 per-ring RNG stream split exactly."""
+    state = np.random.SeedSequence(
+        [int(master_seed), int(ring_id), int(stream)]
+    ).generate_state(1)
+    return int(state[0])
+
+
+def _moscow_rc_legacy_ring_mesh(
+    profile: MoscowStage10Profile,
+    *,
+    topology: str,
+    ring_index: int,
+    width_m: float,
+    seed: int,
+) -> RingMesh:
+    cfg = RingConfig(
+        outer_radius_m=profile.extrados_radius_m,
+        thickness_m=(
+            profile.extrados_radius_m - profile.intrados_radius_m
+        ),
+        width_m=width_m,
+    )
+    sampled_angles = sample_six_segment_angles(
+        seed=_stage9_child_seed(seed, ring_index, 1)
+    )
+    if topology == "kba":
+        return build_ring_mesh(cfg, sampled_angles)
+    if topology != "ten_equal":
+        raise ValueError(f"unsupported Moscow RC topology {topology!r}")
+
+    # The old RingMesh container carries RingAngles because Stage 1 was a
+    # six-segment reconstruction. For ten-equal Moscow RC the angle object is
+    # intentionally unused by curved-mesh, joint and TYPE1 bolt construction;
+    # the actual geometry is defined by these ten analytical extents.
+    step = 360.0 / 10.0
+    extents = tuple(
+        SegmentAngularExtent(
+            name=f"RC{i + 1:02d}",
+            kind="RC",
+            front_start_deg=-0.5 * step + i * step,
+            front_end_deg=-0.5 * step + (i + 1) * step,
+            back_start_deg=-0.5 * step + i * step,
+            back_end_deg=-0.5 * step + (i + 1) * step,
+        )
+        for i in range(10)
+    )
+    segments = tuple(build_hexahedral_segment(cfg, extent) for extent in extents)
+    return RingMesh(
+        config=cfg,
+        angles=sampled_angles,
+        segments=segments,
+    )
+
+
+def _warp_civil_local_object_to_alignment(
+    obj: SceneObject,
+    *,
+    ring_index: int,
+    start_chainage_m: float,
+    end_chainage_m: float,
+    assembly: TunnelAssembly,
+    stations: Sequence[AlignmentStation],
+    namespace: str,
+    profile: MoscowStage10Profile,
+    topology: str,
+) -> SceneObject:
+    midpoint = 0.5 * (start_chainage_m + end_chainage_m)
+    source_ring_width = assembly.config.ring_width_m
+    representative_ring_id = min(
+        assembly.config.n_rings - 1,
+        max(0, int(math.floor(midpoint / source_ring_width))),
+    )
+
+    vertices: list[Vec3] = []
+    for x, local_y, z in obj.vertices:
+        chainage = midpoint + local_y
+        station = sample_alignment_station(stations, chainage)
+        vertices.append(
+            (
+                x + station.offset_x_m,
+                station.world_y_m,
+                z + station.offset_z_m,
+            )
+        )
+
+    type_map = {
+        "lining_segment": "production_moscow_civil_segment",
+        "prescribed_radial_joint": (
+            "production_moscow_civil_prescribed_radial_joint"
+        ),
+        "prescribed_circumferential_joint": (
+            "production_moscow_civil_prescribed_circumferential_joint"
+        ),
+    }
+    object_type = type_map.get(obj.object_type, obj.object_type)
+    key = (
+        f"{namespace}/civil-stage9-transfer/{topology}/"
+        f"ring/{ring_index:06d}/{obj.name}"
+    )
+    iid = stable_instance_id(key)
+    props = dict(obj.extra_properties)
+    props.update(
+        {
+            "persistentKey": key,
+            "persistentInstanceID": iid,
+            "tunnelInstanceID": stable_instance_id(f"{namespace}/tunnel"),
+            "identityScope": "moscow_civil_stage9_architecture_transfer",
+            "domainGeometryStage": "10.4",
+            "moscowCivilRingIndex": ring_index,
+            "moscowCivilRingStartChainageM": start_chainage_m,
+            "moscowCivilRingEndChainageM": end_chainage_m,
+            "eventChainageM": midpoint,
+            "chunkAssignmentDatum": "moscow_ring_midpoint_chainage",
+            "civilFamily": profile.civil_family,
+            "moscowCivilTopology": topology,
+            "stage9SegmentJointFastenerArchitectureTransferred": True,
+            "stage9FastenerVisualTransferNotHistoricalMoscowClaim": True,
+            "moscowProfileID": profile.profile_id,
+            "moscowProfileSHA256": profile.provenance.canonical_sha256,
+        }
+    )
+    if obj.object_type in {"bolt_pocket_cutter", "bolt_head"}:
+        local_bolt_index = int(props.get("boltIndex", 0))
+        props["stage9LocalBoltIndex"] = local_bolt_index
+        props["boltIndex"] = ring_index * 1000 + local_bolt_index
+        props["legacyBoltLayout"] = BoltLayoutType.TYPE1_CENTERED.value
+        props["legacyBoltBooleanOverlapM"] = 0.005
+    if obj.object_type.startswith("prescribed_"):
+        props["legacyPrescribedJointGeometry"] = True
+
+    return SceneObject(
+        name=obj.name,
+        vertices=tuple(vertices),
+        faces=obj.faces,
+        object_type=object_type,
+        ring_id=representative_ring_id,
+        label_id=obj.label_id,
+        instance_id=iid,
+        semantic_class=obj.semantic_class,
+        segment_id=obj.segment_id,
+        segment_name=obj.segment_name,
+        segment_kind=obj.segment_kind,
+        reconstruction=(
+            f"{obj.reconstruction}+moscow_stage9_architecture_transfer"
+            if obj.reconstruction
+            else "moscow_stage9_architecture_transfer"
+        ),
+        collection_path=(
+            "Tunnel",
+            namespace,
+            "CivilShell",
+            "Stage9ArchitectureTransfer",
+            topology,
+            f"Ring_{ring_index:06d}",
+            *obj.collection_path[1:],
+        )
+        if obj.collection_path
+        else (
+            "Tunnel",
+            namespace,
+            "CivilShell",
+            "Stage9ArchitectureTransfer",
+            topology,
+            f"Ring_{ring_index:06d}",
+        ),
+        extra_properties=props,
+    )
+
+
+def _build_stage10_4_rc_stage9_architecture_objects(
+    *,
+    profile: MoscowStage10Profile,
+    topology: str,
+    namespace: str,
+    assembly: TunnelAssembly,
+    stations: Sequence[AlignmentStation],
+    include_bolts: bool,
+    seed: int,
+) -> tuple[SceneObject, ...]:
+    """Parameterize the old Stage-9 segment/joint/bolt pipeline for Moscow RC."""
+    if profile.civil_family != "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000":
+        raise ValueError("Stage-9 civil transfer currently targets Moscow RC only")
+    if topology not in {"ten_equal", "kba"}:
+        raise ValueError("Moscow RC topology must be ten_equal or kba")
+
+    ranges = civil_ring_ranges(
+        assembly.length_by_chainage_m,
+        ring_pitch_m=profile.ring_pitch_m,
+    )
+    result: list[SceneObject] = []
+    for range_index, (
+        ring_index,
+        start_chainage,
+        end_chainage,
+    ) in enumerate(ranges):
+        width = end_chainage - start_chainage
+        ring = _moscow_rc_legacy_ring_mesh(
+            profile,
+            topology=topology,
+            ring_index=ring_index,
+            width_m=width,
+            seed=seed,
+        )
+        joints = build_prescribed_joint_set(
+            ring,
+            sample_joint_config(
+                seed=_stage9_child_seed(seed, ring_index, 2)
+            ),
+        )
+
+        # Stage 9 uses TYPE1_CENTERED by default: three pockets/heads per
+        # segment at y=-0.4, 0, +0.4 m. A short clipped final ring cannot
+        # physically contain those longitudinal positions, so fasteners are
+        # omitted only for that partial ring rather than rescaled.
+        bolts = None
+        full_longitudinal_bolt_layout_fits = width >= 0.8 - 1e-12
+        if include_bolts and full_longitudinal_bolt_layout_fits:
+            bolt_cfg = sample_bolt_config(
+                seed=_stage9_child_seed(seed, ring_index, 3)
+            )
+            bolts = build_bolt_set(
+                ring,
+                bolt_cfg,
+                BoltLayoutType.TYPE1_CENTERED,
+                seed=_stage9_child_seed(seed, ring_index, 4),
+                perturbation_config=BoltPerturbationConfig(),
+            )
+
+        package = build_nominal_scene_package(
+            ring,
+            joints,
+            ring_id=ring_index,
+            include_radial_joints=True,
+            include_circumferential_front=False,
+            include_circumferential_back=(
+                range_index < len(ranges) - 1
+            ),
+            label_policy=LabelPolicy.STSD_COARSE,
+            surface_meshing=SurfaceMeshingConfig(),
+            bolts=bolts,
+            bolt_boolean_overlap_m=0.005,
+        )
+        for obj in package.objects:
+            mapped = _warp_civil_local_object_to_alignment(
+                obj,
+                ring_index=ring_index,
+                start_chainage_m=start_chainage,
+                end_chainage_m=end_chainage,
+                assembly=assembly,
+                stations=stations,
+                namespace=namespace,
+                profile=profile,
+                topology=topology,
+            )
+            if (
+                obj.object_type in {"bolt_pocket_cutter", "bolt_head"}
+                and not full_longitudinal_bolt_layout_fits
+            ):
+                raise AssertionError("partial-ring bolt object unexpectedly built")
+            result.append(mapped)
+    return tuple(result)
+
+
 def _build_stage10_4_civil_shell_objects(
     *,
     profile: MoscowStage10Profile,

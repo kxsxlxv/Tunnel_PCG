@@ -106,7 +106,8 @@ This example now has an explicit two-track/topology layer.
 Files:
 - `track_topology.json` — two independently identified Line-5 main tracks plus source-backed junction-system annotations;
 - `junction_events.json` — event contract for the first Belorusskaya/Krasnaya-Presnya depot-side divergence;
-- `../../data/moscow_turnout_archetypes.json` — source-backed turnout constraints and the tagged project-2976 fallback.
+- `../../data/moscow_turnout_archetypes.json` — source-backed turnout constraints plus tagged R65 project-2976 and alternate R50 project-2891 fallbacks;
+- `../../data/moscow_junction_civil_archetypes.json` — actual-site civil constraints separated from generic Frolov/ENiR chamber references.
 
 Main-track identities:
 - `KOLTSEVAYA_TRACK_A`: I main / inner / clockwise;
@@ -134,3 +135,23 @@ Graph workflow:
 - switch XY/Z, installed turnout project and actual chamber dimensions remain unresolved.
 
 The example therefore contains a strict KNOWN/CONSTRAINED/UNKNOWN boundary. Generic chamber/turnout fallback data must stay tagged as fallback in generated geometry.
+
+## Current station-level track-development inventory
+
+`track_topology.json` now covers all 12 current Line-5 stations. The important distinction is **station development vs nearby network junction**: Taganskaya is source-backed as having no station track development even though a separate nearby service-connection system exists in the Taganskaya area.
+
+Stations without current station track development:
+`Новослободская`, `Комсомольская`, `Таганская`, `Добрынинская`, `Октябрьская`, `Киевская`.
+
+Stations with source-backed current development:
+`Белорусская`, `Проспект Мира`, `Курская`, `Павелецкая`, `Парк культуры`, `Краснопресненская`.
+
+The planned `Достоевская` state is stored separately. Its future 4-turnout/2-storage-track development plus the planned transfer of the current Prospekt-Mira KRL connection must not be mixed into the 2026 normal-operating topology.
+
+## Service-era turnout alternatives
+
+The first mesh fallback remains metro-specific R65 project 2976 because the active Stage-10 service preset is R65/KD65/2001-reference. An R50 1:9 metro-specific project-2891 fallback is also encoded, but only for an explicitly selected R50 service-era/site preset. Neither product project is asserted as the installed Belorusskaya turnout.
+
+## Secondary actual-site validation
+
+`junction_events.json` also contains `JUNCTION_KOL5_KURSKAYA_LDL_1990S` as a secondary visual/civil validation event. It preserves source-backed facts such as Track II/outer-ring switch numbering, a qualitatively descending service branch, and mixed monolithic/cast-iron chamber construction, while leaving all unsourced dimensions and Z null.

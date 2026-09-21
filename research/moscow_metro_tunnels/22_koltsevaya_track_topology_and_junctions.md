@@ -244,6 +244,15 @@ S093, фотоальбом Метростроя 2017, pp.78–79:
 
 S086 дополнительно подтверждает у Белорусской со стороны Краснопресненской трёхстрелочное развитие оборотного пути, продолжающегося в соединение с депо.
 
+S120 adds an actual-site photo sequence of the same depot connection:
+- photo 2: **left = beginning of the depot branch; straight = toward Krasnopresnenskaya**;
+- photo 7: explicitly captioned **two-track section of the depot branch**;
+- photo 8: a downstream switch divides the branch directions **left toward Belorusskaya / right toward Krasnopresnenskaya**;
+- photo 9: a closed-method tunnel segment of the depot branch;
+- photos 16 and 20: the crossover chamber, including a panorama.
+
+This means the complete Krasnaya Presnya depot connection is a **multi-edge graph**. The geometry agent must not extend the first left-hand divergence as one indefinitely single-track branch.
+
 ### Что не установлено для actual chamber
 
 Публичный источник пока не дал:
@@ -562,9 +571,10 @@ Target PCG sequence:
 → `END_NODE / cut marker`.
 
 For actual Belorusskaya / Krasnaya Presnya depot connection:
-- **existence of a tunnel-branch is source-backed**: S098 is an official infrastructure-list reference quoting a Moscow Metro letter and explicitly names the tunnel-branch to depot «Красная Пресня»;
-- S106 gives **C-confidence corroboration that the main connection is two-track**;
-- this track count does **not** resolve whether the underground civil continuation is one common two-track shell, two single-track shells, or another transition arrangement;
+- **existence of a tunnel-branch is source-backed**: S098 explicitly names the tunnel-branch to depot «Красная Пресня»;
+- S120 directly shows/captions a **two-track section** of the actual depot branch and a later switch dividing directions toward Belorusskaya and Krasnopresnenskaya; S106 independently gives C-confidence textual corroboration that the main connection is two-track;
+- this still does **not** resolve whether every portion shares one common two-track civil shell, uses two separate single-track shells, or changes shell type along the connection;
+- for the first local Belorusskaya turnout mesh, a single-track `BRANCH_EDGE` may be cut **before the unresolved downstream merge/two-track system**; it must not be extended through the depot connection as a fabricated single-track tunnel;
 - independent branch shell start = `null`;
 - civil-shell arrangement = `null`;
 - diameter = `null`;

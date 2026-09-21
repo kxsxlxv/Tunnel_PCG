@@ -26,7 +26,9 @@
           "S085",
           "S086",
           "S093",
-          "S120"
+          "S120",
+          "S124",
+          "S125"
         ],
         "civil_shell": {
           "known": [
@@ -84,7 +86,68 @@
           "exact_xy": null,
           "exact_z": null,
           "exact_civil_shell_arrangement": null,
-          "status": "ACTUAL_VISUAL_TOPOLOGY_PARTIAL"
+          "status": "ACTUAL_VISUAL_TOPOLOGY_PARTIAL",
+          "local_two_track_section": {
+            "value": true,
+            "source_id": "S120",
+            "locator": "photo 7 caption",
+            "exact_chainage": null,
+            "exact_shell_arrangement": null
+          },
+          "separate_line5_branch_legs": {
+            "belorusskaya_track_count": 1,
+            "krasnopresnenskaya_track_count": 1,
+            "source_id": "S125",
+            "status": "SOURCE_BACKED_TOPOLOGY"
+          },
+          "reconciliation": "Model distinct single-track line-attachment legs plus an unresolved downstream local two-track section. Do not model one end-to-end double-track branch."
+        },
+        "selected_branch_edge": {
+          "edge_contract_id": "BRANCH_KRP_BELORUSSKAYA_LEG",
+          "track_count": 1,
+          "source_id": "S125",
+          "status": "SOURCE_BACKED_TOPOLOGY",
+          "rule": "The first implementation may model this one single-track branch leg and terminate it before the downstream depot-side two-track/switch system."
+        },
+        "actual_equipment_visual_events": [
+          {
+            "object": "tunnel gate / shutter ('затвор')",
+            "source_id": "S120",
+            "locator": "photo 13 caption",
+            "exact_type": null,
+            "exact_dimensions": null,
+            "exact_chainage": null,
+            "status": "ACTUAL_SITE_VISUAL_OBJECT_TYPE_UNRESOLVED",
+            "pcg_rule": "Preserve as an optional site event only after the branch-edge location is bound; do not invent hermetic/blast/flood-gate subtype."
+          },
+          {
+            "object": "experimental permanent-way section",
+            "source_id": "S120",
+            "locator": "photo 12 caption",
+            "exact_system": null,
+            "exact_dimensions": null,
+            "exact_chainage": null,
+            "status": "ACTUAL_SITE_VISUAL_ANOMALY",
+            "pcg_rule": "Do not apply as ordinary periodic track; retain only as a possible branch-specific event."
+          }
+        ],
+        "construction_context": {
+          "source_ids": [
+            "S093",
+            "S120",
+            "S123"
+          ],
+          "source_backed": [
+            "the depot branch passes through a difficult deep-to-shallow transition",
+            "ground freezing was used on the Circle-line depot branch",
+            "S120 describes powerful quicksand and identifies the closed-method frozen section in photos",
+            "S123 is the open-access Dorman 1971 acquisition target explicitly cross-referenced by S120"
+          ],
+          "exact_freezing_scheme": null,
+          "exact_freezing_hole_spacing": null,
+          "exact_frozen_wall_thickness": null,
+          "caisson_used": null,
+          "status": "CONSTRUCTION_METHOD_CONFIRMED_GEOMETRY_UNKNOWN"
         }
       },
       "turnout_geometry": {
@@ -555,7 +618,7 @@
             "locator": "official OTI list quoting Moscow Metro letter dated 20.08.2013",
             "status": "SOURCE_BACKED"
           },
-          "track_count_or_single_shell_arrangement": null,
+          "track_count_or_single_shell_arrangement": "TRACK topology: one track on selected Belorusskaya leg is source-backed. CIVIL shell arrangement is still unknown and must not be inferred from track count.",
           "connection_track_count": {
             "value": 2,
             "semantics": "the main Krasnaya Presnya depot connection is reported as a two-track connecting branch",
@@ -587,7 +650,11 @@
             "reason": "Russos S120 explicitly says Dorman's 1971 book described construction of this section; RSL marks the full volume open access",
             "exact_relevant_pages": null,
             "status": "PAGE_EXTRACTION_PENDING"
-          }
+          },
+          "selected_local_branch_edge_id": "BRANCH_KRP_BELORUSSKAYA_LEG",
+          "selected_local_branch_track_count": 1,
+          "selected_local_branch_track_count_source_id": "S125",
+          "first_implementation_cut_rule": "END_NODE must be placed on the Belorusskaya single-track branch leg before the unresolved downstream switch/two-track depot-side section; exact cut XY/chainage remains null."
         },
         "first_geometry_fallback": {
           "source_archetype": "METRO_STEPWISE_BRANCH_CHAMBER_RC_TUBING_2001_REFERENCE",
@@ -756,7 +823,33 @@
         "exact_shell_section": null,
         "exact_mapping_to_graph_edge_id": null,
         "rule": "Use only after the physical Krasnopresnenskaya-side branch edge is identified. Preserve these as crown/profile constraints; do not convert them into UGR or rail grade without section/datum evidence.",
-        "status": "ACTUAL_SOURCE_BACKED_PROFILE_FRAGMENT"
+        "status": "ACTUAL_SOURCE_BACKED_PROFILE_FRAGMENT",
+        "concept_vertical_frame": {
+          "source_id": "S121",
+          "crown_marks_m": [
+            {
+              "object_axes": "А-Г/5",
+              "value": 125.15,
+              "derivation_checks": [
+                "133.05-7.90",
+                "129.05-3.90"
+              ],
+              "status": "RECONSTRUCTED_TWICE_FROM_SOURCE_VALUES"
+            },
+            {
+              "object_axes": "А/2-3",
+              "value": 126.25,
+              "derivation_checks": [
+                "133.05-6.80",
+                "129.05-2.80"
+              ],
+              "status": "RECONSTRUCTED_TWICE_FROM_SOURCE_VALUES"
+            }
+          ],
+          "vertical_datum": "UNRESOLVED_CONCEPT_FRAME",
+          "absolute_geodetic_use": false,
+          "note": "These are internally consistent concept-frame crown marks. They are not UGR and are not promoted to absolute Moscow elevation until the 133.05/129.05 datum is explicitly tied to a geodetic system."
+        }
       }
     },
     {

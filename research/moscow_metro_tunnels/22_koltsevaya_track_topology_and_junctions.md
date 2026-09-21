@@ -347,6 +347,33 @@ This is an alternate **R50 service-era fallback only**. It is not evidence that 
 
 The current first-mesh choice remains the R65 project-2976 path because the active Stage-10 service preset is R65/KD65/2001-reference. A geometry agent must switch to the R50 family only via an explicit service-era/site preset.
 
+### 5.5 Legacy 1986-1987 turnout foundation/fastening contract
+
+S117 and S118 close an important geometry gap that a product turnout drawing alone does not resolve: **the local track foundation changes in the turnout zone**.
+
+For the documented Soviet metro construction family:
+
+- turnout/crossover zones use **wooden switch bearers**, not ordinary sleepers embedded in the Stage-10 running-track concrete;
+- S117 gives bearer lengths **2.75-6.75 m**;
+- a ballast construction extends **15 m before and 15 m after** turnouts;
+- ballast thickness beneath sleeper/bearer is **0.30 m**;
+- S118 specifies a **rectangular-section concrete trough** beneath the crushed-stone ballast;
+- R50 ordinary turnouts are **1:9**, crossovers **2:9**;
+- reinforced antiseptic-treated wooden bearers are used;
+- rail joints use six-bolt joint bars;
+- rails/baseplates are fastened to the bearers with track screws;
+- turnout baseplates are **uncanted**; transition back to canted running track uses a special variable-cant baseplate set;
+- in the construction sequence the turnout is raised on mounting concrete cubes and then ballast is filled/tamped beneath the bearers.
+
+S117 also gives a useful mesh orientation rule:
+- bearers under the points/connecting track up to turnout center are perpendicular to the **straight-track axis**;
+- in the frog zone they are perpendicular to the **bisector of the frog angle**.
+
+Machine ID:
+`MOSCOW_METRO_R50_1_9_VNIR_1986_LEGACY_CONSTRAINT`.
+
+This is an era-aligned **construction constraint**, not a complete switch-rail plan. It must not be combined silently with project 2891 or 2976: those are separate geometric fallback products with their own fastening families.
+
 ---
 
 ## 6. Civil shell around turnout
@@ -473,6 +500,15 @@ Therefore the following **must not** be extended blindly from periodic Stage-10 
 
 Source-backed constraints that can already become events:
 
+**Legacy 1986-1987 permanent-way transition (S117/S118):**
+- ordinary sleeper-in-track-concrete generation stops before the turnout event;
+- the documented legacy turnout family uses a **rectangular concrete trough + crushed-stone ballast + long wooden switch bearers**;
+- ballast extends **15 m before and 15 m after** the turnout, with **0.30 m** beneath the support;
+- bearer lengths span **2.75-6.75 m**;
+- historical R50 1:9 / 2:9 turnout-crossover construction uses six-bolt rail joints, screw fastening and uncanted turnout plates;
+- exact Belorusskaya retention of this R50/1986 arrangement in the 2001-reference service era is **not proven**.
+
+**Current validator/event constraints (S022):**
 - turnout has no superelevation in the Frolov reference zone — S058;
 - no transition curve in that zone — S058;
 - current turnout placement validator: turnout on straight track, longitudinal grade ≤**5‰** normally / ≤**10‰** in difficult conditions, beginning of plan or vertical curves ≥**20 m** from turnout center, station platform start ≥**25 m** from turnout center — S022 §5.3.5;
@@ -534,11 +570,11 @@ Again: none of these generic dimensions are assigned to the actual Belorusskaya 
 | two main tracks | I=inner=clockwise; II=outer=counterclockwise; OSM child routes 300607 Inner / 1462011 Outer are resolved | physical way/node chains must be extracted independently | exact current member way/node IDs |
 | junction location | Belorusskaya, Krasnopresnenskaya side; II straight, branch left | multi-switch turnback/depot system | exact switch XY / chainage / Z |
 | turnout | ordinary main/turnback turnout uses 1:9 | metro-specific R65 project 2976 usable as tagged fallback | exact installed project at Belorusskaya |
-| turnout rails | stock rails, points, frog, guard rails needed | project 2976 dimensions available | exact historical fastener/point machine at site |
+| turnout rails | stock rails, points, frog, guard rails needed; legacy R50 construction family is source-backed | project 2976 R65 and project 2891 R50 are tagged product fallbacks; 1986 VNiR gives foundation/fastening morphology | exact installed rail/project/point machine at Belorusskaya |
 | actual chamber | cast-iron tubings + RC end wall | correct visual class confirmed by photo; S102/S103 give generic cast-iron/hybrid morphology references only | actual length/width/height/tubing coordinates |
 | generic chamber progression | Frolov 5.56→7.20→7.70→9.00 m widening, then 15 m two-vault common-wall chamber 6 | independent tunnels only after inter-track >6 m; can drive fallback algorithm only | exact post-chamber-6 split chainage and correspondence to Belorusskaya |
 | contact rail | must be event-based with gaps/ramps/sectioning | normative ranges known | exact local positions |
-| drainage/walkway/services | cannot be periodic through turnout; current passage/drainage/power/sign rules are known | event-based current-rule geometry is constrained | historical/as-built Belorusskaya plan/levels/products |
+| track foundation / drainage / walkway / services | turnout cannot inherit ordinary periodic track concrete; legacy ballasted-trough family and current passage/drainage/power/sign rules are known | event-based legacy/current presets are constrained separately | historical/as-built Belorusskaya foundation plan, drainage levels and service products |
 | vertical geometry | no invented Z | future profile/survey solver | actual switch and branch UGR |
 | branch exit | tunnel-branch existence to Krasnaya Presnya is source-backed | generic reference says independent tunnels only after inter-track >6 m and after two-vault chamber 6 | actual split distance/track count/diameter/lining |
 

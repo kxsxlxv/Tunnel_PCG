@@ -31,7 +31,12 @@ from .ancillary import (
     build_ancillary_set,
     sample_ancillary_config,
 )
-from .assembly import TunnelAssembly, TunnelAssemblyConfig
+from .assembly import (
+    RingPose,
+    TunnelAssembly,
+    TunnelAssemblyConfig,
+    sample_tunnel_assembly,
+)
 from .angles import SegmentAngularExtent, sample_six_segment_angles
 from .bolts import (
     BoltLayoutType,
@@ -2703,6 +2708,48 @@ def _stage9_child_seed(master_seed: int, ring_id: int, stream: int) -> int:
     return int(state[0])
 
 
+def _sample_moscow_civil_roll_assembly(
+    *,
+    source_assembly: TunnelAssembly,
+    profile: MoscowStage10Profile,
+    civil_ring_count: int,
+    master_seed: int,
+) -> TunnelAssembly:
+    """Reproduce Stage-7/9 ring roll on the independent Moscow civil rhythm.
+
+    Stage 10 infrastructure follows the gravity/alignment frame, while the
+    lining itself retains the old per-ring axial stagger.  Moscow civil rings
+    use a 1.0 m pitch, so they need their own pose stream rather than indexing
+    the source 1.35 m Stage-9 assembly poses.
+    """
+    if civil_ring_count <= 0:
+        raise ValueError("Moscow civil roll stream requires at least one ring")
+    src = source_assembly.config
+    cfg = TunnelAssemblyConfig(
+        n_rings=civil_ring_count,
+        ring_width_m=profile.ring_pitch_m,
+        displacement_amplitude_m=0.0,
+        lateral_wavelength_m=src.lateral_wavelength_m,
+        vertical_wavelength_m=src.vertical_wavelength_m,
+        omega_x_rad_per_ring=src.omega_x_rad_per_ring,
+        omega_z_rad_per_ring=src.omega_z_rad_per_ring,
+        axis_noise_sigma_m=0.0,
+        ring_rotation_strategy=src.ring_rotation_strategy,
+        nominal_stagger_deg=src.nominal_stagger_deg,
+        theta_k_deg=src.theta_k_deg,
+        stagger_sigma_fraction_of_bound=src.stagger_sigma_fraction_of_bound,
+        angular_imperfection_fraction=src.angular_imperfection_fraction,
+        recenter_lateral_offsets=False,
+    )
+    # Stage 7/9 sampled the complete assembly from the master stream 10000.
+    # Reusing that stream on the civil-ring count preserves the historical
+    # rotation algorithm while decoupling it from the source-ring pitch.
+    return sample_tunnel_assembly(
+        cfg,
+        seed=_stage9_child_seed(master_seed, 0, 10_000),
+    )
+
+
 def _moscow_rc_legacy_ring_mesh(
     profile: MoscowStage10Profile,
     *,
@@ -2761,6 +2808,8 @@ def _warp_civil_local_object_to_alignment(
     namespace: str,
     profile: MoscowStage10Profile,
     topology: str,
+    civil_pose: RingPose,
+    civil_rotation_seed: int | None,
 ) -> SceneObject:
     midpoint = 0.5 * (start_chainage_m + end_chainage_m)
     source_ring_width = assembly.config.ring_width_m
@@ -2769,15 +2818,23 @@ def _warp_civil_local_object_to_alignment(
         max(0, int(math.floor(midpoint / source_ring_width))),
     )
 
+    rotation_rad = math.radians(civil_pose.rotation_y_deg)
+    rotation_cos = math.cos(rotation_rad)
+    rotation_sin = math.sin(rotation_rad)
+
     vertices: list[Vec3] = []
     for x, local_y, z in obj.vertices:
+        # Literal Stage-7/9 axial ring rotation is applied to the complete
+        # lining object in its local XZ frame before Stage-10 alignment warp.
+        xr = rotation_cos * x + rotation_sin * z
+        zr = -rotation_sin * x + rotation_cos * z
         chainage = midpoint + local_y
         station = sample_alignment_station(stations, chainage)
         vertices.append(
             (
-                x + station.offset_x_m,
+                xr + station.offset_x_m,
                 station.world_y_m,
-                z + station.offset_z_m,
+                zr + station.offset_z_m,
             )
         )
 
@@ -2812,7 +2869,21 @@ def _warp_civil_local_object_to_alignment(
             "ringTranslationX": center_station.offset_x_m,
             "ringTranslationY": center_station.world_y_m,
             "ringTranslationZ": center_station.offset_z_m,
-            "ringRotationDeg": 0.0,
+            "ringRotationDeg": float(civil_pose.rotation_y_deg),
+            "objectAppliedAxialRotationDeg": float(civil_pose.rotation_y_deg),
+            "ringNominalRotationDeg": float(civil_pose.nominal_rotation_deg),
+            "ringAngularImperfectionDeg": float(
+                civil_pose.angular_imperfection_deg
+            ),
+            "moscowCivilRotationStrategy": (
+                assembly.config.ring_rotation_strategy.value
+            ),
+            "moscowCivilRotationSeed": civil_rotation_seed,
+            "moscowCivilRotationFrame": (
+                "local_cross_section_before_stage10_alignment"
+            ),
+            "moscowCivilIndependentRingPoseStream": True,
+            "stage7RingAxialStaggerTransferred": True,
             "productionRingAlignmentStitched": True,
             "productionRingFrontOffsetX": front_station.offset_x_m,
             "productionRingFrontOffsetZ": front_station.offset_z_m,
@@ -2903,6 +2974,12 @@ def _build_stage10_4_rc_stage9_architecture_objects(
         assembly.length_by_chainage_m,
         ring_pitch_m=profile.ring_pitch_m,
     )
+    civil_roll_assembly = _sample_moscow_civil_roll_assembly(
+        source_assembly=assembly,
+        profile=profile,
+        civil_ring_count=len(ranges),
+        master_seed=seed,
+    )
     result: list[SceneObject] = []
     for range_index, (
         ring_index,
@@ -2970,6 +3047,8 @@ def _build_stage10_4_rc_stage9_architecture_objects(
                 namespace=namespace,
                 profile=profile,
                 topology=topology,
+                civil_pose=civil_roll_assembly.poses[ring_index],
+                civil_rotation_seed=civil_roll_assembly.seed,
             )
             if (
                 obj.object_type in {"bolt_pocket_cutter", "bolt_head"}
@@ -3842,6 +3921,46 @@ def build_production_scene(
                     else "deferred_to_stage10_4"
                 ),
                 "moscowCivilStage9ArchitectureTransferred": (
+                    config.moscow_stage in {"10.4", "10.5"}
+                    and config.moscow_profile.civil_family
+                    == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                ),
+                "moscowCivilRotationStrategy": (
+                    source_build.assembly.config.ring_rotation_strategy.value
+                    if (
+                        config.moscow_stage in {"10.4", "10.5"}
+                        and config.moscow_profile.civil_family
+                        == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                    )
+                    else None
+                ),
+                "moscowCivilRotationModel": (
+                    "stage7_ring_pose_on_independent_moscow_civil_rhythm"
+                    if (
+                        config.moscow_stage in {"10.4", "10.5"}
+                        and config.moscow_profile.civil_family
+                        == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                    )
+                    else None
+                ),
+                "moscowCivilRotationSeed": (
+                    _stage9_child_seed(
+                        int(
+                            source_scene.metadata.get(
+                                "proceduralBuild", {}
+                            ).get("masterSeed", 5812)
+                        ),
+                        0,
+                        10_000,
+                    )
+                    if (
+                        config.moscow_stage in {"10.4", "10.5"}
+                        and config.moscow_profile.civil_family
+                        == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                    )
+                    else None
+                ),
+                "moscowCivilRotationAppliedOnlyToLining": (
                     config.moscow_stage in {"10.4", "10.5"}
                     and config.moscow_profile.civil_family
                     == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"

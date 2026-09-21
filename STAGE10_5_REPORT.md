@@ -38,7 +38,7 @@ It replaces the legacy service-era hardware with:
 
 ## Selectable civil envelope
 
-Stage 10.5 now supports two researched circular Moscow civil envelopes through
+Stage 10.5 exposes two researched Moscow civil families through
 `--civil-archetype`:
 
     cast_iron_5500_5100
@@ -46,25 +46,40 @@ Stage 10.5 now supports two researched circular Moscow civil envelopes through
 
     rc_block_6100_5600
         D_in 5.600 m / D_out 6.100 m / ring pitch 1.000 m
-        source-backed topology: 10 identical RC blocks
+        10 identical precast RC blocks
 
-The classic 5.5/5.1 family remains the default. The physical envelope is still
-the source-sized smooth Stage-10 shell, but Stage 10.4+ now adds a separate
-open-backed visual detail layer so the lining again reads as composite rather
-than as a featureless cylinder. The cast-iron family gets an 11-piece visual
-joint/flange rhythm, ring-boundary bands, a circumferential stiffener and
-low-poly M27 x 120 bolt heads in two rows per visual longitudinal joint.
-P10-FROLOV-RING supports the 25 mm flange, typical M27 x 120 bolts and two
-working bolt rows; exact N/C/K angles and bolt drilling coordinates remain
-unresolved, so the visual segmentation is explicitly not series-accurate LOD0.
+The classic cast-iron family remains the compatibility default, but its detailed
+N/C/K tubing geometry is **not** fabricated. Only the source-sized 5.5/5.1 m
+envelope is rendered until the actual cast-iron segment/rib/fastening geometry
+is researched to a defensible level.
 
-For the 6.1/5.6 family, source S026 fixes the diameters, pitch and ten-block
-topology but does not provide a separate UGR-to-lining-axis datum. The
-generator explicitly transfers the established Stage-10 track/UGR datum and
-recomputes shell closure, walkway width and intrados-following service
-placement from the selected radius. Its ten-block rhythm is now visible as
-shallow joint relief; cast-iron M27 bolt heads/stiffener bands are not applied.
-Exact RC block-edge/pin CAD remains unresolved.
+The 6.1/5.6 m RC family is now the detailed composite option and is the intended
+civil archetype for current visual review. Source S026 provides:
+
+    ring pitch                     1.000 m
+    block count                    10 identical blocks
+    block volume                   0.46 m3
+    block mass                     1.15 t
+    historical concrete grade      400
+    working reinforcement          16 mm
+    erection pins                  22 mm
+    permanent bolted block joints  no
+
+Each RC ring is generated as **ten disconnected curved full-depth blocks**, not
+as a smooth cylinder plus decorative seam overlay. The construction is
+deliberately Stage-9-like at the topology level: separate curved annular
+segments with explicit radial end faces, but adapted to the Moscow
+2.800/3.050 m radii, 1.000 m ring pitch and ten equal blocks.
+
+The current 8 mm inter-block seam is a visual fallback, not a source dimension.
+Exact radial-end chamfers, pin holes/seats and reinforcement-mesh CAD remain
+unresolved. The calculated annular volume is approximately 4.60 m3/ring, or
+0.46 m3 for one of ten equal blocks, matching the documented block volume.
+
+S026 does not publish a separate UGR-to-lining-axis placement for this family.
+The existing Stage-10 track/UGR datum therefore remains an explicit transfer
+rule; shell-contact geometry, walkway width and wall-following services are
+recomputed from the selected 2.800 m intrados.
 
 ## Modern permanent way
 
@@ -233,10 +248,13 @@ unresolved.
 One R2K11 rack is generated on each wall at the midpoint of every 1.0 m Moscow
 civil ring.
 
-Stage-10.5 v4 follows the supplied drawing, 3D reference and Blender feedback:
+Stage-10.5 v5 follows the supplied drawing, 3D reference and Blender feedback:
 each horn leaves the upright directly and follows one rounded-W / omega-like
 strip through both cable cradles and the central crest. There is no separate
 horizontal shelf, wall-side tab or short neck between the upright and cradle.
+The v5 pass raises the sparse smooth-profile sampling from two to four samples
+per anchor span so the bends read rounder in Blender without turning the horn
+into a dense spline mesh.
 
 The visual cable preset occupies eight distributed levels per wall and one
 cable place on each occupied level:
@@ -357,7 +375,7 @@ Stress/integration gate:
 
 Profile schema is now **2.2** because the dimensioned support drawing is part of the typed machine contract.
 
-Current fully green v4 code baseline:
+Current fully green v5 code baseline:
 
     194 tests passed
     Stage 10.1 CLI compatibility smoke       PASS

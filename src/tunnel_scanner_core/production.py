@@ -2815,6 +2815,15 @@ def _build_stage10_4_civil_shell_objects(
                     "rcWorkingRebarDiameterM": (
                         0.016 if is_rc_10block else 0.0
                     ),
+                    "rcBlockVolumeSourceM3": (
+                        0.46 if is_rc_10block else 0.0
+                    ),
+                    "rcBlockMassSourceT": (
+                        1.15 if is_rc_10block else 0.0
+                    ),
+                    "rcConcreteGradeHistorical": (
+                        "400" if is_rc_10block else ""
+                    ),
                     "rcAssemblyPinDiameterM": (
                         0.022 if is_rc_10block else 0.0
                     ),
@@ -3531,6 +3540,33 @@ def build_production_scene(
                         == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
                     )
                     else 0.0
+                ),
+                "moscowCivilRCBlockVolumeSourceM3": (
+                    0.46
+                    if (
+                        config.moscow_stage in {"10.4", "10.5"}
+                        and config.moscow_profile.civil_family
+                        == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                    )
+                    else 0.0
+                ),
+                "moscowCivilRCBlockMassSourceT": (
+                    1.15
+                    if (
+                        config.moscow_stage in {"10.4", "10.5"}
+                        and config.moscow_profile.civil_family
+                        == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                    )
+                    else 0.0
+                ),
+                "moscowCivilRCConcreteGradeHistorical": (
+                    "400"
+                    if (
+                        config.moscow_stage in {"10.4", "10.5"}
+                        and config.moscow_profile.civil_family
+                        == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                    )
+                    else ""
                 ),
                 "moscowCivilRCAssemblyPinDiameterM": (
                     0.022

@@ -344,29 +344,88 @@ def sample_alignment_station(
 ) -> AlignmentStation:
     if not stations:
         raise ValueError("stations must not be empty")
+    if not math.isfinite(chainage_m):
+        raise ValueError("chainage must be finite")
+
     start = stations[0].chainage_m
     end = stations[-1].chainage_m
-    if chainage_m < start - 1e-12 or chainage_m > end + 1e-12:
-        raise ValueError("chainage outside station range")
-    if math.isclose(chainage_m, start, abs_tol=1e-12):
+
+    # A fixed 1e-12 m boundary tolerance is too small once chainage reaches
+    # kilometre scale.  Moscow 1.0 m civil-ring coordinates are composed from
+    # a separate rhythm over the source 1.35 m alignment; after thousands of
+    # rings, mathematically identical endpoints can differ by several IEEE-754
+    # ulps.  Accept only that numerical fuzz -- not a real geometric overrun.
+    magnitude = max(abs(start), abs(end), abs(chainage_m), 1.0)
+    numerical_tol = max(1e-12, 32.0 * math.ulp(magnitude))
+    if chainage_m < start - numerical_tol or chainage_m > end + numerical_tol:
+        raise ValueError(
+            "chainage outside station range: "
+            f"{chainage_m:.17g} not in [{start:.17g}, {end:.17g}] "
+            f"(numerical tolerance {numerical_tol:.3g} m)"
+        )
+
+    # Snap only values that lie outside the closed range by floating-point
+    # fuzz. This keeps interpolation strictly inside the physical alignment and
+    # still fails for any material overrun.
+    if chainage_m < start:
+        chainage_m = start
+    elif chainage_m > end:
+        chainage_m = end
+
+    if math.isclose(chainage_m, start, rel_tol=0.0, abs_tol=numerical_tol):
         return stations[0]
-    if math.isclose(chainage_m, end, abs_tol=1e-12):
+    if math.isclose(chainage_m, end, rel_tol=0.0, abs_tol=numerical_tol):
         return stations[-1]
-    for a, b in zip(stations, stations[1:]):
-        if a.chainage_m - 1e-12 <= chainage_m <= b.chainage_m + 1e-12:
-            if math.isclose(chainage_m, a.chainage_m, abs_tol=1e-12):
-                return a
-            if math.isclose(chainage_m, b.chainage_m, abs_tol=1e-12):
-                return b
-            u = (chainage_m - a.chainage_m) / (b.chainage_m - a.chainage_m)
-            return AlignmentStation(
-                chainage_m=float(chainage_m),
-                world_y_m=a.world_y_m + u * (b.world_y_m - a.world_y_m),
-                offset_x_m=a.offset_x_m + u * (b.offset_x_m - a.offset_x_m),
-                offset_z_m=a.offset_z_m + u * (b.offset_z_m - a.offset_z_m),
-                source="interpolated",
-            )
-    raise AssertionError("failed to sample production alignment")
+
+    # Binary search avoids an O(N) scan for every vertex on long production
+    # scenes (3000 source rings -> 6001 alignment stations).
+    lo = 0
+    hi = len(stations) - 1
+    while hi - lo > 1:
+        mid = (lo + hi) // 2
+        if stations[mid].chainage_m <= chainage_m:
+            lo = mid
+        else:
+            hi = mid
+
+    a = stations[lo]
+    b = stations[hi]
+    local_scale = max(
+        abs(a.chainage_m),
+        abs(b.chainage_m),
+        abs(chainage_m),
+        1.0,
+    )
+    local_tol = max(1e-12, 32.0 * math.ulp(local_scale))
+    if math.isclose(
+        chainage_m,
+        a.chainage_m,
+        rel_tol=0.0,
+        abs_tol=local_tol,
+    ):
+        return a
+    if math.isclose(
+        chainage_m,
+        b.chainage_m,
+        rel_tol=0.0,
+        abs_tol=local_tol,
+    ):
+        return b
+    if not (
+        a.chainage_m - local_tol
+        <= chainage_m
+        <= b.chainage_m + local_tol
+    ):
+        raise AssertionError("binary alignment bracket does not contain chainage")
+
+    u = (chainage_m - a.chainage_m) / (b.chainage_m - a.chainage_m)
+    return AlignmentStation(
+        chainage_m=float(chainage_m),
+        world_y_m=a.world_y_m + u * (b.world_y_m - a.world_y_m),
+        offset_x_m=a.offset_x_m + u * (b.offset_x_m - a.offset_x_m),
+        offset_z_m=a.offset_z_m + u * (b.offset_z_m - a.offset_z_m),
+        source="interpolated",
+    )
 
 
 def clipped_alignment_stations(

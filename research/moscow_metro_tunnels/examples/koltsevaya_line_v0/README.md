@@ -7,7 +7,7 @@ This directory is the first real-route pilot for the geospatial tunnel pipeline.
 - Line 5 / Koltsevaya.
 - 12 stations.
 - published operating length: 19.4 km.
-- current Wikidata identifier for the OSM line relation: **1462012**.
+- current OSM route hierarchy: **1462012 route_master**, with **300607 Inner** and **1462011 Outer** child subway routes.
 - station order, public station coordinates and published station depths.
 - Kievskaya depth 53 m is backed here by a station-specific Moscow Metro photo/reference page; an older aggregated list can show 48 m, so the specific source wins for this pilot.
 
@@ -53,12 +53,13 @@ Two alternatives are now supplied:
 
 1. `tools_extract_relation.py`
    - reads a local current Moscow PBF with pyosmium;
-   - target relation: 1462012.
+   - root relation: 1462012;
+   - preserves the current child routes separately: 300607 Inner and 1462011 Outer.
 
 2. `tools_fetch_relation_full.py`
    - calls the standard OpenStreetMap API endpoint `/api/0.6/relation/1462012/full`;
-   - avoids downloading the full ~81 MB Moscow PBF;
-   - exports all returned member ways while preserving member order/roles.
+   - follows nested child route relations conservatively;
+   - emits Inner and Outer separately while preserving member order/roles.
 
 The core parser preserves OSM node IDs. The track stitcher then connects physical `railway=subway` ways only through shared endpoint node IDs and rejects branch/switch graphs rather than guessing.
 
@@ -98,15 +99,16 @@ Main-track identities:
 - `KOLTSEVAYA_TRACK_A`: I main / inner / clockwise;
 - `KOLTSEVAYA_TRACK_B`: II main / outer / counterclockwise.
 
-The physical centerlines are **not** created from `alignment_xy_station_spline_25m.csv` and are **not** offsets of each other. Exact OSM way/node IDs are deliberately null until a current relation/full or Moscow-PBF extraction is available.
+The physical centerlines are **not** created from `alignment_xy_station_spline_25m.csv` and are **not** offsets of each other. The direction-route IDs are now resolved (300607 Inner, 1462011 Outer); exact OSM member way/node IDs remain deliberately null until relation/full or Moscow-PBF extraction is available.
 
 Graph workflow:
-1. fetch relation 1462012 and any nested route relations;
-2. preserve all physical `railway=subway` ways and OSM node IDs;
-3. run the conservative graph extractor;
-4. resolve the two closed main cycles against the sourced direction/station-order contract;
-5. attach branch/crossover semantics from `track_topology.json`;
-6. leave unresolved branches unclassified rather than selecting them automatically.
+1. use route_master 1462012 only to discover/validate its two current child routes;
+2. fetch **300607 Inner** and **1462011 Outer** independently;
+3. preserve all physical `railway=subway` ways and OSM node IDs per child route;
+4. run the conservative graph extractor without choosing degree>2 branches;
+5. map Inner to `KOLTSEVAYA_TRACK_A` and Outer to `KOLTSEVAYA_TRACK_B` using the independent operational direction evidence;
+6. attach branch/crossover semantics from `track_topology.json`;
+7. leave unresolved branches unclassified rather than selecting them automatically.
 
 `osm_track_stitch.py` still rejects graph degree >2. The separate `osm_track_graph.py` is the branch-preserving path for turnout/crossover research.
 

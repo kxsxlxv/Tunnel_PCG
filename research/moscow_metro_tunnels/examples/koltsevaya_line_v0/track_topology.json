@@ -1,0 +1,283 @@
+{
+  "schema_version": "1.0",
+  "research_date": "2026-09-21",
+  "line": {
+    "id": "MOSCOW_METRO_LINE_5",
+    "name_ru": "Кольцевая линия",
+    "master_osm_relation_id": 1462012,
+    "relation_role": "discovery seed only; may contain nested route relations",
+    "physical_model_rule": "Two independent physical centerlines must be extracted from OSM/project ways. Track B must never be produced by a constant lateral offset from Track A."
+  },
+  "coordinate_policy": {
+    "horizontal": "OSM WGS84 may be transformed to engineering CRS for a plan approximation, but is not an engineering survey.",
+    "vertical": "Do not invent Z. z_ugr_m remains null until survey/profile evidence is attached.",
+    "switch_xy": "Do not use station coordinates as switch coordinates; keep null until an actual physical way/node or drawing is resolved."
+  },
+  "physical_main_tracks": [
+    {
+      "id": "KOLTSEVAYA_TRACK_A",
+      "entity_type": "TRACK_EDGE_SET",
+      "operational_name": "I главный путь / first track",
+      "ring_position": "inner",
+      "direction": "clockwise",
+      "direction_source_ids": [
+        "S070",
+        "S071"
+      ],
+      "direction_status": "SOURCE_BACKED",
+      "station_sequence": [
+        "Белорусская",
+        "Новослободская",
+        "Проспект Мира",
+        "Комсомольская",
+        "Курская",
+        "Таганская",
+        "Павелецкая",
+        "Добрынинская",
+        "Октябрьская",
+        "Парк культуры",
+        "Киевская",
+        "Краснопресненская",
+        "Белорусская"
+      ],
+      "station_order_source_id": "S050",
+      "osm_route_relation_ids": null,
+      "osm_way_ids": null,
+      "physical_centerline_file": null,
+      "centerline_status": "UNRESOLVED_PENDING_RELATION_FULL_OR_PBF_GRAPH_EXTRACTION",
+      "z_profile_file": null,
+      "tunnel_axis_spacing_to_other_track_m": null,
+      "relative_z_to_other_track_m": null,
+      "civil_lining_by_edge": null,
+      "notes": [
+        "Current Moscow Transport independently states that trains leave Krasnaya Presnya depot onto the first track and that first-track travel is clockwise.",
+        "Historical metro track literature explicitly calls the clockwise inner track the first track."
+      ]
+    },
+    {
+      "id": "KOLTSEVAYA_TRACK_B",
+      "entity_type": "TRACK_EDGE_SET",
+      "operational_name": "II главный путь / second track",
+      "ring_position": "outer",
+      "direction": "counterclockwise",
+      "direction_source_ids": [
+        "S070",
+        "S071"
+      ],
+      "direction_status": "SOURCE_BACKED",
+      "station_sequence": [
+        "Белорусская",
+        "Краснопресненская",
+        "Киевская",
+        "Парк культуры",
+        "Октябрьская",
+        "Добрынинская",
+        "Павелецкая",
+        "Таганская",
+        "Курская",
+        "Комсомольская",
+        "Проспект Мира",
+        "Новослободская",
+        "Белорусская"
+      ],
+      "station_order_source_id": "S050",
+      "osm_route_relation_ids": null,
+      "osm_way_ids": null,
+      "physical_centerline_file": null,
+      "centerline_status": "UNRESOLVED_PENDING_RELATION_FULL_OR_PBF_GRAPH_EXTRACTION",
+      "z_profile_file": null,
+      "tunnel_axis_spacing_to_other_track_m": null,
+      "relative_z_to_other_track_m": null,
+      "civil_lining_by_edge": null,
+      "notes": [
+        "Current Moscow Transport states that depot trains entering the second track take their first passengers at Krasnopresnenskaya, consistent with counterclockwise travel.",
+        "This track is not a generated offset of Track A."
+      ]
+    }
+  ],
+  "osm_graph_extraction_contract": {
+    "extractor": "reference_impl/tunnel_pcg_ref/osm_track_graph.py::extract_physical_track_graph",
+    "inputs": [
+      "current OSM relation/full export for relation 1462012 and any nested route relations",
+      "or current Moscow PBF member-way export"
+    ],
+    "accepted_physical_tag": "railway=subway",
+    "preserves": [
+      "osm_way_id",
+      "all osm_node_refs",
+      "member_index",
+      "member_role",
+      "full LineString coordinates",
+      "OSM tags",
+      "degree>2 graph nodes"
+    ],
+    "forbidden_automation": [
+      "choosing one branch at a SWITCH_NODE",
+      "merging Track A and Track B",
+      "classifying a branch as depot/crossover from geometry alone",
+      "creating Track B by lateral offset",
+      "assigning Z from OSM"
+    ],
+    "classification_after_extraction": [
+      "match two closed main cycles to the independently sourced clockwise/counterclockwise station sequences",
+      "annotate remaining edges from researched junction semantics",
+      "retain unclassified edges rather than guessing"
+    ]
+  },
+  "confirmed_track_development_systems": [
+    {
+      "id": "KOL5_DEPOT_KRASNAYA_PRESNYA_SYSTEM",
+      "kind": "DEPOT_CONNECTION_AND_TURNBACK_SYSTEM",
+      "area": "Краснопресненская — Белорусская / электродепо Красная Пресня",
+      "source_ids": [
+        "S071",
+        "S072",
+        "S073",
+        "S074",
+        "S075",
+        "S022"
+      ],
+      "confirmed": [
+        "depot serves Line 5",
+        "trains can leave depot onto Track A/first track and Track B/second track",
+        "Belorusskaya has a 3-switch turnback siding continuing to depot connection",
+        "Krasnopresnenskaya has 3 turnouts and one turnback/storage track continuing to depot connection",
+        "the line-to-own-depot connecting branch is a double-track design class under metro design rules"
+      ],
+      "crossover_between_main_tracks": "present in the multi-switch station/depot system per schematic topology; exact OSM node set unresolved",
+      "exact_xy": null,
+      "exact_chainage": null,
+      "z_ugr_m": null,
+      "status": "TOPOLOGY_CONFIRMED_GEOMETRY_UNRESOLVED"
+    },
+    {
+      "id": "KOL5_PROSPEKT_MIRA_SSV_SYSTEM",
+      "kind": "TURNBACK_PLUS_SERVICE_CONNECTION",
+      "area": "Проспект Мира",
+      "destination": "Калужско-Рижская линия",
+      "source_ids": [
+        "S072",
+        "S076"
+      ],
+      "turnout_count": 3,
+      "station_turnback_storage_tracks": 1,
+      "exact_main_track_attachment": null,
+      "exact_xy": null,
+      "exact_chainage": null,
+      "status": "TOPOLOGY_CONFIRMED_GEOMETRY_UNRESOLVED"
+    },
+    {
+      "id": "KOL5_KURSKAYA_SSV_SYSTEM",
+      "kind": "TURNBACK_PTO_PLUS_SERVICE_CONNECTION",
+      "area": "Курская",
+      "destination": "Люблинско-Дмитровская линия",
+      "source_ids": [
+        "S072",
+        "S077"
+      ],
+      "turnout_count": 5,
+      "station_turnback_storage_tracks": 1,
+      "pto_between_main_tracks": true,
+      "exact_main_track_attachment": null,
+      "exact_xy": null,
+      "exact_chainage": null,
+      "status": "TOPOLOGY_CONFIRMED_GEOMETRY_UNRESOLVED"
+    },
+    {
+      "id": "KOL5_TAGANSKAYA_SSV_SYSTEM",
+      "kind": "SERVICE_CONNECTION_SYSTEM",
+      "area": "Таганская",
+      "destinations": [
+        "Таганско-Краснопресненская линия",
+        "Калининская линия / Марксистская"
+      ],
+      "source_ids": [
+        "S072",
+        "S090"
+      ],
+      "exact_turnout_count": null,
+      "exact_main_track_attachment": null,
+      "exact_xy": null,
+      "exact_chainage": null,
+      "status": "TOPOLOGY_CONFIRMED_FROM_SCHEMATIC_AND_DESTINATION_SOURCE"
+    },
+    {
+      "id": "KOL5_PAVELETSKAYA_DOBRYNINSKAYA_SSV_SYSTEM",
+      "kind": "TURNBACK_PLUS_SERVICE_CONNECTION_SYSTEM",
+      "area": "Павелецкая — Добрынинская",
+      "destinations": [
+        "Замоскворецкая линия / Новокузнецкая",
+        "Калужско-Рижская линия",
+        "Серпуховско-Тимирязевская линия"
+      ],
+      "source_ids": [
+        "S072",
+        "S078"
+      ],
+      "turnout_count_at_paveletskaya": 3,
+      "station_turnback_storage_tracks": 1,
+      "exact_main_track_attachment": null,
+      "exact_xy": null,
+      "exact_chainage": null,
+      "status": "TOPOLOGY_CONFIRMED_GEOMETRY_UNRESOLVED"
+    },
+    {
+      "id": "KOL5_PARK_KULTURY_SSV_SYSTEM",
+      "kind": "TURNBACK_PTO_PLUS_SERVICE_CONNECTION",
+      "area": "Парк культуры",
+      "destination": "Сокольническая линия / в сторону Фрунзенской",
+      "source_ids": [
+        "S072",
+        "S079"
+      ],
+      "turnout_count": 5,
+      "station_turnback_storage_tracks": 1,
+      "service_connection_tracks": 1,
+      "pto_on_station_track": true,
+      "exact_main_track_attachment": null,
+      "exact_xy": null,
+      "exact_chainage": null,
+      "status": "TOPOLOGY_CONFIRMED_GEOMETRY_UNRESOLVED"
+    }
+  ],
+  "selected_first_junction": {
+    "id": "JUNCTION_KOL5_BELORUSSKAYA_DEPOT_WEST",
+    "reason": "Actual Koltsevaya junction has a published construction photograph/caption plus a track-development schematic and station operating description.",
+    "area": "Белорусская, со стороны Краснопресненской",
+    "source_ids": [
+      "S071",
+      "S072",
+      "S073",
+      "S074"
+    ],
+    "main_track_id": "KOLTSEVAYA_TRACK_B",
+    "main_track_number": "II",
+    "incoming_orientation": "toward Krasnopresnenskaya in the counterclockwise direction",
+    "straight_outgoing": "KOLTSEVAYA_TRACK_B toward Краснопресненская",
+    "diverging_outgoing": "left toward turnback siding and the Krasnaya Presnya depot connection system",
+    "handedness": "left",
+    "branch_system_kind": "multi-switch turnback/depot system, not an isolated turnout",
+    "crossover_between_main_tracks": "system-level connection exists in the published schematic; exact switch-node decomposition requires OSM/project graph",
+    "switch_world_xy": null,
+    "switch_engineering_xy": null,
+    "z_ugr_m": null,
+    "station_pk_context": {
+      "value": "ПК132+72.3",
+      "meaning": "Belorusskaya station reference only; NOT switch chainage",
+      "source_id": "S074"
+    },
+    "exact_switch_chainage": null,
+    "turnout_archetype_id": "MOSCOW_METRO_R65_1_9_PROJECT_2976_REFERENCE_FALLBACK",
+    "installed_turnout_project_confirmed": false,
+    "civil_chamber_archetype_id": "BELORUSSKAYA_CAST_IRON_DEPOT_JUNCTION_ACTUAL_CONSTRAINT_PLUS_FROLOV_STEPWISE_REFERENCE",
+    "branch_end_model": "cut before depot; exact cut XY unresolved"
+  },
+  "global_unknowns": [
+    "exact OSM way IDs and node IDs for the two main physical cycles until current relation/full or PBF bytes are acquired",
+    "as-built inter-tunnel axis spacing by chainage",
+    "local relative Z of the two running tunnels",
+    "line-wide lining type assignment by physical edge",
+    "exact engineering XY/Z of Line-5 switch nodes",
+    "exact installed turnout project/model at the selected Belorusskaya depot junction"
+  ]
+}

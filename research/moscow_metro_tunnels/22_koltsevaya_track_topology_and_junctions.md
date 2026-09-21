@@ -401,6 +401,11 @@ S058, Frolov 2001, printed pp.146–150, Figs.4.33–4.35, даёт **не Бе�
 | 5 | 9.75 m | max circular ID 9.00 m; text notes elliptical alternative | 4.46 m |
 | 6 | 15.00 m | **two-vault common-wall chamber**: two open single-track lining arches bearing on a concrete/RC wall | exact axis spacing not dimensioned |
 
+Fig.4.34 also provides two useful local axis callout sets without requiring photo-scale inference:
+
+- chamber 5, section 1-1: **2.460 m + 2.000 m = 4.460 m**, which decomposes the published M4 inter-track parameter into offsets from the central section reference; the scan does not unambiguously identify which physical main/branch track should receive the left/right value in a reusable PCG frame;
+- chamber 6, section 2-2: raw horizontal callouts **2.050 m** on each side from the track axes toward the central wall/reference zone. The exact dimension datum on the wall is not sufficiently clear in the available scan, so the contract **does not** convert these two labels into a claimed 4.10 m axis spacing.
+
 For chamber 6, Fig.4.34 section 2-2 gives a generic lining-arc reference:
 - intrados radius **2.57 m**;
 - extrados radius **2.82 m**;

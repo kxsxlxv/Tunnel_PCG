@@ -157,6 +157,71 @@ def _annular_strip_mesh(
     return _extrude_y_polygon(sections, half_y_m=half_y_m)
 
 
+def _ribbon_u_cup_polygon(
+    *,
+    center_x_m: float,
+    center_z_m: float,
+    inward_x: float,
+    inward_z: float,
+    up_x: float,
+    up_z: float,
+    radius_m: float,
+    thickness_m: float,
+    segments: int = 5,
+) -> tuple[tuple[float, float], ...]:
+    """Generic low-poly U saddle retained for non-R2K11 service supports."""
+    if segments < 3:
+        raise ValueError("service cup segments must be >=3")
+    outer_r = radius_m + 0.5 * thickness_m
+    inner_r = radius_m - 0.5 * thickness_m
+    if inner_r <= 0.0:
+        raise ValueError("service cup thickness exceeds radius")
+
+    def point(r: float, theta: float) -> tuple[float, float]:
+        h = r * math.cos(theta)
+        v = r * math.sin(theta)
+        return (
+            center_x_m + inward_x * h + up_x * v,
+            center_z_m + inward_z * h + up_z * v,
+        )
+
+    outer = [
+        point(outer_r, math.pi + math.pi * i / segments)
+        for i in range(segments + 1)
+    ]
+    inner = [
+        point(inner_r, 2.0 * math.pi - math.pi * i / segments)
+        for i in range(segments + 1)
+    ]
+    return tuple((*outer, *inner))
+
+
+def _radial_arm_polygon(
+    *,
+    wall_x_m: float,
+    wall_z_m: float,
+    inward_x: float,
+    inward_z: float,
+    up_x: float,
+    up_z: float,
+    length_m: float,
+    thickness_m: float,
+    vertical_offset_m: float,
+) -> tuple[tuple[float, float], ...]:
+    """Generic wall standoff used by the water-main support, not R2K11."""
+    sx = wall_x_m + up_x * vertical_offset_m
+    sz = wall_z_m + up_z * vertical_offset_m
+    ex = sx + inward_x * length_m
+    ez = sz + inward_z * length_m
+    h = 0.5 * thickness_m
+    return (
+        (sx - up_x * h, sz - up_z * h),
+        (ex - up_x * h, ez - up_z * h),
+        (ex + up_x * h, ez + up_z * h),
+        (sx + up_x * h, sz + up_z * h),
+    )
+
+
 def _smooth_anchor_polyline(
     anchors: Sequence[tuple[float, float]],
     *,

@@ -37,6 +37,8 @@ MODERN_TYPES = {
     "production_water_main_support",
     "production_moscow_walkway",
     "production_moscow_civil_shell_ring",
+    "production_moscow_civil_detail_ribs",
+    "production_moscow_civil_bolt_heads",
 }
 
 
@@ -89,6 +91,9 @@ def main() -> None:
         "implemented_stage10_5_modern_segmented_cover_and_dedicated_support"
     )
     assert meta["civilShellStatus"] == "implemented_stage10_4_smooth_concentric_shell"
+    assert meta["moscowCivilCompositeDetailStatus"] == (
+        "implemented_source_sized_visual_joint_rib_bolt_overlay"
+    )
     assert meta["transitionalCivilGapStatus"] == "closed_by_stage10_4_moscow_shell"
 
     assert not build.scene.objects_of_type("production_sleeper")
@@ -170,6 +175,18 @@ def main() -> None:
     civil_count = int(meta["moscowCivilRingCount"])
     assert civil_count > 0
     assert len(build.scene.objects_of_type("production_moscow_civil_shell_ring")) == civil_count
+    details = build.scene.objects_of_type(
+        "production_moscow_civil_detail_ribs"
+    )
+    assert len(details) == civil_count
+    assert int(meta["moscowCivilDetailRibObjectCount"]) == civil_count
+    assert int(meta["moscowCivilBoltObjectCount"]) == 0
+    assert int(meta["moscowCivilBoltHeadCount"]) == 0
+    assert meta["moscowCivilBoltsEnabled"] is False
+    assert all(
+        int(obj.custom_properties["visualSegmentCount"]) == 11
+        for obj in details
+    )
     assert len(build.scene.objects_of_type("production_moscow_walkway")) == 1
 
     assert len(build.scene.objects_of_type("production_service_cable")) == 16
@@ -179,6 +196,16 @@ def main() -> None:
         assert math.isclose(
             float(cp["cableSagMidspanM"]),
             0.025,
+            abs_tol=1e-12,
+        )
+        assert math.isclose(
+            float(cp["cableSagVariationFraction"]),
+            0.35,
+            abs_tol=1e-12,
+        )
+        assert math.isclose(
+            float(cp["cableSagPeakPhaseJitterFraction"]),
+            0.12,
             abs_tol=1e-12,
         )
         assert int(cp["cableSagControlStationsAdded"]) > 0
@@ -291,6 +318,17 @@ def main() -> None:
         "production_moscow_civil_shell_ring"
     )
     assert rc_rings
+    rc_details = rc_build.scene.objects_of_type(
+        "production_moscow_civil_detail_ribs"
+    )
+    assert len(rc_details) == len(rc_rings)
+    assert all(
+        int(obj.custom_properties["visualSegmentCount"]) == 10
+        for obj in rc_details
+    )
+    assert not rc_build.scene.objects_of_type(
+        "production_moscow_civil_bolt_heads"
+    )
     assert all(
         int(ring.custom_properties["coarseSegmentCountReference"]) == 10
         for ring in rc_rings
@@ -334,6 +372,12 @@ def main() -> None:
                 "contact_base_anchor_count": 4,
                 "contact_cover_span_count": meta["contactRailCoverSpanCount"],
                 "civil_ring_count": civil_count,
+                "civil_detail_rib_count": meta[
+                    "moscowCivilDetailRibObjectCount"
+                ],
+                "civil_bolt_object_count": meta[
+                    "moscowCivilBoltObjectCount"
+                ],
                 "service_cable_count": meta["serviceCableCount"],
                 "service_rack_count": meta["serviceCableRackCount"],
                 "service_cable_places_per_horn": meta["serviceCablePlacesPerHorn"],

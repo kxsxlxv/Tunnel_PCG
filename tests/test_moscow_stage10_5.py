@@ -63,7 +63,7 @@ def test_stage10_5_profile_contains_modern_default_and_legacy_alternative():
     pw = profile.modern_permanent_way
     cr = profile.modern_contact_rail
 
-    assert profile.schema_version == "1.9"
+    assert profile.schema_version == "2.0"
     assert profile.default_service_preset == "MODERN_MOSCOW_LVT_SERVICES_2020S"
     assert profile.water_main.min_nominal_dn_mm == 80
     assert profile.water_main.quantity_single_track_tunnel == 1
@@ -91,6 +91,18 @@ def test_stage10_5_profile_contains_modern_default_and_legacy_alternative():
     assert math.isclose(cr.cover_top_wall_m, 0.003, abs_tol=1e-12)
     assert math.isclose(cr.support_block_height_m, 0.040, abs_tol=1e-12)
     assert math.isclose(cr.support_dowel_length_m, 0.140, abs_tol=1e-12)
+    assert math.isclose(cr.drawing_reference_to_axis_m, 0.683, abs_tol=1e-12)
+    assert math.isclose(
+        cr.drawing_reference_to_outer_envelope_m,
+        0.873,
+        abs_tol=1e-12,
+    )
+    assert math.isclose(cr.drawing_upper_return_m, 0.180, abs_tol=1e-12)
+    assert math.isclose(cr.drawing_top_above_ugr_m, 0.373, abs_tol=1e-12)
+    assert math.isclose(cr.drawing_lower_bend_callout_m, 0.155, abs_tol=1e-12)
+    assert math.isclose(cr.drawing_upper_bend_callout_m, 0.090, abs_tol=1e-12)
+    assert cr.base_plate_anchor_count == 4
+    assert cr.clamp_bolt_count == 2
 
     rack = profile.cable_rack
     assert rack.family == "R2K11"
@@ -190,9 +202,11 @@ def test_stage10_5_modern_contact_local_assembly_uses_dedicated_block_and_hood()
 
     assert set(by_type) == {
         "production_contact_rail_support_block",
+        "production_contact_rail_base_plate",
         "production_contact_rail_bracket",
         "production_contact_rail_insulator",
         "production_contact_rail_fastening_unit",
+        "production_contact_rail_clamp_bolts",
         "production_contact_rail_attachment_dowels",
         "production_contact_rail_support_hood",
     }
@@ -201,16 +215,73 @@ def test_stage10_5_modern_contact_local_assembly_uses_dedicated_block_and_hood()
     assert math.isclose(block.properties["heightM"], 0.040, abs_tol=1e-12)
     assert math.isclose(block.properties["polymerDowelLengthM"], 0.140, abs_tol=1e-12)
 
+    base_plate = by_type["production_contact_rail_base_plate"]
+    assert base_plate.properties["anchorCount"] == 4
+    assert math.isclose(
+        base_plate.properties["transverseM"],
+        0.220,
+        abs_tol=1e-12,
+    )
+
     bracket = by_type["production_contact_rail_bracket"]
     assert bracket.properties["legacySleeperAttachment"] is False
     assert bracket.properties["dedicatedConcreteSupportBlock"] is True
+    assert bracket.properties["geometryMode"] == "dimensioned_hook_channel_873x373_v3"
+    assert math.isclose(
+        bracket.properties["drawingReferenceToAxisM"],
+        0.683,
+        abs_tol=1e-12,
+    )
+    assert math.isclose(
+        bracket.properties["drawingReferenceToOuterEnvelopeM"],
+        0.873,
+        abs_tol=1e-12,
+    )
+    assert math.isclose(
+        bracket.properties["drawingTopAboveUGRM"],
+        0.373,
+        abs_tol=1e-12,
+    )
+    assert math.isclose(
+        bracket.properties["outerEnvelopeProfileAbsXM"],
+        0.5 * profile.track.gauge_m + 0.873,
+        abs_tol=1e-12,
+    )
 
     insulator = by_type["production_contact_rail_insulator"]
-    assert insulator.properties["orientation"] == "vertical_above_contact_rail"
+    assert insulator.properties["orientation"] == (
+        "vertical_between_contact_clamp_and_upper_hook_arm"
+    )
+    assert 0.0 < insulator.properties["visibleHeightM"] <= 0.040 + 1e-12
+
+    clamp = by_type["production_contact_rail_fastening_unit"]
+    assert clamp.properties["geometryMode"] == (
+        "upper_flange_saddle_insulated_two_bolt_v3"
+    )
+    assert clamp.properties["boltCount"] == 2
+
+    clamp_bolts = by_type["production_contact_rail_clamp_bolts"]
+    assert clamp_bolts.properties["quantity"] == 2
+
+    dowels = by_type["production_contact_rail_attachment_dowels"]
+    assert dowels.properties["quantity"] == 4
 
     hood = by_type["production_contact_rail_support_hood"]
     assert hood.properties["mainCoverInterruptedHere"] is True
-    assert hood.properties["geometryMode"] == "rounded_local_fastening_hood_v1"
+    assert hood.properties["coversClampAndBoltHeads"] is True
+    assert hood.properties["geometryMode"] == "rounded_local_fastening_hood_v2"
+
+    # The generated hook bracket must match the readable drawing envelope in
+    # profile X/Z while retaining the authoritative contact-rail datum.
+    bracket_vertices = bracket.vertices
+    profile_x_abs = [abs(x) for x, _y, _z in bracket_vertices]
+    core_z = [z for _x, _y, z in bracket_vertices]
+    assert math.isclose(max(profile_x_abs), 1.633, abs_tol=2e-9)
+    assert math.isclose(
+        max(core_z) + profile.datums.lining_axis_z_m,
+        0.373,
+        abs_tol=2e-9,
+    )
 
 
 def test_stage10_5_lvt_blocks_are_independent_and_clear_central_drain():

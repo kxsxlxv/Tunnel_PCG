@@ -524,6 +524,64 @@
         "pcg_use_rule": "Use only as a morphology prior/visual validation class. It does not turn the reported 14 m span into a Belorusskaya dimension.",
         "registry_id": "MOSCOW_CAST_IRON_CROWN_MONOLITHIC_WALL_INVERT_REFERENCE"
       }
+    },
+    {
+      "event_id": "JUNCTION_KOL5_KURSKAYA_LDL_1990S",
+      "event_type": "SERVICE_BRANCH_DIVERGENCE_VISUAL_REFERENCE",
+      "implementation_priority": "SECONDARY_VALIDATION_NOT_FIRST_JUNCTION",
+      "topology_system_ref": "track_topology.json#/confirmed_track_development_systems/KOL5_KURSKAYA_SSV_SYSTEM",
+      "actual_site": {
+        "status": "ACTUAL_SITE_VISUAL_CONSTRAINED",
+        "area": "Курская, former turnback development / SSV toward Lyublinsko-Dmitrovskaya (Chkalovskaya) system",
+        "source_ids": [
+          "S089",
+          "S104"
+        ],
+        "main_track": "KOLTSEVAYA_TRACK_B",
+        "operational_track_number": "II",
+        "ring_position": "outer",
+        "photographed_view": "toward Комсомольская",
+        "actual_switch_numbers_visible_or_captioned": [
+          4,
+          7
+        ],
+        "source_backed_qualitative_vertical_relation": "service branch descends downward-left after divergence",
+        "exact_delta_z_m": null,
+        "exact_switch_xy": null,
+        "exact_chainage_m": null,
+        "exact_turnout_project": null,
+        "exact_handedness_for_each_switch": null,
+        "note": "Do not convert the photo-derived 'down-left' relation into a numerical grade, radius or Z offset."
+      },
+      "civil": {
+        "archetype_id": "KURSKAYA_LDL_SERVICE_BRANCH_ACTUAL_VISUAL_CONSTRAINT",
+        "source_id": "S104",
+        "source_backed_morphology": [
+          "switch No.4 exit chamber described as fully monolithic",
+          "newer/wider chamber development described as mixed lining: mostly cast iron, widest span monolithic"
+        ],
+        "dimensions_m": null,
+        "tubing_or_frame_layout": null,
+        "transition_lengths_m": null,
+        "status": "ACTUAL_VISUAL_CLASS_ONLY"
+      },
+      "rail_and_turnout": {
+        "frog_mark_constraint": "1:9 ordinary metro turnout unless project-specific evidence overrides",
+        "frog_mark_source_ids": [
+          "S058",
+          "S022"
+        ],
+        "exact_installed_project": null,
+        "mesh_fallback_rule": "Do not automatically reuse Belorusskaya fallback project 2976. Select R50/R65 family from an explicit Kurskaya service-era/site preset.",
+        "status": "CONSTRAINED"
+      },
+      "contact_rail": {
+        "exact_side": null,
+        "exact_gap_positions": null,
+        "rule": "Use general turnout air-gap/sectioning constraints only; site positions remain unresolved.",
+        "source_id": "S022"
+      },
+      "use_rule": "May validate the generator's ability to represent an actual Line-5 branch that changes vertical level and passes through mixed civil construction. Not dimension-ready for as-built mesh."
     }
   ],
   "known_constrained_unknown_summary": {
@@ -553,5 +611,12 @@
     ]
   },
   "source_pinpoints_file": "../../data/koltsevaya_junction_source_pinpoints.json",
-  "civil_archetype_registry": "../../data/moscow_junction_civil_archetypes.json"
+  "civil_archetype_registry": "../../data/moscow_junction_civil_archetypes.json",
+  "event_selection_policy": {
+    "first_geometry_handoff": "JUNCTION_KOL5_BELORUSSKAYA_DEPOT_WEST",
+    "secondary_actual_visual_validation": [
+      "JUNCTION_KOL5_KURSKAYA_LDL_1990S"
+    ],
+    "rule": "Only the first event is the selected implementation archetype. Secondary events are retained to prevent overfitting one civil/junction morphology."
+  }
 }

@@ -1393,6 +1393,7 @@ def test_stage10_5_rc_ten_equal_topology_reuses_stage9_fastener_pipeline():
         assert hp["visibleHeadOnlyMode"] is True
         assert hp["hiddenBoltBodyOmitted"] is True
         assert hp["boltPocketRecessOmitted"] is True
+        assert hp["hiddenEmbeddedHeadBottomCapOmitted"] is True
         assert hp["cutTargetBeforeDisplay"] is False
         assert hp["booleanParticipation"] is False
         assert hp["moscowCivilBoltBooleanParticipation"] is False
@@ -1402,7 +1403,7 @@ def test_stage10_5_rc_ten_equal_topology_reuses_stage9_fastener_pipeline():
         achieved = radius * (1.0 - math.cos(math.pi / n))
         assert 6 <= n <= 10
         assert len(head.vertices) == 2 * n
-        assert len(head.faces) == n + 2
+        assert len(head.faces) == n + 1
         assert math.isclose(
             float(hp["boltHeadSurfaceToleranceM"]),
             0.002,

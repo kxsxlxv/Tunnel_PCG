@@ -14,9 +14,9 @@ from tunnel_scanner_core import (
 from tunnel_scanner_core.blender_adapter import (
     _blender_custom_property_scalar,
     _blender_custom_property_value,
-    _lining_face_is_hidden_extrados,
-    _lining_vertex_radius_m,
+    _float32_vertex_key,
     _mesh_prototype_payload,
+    _source_lining_extrados_vertex_keys,
     build_scene_package_in_blender,
 )
 from tunnel_scanner_core.scene import build_nominal_scene_package
@@ -163,75 +163,40 @@ def test_blender_adapter_builds_hierarchy_meshes_and_custom_props(monkeypatch):
     assert fake.data.collections.get("TunnelScanner::Ring_0012::Joints::PrescribedRadial") is not None
 
 
-def test_lining_extrados_classifier_recovers_stitched_ring_radius():
-    props = {
-        "ringTranslationX": 10.0,
-        "ringTranslationY": 20.0,
-        "ringTranslationZ": -4.0,
-        "liningRingWidthM": 1.0,
-        "productionRingAlignmentStitched": True,
-        "productionRingFrontOffsetX": 9.9,
-        "productionRingFrontOffsetZ": -4.0,
-        "productionRingCenterOffsetX": 10.0,
-        "productionRingCenterOffsetZ": -4.0,
-        "productionRingBackOffsetX": 10.1,
-        "productionRingBackOffsetZ": -4.0,
-    }
-    extrados = 3.05
-    face = (
-        (9.9 + extrados, 19.5, -4.0),
-        (10.0 + extrados, 20.0, -4.0),
-        (10.1 + extrados, 20.5, -4.0),
-        (10.0, 20.0, -4.0 + extrados),
+def test_lining_extrados_classifier_uses_curved_mesh_outer_vertex_topology():
+    package = _package()
+    segment = next(
+        obj for obj in package.objects if obj.object_type == "lining_segment"
     )
-    for vertex in face:
-        assert abs(
-            _lining_vertex_radius_m(
-                props,
-                vertex,
-                fallback_ring_width_m=1.35,
-            )
-            - extrados
-        ) < 1e-12
-    assert _lining_face_is_hidden_extrados(
-        props,
-        face,
-        extrados_radius_m=extrados,
-        fallback_ring_width_m=1.35,
-        radial_tolerance_m=1e-4,
-    )
+    outer = _source_lining_extrados_vertex_keys(segment)
+    props = segment.custom_properties
+    nu = int(props["surfaceSubdivisions"])
+    nv = int(props["surfaceLongitudinalSubdivisions"])
 
-    mixed = (*face[:3], (10.0 + 2.8, 20.0, -4.0))
-    assert not _lining_face_is_hidden_extrados(
-        props,
-        mixed,
-        extrados_radius_m=extrados,
-        fallback_ring_width_m=1.35,
-        radial_tolerance_m=1e-4,
-    )
+    assert len(outer) == (nu + 1) * (nv + 1)
+    dense_faces = segment.faces[: 2 * nu * nv]
+    for index, face in enumerate(dense_faces):
+        keys = {_float32_vertex_key(segment.vertices[i]) for i in face}
+        if index % 2 == 1:
+            assert keys <= outer
+        else:
+            assert not keys <= outer
+
+    # End caps and radial segment sides span both inner and outer layers,
+    # so they must never be classified as hidden extrados.
+    for face in segment.faces[2 * nu * nv :]:
+        keys = {_float32_vertex_key(segment.vertices[i]) for i in face}
+        assert not keys <= outer
 
 
-def test_lining_extrados_classifier_supports_chunk_localized_coordinates():
-    props = {
-        "ringTranslationX": 100.0,
-        "ringTranslationY": 200.0,
-        "ringTranslationZ": -50.0,
-        "liningRingWidthM": 1.0,
-        "productionRingAlignmentStitched": False,
-        "coordinatesLocalizedToChunk": True,
-        "chunkWorldOriginX": 90.0,
-        "chunkWorldOriginY": 180.0,
-        "chunkWorldOriginZ": -40.0,
-    }
-    assert abs(
-        _lining_vertex_radius_m(
-            props,
-            (13.05, 20.0, -10.0),
-            fallback_ring_width_m=1.35,
-        )
-        - 3.05
-    ) < 1e-12
+def test_lining_extrados_float32_keys_match_blender_storage_precision():
+    vertex = (1234.567890123, -0.123456789, 3.0500000001)
+    # Blender mesh coordinates are 32-bit floats. Repacking the values after
+    # an explicit float32 round-trip must therefore produce the same key.
+    import struct
 
+    rounded = struct.unpack("<fff", struct.pack("<fff", *vertex))
+    assert _float32_vertex_key(vertex) == _float32_vertex_key(rounded)
 
 def test_blender_import_script_compiles_without_blender_runtime():
     script = Path(__file__).resolve().parents[1] / "scripts" / "blender_import_scene.py"

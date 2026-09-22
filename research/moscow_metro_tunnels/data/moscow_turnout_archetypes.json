@@ -491,7 +491,63 @@
             "status": "CONFLICTING_CURRENT_SUPPLIER_PACKAGE"
           }
         ],
-        "mesh_rule": "Use high-flange separate-fastening morphology. Do not hard-code one plate count/package for the Belorusskaya as-built junction; the installed historical package remains unknown."
+        "mesh_rule": "Select exactly one plate-package variant for a generated fallback turnout. Do not mix SK65 and SKL65 counts/geometries, and keep installed_model_unconfirmed=true.",
+        "mesh_variant_options": [
+          {
+            "id": "SK65_GOST_FAMILY_CURRENT_GEOMETRY_CONFIRMATION",
+            "package_evidence": {
+              "source_id": "S095",
+              "service_era_specification": "GOST 16277-93",
+              "package_quantity": 117
+            },
+            "geometry_confirmation": {
+              "source_id": "S060",
+              "standard": "GOST 16277-2016",
+              "figure": "5",
+              "envelope_mm": [
+                370,
+                165
+              ],
+              "hole_count": 4,
+              "hole_diameter_mm": 26,
+              "hole_center_spacing_mm": [
+                310,
+                100
+              ],
+              "plate_thickness_mm": 15.5,
+              "overall_height_reference_mm": 46.5,
+              "rail_seat_inclination": "none"
+            },
+            "status": "FALLBACK_GEOMETRY_CROSS_ERA_CONFIRMATION",
+            "confidence": "B",
+            "rule": "Use only if the SK65/117-piece package variant is selected. The exact 1993-vs-2016 local profile equivalence has not been proven here."
+          },
+          {
+            "id": "SKL65_DN436_PRODUCT_FAMILY",
+            "package_evidence": {
+              "source_id": "S094",
+              "package_quantity": 208,
+              "note": "current supplier package variant for the same turnout family"
+            },
+            "geometry": {
+              "source_id": "S132",
+              "component": "СКЛ65 Дн 436",
+              "envelope_mm": [
+                370,
+                165
+              ],
+              "supporting_surface_thickness_mm": 15,
+              "rib_height_mm": 32,
+              "rail_seat_nominal_width_parameter_mm": 150,
+              "rail_seat_inclination": "none",
+              "mass_kg": 7.6
+            },
+            "status": "SOURCE_BACKED_PRODUCT_FAMILY_NOT_INSTALLED_SITE_PROOF",
+            "confidence": "B",
+            "rule": "Use only under an explicit SKL65 package variant. Do not merge dimensions with the SK65 package."
+          }
+        ],
+        "variant_selection": "UNRESOLVED_FOR_BELORUSSKAYA"
       },
       "speeds_kmh": {
         "straight": 100,

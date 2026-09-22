@@ -88,6 +88,29 @@ class OSMTrackGraphTests(unittest.TestCase):
         # The extractor must not pretend to know that this is a depot branch.
         self.assertEqual(branch["classification"], "unclassified_physical_track")
 
+    def test_non_subway_platform_way_is_excluded(self):
+        fc = {
+            "type": "FeatureCollection",
+            "features": [
+                feat(
+                    0,
+                    100,
+                    [1, 2, 3],
+                    [[0, 0], [1, 0], [2, 0]],
+                ),
+                feat(
+                    1,
+                    900,
+                    [10, 11],
+                    [[0.5, 0.2], [1.5, 0.2]],
+                    railway="platform",
+                ),
+            ],
+        }
+        g = extract_physical_track_graph(fc)
+        self.assertEqual({e["osm_way_id"] for e in g["edges"]}, {100})
+        self.assertFalse(any(e["osm_way_id"] == 900 for e in g["edges"]))
+
 
 if __name__ == "__main__":
     unittest.main()

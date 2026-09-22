@@ -39,7 +39,7 @@ def _obj(
 def test_scene_package_polygon_profile_separates_logical_and_unique_mesh_cost():
     package = ScenePackage(
         name="profile-test",
-        mode=SceneMode.NOMINAL,
+        mode=SceneMode.NOMINAL_WITH_PRESCRIBED_JOINTS,
         label_policy=LabelPolicy.STSD_COARSE,
         objects=(
             _obj(

@@ -931,10 +931,12 @@ def main() -> None:
                 if names != ["K", "B1", "A1", "A2", "A3", "B2"]:
                     errors.append("K/B/A segment order mismatch")
 
-            if len(transferred_heads) != len(transferred_cutters):
-                errors.append("Stage-9 bolt head/pocket pairing mismatch")
             bolts_enabled = bool(
                 production_meta.get("moscowCivilBoltsEnabled", False)
+            )
+            bolt_render_mode = production_meta.get(
+                "moscowCivilBoltRenderMode",
+                "legacy_pocket_and_head_boolean",
             )
             if bolts_enabled:
                 if not transferred_heads:
@@ -951,6 +953,28 @@ def main() -> None:
                     "type1_centered"
                 ):
                     errors.append("wrong transferred Stage-9 bolt layout")
+                if bolt_render_mode == "visible_head_only_no_boolean":
+                    if transferred_cutters:
+                        errors.append(
+                            "head-only RC bolt mode unexpectedly contains pocket cutters"
+                        )
+                    if any(
+                        bool(
+                            head.custom_properties.get(
+                                "moscowCivilBoltBooleanParticipation",
+                                True,
+                            )
+                        )
+                        for head in transferred_heads
+                    ):
+                        errors.append(
+                            "head-only RC bolt mode still participates in Booleans"
+                        )
+                elif bolt_render_mode == "legacy_pocket_and_head_boolean":
+                    if len(transferred_heads) != len(transferred_cutters):
+                        errors.append("Stage-9 bolt head/pocket pairing mismatch")
+                else:
+                    errors.append(f"unknown RC bolt render mode: {bolt_render_mode!r}")
             elif transferred_heads or transferred_cutters:
                 errors.append("civil fasteners exist despite disabled bolt transfer")
         else:

@@ -375,8 +375,9 @@ def main() -> None:
     ]
     rc_ring_count = int(rm["moscowCivilRingCount"])
     assert len(rc_segments) == 10 * rc_ring_count
-    assert len(rc_radial) == 10 * rc_ring_count
-    assert len(rc_circ) == 10 * (rc_ring_count - 1)
+    assert rc_radial == []
+    assert rc_circ == []
+    assert rm["prescribedOuterJointSolidsRemoved"] is True
     assert int(rm["moscowCivilRenderedBlockCount"]) == len(rc_segments)
     assert int(rm["moscowCivilSegmentObjectCount"]) == len(rc_segments)
     assert int(rm["moscowCivilPrescribedRadialJointCount"]) == len(rc_radial)

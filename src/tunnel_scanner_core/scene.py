@@ -13,6 +13,7 @@ from .curved_mesh import (
     apply_rigid_transform_to_curved_segment,
     build_curved_circumferential_collar_mesh,
     build_curved_ring_mesh,
+    sagitta_m,
 )
 from .joints import PrescribedJointSet
 from .mesh import Face, RingMesh, Vec3
@@ -453,6 +454,19 @@ def build_nominal_scene_package(
                         "boltHeadRadiusM": float(head.top_radius_m),
                         "boltEmbeddedRadiusM": float(head.bottom_radius_m),
                         "boltHeadThicknessM": float(head.thickness_m),
+                        "boltHeadRingVertices": int(bolts.config.head_ring_vertices),
+                        "boltHeadSurfaceToleranceM": float(
+                            surface_meshing.max_sagitta_m
+                        ),
+                        "boltHeadAchievedMaxSagittaM": float(
+                            sagitta_m(
+                                head.top_radius_m,
+                                360.0 / bolts.config.head_ring_vertices,
+                            )
+                        ),
+                        "boltHeadTessellationMode": (
+                            "sagitta_bounded_adaptive_v1"
+                        ),
                     },
                 )
             )

@@ -260,6 +260,28 @@ def test_stage10_5_r2k11_racks_repeat_on_both_walls_and_stay_inside_shell():
 
     cables = modern_cable_sections_core(profile)
     assert len(cables) == 16
+    assert {len(section) for _name, section, _props in cables} == {7}
+    assert {
+        int(props["sourcePreviewCircleVertices"])
+        for _name, _section, props in cables
+    } == {8}
+    assert {
+        int(props["cableCircleVertices"])
+        for _name, _section, props in cables
+    } == {7}
+    assert all(
+        float(props["surfaceAchievedMaxSagittaM"]) <= 0.002 + 1e-12
+        for _name, _section, props in cables
+    )
+    tighter_cables = modern_cable_sections_core(
+        profile,
+        surface_meshing=SurfaceMeshingConfig(max_sagitta_m=0.001),
+    )
+    assert {len(section) for _name, section, _props in tighter_cables} == {10}
+    assert all(
+        float(props["surfaceAchievedMaxSagittaM"]) <= 0.001 + 1e-12
+        for _name, _section, props in tighter_cables
+    )
     assert {
         props["rackLevel"]
         for _name, _section, props in cables
@@ -1368,6 +1390,26 @@ def test_stage10_5_rc_ten_equal_topology_reuses_stage9_fastener_pipeline():
         assert cp["legacyBoltLayout"] == "type1_centered"
         assert hp["stage9FastenerVisualTransferNotHistoricalMoscowClaim"] is True
         assert cp["stage9FastenerVisualTransferNotHistoricalMoscowClaim"] is True
+        n = int(hp["boltHeadRingVertices"])
+        radius = float(hp["boltHeadRadiusM"])
+        achieved = radius * (1.0 - math.cos(math.pi / n))
+        assert 6 <= n <= 10
+        assert len(head.vertices) == 2 * n
+        assert len(head.faces) == n + 2
+        assert math.isclose(
+            float(hp["boltHeadSurfaceToleranceM"]),
+            0.002,
+            abs_tol=1e-12,
+        )
+        assert math.isclose(
+            float(hp["boltHeadAchievedMaxSagittaM"]),
+            achieved,
+            abs_tol=1e-12,
+        )
+        assert achieved <= 0.002 + 1e-12
+        if n > 6:
+            previous = radius * (1.0 - math.cos(math.pi / (n - 1)))
+            assert previous > 0.002 - 1e-12
         assert cp["booleanOperation"] == "DIFFERENCE"
         assert cp["removeAfterBoolean"] is True
 

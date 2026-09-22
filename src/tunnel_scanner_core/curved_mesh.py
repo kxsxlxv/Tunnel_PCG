@@ -107,6 +107,35 @@ def max_angular_step_deg(radius_m: float, max_sagitta_m: float) -> float:
     return math.degrees(2.0 * math.acos(c))
 
 
+def required_circle_subdivisions(
+    radius_m: float,
+    max_sagitta_m: float,
+    *,
+    min_subdivisions: int = 3,
+    max_subdivisions: int = 4096,
+) -> int:
+    """Minimum full-circle chord count satisfying a radial sagitta bound."""
+    if min_subdivisions < 3:
+        raise ValueError("min_subdivisions must be >=3")
+    if max_subdivisions < min_subdivisions:
+        raise ValueError("max_subdivisions must be >= min_subdivisions")
+    step_limit_deg = max_angular_step_deg(radius_m, max_sagitta_m)
+    if step_limit_deg <= 0.0:
+        raise ValueError("computed angular step is non-positive")
+    required = max(
+        min_subdivisions,
+        int(math.ceil(360.0 / step_limit_deg)),
+    )
+    if required > max_subdivisions:
+        raise ValueError(
+            f"circle cannot meet sagitta tolerance {max_sagitta_m:g} m "
+            f"within max_subdivisions={max_subdivisions}"
+        )
+    if sagitta_m(radius_m, 360.0 / required) > max_sagitta_m + 1e-12:
+        raise AssertionError("computed circle subdivision exceeds sagitta tolerance")
+    return required
+
+
 def sagitta_m(radius_m: float, angular_step_deg: float) -> float:
     if radius_m <= 0.0:
         raise ValueError("radius_m must be positive")

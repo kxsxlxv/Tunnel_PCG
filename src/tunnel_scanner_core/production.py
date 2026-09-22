@@ -45,7 +45,7 @@ from .bolts import (
     sample_bolt_config,
 )
 from .config import RingConfig
-from .curved_mesh import SurfaceMeshingConfig
+from .curved_mesh import SurfaceMeshingConfig, required_circle_subdivisions
 from .joints import PrescribedJointSet, build_prescribed_joint_set, sample_joint_config
 from .mesh import (
     Face,
@@ -926,6 +926,7 @@ def build_continuous_asset_specs(
     moscow_profile: MoscowStage10Profile | None = None,
     moscow_stage: str = "10.1",
     moscow_service_preset: str = "legacy",
+    surface_meshing: SurfaceMeshingConfig | None = None,
 ) -> tuple[ContinuousAssetSpec, ...]:
     if not namespace:
         raise ValueError("namespace must not be empty")
@@ -943,6 +944,7 @@ def build_continuous_asset_specs(
     elif moscow_service_preset not in {"legacy", "modern"}:
         raise ValueError("moscow_service_preset must be 'legacy' or 'modern'")
     profile = rail_profile or RailProfile.generic_from_ancillary(ancillary.config)
+    surface_meshing = surface_meshing or SurfaceMeshingConfig()
     specs: list[ContinuousAssetSpec] = []
 
     for mesh in ancillary.meshes:
@@ -1008,7 +1010,8 @@ def build_continuous_asset_specs(
             "tube",
         )
         for cable_name, section, cable_props in modern_cable_sections_core(
-            moscow_profile
+            moscow_profile,
+            surface_meshing=surface_meshing,
         ):
             specs.append(
                 ContinuousAssetSpec(
@@ -3480,6 +3483,14 @@ def _build_stage10_4_rc_stage9_architecture_objects(
             bolt_cfg = sample_bolt_config(
                 seed=_stage9_child_seed(seed, ring_index, 3)
             )
+            bolt_cfg = replace(
+                bolt_cfg,
+                head_ring_vertices=required_circle_subdivisions(
+                    bolt_cfg.head_radius_m,
+                    surface_meshing.max_sagitta_m,
+                    min_subdivisions=6,
+                ),
+            )
             bolts = build_bolt_set(
                 ring,
                 bolt_cfg,
@@ -3783,6 +3794,7 @@ def build_production_scene(
         moscow_profile=config.moscow_profile,
         moscow_stage=config.moscow_stage,
         moscow_service_preset=config.resolved_moscow_service_preset,
+        surface_meshing=surface_meshing,
     )
 
     objects: list[SceneObject] = []
@@ -5165,6 +5177,7 @@ def build_stage10_5_rc_modern_chunk_plan(
         moscow_service_preset=(
             production_config.resolved_moscow_service_preset
         ),
+        surface_meshing=surface_meshing,
     )
     resolved_boundary_policy = ChunkBoundaryPolicy(boundary_policy)
     chunks = plan_chunks(

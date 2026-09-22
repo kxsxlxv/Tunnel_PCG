@@ -27,6 +27,7 @@ jobs:
           scripts/blender_verify_stage8.py
           scripts/blender_verify_stage9.py
           scripts/blender_verify_stage10.py
+          scripts/blender_profile_stage10.py
           scripts/verify_stage8_stress.py
           scripts/verify_stage8_trimesh.py
           scripts/verify_stage9_stress.py

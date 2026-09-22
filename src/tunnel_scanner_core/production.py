@@ -3855,7 +3855,6 @@ def build_production_scene(
             assembly=source_build.assembly,
             stations=stations,
             label_policy=source_scene.label_policy,
-            surface_meshing=surface_meshing,
         )
         objects.extend(stage10_2_periodic)
 
@@ -3926,6 +3925,7 @@ def build_production_scene(
             assembly=source_build.assembly,
             stations=stations,
             label_policy=source_scene.label_policy,
+            surface_meshing=surface_meshing,
         )
         objects.extend(stage10_5_service_racks)
 
@@ -5416,6 +5416,7 @@ def build_stage10_5_rc_modern_chunk_scene_package(
             assembly=assembly,
             stations=plan.alignment_stations,
             label_policy=plan.source_build.scene.label_policy,
+            surface_meshing=plan.surface_meshing,
             start_chainage_m=start,
             end_chainage_m=end,
         )

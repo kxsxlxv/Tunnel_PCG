@@ -4534,8 +4534,54 @@ def build_production_scene(
                         config.moscow_stage in {"10.4", "10.5"}
                         and config.moscow_profile.civil_family
                         == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                        and config.moscow_civil_bolts_enabled
+                        and config.keep_moscow_civil_bolt_pocket_booleans
                     )
                     else 0.0
+                ),
+                "moscowCivilBoltRenderMode": (
+                    (
+                        "legacy_pocket_and_head_boolean"
+                        if config.keep_moscow_civil_bolt_pocket_booleans
+                        else "visible_head_only_no_boolean"
+                    )
+                    if (
+                        config.moscow_stage in {"10.4", "10.5"}
+                        and config.moscow_profile.civil_family
+                        == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                        and config.moscow_civil_bolts_enabled
+                    )
+                    else "disabled"
+                ),
+                "moscowCivilBoltPocketBooleansEnabled": bool(
+                    config.moscow_stage in {"10.4", "10.5"}
+                    and config.moscow_profile.civil_family
+                    == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                    and config.moscow_civil_bolts_enabled
+                    and config.keep_moscow_civil_bolt_pocket_booleans
+                ),
+                "moscowCivilBoltPocketRecessOmitted": bool(
+                    config.moscow_stage in {"10.4", "10.5"}
+                    and config.moscow_profile.civil_family
+                    == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                    and config.moscow_civil_bolts_enabled
+                    and not config.keep_moscow_civil_bolt_pocket_booleans
+                ),
+                "moscowCivilHiddenBoltBodyOmitted": bool(
+                    config.moscow_stage in {"10.4", "10.5"}
+                    and config.moscow_profile.civil_family
+                    == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                    and config.moscow_civil_bolts_enabled
+                ),
+                "moscowCivilExpectedBlenderBoltBooleanOps": (
+                    2
+                    * sum(
+                        1
+                        for obj in stage10_4_civil_objects
+                        if obj.object_type == "bolt_head"
+                    )
+                    if config.keep_moscow_civil_bolt_pocket_booleans
+                    else 0
                 ),
                 "moscowCivilLegacyFastenerVisualTransfer": (
                     config.moscow_stage in {"10.4", "10.5"}
@@ -4546,6 +4592,7 @@ def build_production_scene(
                     config.moscow_stage in {"10.4", "10.5"}
                     and config.moscow_profile.civil_family
                     == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
+                    and config.keep_moscow_civil_bolt_pocket_booleans
                 ),
                 "moscowCivilLegacyPrescribedJointSolidsIncluded": (
                     config.moscow_stage in {"10.4", "10.5"}
@@ -5331,14 +5378,49 @@ def build_stage10_5_rc_modern_chunk_plan(
         "moscowCivilPrescribedCircumferentialJointCount": (
             civil_segment_count * max(0, len(civil_ranges) - 1)
         ),
-        "moscowCivilBoltPocketCount": bolt_count,
+        "moscowCivilBoltPocketCount": (
+            bolt_count
+            if (
+                include_bolts
+                and production_config.keep_moscow_civil_bolt_pocket_booleans
+            )
+            else 0
+        ),
         "moscowCivilBoltHeadCount": bolt_count,
         "moscowCivilBoltsEnabled": bool(include_bolts),
         "moscowCivilLegacyBoltLayout": (
             BoltLayoutType.TYPE1_CENTERED.value if include_bolts else None
         ),
         "moscowCivilLegacyBoltBooleanOverlapM": (
-            0.005 if include_bolts else 0.0
+            0.005
+            if (
+                include_bolts
+                and production_config.keep_moscow_civil_bolt_pocket_booleans
+            )
+            else 0.0
+        ),
+        "moscowCivilBoltRenderMode": (
+            (
+                "legacy_pocket_and_head_boolean"
+                if production_config.keep_moscow_civil_bolt_pocket_booleans
+                else "visible_head_only_no_boolean"
+            )
+            if include_bolts
+            else "disabled"
+        ),
+        "moscowCivilBoltPocketBooleansEnabled": bool(
+            include_bolts
+            and production_config.keep_moscow_civil_bolt_pocket_booleans
+        ),
+        "moscowCivilBoltPocketRecessOmitted": bool(
+            include_bolts
+            and not production_config.keep_moscow_civil_bolt_pocket_booleans
+        ),
+        "moscowCivilHiddenBoltBodyOmitted": bool(include_bolts),
+        "moscowCivilExpectedBlenderBoltBooleanOps": (
+            2 * bolt_count
+            if production_config.keep_moscow_civil_bolt_pocket_booleans
+            else 0
         ),
         "moscowCivilStage9ArchitectureTransferred": True,
         "moscowCivilRotationStrategy": (

@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 import math
 from typing import Any, Mapping, Sequence
 
-from .curved_mesh import SurfaceMeshingConfig
+from .curved_mesh import SurfaceMeshingConfig, required_circle_subdivisions, sagitta_m
 from .mesh import Face, Vec3
 from .moscow import MoscowStage10Profile
 
@@ -553,6 +553,8 @@ def build_r2k11_local_rack_mesh(
 
 def modern_cable_sections_core(
     profile: MoscowStage10Profile,
+    *,
+    surface_meshing: SurfaceMeshingConfig | None = None,
 ) -> tuple[tuple[str, tuple[tuple[float, float], ...], Mapping[str, Any]], ...]:
     """Populate a moderate-density R2K11 cable preview.
 
@@ -563,7 +565,14 @@ def modern_cable_sections_core(
     sweep adds only one midpoint station per support span.
     """
     rack = profile.cable_rack
+    meshing = surface_meshing or SurfaceMeshingConfig()
     radius = 0.5 * rack.representative_cable_diameter_m
+    circle_vertices = required_circle_subdivisions(
+        radius,
+        meshing.max_sagitta_m,
+        min_subdivisions=6,
+    )
+    achieved_sagitta = sagitta_m(radius, 360.0 / circle_vertices)
     rack_radius = profile.intrados_radius_m - rack.shell_clearance_inward_m
     _u_inner_r, _u_gap, slot_offsets = _r2k11_double_u_layout(
         max_cable_diameter_m=rack.max_cable_diameter_m,
@@ -592,15 +601,15 @@ def modern_cable_sections_core(
                     cx
                     + radius
                     * math.cos(
-                        2.0 * math.pi * i / rack.cable_circle_vertices
+                        2.0 * math.pi * i / circle_vertices
                     ),
                     cz
                     + radius
                     * math.sin(
-                        2.0 * math.pi * i / rack.cable_circle_vertices
+                        2.0 * math.pi * i / circle_vertices
                     ),
                 )
-                for i in range(rack.cable_circle_vertices)
+                for i in range(circle_vertices)
             )
             name = (
                 f"cable_{'neg' if side_sign < 0 else 'pos'}_"
@@ -618,6 +627,11 @@ def modern_cable_sections_core(
                         "representativeCableDiameterM": (
                             rack.representative_cable_diameter_m
                         ),
+                        "sourcePreviewCircleVertices": rack.cable_circle_vertices,
+                        "cableCircleVertices": circle_vertices,
+                        "surfaceToleranceM": meshing.max_sagitta_m,
+                        "surfaceAchievedMaxSagittaM": achieved_sagitta,
+                        "tessellationMode": "sagitta_bounded_adaptive_v1",
                         "maxRackCableDiameterM": rack.max_cable_diameter_m,
                         "exactCableScheduleResolved": False,
                         "occupiedCablePlaceIndex": place_index,

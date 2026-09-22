@@ -222,8 +222,9 @@ def create_blender_object(
 def plan_bolt_boolean_operations(package: ScenePackage) -> tuple[BoltBooleanOperation, ...]:
     """Build deterministic Stage-6 Boolean order without importing bpy.
 
-    Each bolt first cuts its pocket volume, then cuts the head seating volume.
-    The pocket cutter is removed afterwards; the head remains as visible clutter.
+    Production head-only RC bolts always cut the pocket recess, then remove the
+    transient cutter. Legacy/debug mode additionally cuts the head seating
+    volume with the visible head mesh.
     """
     grouped: dict[tuple[int, int], dict[str, SceneObject]] = {}
     for obj in package.objects:
@@ -249,28 +250,39 @@ def plan_bolt_boolean_operations(package: ScenePackage) -> tuple[BoltBooleanOper
     operations: list[BoltBooleanOperation] = []
     for ring_id, idx in sorted(grouped):
         slot = grouped[(ring_id, idx)]
-        if set(slot) != {"bolt_pocket_cutter", "bolt_head"}:
+        if "bolt_pocket_cutter" not in slot:
             raise ValueError(
-                f"ringID={ring_id}, boltIndex={idx}: expected pocket cutter + head, got {sorted(slot)}"
+                f"ringID={ring_id}, boltIndex={idx}: pocket cutter is required"
             )
+        if set(slot) not in (
+            {"bolt_pocket_cutter"},
+            {"bolt_pocket_cutter", "bolt_head"},
+        ):
+            raise ValueError(
+                f"ringID={ring_id}, boltIndex={idx}: unexpected Boolean tools {sorted(slot)}"
+            )
+
         cutter = slot["bolt_pocket_cutter"]
-        head = slot["bolt_head"]
         cutter_target = str(cutter.custom_properties["booleanTarget"])
-        head_target = str(head.custom_properties["booleanTarget"])
-        if cutter_target != head_target:
-            raise ValueError(
-                f"ringID={ring_id}, boltIndex={idx}: cutter/head target mismatch"
+        operations.append(
+            BoltBooleanOperation(
+                target_name=cutter_target,
+                tool_name=cutter.name,
+                ring_id=ring_id,
+                bolt_index=idx,
+                tool_type="bolt_pocket_cutter",
+                remove_tool_after=True,
             )
-        operations.extend(
-            (
-                BoltBooleanOperation(
-                    target_name=cutter_target,
-                    tool_name=cutter.name,
-                    ring_id=ring_id,
-                    bolt_index=idx,
-                    tool_type="bolt_pocket_cutter",
-                    remove_tool_after=True,
-                ),
+        )
+
+        head = slot.get("bolt_head")
+        if head is not None:
+            head_target = str(head.custom_properties["booleanTarget"])
+            if cutter_target != head_target:
+                raise ValueError(
+                    f"ringID={ring_id}, boltIndex={idx}: cutter/head target mismatch"
+                )
+            operations.append(
                 BoltBooleanOperation(
                     target_name=head_target,
                     tool_name=head.name,
@@ -278,9 +290,8 @@ def plan_bolt_boolean_operations(package: ScenePackage) -> tuple[BoltBooleanOper
                     bolt_index=idx,
                     tool_type="bolt_head",
                     remove_tool_after=False,
-                ),
+                )
             )
-        )
     return tuple(operations)
 
 

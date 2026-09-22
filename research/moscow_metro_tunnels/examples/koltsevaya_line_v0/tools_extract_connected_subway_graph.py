@@ -106,7 +106,7 @@ def expand_connected_way_ids(
     seed_way_ids: set[int],
     *,
     expansion_hops: int,
-) -> tuple[set[int], dict[int, int]]:
+) -> tuple[set[int], dict[int, int], set[int]]:
     """BFS over shared OSM nodes.
 
     hop=0: route-member ways only.
@@ -116,12 +116,15 @@ def expand_connected_way_ids(
     The hop count is only an acquisition boundary; it is never a branch
     classification or geometry assumption.
     """
-    missing_seed = seed_way_ids - set(all_ways)
-    if missing_seed:
+    # PTv2 route relations may contain platform/stop ways in addition to
+    # physical running-track ways. Those must not make graph extraction fail
+    # and must not become TRACK_EDGE objects. Preserve their IDs in diagnostics
+    # instead of guessing that they are missing subway geometry.
+    excluded_seed_way_ids = seed_way_ids - set(all_ways)
+    physical_seed_way_ids = seed_way_ids & set(all_ways)
+    if not physical_seed_way_ids:
         raise RuntimeError(
-            "route relation contains way(s) that are not accepted "
-            "railway=subway candidates: "
-            + ", ".join(str(x) for x in sorted(missing_seed))
+            "route relations contain no accepted railway=subway way members"
         )
 
     node_to_way_ids: dict[int, set[int]] = defaultdict(set)
@@ -129,9 +132,9 @@ def expand_connected_way_ids(
         for ref in set(way["refs"]):
             node_to_way_ids[ref].add(wid)
 
-    included = set(seed_way_ids)
-    distance_hops = {wid: 0 for wid in seed_way_ids}
-    frontier = set(seed_way_ids)
+    included = set(physical_seed_way_ids)
+    distance_hops = {wid: 0 for wid in physical_seed_way_ids}
+    frontier = set(physical_seed_way_ids)
 
     for hop in range(1, expansion_hops + 1):
         next_frontier: set[int] = set()
@@ -151,7 +154,7 @@ def expand_connected_way_ids(
         if not frontier:
             break
 
-    return included, distance_hops
+    return included, distance_hops, excluded_seed_way_ids
 
 
 def build_feature_collection(
@@ -252,7 +255,11 @@ def extract_connected_graph(
     topo_pass.apply_file(pbf, locations=False)
 
     seed_ids = inner_ids | outer_ids
-    selected_ids, distance_hops = expand_connected_way_ids(
+    (
+        selected_ids,
+        distance_hops,
+        excluded_route_way_ids,
+    ) = expand_connected_way_ids(
         topo_pass.ways,
         seed_ids,
         expansion_hops=expansion_hops,
@@ -279,6 +286,14 @@ def extract_connected_graph(
         "expansion_hops": expansion_hops,
         "expansion_semantics": (
             "acquisition scope only; not depot/crossover classification"
+        ),
+        "excluded_non_subway_route_way_ids": sorted(
+            excluded_route_way_ids
+        ),
+        "excluded_non_subway_route_way_rule": (
+            "PTv2 route relations may contain platform/stop ways. "
+            "They are retained only as diagnostics and never emitted "
+            "as TRACK_EDGE objects."
         ),
     }
 

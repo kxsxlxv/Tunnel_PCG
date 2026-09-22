@@ -1,4 +1,5 @@
-from scripts import blender_profile_stage10 as profiler
+import importlib.util
+from pathlib import Path
 
 from tunnel_scanner_core.scene import (
     LabelPolicy,
@@ -6,6 +7,13 @@ from tunnel_scanner_core.scene import (
     SceneObject,
     ScenePackage,
 )
+
+
+_SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "blender_profile_stage10.py"
+_SPEC = importlib.util.spec_from_file_location("blender_profile_stage10", _SCRIPT)
+assert _SPEC is not None and _SPEC.loader is not None
+profiler = importlib.util.module_from_spec(_SPEC)
+_SPEC.loader.exec_module(profiler)
 
 
 def _obj(

@@ -236,7 +236,15 @@ def test_stage10_5_r2k11_racks_repeat_on_both_walls_and_stay_inside_shell():
             0.001,
             abs_tol=1e-12,
         )
-        assert rack.properties["hornUArcSegments"] == 8
+        assert rack.properties["hornUArcSegments"] == 5
+        assert rack.properties["tessellationMode"] == "sagitta_bounded_adaptive_v1"
+        assert math.isclose(
+            rack.properties["surfaceToleranceM"],
+            0.002,
+            abs_tol=1e-12,
+        )
+        assert rack.properties["hornUAchievedMaxSagittaM"] <= 0.002 + 1e-12
+        assert rack.properties["uprightAchievedMaxSagittaM"] <= 0.002 + 1e-12
         if side < 0:
             assert math.isclose(
                 rack.properties["centerProfileZM"],
@@ -896,6 +904,33 @@ def test_stage10_5_rc_6100_5600_civil_archetype_adapts_geometry():
             math.hypot(x, z)
             for x, _y, z in local_rack.vertices
         ) < profile.intrados_radius_m
+
+
+def test_stage10_5_rc_r2k11_tessellation_is_minimal_for_2mm_sagitta():
+    profile = load_stage10_initial_moscow_profile(
+        civil_archetype="rc_block_6100_5600"
+    )
+    meshing = SurfaceMeshingConfig(max_sagitta_m=0.002)
+    rack = build_r2k11_local_rack_mesh(
+        profile,
+        side_sign=1,
+        surface_meshing=meshing,
+    )
+    assert rack.properties["uprightArcSegments"] == 7
+    assert rack.properties["hornUArcSegments"] == 5
+    assert rack.properties["uprightAchievedMaxSagittaM"] <= 0.002 + 1e-12
+    assert rack.properties["hornUAchievedMaxSagittaM"] <= 0.002 + 1e-12
+    assert len(rack.faces) == 458
+
+    tighter = build_r2k11_local_rack_mesh(
+        profile,
+        side_sign=1,
+        surface_meshing=SurfaceMeshingConfig(max_sagitta_m=0.001),
+    )
+    assert tighter.properties["uprightArcSegments"] > rack.properties["uprightArcSegments"]
+    assert tighter.properties["hornUArcSegments"] > rack.properties["hornUArcSegments"]
+    assert tighter.properties["uprightAchievedMaxSagittaM"] <= 0.001 + 1e-12
+    assert tighter.properties["hornUAchievedMaxSagittaM"] <= 0.001 + 1e-12
 
 
 def test_stage10_5_replaced_stage7_source_skeleton_is_geometry_equivalent():

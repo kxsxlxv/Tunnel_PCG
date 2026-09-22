@@ -27,9 +27,9 @@
       "notes": "open chain, reversed way, closed loop, branch rejection/filtering"
     },
     "stage11_osm_track_graph": {
-      "count": 4,
+      "count": 5,
       "status": "committed_not_executed_in_current_research_runtime",
-      "notes": "simple two-track loop, single turnout branch, crossover, depot branch; runtime could not clone/run due external network restriction"
+      "notes": "simple two-track loop, single turnout branch, crossover, depot branch, and PTv2 non-track/platform exclusion; committed but not executed in current research runtime"
     }
   },
   "rail_reconstruction": {

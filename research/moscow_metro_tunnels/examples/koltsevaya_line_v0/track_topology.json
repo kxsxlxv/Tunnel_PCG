@@ -161,7 +161,8 @@
         "S124",
         "S125",
         "S134",
-        "S135"
+        "S135",
+        "S136"
       ],
       "confirmed": [
         "depot serves Line 5",
@@ -388,7 +389,7 @@
       "historical_energization": {
         "contact_rail_energized_date": "1954-03-26",
         "event": "voltage applied to the contact rail of the Belorusskaya-Line-5 to Krasnaya-Presnya-depot service branch; test running began",
-        "source_id": "S134",
+        "source_id": "S136",
         "locator": "Metrostroevets March 2025 No.03, PDF p.3, lines 662-665",
         "implication": "the civil/depot branch existed and had an operational contact-rail system by late March 1954; this does not establish the later 2001 service-era turnout/contact-rail hardware",
         "status": "SOURCE_BACKED_HISTORICAL_CONTEXT"
@@ -610,7 +611,8 @@
       "S086",
       "S093",
       "S120",
-      "S134"
+      "S134",
+      "S136"
     ],
     "main_track_id": "KOLTSEVAYA_TRACK_B",
     "main_track_number": "II",
@@ -670,7 +672,7 @@
     "branch_commissioning_context": {
       "contact_rail_energized_date": "1954-03-26",
       "event": "voltage applied to the contact rail of the Belorusskaya-Line-5 to Krasnaya-Presnya-depot service branch; test running began",
-      "source_id": "S134",
+      "source_id": "S136",
       "locator": "Metrostroevets March 2025 No.03, PDF p.3, lines 662-665",
       "implication": "the civil/depot branch existed and had an operational contact-rail system by late March 1954; this does not establish the later 2001 service-era turnout/contact-rail hardware",
       "status": "SOURCE_BACKED_HISTORICAL_CONTEXT"

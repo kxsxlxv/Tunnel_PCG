@@ -1344,14 +1344,14 @@ def test_stage10_5_rc_ten_equal_topology_reuses_stage9_fastener_pipeline():
     assert meta["moscowCivilLegacyBoltLayout"] == "type1_centered"
     assert math.isclose(
         meta["moscowCivilLegacyBoltBooleanOverlapM"],
-        0.0,
+        0.005,
         abs_tol=1e-12,
     )
-    assert meta["moscowCivilBoltRenderMode"] == "visible_head_only_no_boolean"
-    assert meta["moscowCivilBoltPocketBooleansEnabled"] is False
-    assert meta["moscowCivilBoltPocketRecessOmitted"] is True
+    assert meta["moscowCivilBoltRenderMode"] == "pocket_cutter_plus_visible_head"
+    assert meta["moscowCivilBoltPocketBooleansEnabled"] is True
+    assert meta["moscowCivilBoltPocketRecessOmitted"] is False
+    assert meta["moscowCivilHeadSeatingBooleanEnabled"] is False
     assert meta["moscowCivilHiddenBoltBodyOmitted"] is True
-    assert meta["moscowCivilExpectedBlenderBoltBooleanOps"] == 0
 
     segments = [
         obj
@@ -1363,16 +1363,17 @@ def test_stage10_5_rc_ten_equal_topology_reuses_stage9_fastener_pipeline():
     heads = build.scene.objects_of_type("bolt_head")
     cutters = build.scene.objects_of_type("bolt_pocket_cutter")
     assert heads
-    assert cutters == ()
+    assert len(cutters) == len(heads)
 
     # 2 x 1.35 m source rings make two complete 1 m Moscow civil rings plus
     # one clipped 0.7 m ring. The exact Stage-9 TYPE1 layout contributes three
-    # visible heads per segment. Hidden bodies/pockets are omitted in production,
-    # and the clipped final ring receives no transferred heads.
+    # visible heads and one transient pocket cutter per segment. Hidden bolt
+    # bodies are omitted, and the clipped final ring receives no fasteners.
     full_civil_rings = 2
     assert len(heads) == full_civil_rings * 10 * 3
     assert meta["moscowCivilBoltHeadCount"] == len(heads)
-    assert meta["moscowCivilBoltPocketCount"] == 0
+    assert meta["moscowCivilBoltPocketCount"] == len(cutters)
+    assert meta["moscowCivilExpectedBlenderBoltBooleanOps"] == len(cutters)
 
     full_ring_segment_names = {
         obj.segment_name
@@ -1392,7 +1393,7 @@ def test_stage10_5_rc_ten_equal_topology_reuses_stage9_fastener_pipeline():
         assert hp["stage9FastenerVisualTransferNotHistoricalMoscowClaim"] is True
         assert hp["visibleHeadOnlyMode"] is True
         assert hp["hiddenBoltBodyOmitted"] is True
-        assert hp["boltPocketRecessOmitted"] is True
+        assert hp["boltPocketRecessOmitted"] is False
         assert hp["hiddenEmbeddedHeadBottomCapOmitted"] is True
         assert hp["cutTargetBeforeDisplay"] is False
         assert hp["booleanParticipation"] is False
@@ -1682,16 +1683,18 @@ def test_stage10_5_rc_kba_topology_reuses_stage9_fastener_pipeline():
     heads = build.scene.objects_of_type("bolt_head")
     cutters = build.scene.objects_of_type("bolt_pocket_cutter")
     assert heads
-    assert cutters == ()
+    assert len(cutters) == len(heads)
     assert meta["moscowCivilBoltHeadCount"] == len(heads)
-    assert meta["moscowCivilBoltPocketCount"] == 0
+    assert meta["moscowCivilBoltPocketCount"] == len(cutters)
     assert meta["moscowCivilBoltsEnabled"] is True
     assert meta["moscowCivilLegacyBoltLayout"] == "type1_centered"
-    assert meta["moscowCivilBoltRenderMode"] == "visible_head_only_no_boolean"
-    assert meta["moscowCivilExpectedBlenderBoltBooleanOps"] == 0
+    assert meta["moscowCivilBoltRenderMode"] == "pocket_cutter_plus_visible_head"
+    assert meta["moscowCivilExpectedBlenderBoltBooleanOps"] == len(cutters)
+    assert meta["moscowCivilBoltPocketBooleansEnabled"] is True
+    assert meta["moscowCivilHeadSeatingBooleanEnabled"] is False
     assert math.isclose(
         meta["moscowCivilLegacyBoltBooleanOverlapM"],
-        0.0,
+        0.005,
         abs_tol=1e-12,
     )
     for head in sorted(
@@ -1703,7 +1706,7 @@ def test_stage10_5_rc_kba_topology_reuses_stage9_fastener_pipeline():
         assert hp["stage9FastenerVisualTransferNotHistoricalMoscowClaim"] is True
         assert hp["visibleHeadOnlyMode"] is True
         assert hp["hiddenBoltBodyOmitted"] is True
-        assert hp["boltPocketRecessOmitted"] is True
+        assert hp["boltPocketRecessOmitted"] is False
         assert hp["moscowCivilBoltBooleanParticipation"] is False
         assert "booleanTarget" not in hp
 

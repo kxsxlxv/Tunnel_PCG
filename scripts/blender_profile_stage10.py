@@ -113,10 +113,12 @@ def _profile_scene_package(package) -> dict[str, Any]:
     by_type: dict[str, dict[str, Any]] = defaultdict(_new_bucket)
     global_unique_meshes: dict[tuple[str, str], tuple[int, int, int]] = {}
     prototype_keys_by_type: dict[str, set[str]] = defaultdict(set)
+    objects_by_type: dict[str, list[Any]] = defaultdict(list)
 
     for obj in package.objects:
         object_type = str(obj.object_type)
         bucket = by_type[object_type]
+        objects_by_type[object_type].append(obj)
         vertices = len(obj.vertices)
         polygons = len(obj.faces)
         triangles = _triangles_from_faces(obj.faces)
@@ -141,7 +143,7 @@ def _profile_scene_package(package) -> dict[str, Any]:
     # A prototype key is expected to stay within one semantic object type, but
     # calculate per-type unique geometry independently so the report stays
     # useful even if that invariant changes later.
-    for object_type, objects in package._objects_by_type.items():
+    for object_type, objects in objects_by_type.items():
         bucket = by_type[str(object_type)]
         seen: set[tuple[str, str]] = set()
         for obj in objects:
@@ -201,6 +203,7 @@ def _profile_blender_objects(bpy, object_names: Iterable[str]) -> dict[str, Any]
     global_seen_meshes: set[str] = set()
     global_unique_counts: dict[str, tuple[int, int, int]] = {}
     prototype_keys_by_type: dict[str, set[str]] = defaultdict(set)
+    mesh_count_cache: dict[str, tuple[int, int, int]] = {}
 
     for name in object_names:
         obj = bpy.data.objects.get(name)
@@ -208,7 +211,12 @@ def _profile_blender_objects(bpy, object_names: Iterable[str]) -> dict[str, Any]
             continue
         mesh = obj.data
         object_type = str(obj.get("objectType", "<missing>"))
-        vertices, polygons, triangles = _mesh_counts(mesh)
+        mesh_key = str(mesh.name)
+        counts = mesh_count_cache.get(mesh_key)
+        if counts is None:
+            counts = _mesh_counts(mesh)
+            mesh_count_cache[mesh_key] = counts
+        vertices, polygons, triangles = counts
         bucket = by_type[object_type]
 
         bucket["objects"] += 1
@@ -221,7 +229,6 @@ def _profile_blender_objects(bpy, object_names: Iterable[str]) -> dict[str, Any]
             bucket["prototypeInstances"] += 1
             prototype_keys_by_type[object_type].add(str(prototype_key))
 
-        mesh_key = str(mesh.name)
         if mesh_key not in per_type_seen_meshes[object_type]:
             per_type_seen_meshes[object_type].add(mesh_key)
             bucket["uniqueMeshDataBlocks"] += 1

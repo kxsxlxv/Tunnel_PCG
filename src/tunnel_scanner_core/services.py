@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 import math
 from typing import Any, Mapping, Sequence
 
+from .curved_mesh import SurfaceMeshingConfig
 from .mesh import Face, Vec3
 from .moscow import MoscowStage10Profile
 
@@ -57,6 +58,39 @@ def cable_rack_chainages(
         result.append(0.5 * (start + end))
         start = end
     return tuple(result)
+
+
+def _arc_segments_for_sagitta(
+    *,
+    radius_m: float,
+    span_rad: float,
+    max_sagitta_m: float,
+    min_segments: int = 1,
+) -> tuple[int, float]:
+    """Return the minimum chord count satisfying a radial sagitta tolerance."""
+    if not math.isfinite(radius_m) or radius_m <= 0.0:
+        raise ValueError("arc radius must be finite and positive")
+    if not math.isfinite(span_rad) or span_rad <= 0.0:
+        raise ValueError("arc span must be finite and positive")
+    if not math.isfinite(max_sagitta_m) or max_sagitta_m <= 0.0:
+        raise ValueError("max_sagitta_m must be finite and positive")
+    if min_segments < 1:
+        raise ValueError("min_segments must be >=1")
+
+    # s = r * (1 - cos(theta/2)).  Clamp the acos input so the
+    # calculation remains defined for deliberately coarse tolerances.
+    cosine = 1.0 - max_sagitta_m / radius_m
+    cosine = min(1.0, max(-1.0, cosine))
+    max_step = 2.0 * math.acos(cosine)
+    if max_step <= 1e-15:
+        raise ValueError("sagitta tolerance yields a degenerate angular step")
+    segments = max(min_segments, int(math.ceil(span_rad / max_step)))
+    achieved = radius_m * (
+        1.0 - math.cos(0.5 * span_rad / segments)
+    )
+    if achieved > max_sagitta_m + 1e-12:
+        raise AssertionError("computed arc tessellation exceeds sagitta tolerance")
+    return segments, achieved
 
 
 def _rack_center_angle(
@@ -388,18 +422,26 @@ def build_r2k11_local_rack_mesh(
     profile: MoscowStage10Profile,
     *,
     side_sign: int,
+    surface_meshing: SurfaceMeshingConfig | None = None,
 ) -> LocalServiceMesh:
     rack = profile.cable_rack
+    meshing = surface_meshing or SurfaceMeshingConfig()
     center_angle = _rack_center_angle(profile, side_sign)
     half_angle = 0.5 * rack.overall_arc_length_m / profile.intrados_radius_m
+    rack_radius = profile.intrados_radius_m - rack.shell_clearance_inward_m
+    upright_segments, upright_sagitta = _arc_segments_for_sagitta(
+        radius_m=rack_radius,
+        span_rad=2.0 * half_angle,
+        max_sagitta_m=meshing.max_sagitta_m,
+        min_segments=2,
+    )
     # Keep point order from lower to upper end on either wall.
     angles = tuple(
         center_angle
         + side_sign * half_angle
-        - side_sign * (2.0 * half_angle) * i / 16.0
-        for i in range(17)
+        - side_sign * (2.0 * half_angle) * i / upright_segments
+        for i in range(upright_segments + 1)
     )
-    rack_radius = profile.intrados_radius_m - rack.shell_clearance_inward_m
     meshes = [
         _annular_strip_mesh(
             radius_outer_m=rack_radius,
@@ -425,6 +467,13 @@ def build_r2k11_local_rack_mesh(
             max_cable_diameter_m=rack.max_cable_diameter_m,
             thickness_m=rack.horn_thickness_m,
         )
+        horn_outer_r = u_inner_r + rack.horn_thickness_m
+        horn_arc_segments, horn_sagitta = _arc_segments_for_sagitta(
+            radius_m=horn_outer_r,
+            span_rad=math.pi,
+            max_sagitta_m=meshing.max_sagitta_m,
+            min_segments=4,
+        )
         horns = _double_u_horn_polygons(
             wall_x_m=wall_x,
             wall_z_m=wall_z,
@@ -435,6 +484,7 @@ def build_r2k11_local_rack_mesh(
             inner_radius_m=u_inner_r,
             thickness_m=rack.horn_thickness_m,
             central_gap_m=u_gap,
+            arc_segments=horn_arc_segments,
         )
         meshes.extend(
             _extrude_y_polygon(
@@ -490,7 +540,12 @@ def build_r2k11_local_rack_mesh(
                 u_inner_r - 0.5 * rack.max_cable_diameter_m
             ),
             "hornUStemHeightM": 0.035,
-            "hornUArcSegments": 8,
+            "surfaceToleranceM": meshing.max_sagitta_m,
+            "tessellationMode": "sagitta_bounded_adaptive_v1",
+            "uprightArcSegments": upright_segments,
+            "uprightAchievedMaxSagittaM": upright_sagitta,
+            "hornUArcSegments": horn_arc_segments,
+            "hornUAchievedMaxSagittaM": horn_sagitta,
             "shellClearanceInwardM": rack.shell_clearance_inward_m,
         },
     )

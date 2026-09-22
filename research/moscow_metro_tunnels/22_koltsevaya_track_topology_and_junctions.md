@@ -321,6 +321,15 @@ The S120 photo sequence adds useful **non-dimensional** constraints to S093:
 
 This is enough to validate the **shape class** of the first civil mesh, but not its size. No chamber span, pier thickness, opening diameter or transition length is taken from the photographs.
 
+### Historical electrical commissioning anchor
+
+S136 adds an official Metrostroy chronology point for the selected branch: on **26 March 1954** voltage was applied to the contact rail of the service branch from Line-5 `Белорусская` to depot `Красная Пресня`, and test running began before commissioning.
+
+Engineering use is deliberately narrow:
+- it proves the Belorusskaya depot leg and its contact-rail system were operationally complete enough for energized test running by that date;
+- it constrains the original civil/electrical era independently of the later `LEGACY_R65_TIMBER_KD65_2001_REFERENCE` service preset;
+- it does **not** identify the original turnout factory project, original rail type at the exact switch, bracket/insulator family, air-gap coordinates or later renewal state.
+
 ### Что не установлено для actual chamber
 
 Публичный источник пока не дал:

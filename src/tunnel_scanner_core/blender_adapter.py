@@ -230,6 +230,11 @@ def plan_bolt_boolean_operations(package: ScenePackage) -> tuple[BoltBooleanOper
         if obj.object_type not in {"bolt_pocket_cutter", "bolt_head"}:
             continue
         props = obj.custom_properties
+        if (
+            obj.object_type == "bolt_head"
+            and props.get("cutTargetBeforeDisplay") is False
+        ):
+            continue
         if "boltIndex" not in props or "booleanTarget" not in props:
             raise ValueError(f"{obj.name}: incomplete Stage-6 Boolean metadata")
         idx = int(props["boltIndex"])

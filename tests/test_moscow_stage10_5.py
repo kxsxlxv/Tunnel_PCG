@@ -1344,9 +1344,14 @@ def test_stage10_5_rc_ten_equal_topology_reuses_stage9_fastener_pipeline():
     assert meta["moscowCivilLegacyBoltLayout"] == "type1_centered"
     assert math.isclose(
         meta["moscowCivilLegacyBoltBooleanOverlapM"],
-        0.005,
+        0.0,
         abs_tol=1e-12,
     )
+    assert meta["moscowCivilBoltRenderMode"] == "visible_head_only_no_boolean"
+    assert meta["moscowCivilBoltPocketBooleansEnabled"] is False
+    assert meta["moscowCivilBoltPocketRecessOmitted"] is True
+    assert meta["moscowCivilHiddenBoltBodyOmitted"] is True
+    assert meta["moscowCivilExpectedBlenderBoltBooleanOps"] == 0
 
     segments = [
         obj
@@ -1357,17 +1362,17 @@ def test_stage10_5_rc_ten_equal_topology_reuses_stage9_fastener_pipeline():
     ]
     heads = build.scene.objects_of_type("bolt_head")
     cutters = build.scene.objects_of_type("bolt_pocket_cutter")
-    assert len(heads) == len(cutters)
     assert heads
+    assert cutters == ()
 
     # 2 x 1.35 m source rings make two complete 1 m Moscow civil rings plus
-    # one clipped 0.7 m ring. The exact Stage-9 TYPE1 layout is three
-    # pockets/heads per segment and is intentionally omitted on the clipped
-    # final ring instead of rescaling the legacy hardware.
+    # one clipped 0.7 m ring. The exact Stage-9 TYPE1 layout contributes three
+    # visible heads per segment. Hidden bodies/pockets are omitted in production,
+    # and the clipped final ring receives no transferred heads.
     full_civil_rings = 2
     assert len(heads) == full_civil_rings * 10 * 3
     assert meta["moscowCivilBoltHeadCount"] == len(heads)
-    assert meta["moscowCivilBoltPocketCount"] == len(cutters)
+    assert meta["moscowCivilBoltPocketCount"] == 0
 
     full_ring_segment_names = {
         obj.segment_name
@@ -1378,24 +1383,27 @@ def test_stage10_5_rc_ten_equal_topology_reuses_stage9_fastener_pipeline():
         f"RC{i:02d}" for i in range(1, 11)
     }
 
-    for head, cutter in zip(
-        sorted(heads, key=lambda o: o.custom_properties["boltIndex"]),
-        sorted(cutters, key=lambda o: o.custom_properties["boltIndex"]),
+    for head in sorted(
+        heads,
+        key=lambda o: o.custom_properties["boltIndex"],
     ):
         hp = head.custom_properties
-        cp = cutter.custom_properties
-        assert hp["booleanTarget"] == cp["booleanTarget"]
-        assert hp["boltIndex"] == cp["boltIndex"]
         assert hp["legacyBoltLayout"] == "type1_centered"
-        assert cp["legacyBoltLayout"] == "type1_centered"
         assert hp["stage9FastenerVisualTransferNotHistoricalMoscowClaim"] is True
-        assert cp["stage9FastenerVisualTransferNotHistoricalMoscowClaim"] is True
+        assert hp["visibleHeadOnlyMode"] is True
+        assert hp["hiddenBoltBodyOmitted"] is True
+        assert hp["boltPocketRecessOmitted"] is True
+        assert hp["hiddenEmbeddedHeadBottomCapOmitted"] is True
+        assert hp["cutTargetBeforeDisplay"] is False
+        assert hp["booleanParticipation"] is False
+        assert hp["moscowCivilBoltBooleanParticipation"] is False
+        assert "booleanTarget" not in hp
         n = int(hp["boltHeadRingVertices"])
         radius = float(hp["boltHeadRadiusM"])
         achieved = radius * (1.0 - math.cos(math.pi / n))
         assert 6 <= n <= 10
         assert len(head.vertices) == 2 * n
-        assert len(head.faces) == n + 2
+        assert len(head.faces) == n + 1
         assert math.isclose(
             float(hp["boltHeadSurfaceToleranceM"]),
             0.002,
@@ -1410,8 +1418,46 @@ def test_stage10_5_rc_ten_equal_topology_reuses_stage9_fastener_pipeline():
         if n > 6:
             previous = radius * (1.0 - math.cos(math.pi / (n - 1)))
             assert previous > 0.002 - 1e-12
-        assert cp["booleanOperation"] == "DIFFERENCE"
-        assert cp["removeAfterBoolean"] is True
+
+
+def test_stage10_5_rc_legacy_bolt_boolean_mode_remains_available_for_debug():
+    from tunnel_scanner_core.blender_adapter import plan_bolt_boolean_operations
+
+    profile = load_stage10_initial_moscow_profile(
+        civil_archetype="rc_block_6100_5600"
+    )
+    build = build_production_tunnel(
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=1,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.0,
+        ),
+        include_bolts=True,
+        production_config=ProductionConfig(
+            namespace="stage10-5-rc-debug-bolt-booleans",
+            moscow_profile=profile,
+            moscow_stage="10.5",
+            moscow_civil_topology="ten_equal",
+            keep_moscow_civil_bolt_pocket_booleans=True,
+        ),
+        seed=5812,
+    )
+    heads = build.scene.objects_of_type("bolt_head")
+    cutters = build.scene.objects_of_type("bolt_pocket_cutter")
+    meta = build.scene.metadata["productionGeometry"]
+    assert heads
+    assert len(cutters) == len(heads)
+    assert meta["moscowCivilBoltRenderMode"] == "legacy_pocket_and_head_boolean"
+    assert meta["moscowCivilBoltPocketBooleansEnabled"] is True
+    assert meta["moscowCivilBoltPocketCount"] == len(cutters)
+    assert meta["moscowCivilExpectedBlenderBoltBooleanOps"] == 2 * len(heads)
+    assert math.isclose(
+        meta["moscowCivilLegacyBoltBooleanOverlapM"],
+        0.005,
+        abs_tol=1e-12,
+    )
+    operations = plan_bolt_boolean_operations(build.scene)
+    assert len(operations) == 2 * len(heads)
 
 
 def test_stage10_5_rc_kba_preserves_boundary_fastener_mesh_at_exact_scene_end():
@@ -1636,30 +1682,30 @@ def test_stage10_5_rc_kba_topology_reuses_stage9_fastener_pipeline():
     heads = build.scene.objects_of_type("bolt_head")
     cutters = build.scene.objects_of_type("bolt_pocket_cutter")
     assert heads
-    assert len(heads) == len(cutters)
+    assert cutters == ()
     assert meta["moscowCivilBoltHeadCount"] == len(heads)
-    assert meta["moscowCivilBoltPocketCount"] == len(cutters)
+    assert meta["moscowCivilBoltPocketCount"] == 0
     assert meta["moscowCivilBoltsEnabled"] is True
     assert meta["moscowCivilLegacyBoltLayout"] == "type1_centered"
+    assert meta["moscowCivilBoltRenderMode"] == "visible_head_only_no_boolean"
+    assert meta["moscowCivilExpectedBlenderBoltBooleanOps"] == 0
     assert math.isclose(
         meta["moscowCivilLegacyBoltBooleanOverlapM"],
-        0.005,
+        0.0,
         abs_tol=1e-12,
     )
-    for head, cutter in zip(
-        sorted(heads, key=lambda o: o.custom_properties["boltIndex"]),
-        sorted(cutters, key=lambda o: o.custom_properties["boltIndex"]),
+    for head in sorted(
+        heads,
+        key=lambda o: o.custom_properties["boltIndex"],
     ):
         hp = head.custom_properties
-        cp = cutter.custom_properties
-        assert hp["booleanTarget"] == cp["booleanTarget"]
-        assert hp["boltIndex"] == cp["boltIndex"]
         assert hp["legacyBoltLayout"] == "type1_centered"
-        assert cp["legacyBoltLayout"] == "type1_centered"
         assert hp["stage9FastenerVisualTransferNotHistoricalMoscowClaim"] is True
-        assert cp["stage9FastenerVisualTransferNotHistoricalMoscowClaim"] is True
-        assert cp["booleanOperation"] == "DIFFERENCE"
-        assert cp["removeAfterBoolean"] is True
+        assert hp["visibleHeadOnlyMode"] is True
+        assert hp["hiddenBoltBodyOmitted"] is True
+        assert hp["boltPocketRecessOmitted"] is True
+        assert hp["moscowCivilBoltBooleanParticipation"] is False
+        assert "booleanTarget" not in hp
 
 
 def test_stage10_5_periodic_assets_declare_exact_reusable_mesh_prototypes():

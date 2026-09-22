@@ -134,7 +134,8 @@ def parse_args() -> argparse.Namespace:
             "ten_equal; ten_equal uses the S026 ten-identical-block family; "
             "kba uses the legacy Stage-9 K/B/A six-segment topology as an "
             "explicit photo-reference visual alternative. Both reuse the old "
-            "Stage-9 segment/joint/bolt-pocket/head architecture."
+            "Stage-9 segment/joint/visible-bolt-head architecture; hidden bolt "
+            "bodies and pocket Booleans are omitted in production."
         ),
     )
     parser.add_argument(
@@ -711,11 +712,41 @@ def _validate_stage10_build(
                 ) is True
             ]
             if bool(meta.get("moscowCivilBoltsEnabled", False)):
-                if not heads or len(heads) != len(cutters):
+                if not heads:
                     raise AssertionError(
-                        "Stage 10.4 RC legacy bolt pocket/head pairs missing"
+                        "Stage 10.4 RC visible bolt heads missing"
                     )
-                for obj in (*heads, *cutters):
+                bolt_render_mode = meta.get(
+                    "moscowCivilBoltRenderMode",
+                    "legacy_pocket_and_head_boolean",
+                )
+                if bolt_render_mode == "visible_head_only_no_boolean":
+                    if cutters:
+                        raise AssertionError(
+                            "head-only RC bolt mode unexpectedly generated cutters"
+                        )
+                    if any(
+                        obj.custom_properties.get(
+                            "moscowCivilBoltBooleanParticipation"
+                        )
+                        is not False
+                        for obj in heads
+                    ):
+                        raise AssertionError(
+                            "head-only RC bolt mode still participates in Booleans"
+                        )
+                    transferred_fasteners = tuple(heads)
+                elif bolt_render_mode == "legacy_pocket_and_head_boolean":
+                    if len(heads) != len(cutters):
+                        raise AssertionError(
+                            "Stage 10.4 RC legacy bolt pocket/head pairs missing"
+                        )
+                    transferred_fasteners = (*heads, *cutters)
+                else:
+                    raise AssertionError(
+                        f"unknown Stage 10.4 RC bolt render mode: {bolt_render_mode!r}"
+                    )
+                for obj in transferred_fasteners:
                     p = obj.custom_properties
                     if p.get(
                         "stage9FastenerVisualTransferNotHistoricalMoscowClaim"

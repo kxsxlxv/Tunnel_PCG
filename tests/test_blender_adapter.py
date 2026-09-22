@@ -204,6 +204,53 @@ def test_blender_import_script_compiles_without_blender_runtime():
 
 
 
+def test_visible_bolt_heads_only_package_has_no_boolean_plan():
+    from tunnel_scanner_core.bolts import (
+        BoltConfig,
+        BoltLayoutType,
+        BoltPerturbationConfig,
+        build_bolt_set,
+    )
+    from tunnel_scanner_core.blender_adapter import plan_bolt_boolean_operations
+
+    cfg = RingConfig()
+    angles = sample_six_segment_angles(seed=5812)
+    ring = build_ring_mesh(cfg, angles)
+    joints = build_prescribed_joint_set(ring, sample_joint_config(seed=5812))
+    bolts = build_bolt_set(
+        ring,
+        BoltConfig(),
+        BoltLayoutType.TYPE1_CENTERED,
+        seed=5812,
+        perturbation_config=BoltPerturbationConfig(
+            sigma_m=0.0,
+            sigma_fraction=0.0,
+        ),
+    )
+    package = build_nominal_scene_package(
+        ring,
+        joints,
+        ring_id=12,
+        bolts=bolts,
+        visible_bolt_heads_only=True,
+    )
+    heads = package.objects_of_type("bolt_head")
+    cutters = package.objects_of_type("bolt_pocket_cutter")
+    assert heads
+    assert cutters == ()
+    assert plan_bolt_boolean_operations(package) == ()
+    assert all(
+        head.custom_properties["visibleHeadOnlyMode"] is True
+        and head.custom_properties["hiddenBoltBodyOmitted"] is True
+        and head.custom_properties["boltPocketRecessOmitted"] is True
+        and head.custom_properties["hiddenEmbeddedHeadBottomCapOmitted"] is True
+        and head.custom_properties["cutTargetBeforeDisplay"] is False
+        and head.custom_properties["booleanParticipation"] is False
+        and "booleanTarget" not in head.custom_properties
+        for head in heads
+    )
+
+
 def test_stage6_boolean_plan_orders_pocket_before_head_for_each_bolt():
     from tunnel_scanner_core.bolts import (
         BoltConfig,

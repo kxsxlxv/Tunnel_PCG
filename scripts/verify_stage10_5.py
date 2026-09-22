@@ -375,8 +375,9 @@ def main() -> None:
     ]
     rc_ring_count = int(rm["moscowCivilRingCount"])
     assert len(rc_segments) == 10 * rc_ring_count
-    assert len(rc_radial) == 10 * rc_ring_count
-    assert len(rc_circ) == 10 * (rc_ring_count - 1)
+    assert rc_radial == []
+    assert rc_circ == []
+    assert rm["prescribedOuterJointSolidsRemoved"] is True
     assert int(rm["moscowCivilRenderedBlockCount"]) == len(rc_segments)
     assert int(rm["moscowCivilSegmentObjectCount"]) == len(rc_segments)
     assert int(rm["moscowCivilPrescribedRadialJointCount"]) == len(rc_radial)
@@ -462,14 +463,23 @@ def main() -> None:
         ) is True
     ]
     assert heads
-    assert len(heads) == len(cutters)
+    assert cutters == []
     assert int(km["moscowCivilBoltHeadCount"]) == len(heads)
-    assert int(km["moscowCivilBoltPocketCount"]) == len(cutters)
+    assert int(km["moscowCivilBoltPocketCount"]) == 0
     assert km["moscowCivilLegacyBoltLayout"] == "type1_centered"
+    assert km["moscowCivilBoltRenderMode"] == "visible_head_only_no_boolean"
+    assert km["moscowCivilBoltPocketBooleansEnabled"] is False
+    assert km["moscowCivilExpectedBlenderBoltBooleanOps"] == 0
     assert math.isclose(
         float(km["moscowCivilLegacyBoltBooleanOverlapM"]),
-        0.005,
+        0.0,
         abs_tol=1e-12,
+    )
+    assert all(
+        head.custom_properties["visibleHeadOnlyMode"] is True
+        and head.custom_properties["cutTargetBeforeDisplay"] is False
+        and head.custom_properties["moscowCivilBoltBooleanParticipation"] is False
+        for head in heads
     )
 
     legacy = build_production_tunnel(

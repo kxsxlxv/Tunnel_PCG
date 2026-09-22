@@ -148,6 +148,8 @@ For the first Belorusskaya fixture:
 - actual Belorusskaya chamber dimensions remain unknown;
 - generic Frolov chambers are allowed only as tagged civil fallback geometry.
 
+Historical service anchor: S136 records that on **26 March 1954** the contact rail of the Belorusskaya → Krasnaya Presnya service branch was energized and test running began. This is chronology evidence only, not a turnout-geometry source.
+
 ### First junction
 
 `JUNCTION_KOL5_BELORUSSKAYA_DEPOT_WEST`:

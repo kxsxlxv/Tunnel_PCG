@@ -84,6 +84,7 @@ def test_emit_live_osm_acquisition_payload():
     for i,ch in enumerate(chunks,1):
         warnings.warn(f"OSM_LIVE_CHUNK {i}/{len(chunks)} {ch}",UserWarning)
     assert route_way_ids
+    raise AssertionError("ACQUIRE_COMPLETE_FAST_STOP")
 
 # PR-triggered acquisition run
 

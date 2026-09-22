@@ -86,3 +86,5 @@ def test_emit_live_osm_acquisition_payload():
     assert route_way_ids
 
 # PR-triggered acquisition run
+
+# synchronize-trigger

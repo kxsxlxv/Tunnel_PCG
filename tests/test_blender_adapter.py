@@ -14,6 +14,8 @@ from tunnel_scanner_core import (
 from tunnel_scanner_core.blender_adapter import (
     _blender_custom_property_scalar,
     _blender_custom_property_value,
+    _lining_face_is_hidden_extrados,
+    _lining_vertex_radius_m,
     _mesh_prototype_payload,
     build_scene_package_in_blender,
 )
@@ -159,6 +161,76 @@ def test_blender_adapter_builds_hierarchy_meshes_and_custom_props(monkeypatch):
     assert fake.data.collections.get("TunnelScanner::Ring_0012") is not None
     assert fake.data.collections.get("TunnelScanner::Ring_0012::Segments") is not None
     assert fake.data.collections.get("TunnelScanner::Ring_0012::Joints::PrescribedRadial") is not None
+
+
+def test_lining_extrados_classifier_recovers_stitched_ring_radius():
+    props = {
+        "ringTranslationX": 10.0,
+        "ringTranslationY": 20.0,
+        "ringTranslationZ": -4.0,
+        "liningRingWidthM": 1.0,
+        "productionRingAlignmentStitched": True,
+        "productionRingFrontOffsetX": 9.9,
+        "productionRingFrontOffsetZ": -4.0,
+        "productionRingCenterOffsetX": 10.0,
+        "productionRingCenterOffsetZ": -4.0,
+        "productionRingBackOffsetX": 10.1,
+        "productionRingBackOffsetZ": -4.0,
+    }
+    extrados = 3.05
+    face = (
+        (9.9 + extrados, 19.5, -4.0),
+        (10.0 + extrados, 20.0, -4.0),
+        (10.1 + extrados, 20.5, -4.0),
+        (10.0, 20.0, -4.0 + extrados),
+    )
+    for vertex in face:
+        assert abs(
+            _lining_vertex_radius_m(
+                props,
+                vertex,
+                fallback_ring_width_m=1.35,
+            )
+            - extrados
+        ) < 1e-12
+    assert _lining_face_is_hidden_extrados(
+        props,
+        face,
+        extrados_radius_m=extrados,
+        fallback_ring_width_m=1.35,
+        radial_tolerance_m=1e-4,
+    )
+
+    mixed = (*face[:3], (10.0 + 2.8, 20.0, -4.0))
+    assert not _lining_face_is_hidden_extrados(
+        props,
+        mixed,
+        extrados_radius_m=extrados,
+        fallback_ring_width_m=1.35,
+        radial_tolerance_m=1e-4,
+    )
+
+
+def test_lining_extrados_classifier_supports_chunk_localized_coordinates():
+    props = {
+        "ringTranslationX": 100.0,
+        "ringTranslationY": 200.0,
+        "ringTranslationZ": -50.0,
+        "liningRingWidthM": 1.0,
+        "productionRingAlignmentStitched": False,
+        "coordinatesLocalizedToChunk": True,
+        "chunkWorldOriginX": 90.0,
+        "chunkWorldOriginY": 180.0,
+        "chunkWorldOriginZ": -40.0,
+    }
+    assert abs(
+        _lining_vertex_radius_m(
+            props,
+            (13.05, 20.0, -10.0),
+            fallback_ring_width_m=1.35,
+        )
+        - 3.05
+    ) < 1e-12
 
 
 def test_blender_import_script_compiles_without_blender_runtime():

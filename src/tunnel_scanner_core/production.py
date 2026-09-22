@@ -4592,7 +4592,6 @@ def build_production_scene(
                     config.moscow_stage in {"10.4", "10.5"}
                     and config.moscow_profile.civil_family
                     == "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000"
-                    and config.keep_moscow_civil_bolt_pocket_booleans
                 ),
                 "moscowCivilLegacyPrescribedJointSolidsIncluded": (
                     config.moscow_stage in {"10.4", "10.5"}

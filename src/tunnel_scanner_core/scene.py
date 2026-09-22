@@ -279,6 +279,7 @@ def build_nominal_scene_package(
     surface_meshing: SurfaceMeshingConfig | None = None,
     bolts: BoltSet | None = None,
     bolt_boolean_overlap_m: float = 0.005,
+    visible_bolt_heads_only: bool = False,
     ancillary: AncillarySet | None = None,
 ) -> ScenePackage:
     if ring_id < 0:
@@ -396,37 +397,39 @@ def build_nominal_scene_package(
                 raise ValueError(f"bolt references unknown segment {placement.segment_name}")
             seg_id = segment_id_map[placement.segment_name]
             target_name = f"R{ring_id:04d}_SEG_{seg_id:02d}_{placement.segment_name}"
-            cutter = build_pocket_boolean_cutter(
-                assembly.pocket, overlap_m=bolt_boolean_overlap_m
-            )
             bolt_index = placement.index
-            objects.append(
-                SceneObject(
-                    name=f"R{ring_id:04d}_BCUT_{bolt_index:03d}_{placement.segment_name}",
-                    vertices=cutter.vertices,
-                    faces=cutter.faces,
-                    object_type="bolt_pocket_cutter",
-                    ring_id=ring_id,
-                    label_id=0,
-                    instance_id=_instance_id(ring_id, local_index),
-                    semantic_class="clutter",
-                    segment_id=seg_id,
-                    segment_name=placement.segment_name,
-                    reconstruction=cutter.reconstruction,
-                    collection_path=(f"Ring_{ring_id:04d}", "Bolts", "Cutters"),
-                    extra_properties={
-                        "boltIndex": int(bolt_index),
-                        "boltLayout": placement.layout.value,
-                        "boltAlphaDeg": float(placement.alpha_deg),
-                        "boltYM": float(placement.y_m),
-                        "booleanTarget": target_name,
-                        "booleanOperation": "DIFFERENCE",
-                        "booleanEntryOverlapM": float(cutter.overlap_m),
-                        "removeAfterBoolean": True,
-                    },
+            if not visible_bolt_heads_only:
+                cutter = build_pocket_boolean_cutter(
+                    assembly.pocket, overlap_m=bolt_boolean_overlap_m
                 )
-            )
-            local_index += 1
+                objects.append(
+                    SceneObject(
+                        name=f"R{ring_id:04d}_BCUT_{bolt_index:03d}_{placement.segment_name}",
+                        vertices=cutter.vertices,
+                        faces=cutter.faces,
+                        object_type="bolt_pocket_cutter",
+                        ring_id=ring_id,
+                        label_id=0,
+                        instance_id=_instance_id(ring_id, local_index),
+                        semantic_class="clutter",
+                        segment_id=seg_id,
+                        segment_name=placement.segment_name,
+                        reconstruction=cutter.reconstruction,
+                        collection_path=(f"Ring_{ring_id:04d}", "Bolts", "Cutters"),
+                        extra_properties={
+                            "boltIndex": int(bolt_index),
+                            "boltLayout": placement.layout.value,
+                            "boltAlphaDeg": float(placement.alpha_deg),
+                            "boltYM": float(placement.y_m),
+                            "booleanTarget": target_name,
+                            "booleanOperation": "DIFFERENCE",
+                            "booleanEntryOverlapM": float(cutter.overlap_m),
+                            "removeAfterBoolean": True,
+                            "visibleHeadOnlyMode": False,
+                        },
+                    )
+                )
+                local_index += 1
 
             head = assembly.head
             objects.append(
@@ -448,9 +451,22 @@ def build_nominal_scene_package(
                         "boltLayout": placement.layout.value,
                         "boltAlphaDeg": float(placement.alpha_deg),
                         "boltYM": float(placement.y_m),
-                        "booleanTarget": target_name,
-                        "booleanOperation": "DIFFERENCE",
-                        "cutTargetBeforeDisplay": True,
+                        **(
+                            {
+                                "booleanTarget": target_name,
+                                "booleanOperation": "DIFFERENCE",
+                                "cutTargetBeforeDisplay": True,
+                                "visibleHeadOnlyMode": False,
+                            }
+                            if not visible_bolt_heads_only
+                            else {
+                                "cutTargetBeforeDisplay": False,
+                                "visibleHeadOnlyMode": True,
+                                "hiddenBoltBodyOmitted": True,
+                                "boltPocketRecessOmitted": True,
+                                "booleanParticipation": False,
+                            }
+                        ),
                         "boltHeadRadiusM": float(head.top_radius_m),
                         "boltEmbeddedRadiusM": float(head.bottom_radius_m),
                         "boltHeadThicknessM": float(head.thickness_m),

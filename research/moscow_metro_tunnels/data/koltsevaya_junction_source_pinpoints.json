@@ -1613,6 +1613,22 @@
       },
       "applicability": "Current replacement standard; use only as dimensional confirmation for an SK65 mesh family, not as proof that the 2016 profile was the exact historical plate installed at Belorusskaya.",
       "confidence": "A_current_standard_B_cross_era_geometry_confirmation"
+    },
+    {
+      "id": "S136",
+      "title": "Метростроевец, март 2025 №03 — historical calendar",
+      "url": "https://www.metrostroy.ru/upload/uf/e5e/vr7c7q2yewco0gtrzo8ldzzk15rvx9pq.pdf",
+      "locator": {
+        "pdf_page": 3,
+        "exact_web_lines": "662-665",
+        "calendar_date": "26 МАРТА",
+        "supports": [
+          "26 March 1954: voltage applied to the contact rail of the service branch from Belorusskaya on the Circle Line to Krasnaya Presnya depot",
+          "test running of the branch began before commissioning"
+        ]
+      },
+      "applicability": "Historical service/commissioning context only; no geometry or hardware dimensions.",
+      "confidence": "A/B_official_retrospective"
     }
   ],
   "acquisition_targets": [

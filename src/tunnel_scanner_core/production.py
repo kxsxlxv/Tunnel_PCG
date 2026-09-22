@@ -3355,7 +3355,17 @@ def _warp_civil_local_object_to_alignment(
         props["stage9LocalBoltIndex"] = local_bolt_index
         props["boltIndex"] = ring_index * 1000 + local_bolt_index
         props["legacyBoltLayout"] = BoltLayoutType.TYPE1_CENTERED.value
-        props["legacyBoltBooleanOverlapM"] = 0.005
+        participates_in_boolean = bool(
+            props.get("booleanOperation") == "DIFFERENCE"
+            and (
+                obj.object_type == "bolt_pocket_cutter"
+                or props.get("cutTargetBeforeDisplay") is True
+            )
+        )
+        props["legacyBoltBooleanOverlapM"] = (
+            0.005 if participates_in_boolean else 0.0
+        )
+        props["moscowCivilBoltBooleanParticipation"] = participates_in_boolean
     if obj.object_type.startswith("prescribed_"):
         props["legacyPrescribedJointGeometry"] = True
 
@@ -3991,6 +4001,9 @@ def build_production_scene(
                     stations=stations,
                     surface_meshing=surface_meshing,
                     include_bolts=config.moscow_civil_bolts_enabled,
+                    include_bolt_pocket_booleans=(
+                        config.keep_moscow_civil_bolt_pocket_booleans
+                    ),
                     include_prescribed_outer_joint_solids=(
                         config.keep_prescribed_outer_joint_solids
                     ),
@@ -5456,6 +5469,9 @@ def build_stage10_5_rc_modern_chunk_scene_package(
             stations=plan.alignment_stations,
             surface_meshing=plan.surface_meshing,
             include_bolts=plan.config.moscow_civil_bolts_enabled,
+            include_bolt_pocket_booleans=(
+                plan.config.keep_moscow_civil_bolt_pocket_booleans
+            ),
             include_prescribed_outer_joint_solids=(
                 plan.config.keep_prescribed_outer_joint_solids
             ),

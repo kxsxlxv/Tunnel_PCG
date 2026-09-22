@@ -134,7 +134,8 @@ def parse_args() -> argparse.Namespace:
             "ten_equal; ten_equal uses the S026 ten-identical-block family; "
             "kba uses the legacy Stage-9 K/B/A six-segment topology as an "
             "explicit photo-reference visual alternative. Both reuse the old "
-            "Stage-9 segment/joint/bolt-pocket/head architecture."
+            "Stage-9 segment/joint/visible-bolt-head architecture; hidden bolt "
+            "bodies and pocket Booleans are omitted in production."
         ),
     )
     parser.add_argument(

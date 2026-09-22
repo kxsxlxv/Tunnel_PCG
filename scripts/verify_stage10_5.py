@@ -463,16 +463,18 @@ def main() -> None:
         ) is True
     ]
     assert heads
-    assert cutters == []
+    assert len(cutters) == len(heads)
     assert int(km["moscowCivilBoltHeadCount"]) == len(heads)
-    assert int(km["moscowCivilBoltPocketCount"]) == 0
+    assert int(km["moscowCivilBoltPocketCount"]) == len(cutters)
     assert km["moscowCivilLegacyBoltLayout"] == "type1_centered"
-    assert km["moscowCivilBoltRenderMode"] == "visible_head_only_no_boolean"
-    assert km["moscowCivilBoltPocketBooleansEnabled"] is False
-    assert km["moscowCivilExpectedBlenderBoltBooleanOps"] == 0
+    assert km["moscowCivilBoltRenderMode"] == "pocket_cutter_plus_visible_head"
+    assert km["moscowCivilBoltPocketBooleansEnabled"] is True
+    assert km["moscowCivilBoltPocketRecessOmitted"] is False
+    assert km["moscowCivilHeadSeatingBooleanEnabled"] is False
+    assert km["moscowCivilExpectedBlenderBoltBooleanOps"] == len(cutters)
     assert math.isclose(
         float(km["moscowCivilLegacyBoltBooleanOverlapM"]),
-        0.0,
+        0.005,
         abs_tol=1e-12,
     )
     assert all(
@@ -480,6 +482,11 @@ def main() -> None:
         and head.custom_properties["cutTargetBeforeDisplay"] is False
         and head.custom_properties["moscowCivilBoltBooleanParticipation"] is False
         for head in heads
+    )
+    assert all(
+        cutter.custom_properties["booleanParticipation"] is True
+        and cutter.custom_properties["removeAfterBoolean"] is True
+        for cutter in cutters
     )
 
     legacy = build_production_tunnel(

@@ -135,7 +135,7 @@ def parse_args() -> argparse.Namespace:
             "kba uses the legacy Stage-9 K/B/A six-segment topology as an "
             "explicit photo-reference visual alternative. Both reuse the old "
             "Stage-9 segment/joint/visible-bolt-head architecture; hidden bolt "
-            "bodies and pocket Booleans are omitted in production."
+            "bodies are omitted while pocket cutters form the visible recesses."
         ),
     )
     parser.add_argument(
@@ -720,10 +720,10 @@ def _validate_stage10_build(
                     "moscowCivilBoltRenderMode",
                     "legacy_pocket_and_head_boolean",
                 )
-                if bolt_render_mode == "visible_head_only_no_boolean":
-                    if cutters:
+                if bolt_render_mode == "pocket_cutter_plus_visible_head":
+                    if len(heads) != len(cutters):
                         raise AssertionError(
-                            "head-only RC bolt mode unexpectedly generated cutters"
+                            "RC bolt pocket/head pairing missing"
                         )
                     if any(
                         obj.custom_properties.get(
@@ -733,9 +733,17 @@ def _validate_stage10_build(
                         for obj in heads
                     ):
                         raise AssertionError(
-                            "head-only RC bolt mode still participates in Booleans"
+                            "visible RC bolt heads still participate in Booleans"
                         )
-                    transferred_fasteners = tuple(heads)
+                    if any(
+                        obj.custom_properties.get("booleanParticipation")
+                        is not True
+                        for obj in cutters
+                    ):
+                        raise AssertionError(
+                            "RC bolt pocket cutters are not active Boolean tools"
+                        )
+                    transferred_fasteners = (*heads, *cutters)
                 elif bolt_render_mode == "legacy_pocket_and_head_boolean":
                     if len(heads) != len(cutters):
                         raise AssertionError(

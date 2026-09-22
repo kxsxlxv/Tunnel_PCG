@@ -953,11 +953,9 @@ def main() -> None:
                     "type1_centered"
                 ):
                     errors.append("wrong transferred Stage-9 bolt layout")
-                if bolt_render_mode == "visible_head_only_no_boolean":
-                    if transferred_cutters:
-                        errors.append(
-                            "head-only RC bolt mode unexpectedly contains pocket cutters"
-                        )
+                if bolt_render_mode == "pocket_cutter_plus_visible_head":
+                    if len(transferred_heads) != len(transferred_cutters):
+                        errors.append("RC bolt head/pocket pairing mismatch")
                     if any(
                         bool(
                             head.custom_properties.get(
@@ -968,7 +966,15 @@ def main() -> None:
                         for head in transferred_heads
                     ):
                         errors.append(
-                            "head-only RC bolt mode still participates in Booleans"
+                            "visible RC bolt heads still participate in Booleans"
+                        )
+                    if any(
+                        cutter.custom_properties.get("booleanParticipation")
+                        is not True
+                        for cutter in transferred_cutters
+                    ):
+                        errors.append(
+                            "RC bolt pocket cutter is not an active Boolean tool"
                         )
                 elif bolt_render_mode == "legacy_pocket_and_head_boolean":
                     if len(transferred_heads) != len(transferred_cutters):

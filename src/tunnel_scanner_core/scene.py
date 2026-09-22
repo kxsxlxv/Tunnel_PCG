@@ -398,38 +398,39 @@ def build_nominal_scene_package(
             seg_id = segment_id_map[placement.segment_name]
             target_name = f"R{ring_id:04d}_SEG_{seg_id:02d}_{placement.segment_name}"
             bolt_index = placement.index
-            if not visible_bolt_heads_only:
-                cutter = build_pocket_boolean_cutter(
-                    assembly.pocket, overlap_m=bolt_boolean_overlap_m
+            cutter = build_pocket_boolean_cutter(
+                assembly.pocket, overlap_m=bolt_boolean_overlap_m
+            )
+            objects.append(
+                SceneObject(
+                    name=f"R{ring_id:04d}_BCUT_{bolt_index:03d}_{placement.segment_name}",
+                    vertices=cutter.vertices,
+                    faces=cutter.faces,
+                    object_type="bolt_pocket_cutter",
+                    ring_id=ring_id,
+                    label_id=0,
+                    instance_id=_instance_id(ring_id, local_index),
+                    semantic_class="clutter",
+                    segment_id=seg_id,
+                    segment_name=placement.segment_name,
+                    reconstruction=cutter.reconstruction,
+                    collection_path=(f"Ring_{ring_id:04d}", "Bolts", "Cutters"),
+                    extra_properties={
+                        "boltIndex": int(bolt_index),
+                        "boltLayout": placement.layout.value,
+                        "boltAlphaDeg": float(placement.alpha_deg),
+                        "boltYM": float(placement.y_m),
+                        "booleanTarget": target_name,
+                        "booleanOperation": "DIFFERENCE",
+                        "booleanEntryOverlapM": float(cutter.overlap_m),
+                        "removeAfterBoolean": True,
+                        "visibleHeadOnlyMode": bool(visible_bolt_heads_only),
+                        "booleanParticipation": True,
+                        "cutterPurpose": "visible_bolt_pocket_recess",
+                    },
                 )
-                objects.append(
-                    SceneObject(
-                        name=f"R{ring_id:04d}_BCUT_{bolt_index:03d}_{placement.segment_name}",
-                        vertices=cutter.vertices,
-                        faces=cutter.faces,
-                        object_type="bolt_pocket_cutter",
-                        ring_id=ring_id,
-                        label_id=0,
-                        instance_id=_instance_id(ring_id, local_index),
-                        semantic_class="clutter",
-                        segment_id=seg_id,
-                        segment_name=placement.segment_name,
-                        reconstruction=cutter.reconstruction,
-                        collection_path=(f"Ring_{ring_id:04d}", "Bolts", "Cutters"),
-                        extra_properties={
-                            "boltIndex": int(bolt_index),
-                            "boltLayout": placement.layout.value,
-                            "boltAlphaDeg": float(placement.alpha_deg),
-                            "boltYM": float(placement.y_m),
-                            "booleanTarget": target_name,
-                            "booleanOperation": "DIFFERENCE",
-                            "booleanEntryOverlapM": float(cutter.overlap_m),
-                            "removeAfterBoolean": True,
-                            "visibleHeadOnlyMode": False,
-                        },
-                    )
-                )
-                local_index += 1
+            )
+            local_index += 1
 
             head = assembly.head
             head_faces = (
@@ -468,7 +469,8 @@ def build_nominal_scene_package(
                                 "cutTargetBeforeDisplay": False,
                                 "visibleHeadOnlyMode": True,
                                 "hiddenBoltBodyOmitted": True,
-                                "boltPocketRecessOmitted": True,
+                                "boltPocketRecessOmitted": False,
+                                "boltPocketCutterPresent": True,
                                 "hiddenEmbeddedHeadBottomCapOmitted": True,
                                 "booleanParticipation": False,
                             }

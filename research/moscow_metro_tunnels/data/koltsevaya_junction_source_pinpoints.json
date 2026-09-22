@@ -1465,7 +1465,7 @@
     },
     {
       "id": "S132",
-      "title": "Dnipro Switch Plant — turnout drive fittings catalogue",
+      "title": "Dnipro Switch Plant — miscellaneous turnout components catalogue",
       "url": "https://dnsz.ua/files/zagruzki/Rizne_ukr.pdf",
       "locator": {
         "pdf_page": 4,
@@ -1479,8 +1479,39 @@
           "fitting mass 132 kg"
         ]
       },
-      "limitation": "Compatibility/product-family evidence only. It does not prove the selected Belorusskaya switch uses SP-6 or this fitting set.",
-      "confidence": "B_official_manufacturer_compatibility"
+      "limitation": "Product-family component evidence only. It does not prove which plate package or drive fitting was installed at the selected Belorusskaya junction.",
+      "confidence": "B_official_manufacturer_compatibility",
+      "locators": [
+        {
+          "pdf_page": 1,
+          "printed_page": "1 of 7",
+          "section": "ПІДКЛАДКИ литі — Для рейки типу Р65",
+          "row": "СКЛ65 Дн 436",
+          "supports": [
+            "SKL65 turnout plate rail-seat nominal width parameter 150 (+2/0) mm",
+            "supporting-surface thickness 15 (+2/0) mm",
+            "overall width 165±2 mm",
+            "overall length 370±2 mm",
+            "no rail-seat inclination",
+            "rib/flange height 32±1 mm",
+            "mass 7.6 kg"
+          ],
+          "status": "SOURCE_BACKED_MANUFACTURER_COMPONENT"
+        },
+        {
+          "pdf_page": 4,
+          "printed_page": "4 of 7",
+          "table": "Група I — гарнітура без додаткових перевідних пристроїв до стрілки",
+          "row": 7,
+          "supports": [
+            "fitting project 16760-00-00 / 16760Dn.00.000",
+            "for SP-6 electric point machine",
+            "for R65 1/9 1520 mm metro turnout project 2976Dn",
+            "fitting mass 132 kg"
+          ],
+          "status": "SOURCE_BACKED_MANUFACTURER_COMPATIBILITY"
+        }
+      ]
     },
     {
       "id": "S133",

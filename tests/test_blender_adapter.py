@@ -204,7 +204,7 @@ def test_blender_import_script_compiles_without_blender_runtime():
 
 
 
-def test_visible_bolt_heads_only_package_has_no_boolean_plan():
+def test_visible_bolt_heads_only_package_keeps_pocket_boolean_plan():
     from tunnel_scanner_core.bolts import (
         BoltConfig,
         BoltLayoutType,
@@ -237,12 +237,22 @@ def test_visible_bolt_heads_only_package_has_no_boolean_plan():
     heads = package.objects_of_type("bolt_head")
     cutters = package.objects_of_type("bolt_pocket_cutter")
     assert heads
-    assert cutters == ()
-    assert plan_bolt_boolean_operations(package) == ()
+    assert len(cutters) == len(heads)
+    plan = plan_bolt_boolean_operations(package)
+    assert len(plan) == len(cutters)
+    assert all(op.tool_type == "bolt_pocket_cutter" for op in plan)
+    assert all(op.remove_tool_after is True for op in plan)
+    assert all(
+        cutter.custom_properties["booleanParticipation"] is True
+        and cutter.custom_properties["removeAfterBoolean"] is True
+        and cutter.custom_properties["cutterPurpose"] == "visible_bolt_pocket_recess"
+        for cutter in cutters
+    )
     assert all(
         head.custom_properties["visibleHeadOnlyMode"] is True
         and head.custom_properties["hiddenBoltBodyOmitted"] is True
-        and head.custom_properties["boltPocketRecessOmitted"] is True
+        and head.custom_properties["boltPocketRecessOmitted"] is False
+        and head.custom_properties["boltPocketCutterPresent"] is True
         and head.custom_properties["hiddenEmbeddedHeadBottomCapOmitted"] is True
         and head.custom_properties["cutTargetBeforeDisplay"] is False
         and head.custom_properties["booleanParticipation"] is False

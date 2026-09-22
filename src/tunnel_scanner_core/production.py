@@ -4664,10 +4664,11 @@ def build_production_scene(
                         "Moscow RC principal radii and ten-equal topology are "
                         "source-backed by S026. K/B/A topology is an explicit "
                         "user-selected photo-reference alternative pending a "
-                        "registered source. Segment/joint/bolt pocket/head "
+                        "registered source. Segment/joint/visible bolt-head "
                         "geometry is transferred from the old Stage-9 "
                         "architecture and is not claimed as Moscow historical "
-                        "fastener geometry."
+                        "fastener geometry. Hidden bolt bodies and pocket/recess "
+                        "Booleans are omitted from production by default."
                     )
                     if config.moscow_stage in {"10.4", "10.5"}
                     else None

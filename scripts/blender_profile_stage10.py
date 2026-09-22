@@ -72,6 +72,11 @@ def parse_args() -> argparse.Namespace:
         help="Keep exact coincident segment-interface faces.",
     )
     parser.add_argument(
+        "--keep-hidden-lining-extrados",
+        action="store_true",
+        help="Keep the hidden outer RC lining surface after bolt Booleans.",
+    )
+    parser.add_argument(
         "--no-mesh-prototype-reuse",
         action="store_true",
         help="Disable Blender mesh-datablock reuse for declared prototypes.",
@@ -399,6 +404,9 @@ def main() -> None:
         strip_coincident_lining_interfaces=(
             not args.keep_coincident_lining_interfaces
         ),
+        strip_hidden_lining_extrados=(
+            not args.keep_hidden_lining_extrados
+        ),
         reuse_mesh_prototypes=not args.no_mesh_prototype_reuse,
     )
     final_profile = _profile_blender_objects(bpy, result.object_names)
@@ -414,6 +422,9 @@ def main() -> None:
             "stripCoincidentLiningInterfaces": (
                 not args.keep_coincident_lining_interfaces
             ),
+            "stripHiddenLiningExtrados": (
+                not args.keep_hidden_lining_extrados
+            ),
             "reuseMeshPrototypes": not args.no_mesh_prototype_reuse,
         },
         "inputScenePackage": input_profile,
@@ -425,6 +436,7 @@ def main() -> None:
             "removedToolCount": len(result.removed_tool_names),
             "liningCapFacesRemoved": result.lining_cap_faces_removed,
             "liningInterfaceFacesRemoved": result.lining_interface_faces_removed,
+            "liningExtradosFacesRemoved": result.lining_extrados_faces_removed,
             "meshPrototypeCount": result.mesh_prototype_count,
             "meshPrototypeInstanceCount": result.mesh_prototype_instance_count,
             "sharedMeshDataBlocksSaved": result.shared_mesh_data_blocks_saved,
@@ -443,7 +455,8 @@ def main() -> None:
         f"{result.boolean_operations_applied} Boolean ops, "
         f"{len(result.removed_tool_names)} cutters removed, "
         f"{result.lining_cap_faces_removed} lining-cap faces removed, "
-        f"{result.lining_interface_faces_removed} coincident interface faces removed"
+        f"{result.lining_interface_faces_removed} coincident interface faces removed, "
+        f"{result.lining_extrados_faces_removed} hidden extrados faces removed"
     )
     print(
         "Prototype reuse: "

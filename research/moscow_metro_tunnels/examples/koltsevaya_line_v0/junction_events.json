@@ -920,9 +920,18 @@
           "exact_condition_chainage_m": null,
           "deterministic_pcg_convention": "instantiate independent round branch/main tunnels after chamber 6 if an exact project split is unavailable",
           "convention_chainage_from_chamber2_start_m": 61,
-          "ordinary_independent_tunnel_inner_diameter_m": 5.14,
-          "ordinary_independent_tunnel_outer_diameter_m": 5.64,
-          "status": "GENERIC_REFERENCE_PLUS_EXPLICIT_FALLBACK_CONVENTION_NOT_BELORUSSKAYA_AS_BUILT"
+          "status": "GENERIC_REFERENCE_PLUS_EXPLICIT_FALLBACK_CONVENTION_NOT_BELORUSSKAYA_AS_BUILT",
+          "independent_tunnel_inner_diameter_m": null,
+          "independent_tunnel_outer_diameter_m": null,
+          "chamber6_open_lining_reference": {
+            "inner_diameter_m": 5.14,
+            "outer_diameter_m": 5.64,
+            "source_id": "S058",
+            "locator": "Frolov 2001 Fig.4.34 section 2-2 / printed p.150",
+            "semantics": "open single-track lining arcs in the two-vault common-wall chamber 6; NOT automatically the diameter of the later fully independent tunnels",
+            "status": "SOURCE_BACKED_CHAMBER6_ONLY"
+          },
+          "diameter_rule": "Keep the post-split independent-tunnel diameter null until a source explicitly dimensions that tunnel. Do not propagate chamber-6 5.14/5.64 m to the detached tunnel by assumption."
         },
         "actual_depot_network_visual_transition": {
           "source_id": "S120",

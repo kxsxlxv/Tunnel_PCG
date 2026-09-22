@@ -2378,11 +2378,16 @@ def _build_stage10_5_service_rack_scene_objects(
     assembly: TunnelAssembly,
     stations: Sequence[AlignmentStation],
     label_policy: LabelPolicy,
+    surface_meshing: SurfaceMeshingConfig,
     start_chainage_m: float | None = None,
     end_chainage_m: float | None = None,
 ) -> tuple[SceneObject, ...]:
     local_by_side = {
-        side: build_r2k11_local_rack_mesh(profile, side_sign=side)
+        side: build_r2k11_local_rack_mesh(
+            profile,
+            side_sign=side,
+            surface_meshing=surface_meshing,
+        )
         for side in (-1, 1)
     }
     chainages = cable_rack_chainages(
@@ -3920,6 +3925,7 @@ def build_production_scene(
             assembly=source_build.assembly,
             stations=stations,
             label_policy=source_scene.label_policy,
+            surface_meshing=surface_meshing,
         )
         objects.extend(stage10_5_service_racks)
 
@@ -5409,6 +5415,7 @@ def build_stage10_5_rc_modern_chunk_scene_package(
             assembly=assembly,
             stations=plan.alignment_stations,
             label_policy=plan.source_build.scene.label_policy,
+            surface_meshing=plan.surface_meshing,
             start_chainage_m=start,
             end_chainage_m=end,
         )

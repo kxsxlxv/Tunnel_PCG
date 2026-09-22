@@ -232,7 +232,11 @@ def main() -> None:
         assert len(centers) == 2
         assert math.isclose(centers[0], 0.0375, abs_tol=1e-12)
         assert math.isclose(centers[1], 0.1165, abs_tol=1e-12)
-        assert int(rp["hornUArcSegments"]) == 8
+        assert int(rp["hornUArcSegments"]) == 5
+        assert rp["tessellationMode"] == "sagitta_bounded_adaptive_v1"
+        assert float(rp["surfaceToleranceM"]) == 0.002
+        assert float(rp["hornUAchievedMaxSagittaM"]) <= 0.002 + 1e-12
+        assert float(rp["uprightAchievedMaxSagittaM"]) <= 0.002 + 1e-12
     assert meta["serviceCableRackFamily"] == "R2K11"
     assert int(meta["serviceCableRackHornCount"]) == 11
     assert meta["serviceCableRackUprightDesignation"] == "K1351.001-09"

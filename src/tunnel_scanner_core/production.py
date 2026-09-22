@@ -5391,7 +5391,6 @@ def build_stage10_5_rc_modern_chunk_scene_package(
             assembly=assembly,
             stations=plan.alignment_stations,
             label_policy=plan.source_build.scene.label_policy,
-            surface_meshing=plan.surface_meshing,
             start_chainage_m=start,
             end_chainage_m=end,
         )

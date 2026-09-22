@@ -1592,6 +1592,27 @@
       },
       "limitation": "The article says 'one of the branches' and does not identify whether the 256 m branch is the Belorusskaya or Krasnopresnenskaya leg. Do not assign 256 m to a named leg without an independent map/chainage source.",
       "confidence": "B_primary_historical_engineering_article_via_text_reprint"
+    },
+    {
+      "id": "S060",
+      "title": "ГОСТ 16277-2016 — подкладки раздельного скрепления, SK/KD families",
+      "url": "https://files.stroyinf.ru/Data/619/61917.pdf",
+      "locator": {
+        "clause": "4.1-4.3; 5.1.1",
+        "figure": "5 — СК65",
+        "pdf_page": 11,
+        "supports": [
+          "СК65 is the turnout/no-rail-inclination plate family for wooden sleepers/bearers",
+          "СК65 plan envelope 370 x 165 mm",
+          "four Ø26 holes",
+          "hole-center spacing 310 x 100 mm",
+          "supporting plate thickness 15.5±1 mm",
+          "reference overall height 46.5 mm",
+          "four-hole turnout plate profile and rib geometry"
+        ]
+      },
+      "applicability": "Current replacement standard; use only as dimensional confirmation for an SK65 mesh family, not as proof that the 2016 profile was the exact historical plate installed at Belorusskaya.",
+      "confidence": "A_current_standard_B_cross_era_geometry_confirmation"
     }
   ],
   "acquisition_targets": [

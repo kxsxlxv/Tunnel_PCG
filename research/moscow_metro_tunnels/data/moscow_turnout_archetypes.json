@@ -622,15 +622,28 @@
           }
         },
         "drive": {
-          "compatibility": {
-            "point_machine_family": "SP-6",
-            "fitting_project": "16760-00-00 / 16760Dn.00.000",
-            "turnout_family": "R65 1:9 1520 mm metro project 2976Dn",
-            "fitting_mass_kg": 132,
-            "source_id": "S132",
-            "locator": "Dnipro Switch Plant fittings catalogue, PDF p.4, Group I row 7",
-            "status": "SOURCE_BACKED_PRODUCT_COMPATIBILITY"
-          },
+          "compatibility_candidates": [
+            {
+              "fitting_project": "16760-00-00 / 16760Dn.00.000",
+              "point_machine_family": "SP-6",
+              "turnout_family": "R65 1/9 1520 mm metro project 2976Dn",
+              "fitting_mass_kg": 132,
+              "source_id": "S132",
+              "locator": "Dnipro Switch Plant fittings catalogue, PDF p.4, Group I row 7",
+              "authority": "official manufacturer compatibility table",
+              "status": "SOURCE_BACKED_PRODUCT_COMPATIBILITY"
+            },
+            {
+              "fitting_project": "16737-00-00",
+              "point_machine_family": "SP-6",
+              "turnout_family": "listed by supplier with project 2976.00.000",
+              "source_id": "S095",
+              "locator": "ATIZ product page, optional equipment list",
+              "authority": "secondary supplier listing",
+              "status": "CONFLICTING_SECONDARY_PRODUCT_LISTING"
+            }
+          ],
+          "conflict_resolution_rule": "Do not encode a point-machine fitting project into the Belorusskaya mesh. For a generic 2976-family compatibility preset prefer S132/16760 as the manufacturer-family cross-check, while retaining S095/16737 as a documented supplier conflict.",
           "installed_at_selected_junction": null,
           "installed_model_status": "UNKNOWN"
         },
@@ -652,7 +665,8 @@
         "exact frog front/rear extent relative to mathematical center despite known 4.59 m assembled length",
         "terminal R65 1/9 Table-16 ordinate rows beyond x=14 m are intentionally not transcribed until numerator/denominator endpoint semantics are rechecked",
         "point pivot/root hardware geometry despite resolved longitudinal root station",
-        "full point opening/gauge-face path between tip and root"
+        "full point opening/gauge-face path between tip and root",
+        "exact installed point-machine/fitting project at Belorusskaya; public product sources conflict between 16760 manufacturer-family and 16737 supplier listing"
       ],
       "straight_insert_note": "No main-line source found that gives a universal distance from the project-2976 stock-rail front joint or frog tail to the next curve. Current SP instead constrains curve/vertical-curve starts to be >=20 m from turnout center (§5.3.5). The 2.9 m value in SP Table 5.30 is for depot park tracks and is not transferred to this tunnel junction.",
       "current_metro_placement_validator": {

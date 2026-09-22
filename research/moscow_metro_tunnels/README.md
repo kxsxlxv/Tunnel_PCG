@@ -159,6 +159,8 @@ The sourced identity is:
 - `KOLTSEVAYA_TRACK_A` = I main / inner / clockwise;
 - `KOLTSEVAYA_TRACK_B` = II main / outer / counterclockwise.
 
+Project-2976 fallback component geometry is now additionally constrained by source-backed 12.5 m stock-rail, 8.3 m point and 4.59 m assembled-frog lengths, plus explicit SK65/SKL65 fastening variants; none of these identify the installed Belorusskaya project.
+
 The selected first real junction is the Belorusskaya/Krasnaya-Presnya depot-side divergence. Direction-level OSM route IDs are resolved (Inner 300607 / Outer 1462011); exact current member way/node IDs, site Z, installed turnout project and actual chamber dimensions remain deliberately unresolved where no source was obtained. No second tunnel is produced by lateral offset.
 
 

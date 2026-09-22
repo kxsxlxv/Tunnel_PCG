@@ -243,6 +243,7 @@ def test_visible_bolt_heads_only_package_has_no_boolean_plan():
         head.custom_properties["visibleHeadOnlyMode"] is True
         and head.custom_properties["hiddenBoltBodyOmitted"] is True
         and head.custom_properties["boltPocketRecessOmitted"] is True
+        and head.custom_properties["hiddenEmbeddedHeadBottomCapOmitted"] is True
         and head.custom_properties["cutTargetBeforeDisplay"] is False
         and head.custom_properties["booleanParticipation"] is False
         and "booleanTarget" not in head.custom_properties

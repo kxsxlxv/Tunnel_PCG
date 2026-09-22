@@ -33,6 +33,7 @@ class BlenderBuildResult:
     removed_tool_names: tuple[str, ...] = ()
     lining_cap_faces_removed: int = 0
     lining_interface_faces_removed: int = 0
+    lining_extrados_faces_removed: int = 0
     mesh_prototype_count: int = 0
     mesh_prototype_instance_count: int = 0
     shared_mesh_data_blocks_saved: int = 0
@@ -345,6 +346,99 @@ def _apply_stage6_bolt_booleans(bpy, package: ScenePackage) -> tuple[int, tuple[
     return len(operations), tuple(removed)
 
 
+def _lining_vertex_radius_m(
+    props: dict[str, Any],
+    vertex_xyz: tuple[float, float, float],
+    *,
+    fallback_ring_width_m: float,
+) -> float:
+    """Recover a transferred lining vertex radius in its civil-ring frame.
+
+    Stage-10 RC lining vertices are warped to the alignment independently by
+    chainage.  Reconstruct the local tunnel-axis centre with the same
+    front/centre/back interpolation used by the existing segment-interface
+    cleanup, then measure XZ radius.  Axial ring rotation does not affect the
+    radius and therefore does not need to be inverted.
+    """
+    x, y, z = (float(v) for v in vertex_xyz)
+    local_ring_width_m = float(
+        props.get("liningRingWidthM", fallback_ring_width_m)
+    )
+    if local_ring_width_m <= 0.0:
+        raise ValueError("lining ring width must be positive")
+
+    localized = bool(props.get("coordinatesLocalizedToChunk", False))
+    origin_x = float(props.get("chunkWorldOriginX", 0.0)) if localized else 0.0
+    origin_y = float(props.get("chunkWorldOriginY", 0.0)) if localized else 0.0
+    origin_z = float(props.get("chunkWorldOriginZ", 0.0)) if localized else 0.0
+
+    tx = float(props["ringTranslationX"]) - origin_x
+    ty = float(props["ringTranslationY"]) - origin_y
+    tz = float(props["ringTranslationZ"]) - origin_z
+    local_y = y - ty
+    center_x = tx
+    center_z = tz
+
+    if bool(props.get("productionRingAlignmentStitched", False)):
+        required = (
+            "productionRingFrontOffsetX",
+            "productionRingFrontOffsetZ",
+            "productionRingCenterOffsetX",
+            "productionRingCenterOffsetZ",
+            "productionRingBackOffsetX",
+            "productionRingBackOffsetZ",
+        )
+        if any(key not in props for key in required):
+            raise ValueError("stitched lining object lacks alignment offsets")
+        front_x = float(props["productionRingFrontOffsetX"]) - origin_x
+        front_z = float(props["productionRingFrontOffsetZ"]) - origin_z
+        centre_x = float(props["productionRingCenterOffsetX"]) - origin_x
+        centre_z = float(props["productionRingCenterOffsetZ"]) - origin_z
+        back_x = float(props["productionRingBackOffsetX"]) - origin_x
+        back_z = float(props["productionRingBackOffsetZ"]) - origin_z
+
+        half_width = 0.5 * local_ring_width_m
+        if local_y <= 0.0:
+            u = min(1.0, max(0.0, (local_y + half_width) / half_width))
+            center_x = front_x + u * (centre_x - front_x)
+            center_z = front_z + u * (centre_z - front_z)
+        else:
+            u = min(1.0, max(0.0, local_y / half_width))
+            center_x = centre_x + u * (back_x - centre_x)
+            center_z = centre_z + u * (back_z - centre_z)
+
+    return math.hypot(x - center_x, z - center_z)
+
+
+def _lining_face_is_hidden_extrados(
+    props: dict[str, Any],
+    vertices_xyz,
+    *,
+    extrados_radius_m: float,
+    fallback_ring_width_m: float,
+    radial_tolerance_m: float,
+) -> bool:
+    if extrados_radius_m <= 0.0:
+        raise ValueError("extrados radius must be positive")
+    if radial_tolerance_m <= 0.0:
+        raise ValueError("radial tolerance must be positive")
+    vertices = tuple(vertices_xyz)
+    if not vertices:
+        return False
+    return all(
+        abs(
+            _lining_vertex_radius_m(
+                props,
+                (float(vertex[0]), float(vertex[1]), float(vertex[2])),
+                fallback_ring_width_m=fallback_ring_width_m,
+            )
+            - extrados_radius_m
+        )
+        <= radial_tolerance_m
+        for vertex in vertices
+    )
+
+
 def _strip_internal_lining_caps_in_blender(
     bpy,
     package: ScenePackage,
@@ -627,6 +721,93 @@ def _strip_coincident_lining_interfaces_in_blender(
     return removed_total
 
 
+def _strip_hidden_lining_extrados_in_blender(
+    bpy,
+    package: ScenePackage,
+    *,
+    radial_tolerance_m: float = 1e-4,
+) -> int:
+    """Remove RC lining faces that lie entirely on the hidden extrados.
+
+    This runs after bolt Booleans.  The intrados and all Boolean pocket walls
+    remain untouched; only faces whose every vertex is on the civil-shell
+    outer radius are removed.  The result is an intentionally open
+    render/sensor surface, not a watertight construction solid.
+    """
+    try:
+        import bmesh  # type: ignore
+    except ImportError as exc:  # pragma: no cover - Blender runtime only
+        raise RuntimeError("bmesh is required for lining extrados cleanup") from exc
+
+    production = package.metadata.get("productionGeometry", {})
+    if not isinstance(production, dict):
+        return 0
+    raw_extrados = production.get("moscowCivilExtradosRadiusM")
+    if raw_extrados is None:
+        return 0
+    extrados_radius_m = float(raw_extrados)
+    if extrados_radius_m <= 0.0:
+        return 0
+
+    fallback_ring_width_m = float(package.metadata.get("ringWidthM", 0.0))
+    if fallback_ring_width_m <= 0.0:
+        raise ValueError("scene metadata lacks positive ringWidthM")
+
+    removed_total = 0
+    for scene_object in package.objects:
+        if scene_object.object_type != "lining_segment":
+            continue
+        props = scene_object.custom_properties
+        if not bool(
+            props.get("stage9SegmentJointFastenerArchitectureTransferred", False)
+        ):
+            continue
+        if props.get("civilFamily") != "RC_BLOCK_MOSCOW_6100_5600_10SEG_R1000":
+            continue
+
+        obj = bpy.data.objects.get(scene_object.name)
+        if obj is None:
+            raise RuntimeError(
+                f"lining object missing during extrados cleanup: {scene_object.name}"
+            )
+
+        local_extrados = float(props.get("extradosRadiusM", extrados_radius_m))
+        bm = bmesh.new()
+        bm.from_mesh(obj.data)
+        remove = []
+        for face in bm.faces:
+            if _lining_face_is_hidden_extrados(
+                props,
+                tuple(
+                    (
+                        float(vertex.co.x),
+                        float(vertex.co.y),
+                        float(vertex.co.z),
+                    )
+                    for vertex in face.verts
+                ),
+                extrados_radius_m=local_extrados,
+                fallback_ring_width_m=fallback_ring_width_m,
+                radial_tolerance_m=radial_tolerance_m,
+            ):
+                remove.append(face)
+
+        for face in remove:
+            bm.faces.remove(face)
+        removed = len(remove)
+        removed_total += removed
+        bm.to_mesh(obj.data)
+        bm.free()
+        obj.data.update(calc_edges=True)
+        obj["hiddenExtradosFacesStripped"] = True
+        obj["hiddenExtradosFacesRemoved"] = int(removed)
+        obj["renderSurfaceOpenAtExtrados"] = True
+        obj["extradosCleanupRadiusM"] = float(local_extrados)
+        obj["extradosCleanupRadialToleranceM"] = float(radial_tolerance_m)
+
+    return removed_total
+
+
 def build_scene_package_in_blender(
     package: ScenePackage,
     *,
@@ -637,6 +818,7 @@ def build_scene_package_in_blender(
     apply_bolt_booleans: bool = True,
     strip_internal_lining_caps: bool = False,
     strip_coincident_lining_interfaces: bool = False,
+    strip_hidden_lining_extrados: bool = False,
     reuse_mesh_prototypes: bool = True,
 ) -> BlenderBuildResult:
     bpy = _require_bpy()
@@ -708,6 +890,12 @@ def build_scene_package_in_blender(
             _strip_coincident_lining_interfaces_in_blender(bpy, package)
         )
 
+    lining_extrados_faces_removed = 0
+    if strip_hidden_lining_extrados:
+        lining_extrados_faces_removed = (
+            _strip_hidden_lining_extrados_in_blender(bpy, package)
+        )
+
     surviving_object_names = tuple(
         name for name in object_names if bpy.data.objects.get(name) is not None
     )
@@ -724,6 +912,7 @@ def build_scene_package_in_blender(
         removed_tool_names=removed_tools,
         lining_cap_faces_removed=lining_cap_faces_removed,
         lining_interface_faces_removed=lining_interface_faces_removed,
+        lining_extrados_faces_removed=lining_extrados_faces_removed,
         mesh_prototype_count=mesh_prototype_count,
         mesh_prototype_instance_count=mesh_prototype_instance_count,
         shared_mesh_data_blocks_saved=max(

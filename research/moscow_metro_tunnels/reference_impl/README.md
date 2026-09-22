@@ -107,6 +107,7 @@ Synthetic test cases were added in `tests/test_osm_track_graph.py`:
 - simple two-track loop;
 - single turnout branch;
 - crossover between two tracks;
-- depot branch.
+- depot branch;
+- PTv2 non-track/platform way exclusion.
 
 The current execution environment could not clone/run the repository because external DNS for GitHub is unavailable, so these new tests are **committed but not claimed as executed here**.

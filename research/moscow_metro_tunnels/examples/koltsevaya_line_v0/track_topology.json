@@ -384,6 +384,14 @@
         "source_id": "S135",
         "status": "SOURCE_BACKED_HISTORICAL_CONSTRUCTION",
         "exact_mapping_to_selected_belorusskaya_chamber": null
+      },
+      "historical_energization": {
+        "contact_rail_energized_date": "1954-03-26",
+        "event": "voltage applied to the contact rail of the Belorusskaya-Line-5 to Krasnaya-Presnya-depot service branch; test running began",
+        "source_id": "S134",
+        "locator": "Metrostroevets March 2025 No.03, PDF p.3, lines 662-665",
+        "implication": "the civil/depot branch existed and had an operational contact-rail system by late March 1954; this does not establish the later 2001 service-era turnout/contact-rail hardware",
+        "status": "SOURCE_BACKED_HISTORICAL_CONTEXT"
       }
     },
     {
@@ -658,6 +666,14 @@
       "locator": "1983 A.M. Gorkov design account, web line 116",
       "semantics": "Belorusskaya is one of the two single-track depot-connection branches",
       "status": "SOURCE_BACKED_HISTORICAL_DESIGN_ACCOUNT"
+    },
+    "branch_commissioning_context": {
+      "contact_rail_energized_date": "1954-03-26",
+      "event": "voltage applied to the contact rail of the Belorusskaya-Line-5 to Krasnaya-Presnya-depot service branch; test running began",
+      "source_id": "S134",
+      "locator": "Metrostroevets March 2025 No.03, PDF p.3, lines 662-665",
+      "implication": "the civil/depot branch existed and had an operational contact-rail system by late March 1954; this does not establish the later 2001 service-era turnout/contact-rail hardware",
+      "status": "SOURCE_BACKED_HISTORICAL_CONTEXT"
     }
   },
   "global_unknowns": [

@@ -3407,6 +3407,7 @@ def _build_stage10_4_rc_stage9_architecture_objects(
     stations: Sequence[AlignmentStation],
     surface_meshing: SurfaceMeshingConfig,
     include_bolts: bool,
+    include_bolt_pocket_booleans: bool = False,
     include_prescribed_outer_joint_solids: bool = False,
     seed: int,
     start_chainage_m: float | None = None,
@@ -3525,6 +3526,7 @@ def _build_stage10_4_rc_stage9_architecture_objects(
             surface_meshing=surface_meshing,
             bolts=bolts,
             bolt_boolean_overlap_m=0.005,
+            visible_bolt_heads_only=not include_bolt_pocket_booleans,
         )
         for obj in package.objects:
             mapped = _warp_civil_local_object_to_alignment(
@@ -3686,6 +3688,7 @@ class ProductionConfig:
     keep_stage8_ring_ancillary: bool = False
     keep_prescribed_outer_joint_solids: bool = False
     moscow_civil_bolts_enabled: bool = True
+    keep_moscow_civil_bolt_pocket_booleans: bool = False
     stitch_ring_geometry: bool = True
     stable_reidentify_ring_objects: bool = True
 

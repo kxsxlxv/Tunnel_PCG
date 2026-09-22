@@ -432,11 +432,16 @@ def build_nominal_scene_package(
                 local_index += 1
 
             head = assembly.head
+            head_faces = (
+                (head.faces[0], *head.faces[2:])
+                if visible_bolt_heads_only
+                else head.faces
+            )
             objects.append(
                 SceneObject(
                     name=f"R{ring_id:04d}_BHEAD_{bolt_index:03d}_{placement.segment_name}",
                     vertices=head.vertices,
-                    faces=head.faces,
+                    faces=head_faces,
                     object_type="bolt_head",
                     ring_id=ring_id,
                     label_id=0,
@@ -464,6 +469,7 @@ def build_nominal_scene_package(
                                 "visibleHeadOnlyMode": True,
                                 "hiddenBoltBodyOmitted": True,
                                 "boltPocketRecessOmitted": True,
+                                "hiddenEmbeddedHeadBottomCapOmitted": True,
                                 "booleanParticipation": False,
                             }
                         ),

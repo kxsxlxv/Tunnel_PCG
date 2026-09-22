@@ -204,6 +204,13 @@
             "exact_xy_z": null
           },
           "generation_rule": "Spawn these as junction-local event assets. Presence/morphology may follow the photos; dimensions/coordinates must come from separate sources or remain parameterized."
+        },
+        "historical_commissioning": {
+          "branch_contact_rail_energized_date": "1954-03-26",
+          "test_running_started": true,
+          "source_id": "S134",
+          "status": "SOURCE_BACKED",
+          "use_rule": "Use only to constrain the branch/civil existence and early electrical-service era. Do not infer exact 1954 turnout project, contact-rail bracket family, gap coordinates or modernized 2001 hardware."
         }
       },
       "turnout_geometry": {

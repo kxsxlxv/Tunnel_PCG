@@ -605,6 +605,24 @@ The same instruction also gives:
 
 Terminal Table-16 rows after x=14 m have intentionally not been promoted to the machine contract until their 1524/1520 numerator/denominator endpoint semantics are rechecked. The source remains authoritative; the omission is conservative transcription, not a geometry fallback.
 
+### 5.4 Additional source-backed component closure for project 2976
+
+The first R65 fallback can now be meshed more specifically without inventing several component lengths:
+
+- S131, an official Dnipro Switch Plant metro-product table for the 2976Dn/2976 family, gives:
+  - stock/frame rail component length **12.500 m**;
+  - rotating point component length **8.300 m**;
+  - assembled frog component length **4.590 m**;
+  - total turnout length **31.035 m**;
+  - radii **300.00 / 200.06 m**.
+- The high-resolution drawing mirror S130 independently shows a point longitudinal projection callout **8298 mm**. Together with the source-backed point tip at x=2765 mm, this gives a fallback point-root longitudinal station **x≈11063 mm** from the front joint. This is a drawing reconstruction, not an installed-site coordinate.
+- S130 also shows a local **68.4 mm** callout at the point heel/root. It is stored only as a local point/stock-rail opening callout; it is **not** promoted to track-centerline offset.
+- S132, the official Dnipro component catalogue, links the 2976Dn metro turnout family to **SP-6** through fitting project **16760-00-00 / 16760Dn.00.000**, mass 132 kg. ATIZ S095 instead lists **16737-00-00** as optional equipment for project 2976. Because these public product sources conflict, the selected Belorusskaya point-machine/fitting project remains `null`.
+- S132 also dimensions the **SKL65 Dn436** turnout plate family: **370×165 mm**, support thickness **15 mm**, rib height **32 mm**, no rail-seat inclination.
+- The alternate SK65 package remains separate. S095 lists **117× SK65 GOST 16277-93**; current GOST S060 Fig.5 provides a cross-era dimensional confirmation of an SK65 mesh family: **370×165 mm**, four **Ø26** holes on **310×100 mm** centers, no rail inclination. This is a fallback geometry confirmation, not proof of the historical Belorusskaya plate.
+
+PCG rule: a fallback turnout selects **one** fastening/package variant. It must not combine the 117-piece SK65 package with the 208-piece SKL65 package.
+
 ## 6. Civil shell around turnout
 
 ### 6.1 Actual Belorusskaya

@@ -410,6 +410,50 @@ def _source_lining_extrados_vertex_keys(
         for i in range(1, len(vertices), 2)
     )
 
+
+def _source_lining_boundary_vertex_keys(
+    scene_object: SceneObject,
+    boundary: str,
+) -> frozenset[bytes]:
+    """Return source curved-mesh vertices on one topological boundary."""
+    props = scene_object.custom_properties
+    vertices = scene_object.vertices
+    nu = int(props.get("surfaceSubdivisions", 0))
+    nv = int(props.get("surfaceLongitudinalSubdivisions", 0))
+    expected_vertices = 2 * (nu + 1) * (nv + 1)
+    if (
+        scene_object.object_type != "lining_segment"
+        or nu <= 0
+        or nv <= 0
+        or len(vertices) != expected_vertices
+    ):
+        raise ValueError(
+            f"{scene_object.name}: invalid curved lining topology metadata"
+        )
+
+    def index(iv: int, iu: int, layer: int) -> int:
+        return 2 * (iv * (nu + 1) + iu) + layer
+
+    indices: list[int] = []
+    if boundary == "front":
+        for iu in range(nu + 1):
+            indices.extend((index(0, iu, 0), index(0, iu, 1)))
+    elif boundary == "back":
+        for iu in range(nu + 1):
+            indices.extend((index(nv, iu, 0), index(nv, iu, 1)))
+    elif boundary == "start":
+        for iv in range(nv + 1):
+            indices.extend((index(iv, 0, 0), index(iv, 0, 1)))
+    elif boundary == "end":
+        for iv in range(nv + 1):
+            indices.extend((index(iv, nu, 0), index(iv, nu, 1)))
+    else:
+        raise ValueError(f"unknown curved lining boundary: {boundary!r}")
+    return frozenset(
+        _float32_vertex_key(vertices[index])
+        for index in indices
+    )
+
 def _strip_internal_lining_caps_in_blender(
     bpy,
     package: ScenePackage,

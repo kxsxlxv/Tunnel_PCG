@@ -333,7 +333,14 @@ def plan_bolt_boolean_batches(
     return tuple(tuple(grouped[target]) for target in target_order)
 
 
-def _apply_boolean_difference(bpy, target, tool, *, modifier_name: str) -> None:
+def _apply_boolean_difference(
+    bpy,
+    target,
+    tool,
+    *,
+    modifier_name: str,
+    validate_mesh: bool = True,
+) -> None:
     modifier = target.modifiers.new(name=modifier_name, type="BOOLEAN")
     modifier.operation = "DIFFERENCE"
     if hasattr(modifier, "solver"):
@@ -364,7 +371,7 @@ def _apply_boolean_difference(bpy, target, tool, *, modifier_name: str) -> None:
         raise RuntimeError(
             f"Boolean DIFFERENCE cancelled: target={target.name!r}, tool={tool.name!r}"
         )
-    if hasattr(target.data, "validate"):
+    if validate_mesh and hasattr(target.data, "validate"):
         target.data.validate(verbose=False)
     if hasattr(target.data, "update"):
         target.data.update(calc_edges=True)
@@ -430,6 +437,7 @@ def _apply_stage6_bolt_booleans(
     package: ScenePackage,
     *,
     batch_pocket_cutters: bool = True,
+    validate_mesh: bool = True,
 ) -> tuple[int, int, tuple[str, ...]]:
     """Apply Stage-6 Booleans, batching production pocket cutters per segment.
 
@@ -497,6 +505,7 @@ def _apply_stage6_bolt_booleans(
                     f"TS_R{batch[0].ring_id:04d}_"
                     f"BATCH_{batch_index:04d}_bolt_pocket_cutters"
                 ),
+                validate_mesh=validate_mesh,
             )
             modifier_count += 1
 
@@ -524,6 +533,7 @@ def _apply_stage6_bolt_booleans(
             modifier_name=(
                 f"TS_R{op.ring_id:04d}_BOLT_{op.bolt_index:03d}_{op.tool_type}"
             ),
+            validate_mesh=validate_mesh,
         )
         modifier_count += 1
         if op.remove_tool_after:
@@ -1157,6 +1167,8 @@ def build_scene_package_in_blender(
     object_creation_seconds = time.perf_counter() - object_creation_started
     mesh_prototype_count = len(mesh_prototypes or {})
     root["meshPrototypeReuseEnabled"] = bool(reuse_mesh_prototypes)
+    root["meshValidationEnabled"] = bool(validate_mesh)
+    root["postBooleanMeshValidationEnabled"] = bool(validate_mesh)
     root["meshPrototypeCount"] = int(mesh_prototype_count)
     root["meshPrototypeInstanceCount"] = int(mesh_prototype_instance_count)
     root["sharedMeshDataBlocksSaved"] = int(
@@ -1176,6 +1188,7 @@ def build_scene_package_in_blender(
             bpy,
             package,
             batch_pocket_cutters=batch_bolt_pocket_booleans,
+            validate_mesh=validate_mesh,
         )
     boolean_seconds = time.perf_counter() - boolean_started
 

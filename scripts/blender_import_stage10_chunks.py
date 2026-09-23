@@ -49,9 +49,9 @@ def parse_args() -> argparse.Namespace:
         "--validate-meshes",
         action="store_true",
         help=(
-            "Run Blender Mesh.validate() on every generated object. Off by "
-            "default for trusted Tunnel_PCG ScenePackages because it is costly "
-            "on multi-chunk imports."
+            "Run Blender Mesh.validate() on every generated object and after "
+            "each applied Boolean. Off by default for trusted Tunnel_PCG "
+            "ScenePackages because it is costly on multi-chunk imports."
         ),
     )
     parser.add_argument(

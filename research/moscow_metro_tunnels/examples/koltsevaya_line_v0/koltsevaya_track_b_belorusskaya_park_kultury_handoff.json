@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.1",
+  "schema_version": "0.2",
   "research_date": "2026-09-23",
   "file_role": "geometry_runtime_handoff",
   "scope": {
@@ -1054,5 +1054,39 @@
     "S138": "Moscow_Metro_Pathfinder raw Overpass route snapshot, timestamp 2026-04-13T02:37:58Z.",
     "S139": "Moscow_Metro_Pathfinder raw connected subway ways snapshot, timestamp 2026-04-05T03:59:54Z.",
     "S140": "A. Z. Rubinov, Со служебного входа (1980), historical operational profile description for Krasnopresnenskaya → Kievskaya."
+  },
+  "geometry_test_vertical_fallback": {
+    "status": "SYNTHETIC_GEOMETRY_TEST_ONLY_NOT_AS_BUILT",
+    "rationale": "Requested to exercise geometry runtime with both curved XY and vertical relief even though engineering Z is unresolved.",
+    "source_truth_vertical_status": "Z_UNRESOLVED",
+    "profile_file": "koltsevaya_track_b_belorusskaya_park_kultury_geometry_test_profile.json",
+    "alignment_3d_geojson_file": "koltsevaya_track_b_belorusskaya_park_kultury_geometry_test_3d.geojson",
+    "xy_source": "S138 dated OSM Track-B snapshot",
+    "z_model": "Published station depths used only as relative stress-test anchors under an arbitrary flat-surface-zero assumption; S140 38‰ downhill constraint is imposed after Krasnopresnenskaya.",
+    "station_test_z_m": [
+      {
+        "station": "Белорусская",
+        "chainage_m": 0,
+        "z_test_m": -42.5
+      },
+      {
+        "station": "Краснопресненская",
+        "chainage_m": 1787.247,
+        "z_test_m": -35.5
+      },
+      {
+        "station": "Киевская",
+        "chainage_m": 3800.527,
+        "z_test_m": -53
+      },
+      {
+        "station": "Парк культуры",
+        "chainage_m": 5947.519,
+        "z_test_m": -40
+      }
+    ],
+    "maximum_abs_grade_permille": 38,
+    "minimum_vertical_curve_radius_approx_m": 5263.158,
+    "runtime_rule": "Use this preset for geometry integration/stress testing only. Never overwrite vertical_constraints.global.z_ugr_status=Z_UNRESOLVED and never export z_test_m as surveyed/as-built UGR."
   }
 }

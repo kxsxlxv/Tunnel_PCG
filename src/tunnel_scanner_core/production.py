@@ -17,7 +17,9 @@ geometry into an engine-oriented representation:
 from dataclasses import dataclass, field, replace
 from enum import Enum
 import hashlib
+import json
 import math
+from pathlib import Path
 from typing import Any, Callable, Iterator, Mapping, Sequence
 
 import numpy as np
@@ -253,10 +255,16 @@ class RailProfile:
 
 @dataclass(frozen=True)
 class AlignmentStation:
-    """Production alignment sample.
+    """Production alignment sample with an optional zero-roll 3D tangent frame.
 
-    chainage_m starts at the front face of the first ring. world_y_m keeps the
-    existing Stage-7 coordinate convention, where ring-0 centre is y=0.
+    The legacy Stage-7/9 contract stores the world-space centreline origin as
+    (offset_x_m, world_y_m, offset_z_m) and implicitly assumes a global +Y
+    tunnel tangent. tangent_world extends that contract without changing
+    existing callers: its default is exactly the legacy +Y direction.
+
+    Frame-aware geometry derives a right/up pair from tangent_world and the
+    global +Z gravity axis. This intentionally introduces pitch/yaw but no cant
+    or roll; a future surveyed-cant contract can extend the frame explicitly.
     """
 
     chainage_m: float
@@ -264,6 +272,265 @@ class AlignmentStation:
     offset_x_m: float
     offset_z_m: float
     source: str
+    tangent_world: tuple[float, float, float] = (0.0, 1.0, 0.0)
+
+
+def _normalize_vec3(
+    vector: Sequence[float],
+    *,
+    name: str,
+) -> tuple[float, float, float]:
+    if len(vector) != 3:
+        raise ValueError(f"{name} must contain three components")
+    x, y, z = (float(value) for value in vector)
+    norm = math.sqrt(x * x + y * y + z * z)
+    if not math.isfinite(norm) or norm <= 1e-15:
+        raise ValueError(f"{name} must be finite and non-zero")
+    return (x / norm, y / norm, z / norm)
+
+
+def alignment_station_origin(
+    station: AlignmentStation,
+) -> tuple[float, float, float]:
+    return (
+        float(station.offset_x_m),
+        float(station.world_y_m),
+        float(station.offset_z_m),
+    )
+
+
+def alignment_station_frame(
+    station: AlignmentStation,
+) -> tuple[
+    tuple[float, float, float],
+    tuple[float, float, float],
+    tuple[float, float, float],
+]:
+    """Return orthonormal (right, tangent, up) for one alignment sample."""
+    tangent = _normalize_vec3(station.tangent_world, name="alignment tangent")
+    tx, ty, tz = tangent
+
+    # right = tangent x global_up. For metro grades tangent can never be
+    # vertical, but keep a hard guard because a near-vertical route would make
+    # a zero-roll frame undefined.
+    rx, ry, rz = (ty, -tx, 0.0)
+    right_norm = math.hypot(rx, ry)
+    if right_norm <= 1e-9:
+        raise ValueError("zero-roll alignment frame undefined for vertical tangent")
+    right = (rx / right_norm, ry / right_norm, rz)
+
+    # up = right x tangent. This keeps +Z as close as possible to gravity while
+    # remaining exactly perpendicular to the 3D track tangent.
+    ux = right[1] * tz - right[2] * ty
+    uy = right[2] * tx - right[0] * tz
+    uz = right[0] * ty - right[1] * tx
+    up = _normalize_vec3((ux, uy, uz), name="alignment up")
+    return right, tangent, up
+
+
+def alignment_station_uses_identity_frame(
+    station: AlignmentStation,
+    *,
+    tolerance: float = 1e-12,
+) -> bool:
+    tx, ty, tz = _normalize_vec3(
+        station.tangent_world,
+        name="alignment tangent",
+    )
+    return (
+        abs(tx) <= tolerance
+        and abs(ty - 1.0) <= tolerance
+        and abs(tz) <= tolerance
+    )
+
+
+def transform_alignment_local_point(
+    station: AlignmentStation,
+    local_x_m: float,
+    local_y_m: float,
+    local_z_m: float,
+) -> Vec3:
+    """Map tunnel-local XYZ into the station zero-roll world frame."""
+    right, tangent, up = alignment_station_frame(station)
+    ox, oy, oz = alignment_station_origin(station)
+    x = float(local_x_m)
+    y = float(local_y_m)
+    z = float(local_z_m)
+    return (
+        ox + right[0] * x + tangent[0] * y + up[0] * z,
+        oy + right[1] * x + tangent[1] * y + up[1] * z,
+        oz + right[2] * x + tangent[2] * y + up[2] * z,
+    )
+
+
+def transform_alignment_cross_section_point(
+    station: AlignmentStation,
+    local_x_m: float,
+    local_z_m: float,
+) -> Vec3:
+    return transform_alignment_local_point(
+        station,
+        local_x_m,
+        0.0,
+        local_z_m,
+    )
+
+
+def _wgs84_ecef_at_zero_height(
+    lon_deg: float,
+    lat_deg: float,
+) -> tuple[float, float, float]:
+    """WGS84 geodetic lon/lat to ECEF at h=0 without external geo deps."""
+    a = 6378137.0
+    flattening = 1.0 / 298.257223563
+    e2 = flattening * (2.0 - flattening)
+    lon = math.radians(float(lon_deg))
+    lat = math.radians(float(lat_deg))
+    sin_lat = math.sin(lat)
+    cos_lat = math.cos(lat)
+    radius = a / math.sqrt(1.0 - e2 * sin_lat * sin_lat)
+    return (
+        radius * cos_lat * math.cos(lon),
+        radius * cos_lat * math.sin(lon),
+        radius * (1.0 - e2) * sin_lat,
+    )
+
+
+def _wgs84_lonlat_to_local_en(
+    lon_deg: float,
+    lat_deg: float,
+    *,
+    anchor_lon_deg: float,
+    anchor_lat_deg: float,
+    anchor_ecef: tuple[float, float, float],
+) -> tuple[float, float]:
+    x, y, z = _wgs84_ecef_at_zero_height(lon_deg, lat_deg)
+    dx = x - anchor_ecef[0]
+    dy = y - anchor_ecef[1]
+    dz = z - anchor_ecef[2]
+    lon0 = math.radians(anchor_lon_deg)
+    lat0 = math.radians(anchor_lat_deg)
+    sin_lon = math.sin(lon0)
+    cos_lon = math.cos(lon0)
+    sin_lat = math.sin(lat0)
+    cos_lat = math.cos(lat0)
+    east = -sin_lon * dx + cos_lon * dy
+    north = (
+        -sin_lat * cos_lon * dx
+        - sin_lat * sin_lon * dy
+        + cos_lat * dz
+    )
+    return float(east), float(north)
+
+
+def load_frame_alignment_geojson(
+    path: str | Path,
+    *,
+    expected_track_id: str | None = None,
+    expected_direction: str | None = None,
+) -> tuple[AlignmentStation, ...]:
+    """Load a 3D LineString alignment into local ENZ frame-aware stations.
+
+    GeoJSON X/Y are WGS84 longitude/latitude. They are converted to a local
+    east/north plane anchored at the first vertex, while the input third
+    coordinate is preserved literally as world Z. Chainage is read from the
+    feature vertex_chainage_m array rather than recomputed from geometry.
+    """
+    source_path = Path(path)
+    data = json.loads(source_path.read_text(encoding="utf-8"))
+    if data.get("type") != "FeatureCollection":
+        raise ValueError("alignment GeoJSON must be a FeatureCollection")
+    features = data.get("features")
+    if not isinstance(features, list) or len(features) != 1:
+        raise ValueError("alignment GeoJSON must contain exactly one feature")
+    feature = features[0]
+    geometry = feature.get("geometry", {})
+    if geometry.get("type") != "LineString":
+        raise ValueError("alignment feature must be a LineString")
+    coordinates = geometry.get("coordinates")
+    props = feature.get("properties", {})
+    chainages = props.get("vertex_chainage_m")
+    if not isinstance(coordinates, list) or len(coordinates) < 2:
+        raise ValueError("alignment LineString must contain at least two vertices")
+    if not isinstance(chainages, list) or len(chainages) != len(coordinates):
+        raise ValueError("vertex_chainage_m must match LineString vertex count")
+    if expected_track_id is not None and props.get("track_id") != expected_track_id:
+        raise ValueError(
+            f"alignment track_id {props.get('track_id')!r} does not match "
+            f"{expected_track_id!r}"
+        )
+    if expected_direction is not None and props.get("direction") != expected_direction:
+        raise ValueError(
+            f"alignment direction {props.get('direction')!r} does not match "
+            f"{expected_direction!r}"
+        )
+
+    parsed_coordinates: list[tuple[float, float, float]] = []
+    for index, coordinate in enumerate(coordinates):
+        if not isinstance(coordinate, (list, tuple)) or len(coordinate) < 3:
+            raise ValueError(f"alignment vertex {index} is not 3D")
+        lon, lat, z = (float(coordinate[i]) for i in range(3))
+        if not all(math.isfinite(value) for value in (lon, lat, z)):
+            raise ValueError(f"alignment vertex {index} is non-finite")
+        parsed_coordinates.append((lon, lat, z))
+
+    resolved_chainages = tuple(float(value) for value in chainages)
+    if not math.isclose(resolved_chainages[0], 0.0, abs_tol=1e-9):
+        raise ValueError("external alignment chainage must start at zero")
+    if any(
+        b <= a
+        for a, b in zip(resolved_chainages, resolved_chainages[1:])
+    ):
+        raise ValueError("external alignment chainage must be strictly increasing")
+
+    anchor_lon, anchor_lat, _anchor_z = parsed_coordinates[0]
+    anchor_ecef = _wgs84_ecef_at_zero_height(anchor_lon, anchor_lat)
+    origins: list[tuple[float, float, float]] = []
+    for lon, lat, z in parsed_coordinates:
+        east, north = _wgs84_lonlat_to_local_en(
+            lon,
+            lat,
+            anchor_lon_deg=anchor_lon,
+            anchor_lat_deg=anchor_lat,
+            anchor_ecef=anchor_ecef,
+        )
+        origins.append((east, north, z))
+
+    tangents: list[tuple[float, float, float]] = []
+    for index in range(len(origins)):
+        if index == 0:
+            a = origins[0]
+            b = origins[1]
+        elif index == len(origins) - 1:
+            a = origins[-2]
+            b = origins[-1]
+        else:
+            a = origins[index - 1]
+            b = origins[index + 1]
+        tangents.append(
+            _normalize_vec3(
+                (
+                    b[0] - a[0],
+                    b[1] - a[1],
+                    b[2] - a[2],
+                ),
+                name=f"alignment tangent at vertex {index}",
+            )
+        )
+
+    return tuple(
+        AlignmentStation(
+            chainage_m=chainage,
+            world_y_m=origin[1],
+            offset_x_m=origin[0],
+            offset_z_m=origin[2],
+            source=f"external_geojson:{source_path.name}:vertex_{index:04d}",
+            tangent_world=tangents[index],
+        )
+        for index, (chainage, origin) in enumerate(
+            zip(resolved_chainages, origins)
+        )
+    )
 
 
 def production_alignment_stations(

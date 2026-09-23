@@ -1,0 +1,1024 @@
+{
+  "schema_version": "0.1",
+  "research_date": "2026-09-23",
+  "file_role": "geometry_runtime_handoff",
+  "scope": {
+    "line": "Moscow Metro Line 5 / Кольцевая линия",
+    "track_id": "KOLTSEVAYA_TRACK_B",
+    "operational_track_number": "II",
+    "ring_position": "outer",
+    "direction": "counterclockwise",
+    "osm_route_relation_id": 1462011,
+    "segment_station_sequence": [
+      "Белорусская",
+      "Краснопресненская",
+      "Киевская",
+      "Парк культуры"
+    ],
+    "segment_boundary_rule": "Boundaries are the OSM route-member stop_position vertices on the physical Track-B graph in S138; no station-coordinate spline clipping is used.",
+    "segment_length_osm_plan_m": 5947.519,
+    "source_crs": "EPSG:4326",
+    "engineering_z_status": "Z_UNRESOLVED"
+  },
+  "status_vocabulary": {
+    "KNOWN": "Direct source-backed fact suitable as a semantic/runtime constraint within the stated source/era scope.",
+    "CONSTRAINED": "Bound to a dated OSM-derived snapshot, qualitative source, or incomplete evidence; must not be promoted to current/as-built truth.",
+    "UNKNOWN": "Not established. Runtime must not reconstruct or infer a value silently."
+  },
+  "acquisition_status": {
+    "current_relation_identity": {
+      "status": "KNOWN",
+      "relation_id": 1462011,
+      "current_version_observed": 62,
+      "current_member_count_observed": 35,
+      "source_id": "S137"
+    },
+    "current_relation_full_bytes": {
+      "status": "UNKNOWN",
+      "bytes_acquired": false,
+      "source_endpoint_exists": true,
+      "research_runtime_result": "BLOCKED_BY_CLIENT_CONTENT_TYPE_LIMITATION_FOR_APPLICATION_XML",
+      "rule": "Do not claim current exact member way IDs, member indices, or raw way node refs until relation/full XML or a current Moscow PBF is ingested."
+    },
+    "dated_osm_snapshot": {
+      "status": "CONSTRAINED",
+      "source_id": "S138",
+      "timestamp": "2026-04-13T02:37:58Z",
+      "generator": "overpass-turbo",
+      "relation_member_railway_subway_way_ids_snapshot": [
+        96969622,
+        98185029,
+        99370462,
+        99370487,
+        103056955,
+        370614074,
+        370614076,
+        1086757198,
+        1456057581
+      ],
+      "continuous_track_b_loop_way_order_snapshot": [
+        370614074,
+        99370462,
+        1456057581,
+        99370487,
+        98185029,
+        1086757198,
+        96969622,
+        103056955,
+        370614076
+      ],
+      "relation_member_roles_for_these_ways": "empty string in S138",
+      "relation_member_indices": null,
+      "relation_member_indices_status": "UNKNOWN_GEOJSON_EXPORT_DOES_NOT_PRESERVE_RELATION_MEMBER_ORDER",
+      "raw_way_node_refs": null,
+      "raw_way_node_refs_status": "UNKNOWN_GEOJSON_EXPORT_DOES_NOT_PRESERVE_OSM_ND_REFS"
+    }
+  },
+  "mainline_edges": [
+    {
+      "sequence": 0,
+      "edge_id": "KOLTSEVAYA_TRACK_B_OSM_SNAPSHOT_WAY_1086757198",
+      "classification": "MAINLINE_TRACK_B",
+      "knowledge_status": "CONSTRAINED",
+      "osm_way_id_snapshot": 1086757198,
+      "osm_way_id_current": null,
+      "osm_way_id_current_status": "UNKNOWN",
+      "route_relation_id": 1462011,
+      "snapshot_member_role": "",
+      "snapshot_member_index": null,
+      "snapshot_member_index_status": "UNKNOWN_GEOJSON_EXPORT_DOES_NOT_PRESERVE_RELATION_MEMBER_ORDER",
+      "current_member_index": null,
+      "current_member_index_status": "UNKNOWN_CURRENT_RELATION_FULL_NOT_ACQUIRED",
+      "preferred_direction": "forward",
+      "direction_interpretation": "snapshot way forward direction is continuous with KOLTSEVAYA_TRACK_B counterclockwise chain",
+      "source_id": "S138",
+      "source_snapshot_timestamp": "2026-04-13T02:37:58Z",
+      "geometry_status": "CONSTRAINED_OSM_SNAPSHOT",
+      "vertex_slice": {
+        "from_way_vertex_index": 0,
+        "to_way_vertex_index": 2,
+        "uses_full_way": true
+      },
+      "chainage_start_m": 0,
+      "chainage_end_m": 241.207,
+      "length_m": 241.207,
+      "osm_node_refs": null,
+      "osm_node_refs_status": "UNKNOWN_GEOJSON_EXPORT_PRESERVES_COORDINATES_NOT_RAW_WAY_NODE_REFS",
+      "wgs84_vertices": [
+        [
+          37.5839267,
+          55.7762207
+        ],
+        [
+          37.5826878,
+          55.7755319
+        ],
+        [
+          37.5811847,
+          55.7746952
+        ]
+      ]
+    },
+    {
+      "sequence": 1,
+      "edge_id": "KOLTSEVAYA_TRACK_B_OSM_SNAPSHOT_WAY_96969622",
+      "classification": "MAINLINE_TRACK_B",
+      "knowledge_status": "CONSTRAINED",
+      "osm_way_id_snapshot": 96969622,
+      "osm_way_id_current": null,
+      "osm_way_id_current_status": "UNKNOWN",
+      "route_relation_id": 1462011,
+      "snapshot_member_role": "",
+      "snapshot_member_index": null,
+      "snapshot_member_index_status": "UNKNOWN_GEOJSON_EXPORT_DOES_NOT_PRESERVE_RELATION_MEMBER_ORDER",
+      "current_member_index": null,
+      "current_member_index_status": "UNKNOWN_CURRENT_RELATION_FULL_NOT_ACQUIRED",
+      "preferred_direction": "forward",
+      "direction_interpretation": "snapshot way forward direction is continuous with KOLTSEVAYA_TRACK_B counterclockwise chain",
+      "source_id": "S138",
+      "source_snapshot_timestamp": "2026-04-13T02:37:58Z",
+      "geometry_status": "CONSTRAINED_OSM_SNAPSHOT",
+      "vertex_slice": {
+        "from_way_vertex_index": 0,
+        "to_way_vertex_index": 10,
+        "uses_full_way": true
+      },
+      "chainage_start_m": 241.207,
+      "chainage_end_m": 1999.65,
+      "length_m": 1758.442,
+      "osm_node_refs": null,
+      "osm_node_refs_status": "UNKNOWN_GEOJSON_EXPORT_PRESERVES_COORDINATES_NOT_RAW_WAY_NODE_REFS",
+      "wgs84_vertices": [
+        [
+          37.5811847,
+          55.7746952
+        ],
+        [
+          37.5805766,
+          55.7742936
+        ],
+        [
+          37.5800415,
+          55.7738605
+        ],
+        [
+          37.5795847,
+          55.7734003
+        ],
+        [
+          37.5792102,
+          55.772917
+        ],
+        [
+          37.5789216,
+          55.7724152
+        ],
+        [
+          37.5787218,
+          55.7718997
+        ],
+        [
+          37.5786129,
+          55.7713759
+        ],
+        [
+          37.5772286,
+          55.7620364
+        ],
+        [
+          37.5771167,
+          55.7611984
+        ],
+        [
+          37.5768267,
+          55.7592952
+        ]
+      ]
+    },
+    {
+      "sequence": 2,
+      "edge_id": "KOLTSEVAYA_TRACK_B_OSM_SNAPSHOT_WAY_103056955",
+      "classification": "MAINLINE_TRACK_B",
+      "knowledge_status": "CONSTRAINED",
+      "osm_way_id_snapshot": 103056955,
+      "osm_way_id_current": null,
+      "osm_way_id_current_status": "UNKNOWN",
+      "route_relation_id": 1462011,
+      "snapshot_member_role": "",
+      "snapshot_member_index": null,
+      "snapshot_member_index_status": "UNKNOWN_GEOJSON_EXPORT_DOES_NOT_PRESERVE_RELATION_MEMBER_ORDER",
+      "current_member_index": null,
+      "current_member_index_status": "UNKNOWN_CURRENT_RELATION_FULL_NOT_ACQUIRED",
+      "preferred_direction": "forward",
+      "direction_interpretation": "snapshot way forward direction is continuous with KOLTSEVAYA_TRACK_B counterclockwise chain",
+      "source_id": "S138",
+      "source_snapshot_timestamp": "2026-04-13T02:37:58Z",
+      "geometry_status": "CONSTRAINED_OSM_SNAPSHOT",
+      "vertex_slice": {
+        "from_way_vertex_index": 0,
+        "to_way_vertex_index": 9,
+        "uses_full_way": true
+      },
+      "chainage_start_m": 1999.65,
+      "chainage_end_m": 3504.023,
+      "length_m": 1504.373,
+      "osm_node_refs": null,
+      "osm_node_refs_status": "UNKNOWN_GEOJSON_EXPORT_PRESERVES_COORDINATES_NOT_RAW_WAY_NODE_REFS",
+      "wgs84_vertices": [
+        [
+          37.5768267,
+          55.7592952
+        ],
+        [
+          37.5766666,
+          55.7587761
+        ],
+        [
+          37.5764247,
+          55.7582677
+        ],
+        [
+          37.5761028,
+          55.7577731
+        ],
+        [
+          37.5757149,
+          55.757309
+        ],
+        [
+          37.575343,
+          55.7569428
+        ],
+        [
+          37.567151,
+          55.7493252
+        ],
+        [
+          37.5665638,
+          55.7487039
+        ],
+        [
+          37.5660876,
+          55.7480532
+        ],
+        [
+          37.5657275,
+          55.7473799
+        ]
+      ]
+    },
+    {
+      "sequence": 3,
+      "edge_id": "KOLTSEVAYA_TRACK_B_OSM_SNAPSHOT_WAY_370614076",
+      "classification": "MAINLINE_TRACK_B",
+      "knowledge_status": "CONSTRAINED",
+      "osm_way_id_snapshot": 370614076,
+      "osm_way_id_current": null,
+      "osm_way_id_current_status": "UNKNOWN",
+      "route_relation_id": 1462011,
+      "snapshot_member_role": "",
+      "snapshot_member_index": null,
+      "snapshot_member_index_status": "UNKNOWN_GEOJSON_EXPORT_DOES_NOT_PRESERVE_RELATION_MEMBER_ORDER",
+      "current_member_index": null,
+      "current_member_index_status": "UNKNOWN_CURRENT_RELATION_FULL_NOT_ACQUIRED",
+      "preferred_direction": "forward",
+      "direction_interpretation": "snapshot way forward direction is continuous with KOLTSEVAYA_TRACK_B counterclockwise chain",
+      "source_id": "S138",
+      "source_snapshot_timestamp": "2026-04-13T02:37:58Z",
+      "geometry_status": "CONSTRAINED_OSM_SNAPSHOT",
+      "vertex_slice": {
+        "from_way_vertex_index": 0,
+        "to_way_vertex_index": 4,
+        "uses_full_way": true
+      },
+      "chainage_start_m": 3504.023,
+      "chainage_end_m": 3999.761,
+      "length_m": 495.739,
+      "osm_node_refs": null,
+      "osm_node_refs_status": "UNKNOWN_GEOJSON_EXPORT_PRESERVES_COORDINATES_NOT_RAW_WAY_NODE_REFS",
+      "wgs84_vertices": [
+        [
+          37.5657275,
+          55.7473799
+        ],
+        [
+          37.5654862,
+          55.7466895
+        ],
+        [
+          37.5653664,
+          55.7459886
+        ],
+        [
+          37.5653063,
+          55.7447303
+        ],
+        [
+          37.5652137,
+          55.7429393
+        ]
+      ]
+    },
+    {
+      "sequence": 4,
+      "edge_id": "KOLTSEVAYA_TRACK_B_OSM_SNAPSHOT_WAY_370614074",
+      "classification": "MAINLINE_TRACK_B",
+      "knowledge_status": "CONSTRAINED",
+      "osm_way_id_snapshot": 370614074,
+      "osm_way_id_current": null,
+      "osm_way_id_current_status": "UNKNOWN",
+      "route_relation_id": 1462011,
+      "snapshot_member_role": "",
+      "snapshot_member_index": null,
+      "snapshot_member_index_status": "UNKNOWN_GEOJSON_EXPORT_DOES_NOT_PRESERVE_RELATION_MEMBER_ORDER",
+      "current_member_index": null,
+      "current_member_index_status": "UNKNOWN_CURRENT_RELATION_FULL_NOT_ACQUIRED",
+      "preferred_direction": "forward",
+      "direction_interpretation": "snapshot way forward direction is continuous with KOLTSEVAYA_TRACK_B counterclockwise chain",
+      "source_id": "S138",
+      "source_snapshot_timestamp": "2026-04-13T02:37:58Z",
+      "geometry_status": "CONSTRAINED_OSM_SNAPSHOT",
+      "vertex_slice": {
+        "from_way_vertex_index": 0,
+        "to_way_vertex_index": 31,
+        "uses_full_way": false
+      },
+      "chainage_start_m": 3999.761,
+      "chainage_end_m": 5947.519,
+      "length_m": 1947.757,
+      "osm_node_refs": null,
+      "osm_node_refs_status": "UNKNOWN_GEOJSON_EXPORT_PRESERVES_COORDINATES_NOT_RAW_WAY_NODE_REFS",
+      "wgs84_vertices": [
+        [
+          37.5652137,
+          55.7429393
+        ],
+        [
+          37.5652104,
+          55.7426828
+        ],
+        [
+          37.5652398,
+          55.7424255
+        ],
+        [
+          37.5653244,
+          55.7421014
+        ],
+        [
+          37.5654588,
+          55.7417875
+        ],
+        [
+          37.565642,
+          55.7414828
+        ],
+        [
+          37.5658524,
+          55.7412121
+        ],
+        [
+          37.5661433,
+          55.7409131
+        ],
+        [
+          37.566492,
+          55.7406244
+        ],
+        [
+          37.566951,
+          55.7403186
+        ],
+        [
+          37.5674974,
+          55.7400295
+        ],
+        [
+          37.5680112,
+          55.7398118
+        ],
+        [
+          37.5685267,
+          55.7396349
+        ],
+        [
+          37.569012,
+          55.7395003
+        ],
+        [
+          37.569388,
+          55.7394149
+        ],
+        [
+          37.5697974,
+          55.7393391
+        ],
+        [
+          37.5702933,
+          55.7392697
+        ],
+        [
+          37.5707069,
+          55.7392295
+        ],
+        [
+          37.5709679,
+          55.7392122
+        ],
+        [
+          37.5712083,
+          55.7392016
+        ],
+        [
+          37.5726732,
+          55.7391702
+        ],
+        [
+          37.5738942,
+          55.7391441
+        ],
+        [
+          37.5746039,
+          55.7391185
+        ],
+        [
+          37.5754838,
+          55.7390521
+        ],
+        [
+          37.5762089,
+          55.7389676
+        ],
+        [
+          37.5842924,
+          55.7377266
+        ],
+        [
+          37.5847445,
+          55.7376514
+        ],
+        [
+          37.5856325,
+          55.7374731
+        ],
+        [
+          37.5864948,
+          55.7372583
+        ],
+        [
+          37.5873267,
+          55.7370081
+        ],
+        [
+          37.589517,
+          55.7362774
+        ],
+        [
+          37.5911968,
+          55.7357183
+        ]
+      ]
+    }
+  ],
+  "ordered_node_ids": {
+    "status": "UNKNOWN",
+    "complete_ordered_raw_osm_node_ref_list": null,
+    "reason": "S138 contains exact WGS84 vertices and tagged node features but not each way's raw OSM nd/ref list; current relation/full/PBF was not acquired.",
+    "known_tagged_node_anchors_in_track_b_order": [
+      {
+        "node_id": 6937381513,
+        "type": "STOP_POSITION",
+        "name": "Белорусская",
+        "chainage_m": 0
+      },
+      {
+        "node_id": 309744783,
+        "type": "RAILWAY_SWITCH",
+        "ref": "2",
+        "chainage_m": 108.947
+      },
+      {
+        "node_id": 1398729304,
+        "type": "RAILWAY_SWITCH",
+        "ref": "2",
+        "chainage_m": 1693.803
+      },
+      {
+        "node_id": 6937381516,
+        "type": "STOP_POSITION",
+        "name": "Краснопресненская",
+        "chainage_m": 1787.247
+      },
+      {
+        "node_id": 6937381518,
+        "type": "STOP_POSITION",
+        "name": "Киевская",
+        "chainage_m": 3800.527
+      },
+      {
+        "node_id": 1189903147,
+        "type": "RAILWAY_SWITCH",
+        "ref": "4",
+        "chainage_m": 4711.933
+      },
+      {
+        "node_id": 4038142918,
+        "type": "RAILWAY_SWITCH",
+        "ref": "2",
+        "chainage_m": 5825.355
+      },
+      {
+        "node_id": 6937381520,
+        "type": "STOP_POSITION",
+        "name": "Парк культуры",
+        "chainage_m": 5947.519
+      }
+    ],
+    "rule": "Do not manufacture OSM node IDs by coordinate matching."
+  },
+  "station_events": [
+    {
+      "event_id": "STATION_KOL5_BELORUSSKAYA_TRACK_B",
+      "station": "Белорусская",
+      "main_track": "KOLTSEVAYA_TRACK_B",
+      "operational_track_number": "II",
+      "direction": "counterclockwise",
+      "knowledge_status": "CONSTRAINED",
+      "snapshot_osm_stop_position_node_id": 6937381513,
+      "current_osm_stop_position_node_id": null,
+      "current_osm_node_status": "UNKNOWN_CURRENT_RELATION_FULL_NOT_ACQUIRED",
+      "wgs84": [
+        37.5839267,
+        55.7762207
+      ],
+      "actual_snapshot_main_track_binding": {
+        "osm_way_id_snapshot": 1086757198,
+        "way_vertex_index": 0,
+        "binding": "OUTGOING_EDGE_START_VERTEX",
+        "exact_vertex_match": true,
+        "status": "CONSTRAINED_EXACT_ON_2026_04_13_OSM_SNAPSHOT_MAIN_TRACK_VERTEX"
+      },
+      "track_b_osm_plan_chainage_m": 0,
+      "chainage_origin": "Belorusskaya Track-B OSM stop_position node in the same snapshot",
+      "chainage_status": "CONSTRAINED_OSM_PLAN_CHAINAGE_NOT_ENGINEERING_PK",
+      "published_station_pk_context": {
+        "value": "ПК132+72.3",
+        "source_id": "S086",
+        "relative_distance_from_belorusskaya_by_pk_m": 0,
+        "osm_plan_minus_pk_relative_m": 0,
+        "status": "KNOWN_STATION_REFERENCE_PK_NOT_SWITCH_OR_CURVE_ELEMENT_CHAINAGE"
+      },
+      "coordinate_semantics": {
+        "public_station_anchor_used": false,
+        "osm_stop_position_used": true,
+        "note": "This snapshot point is an OSM public_transport=stop_position / railway=stop member located exactly on the physical route-member railway=subway vertex. It is not a surveyed as-built track-axis point.",
+        "status": "CONSTRAINED"
+      }
+    },
+    {
+      "event_id": "STATION_KOL5_KRASNOPRESNENSKAYA_TRACK_B",
+      "station": "Краснопресненская",
+      "main_track": "KOLTSEVAYA_TRACK_B",
+      "operational_track_number": "II",
+      "direction": "counterclockwise",
+      "knowledge_status": "CONSTRAINED",
+      "snapshot_osm_stop_position_node_id": 6937381516,
+      "current_osm_stop_position_node_id": null,
+      "current_osm_node_status": "UNKNOWN_CURRENT_RELATION_FULL_NOT_ACQUIRED",
+      "wgs84": [
+        37.5771167,
+        55.7611984
+      ],
+      "actual_snapshot_main_track_binding": {
+        "osm_way_id_snapshot": 96969622,
+        "way_vertex_index": 9,
+        "binding": "WAY_VERTEX",
+        "exact_vertex_match": true,
+        "status": "CONSTRAINED_EXACT_ON_2026_04_13_OSM_SNAPSHOT_MAIN_TRACK_VERTEX"
+      },
+      "track_b_osm_plan_chainage_m": 1787.247,
+      "chainage_origin": "Belorusskaya Track-B OSM stop_position node in the same snapshot",
+      "chainage_status": "CONSTRAINED_OSM_PLAN_CHAINAGE_NOT_ENGINEERING_PK",
+      "published_station_pk_context": {
+        "value": "ПК115+08.2",
+        "source_id": "S087",
+        "relative_distance_from_belorusskaya_by_pk_m": 1764.1,
+        "osm_plan_minus_pk_relative_m": 23.147,
+        "status": "KNOWN_STATION_REFERENCE_PK_NOT_SWITCH_OR_CURVE_ELEMENT_CHAINAGE"
+      },
+      "coordinate_semantics": {
+        "public_station_anchor_used": false,
+        "osm_stop_position_used": true,
+        "note": "This snapshot point is an OSM public_transport=stop_position / railway=stop member located exactly on the physical route-member railway=subway vertex. It is not a surveyed as-built track-axis point.",
+        "status": "CONSTRAINED"
+      }
+    },
+    {
+      "event_id": "STATION_KOL5_KIEVSKAYA_TRACK_B",
+      "station": "Киевская",
+      "main_track": "KOLTSEVAYA_TRACK_B",
+      "operational_track_number": "II",
+      "direction": "counterclockwise",
+      "knowledge_status": "CONSTRAINED",
+      "snapshot_osm_stop_position_node_id": 6937381518,
+      "current_osm_stop_position_node_id": null,
+      "current_osm_node_status": "UNKNOWN_CURRENT_RELATION_FULL_NOT_ACQUIRED",
+      "wgs84": [
+        37.5653063,
+        55.7447303
+      ],
+      "actual_snapshot_main_track_binding": {
+        "osm_way_id_snapshot": 370614076,
+        "way_vertex_index": 3,
+        "binding": "WAY_VERTEX",
+        "exact_vertex_match": true,
+        "status": "CONSTRAINED_EXACT_ON_2026_04_13_OSM_SNAPSHOT_MAIN_TRACK_VERTEX"
+      },
+      "track_b_osm_plan_chainage_m": 3800.527,
+      "chainage_origin": "Belorusskaya Track-B OSM stop_position node in the same snapshot",
+      "chainage_status": "CONSTRAINED_OSM_PLAN_CHAINAGE_NOT_ENGINEERING_PK",
+      "published_station_pk_context": {
+        "value": "ПК94+20.6",
+        "source_id": "S113",
+        "relative_distance_from_belorusskaya_by_pk_m": 3851.7,
+        "osm_plan_minus_pk_relative_m": -51.173,
+        "status": "KNOWN_STATION_REFERENCE_PK_NOT_SWITCH_OR_CURVE_ELEMENT_CHAINAGE"
+      },
+      "coordinate_semantics": {
+        "public_station_anchor_used": false,
+        "osm_stop_position_used": true,
+        "note": "This snapshot point is an OSM public_transport=stop_position / railway=stop member located exactly on the physical route-member railway=subway vertex. It is not a surveyed as-built track-axis point.",
+        "status": "CONSTRAINED"
+      }
+    },
+    {
+      "event_id": "STATION_KOL5_PARK_KULTURY_TRACK_B",
+      "station": "Парк культуры",
+      "main_track": "KOLTSEVAYA_TRACK_B",
+      "operational_track_number": "II",
+      "direction": "counterclockwise",
+      "knowledge_status": "CONSTRAINED",
+      "snapshot_osm_stop_position_node_id": 6937381520,
+      "current_osm_stop_position_node_id": null,
+      "current_osm_node_status": "UNKNOWN_CURRENT_RELATION_FULL_NOT_ACQUIRED",
+      "wgs84": [
+        37.5911968,
+        55.7357183
+      ],
+      "actual_snapshot_main_track_binding": {
+        "osm_way_id_snapshot": 370614074,
+        "way_vertex_index": 31,
+        "binding": "WAY_VERTEX",
+        "exact_vertex_match": true,
+        "status": "CONSTRAINED_EXACT_ON_2026_04_13_OSM_SNAPSHOT_MAIN_TRACK_VERTEX"
+      },
+      "track_b_osm_plan_chainage_m": 5947.519,
+      "chainage_origin": "Belorusskaya Track-B OSM stop_position node in the same snapshot",
+      "chainage_status": "CONSTRAINED_OSM_PLAN_CHAINAGE_NOT_ENGINEERING_PK",
+      "published_station_pk_context": {
+        "value": "ПК73+26.8",
+        "source_id": "S091",
+        "relative_distance_from_belorusskaya_by_pk_m": 5945.5,
+        "osm_plan_minus_pk_relative_m": 2.019,
+        "status": "KNOWN_STATION_REFERENCE_PK_NOT_SWITCH_OR_CURVE_ELEMENT_CHAINAGE"
+      },
+      "coordinate_semantics": {
+        "public_station_anchor_used": false,
+        "osm_stop_position_used": true,
+        "note": "This snapshot point is an OSM public_transport=stop_position / railway=stop member located exactly on the physical route-member railway=subway vertex. It is not a surveyed as-built track-axis point.",
+        "status": "CONSTRAINED"
+      }
+    }
+  ],
+  "junction_events": [
+    {
+      "event_id": "JUNCTION_KOL5_BELORUSSKAYA_DEPOT_WEST",
+      "event_type": "TURNOUT_DIVERGENCE_CHAMBER_SYSTEM",
+      "main_track": "KOLTSEVAYA_TRACK_B",
+      "operational_track_number": "II",
+      "mainline_continuation": "Track B counterclockwise toward Краснопресненская; snapshot mainline way 1086757198 continues into way 96969622",
+      "branch_side": "left",
+      "branch_side_status": "KNOWN_SOURCE_BACKED_RELATIVE_TO_TRACK_B_DIRECTION",
+      "semantic_source_ids": [
+        "S084",
+        "S086",
+        "S093",
+        "S120",
+        "S134"
+      ],
+      "snapshot_switch_node_id": 309744783,
+      "snapshot_switch_ref": "2",
+      "wgs84": [
+        37.5826878,
+        55.7755319
+      ],
+      "exact_xy_status": "CONSTRAINED_OSM_SNAPSHOT_MATCH_NOT_CURRENT_ENGINEERING_XY",
+      "track_b_osm_plan_chainage_m": 108.947,
+      "chainage_status": "CONSTRAINED_OSM_PLAN_CHAINAGE_NOT_ENGINEERING_PK",
+      "physical_graph_degree_gt_2": null,
+      "physical_graph_degree_status": "UNKNOWN_AVAILABLE_CONNECTED-WAYS_SNAPSHOT_IS_8_DAYS_OLDER_AND_DOES_NOT_EXPOSE_A_THIRD_EDGE_AT_THIS_NODE",
+      "branch_edge_ids_current": null,
+      "geometry_status": "CONSTRAINED_SEMANTICS_PLUS_SNAPSHOT_SWITCH_BINDING; ACTUAL_BRANCH_EDGE_AND_INSTALLED_TURNOUT_PROJECT_UNKNOWN",
+      "civil_geometry_status": "KNOWN_LOCAL_MATERIAL_CLASS_ONLY: S093 cast-iron tubing chamber + monolithic reinforced-concrete end wall; dimensions unresolved",
+      "knowledge_status": "CONSTRAINED"
+    },
+    {
+      "event_id": "JUNCTION_KOL5_KRASNOPRESNENSKAYA_TRACK_B_SWITCH_REF2",
+      "event_type": "TURNBACK_DEPOT_CROSSOVER_SYSTEM_SWITCH",
+      "main_track": "KOLTSEVAYA_TRACK_B",
+      "operational_track_number": "II",
+      "mainline_continuation": "Track B counterclockwise on snapshot way 96969622 toward way 103056955",
+      "branch_side": null,
+      "branch_side_status": "UNKNOWN",
+      "semantic_source_ids": [
+        "S084",
+        "S087",
+        "S098",
+        "S120",
+        "S134"
+      ],
+      "snapshot_switch_node_id": 1398729304,
+      "snapshot_switch_ref": "2",
+      "wgs84": [
+        37.5772286,
+        55.7620364
+      ],
+      "exact_xy_status": "CONSTRAINED_OSM_SNAPSHOT_NOT_CURRENT_ENGINEERING_XY",
+      "track_b_osm_plan_chainage_m": 1693.803,
+      "chainage_status": "CONSTRAINED_OSM_PLAN_CHAINAGE_NOT_ENGINEERING_PK",
+      "physical_graph_degree_gt_2": true,
+      "physical_graph_degree_status": "CONSTRAINED_MINIMUM_DEGREE_3_FROM_S138_MAINLINE_INTERIOR_PLUS_S139_CONNECTED_CROSSOVER_EDGE",
+      "connected_off_main_edge": {
+        "osm_way_id_snapshot": 429982507,
+        "classification": "CROSSOVER_CANDIDATE",
+        "railway": "subway",
+        "service": "crossover",
+        "usage": "main",
+        "source_id": "S139",
+        "status": "CONSTRAINED_OSM_TAGGED_PHYSICAL_EDGE_NOT_FULL_SEMANTIC_DECOMPOSITION"
+      },
+      "geometry_status": "CONSTRAINED_SNAPSHOT_SWITCH_AND_CROSSOVER_EDGE; FULL_DEPOT/TURNBACK_SWITCH_SEQUENCE_UNKNOWN",
+      "knowledge_status": "CONSTRAINED"
+    },
+    {
+      "event_id": "JUNCTION_KOL5_PARK_KULTURY_SWITCH_REF4",
+      "event_type": "TURNBACK_SSV_SYSTEM_SWITCH",
+      "main_track": "KOLTSEVAYA_TRACK_B",
+      "operational_track_number": "II",
+      "mainline_continuation": "Track B counterclockwise along snapshot way 370614074 toward Парк культуры",
+      "branch_side": null,
+      "branch_side_status": "UNKNOWN_RELATIVE_TO_TRACK_B; S105 ONLY_STATES_RIGHT_IN_PHOTOGRAPHED_ORIENTATION",
+      "photo_orientation_branch_side": "right",
+      "semantic_source_ids": [
+        "S085",
+        "S091",
+        "S105",
+        "S134"
+      ],
+      "snapshot_switch_node_id": 1189903147,
+      "snapshot_switch_ref": "4",
+      "wgs84": [
+        37.5726732,
+        55.7391702
+      ],
+      "exact_xy_status": "CONSTRAINED_OSM_SNAPSHOT_IDENTITY_MATCH_TO_SOURCE_SWITCH_NUMBER_NOT_CURRENT_ENGINEERING_XY",
+      "track_b_osm_plan_chainage_m": 4711.933,
+      "chainage_status": "CONSTRAINED_OSM_PLAN_CHAINAGE_NOT_ENGINEERING_PK",
+      "physical_graph_degree_gt_2": null,
+      "physical_graph_degree_status": "UNKNOWN_CONNECTED-WAYS_SNAPSHOT_DOES_NOT_RESOLVE_THE_BRANCH_AT_THIS_LATER_RELATION-SNAPSHOT_SWITCH",
+      "geometry_status": "CONSTRAINED_SOURCE_SWITCH_NUMBER_PLUS_SNAPSHOT_BINDING; BRANCH_EDGE_AND_EXACT_HAND_UNKNOWN",
+      "knowledge_status": "CONSTRAINED"
+    },
+    {
+      "event_id": "JUNCTION_KOL5_PARK_KULTURY_SWITCH_REF2",
+      "event_type": "TURNBACK_SSV_SYSTEM_SWITCH_UNRESOLVED_ROLE",
+      "main_track": "KOLTSEVAYA_TRACK_B",
+      "operational_track_number": "II",
+      "mainline_continuation": "Track B counterclockwise along snapshot way 370614074 to Парк культуры",
+      "branch_side": null,
+      "branch_side_status": "UNKNOWN",
+      "semantic_source_ids": [
+        "S085",
+        "S091"
+      ],
+      "snapshot_switch_node_id": 4038142918,
+      "snapshot_switch_ref": "2",
+      "wgs84": [
+        37.589517,
+        55.7362774
+      ],
+      "exact_xy_status": "CONSTRAINED_OSM_SNAPSHOT_NOT_CURRENT_ENGINEERING_XY",
+      "track_b_osm_plan_chainage_m": 5825.355,
+      "chainage_status": "CONSTRAINED_OSM_PLAN_CHAINAGE_NOT_ENGINEERING_PK",
+      "physical_graph_degree_gt_2": null,
+      "physical_graph_degree_status": "UNKNOWN_CONNECTED-WAYS_SNAPSHOT_DOES_NOT_RESOLVE_THE_BRANCH_AT_THIS_LATER_RELATION-SNAPSHOT_SWITCH",
+      "geometry_status": "CONSTRAINED_SWITCH_PRESENCE_AND_REF; SEMANTIC_ROLE_IN_5-TURNOUT_SYSTEM_UNKNOWN",
+      "knowledge_status": "CONSTRAINED"
+    },
+    {
+      "event_id": "NO_JUNCTION_KOL5_KIEVSKAYA_CURRENT",
+      "event_type": "NO_CURRENT_STATION_TRACK_DEVELOPMENT",
+      "main_track": "KOLTSEVAYA_TRACK_B",
+      "mainline_continuation": "continuous Track B through Киевская",
+      "branch_side": null,
+      "branch_side_status": "NOT_APPLICABLE",
+      "semantic_source_ids": [
+        "S113"
+      ],
+      "exact_xy_status": "NOT_APPLICABLE_TO_JUNCTION; station stop_position has separate CONSTRAINED snapshot binding",
+      "chainage_status": "NOT_APPLICABLE_TO_JUNCTION; station event chainage available separately",
+      "geometry_status": "KNOWN_SOURCE_BACKED_NO_CURRENT_STATION_TRACK_DEVELOPMENT",
+      "knowledge_status": "KNOWN"
+    }
+  ],
+  "horizontal_provenance": {
+    "geometry_authority_for_this_handoff": {
+      "status": "CONSTRAINED",
+      "source_id": "S138",
+      "method": "dated OSM/Overpass route-member physical railway=subway geometry",
+      "priority": "FALLBACK_PLAN_GEOMETRY_UNTIL_PROJECT_OR_SURVEY_ALIGNMENT_IS_OBTAINED",
+      "explicit_rule": "OSM XY is a plan approximation only; it is not as-built/survey geometry."
+    },
+    "real_station_pk_anchors": {
+      "status": "KNOWN",
+      "semantics": "published station reference PK context; not curve tangent points, switch chainages, or proof of a shared chainage origin between all documents",
+      "anchors": [
+        {
+          "station": "Белорусская",
+          "pk": "ПК132+72.3",
+          "source_id": "S086"
+        },
+        {
+          "station": "Краснопресненская",
+          "pk": "ПК115+08.2",
+          "source_id": "S087"
+        },
+        {
+          "station": "Киевская",
+          "pk": "ПК94+20.6",
+          "source_id": "S113"
+        },
+        {
+          "station": "Парк культуры",
+          "pk": "ПК73+26.8",
+          "source_id": "S091"
+        }
+      ]
+    },
+    "osm_plan_vs_station_pk_diagnostic": {
+      "status": "CONSTRAINED_DIAGNOSTIC_ONLY",
+      "rows": [
+        {
+          "station": "Белорусская",
+          "osm_plan_chainage_from_belorusskaya_m": 0,
+          "station_pk_relative_distance_from_belorusskaya_m": 0,
+          "residual_osm_minus_pk_m": 0
+        },
+        {
+          "station": "Краснопресненская",
+          "osm_plan_chainage_from_belorusskaya_m": 1787.247,
+          "station_pk_relative_distance_from_belorusskaya_m": 1764.1,
+          "residual_osm_minus_pk_m": 23.147
+        },
+        {
+          "station": "Киевская",
+          "osm_plan_chainage_from_belorusskaya_m": 3800.527,
+          "station_pk_relative_distance_from_belorusskaya_m": 3851.7,
+          "residual_osm_minus_pk_m": -51.173
+        },
+        {
+          "station": "Парк культуры",
+          "osm_plan_chainage_from_belorusskaya_m": 5947.519,
+          "station_pk_relative_distance_from_belorusskaya_m": 5945.5,
+          "residual_osm_minus_pk_m": 2.019
+        }
+      ],
+      "rule": "Do not warp OSM vertices to force these residuals to zero."
+    },
+    "plan_curve_elements": {
+      "status": "UNKNOWN",
+      "plan_radii_m": null,
+      "tangent_points_pk": null,
+      "transition_curve_parameters": null,
+      "search_result": "No source-backed radius/tangent/curve-element table for the three requested interstation runs was located in the research corpus/search.",
+      "source_priority_if_later_acquired": [
+        "as-built/project plan or LandXML",
+        "dimensioned engineering plan/profile",
+        "OSM physical XY approximation"
+      ]
+    }
+  },
+  "vertical_constraints": {
+    "global": {
+      "z_ugr_status": "Z_UNRESOLVED",
+      "absolute_z_m": null,
+      "vertical_datum": null,
+      "station_depth_use_rule": "FORBIDDEN_AS_UGR",
+      "note": "Published station depth values are not used as rail-head/UGR elevations."
+    },
+    "runs": [
+      {
+        "from": "Белорусская",
+        "to": "Краснопресненская",
+        "main_track": "KOLTSEVAYA_TRACK_B",
+        "status": "UNKNOWN",
+        "z_ugr_status": "Z_UNRESOLVED",
+        "grade_per_mille": null,
+        "exact_vertical_curve_pk": null,
+        "note": "No source-backed numerical Track-II UGR/grade interval located for this run."
+      },
+      {
+        "from": "Краснопресненская",
+        "to": "Киевская",
+        "main_track": "KOLTSEVAYA_TRACK_B",
+        "status": "CONSTRAINED",
+        "z_ugr_status": "Z_UNRESOLVED",
+        "source_id": "S140",
+        "constraints": [
+          {
+            "location_semantics": "immediately after Краснопресненская in the Краснопресненская → Киевская direction",
+            "grade_magnitude_per_mille": 38,
+            "direction": "downhill in Track-B counterclockwise travel",
+            "signed_grade_per_mille_under_positive_z_up_runtime_convention": -38,
+            "exact_start_chainage_m": null,
+            "exact_end_chainage_m": null,
+            "status": "KNOWN_MAGNITUDE_AND_DIRECTION_FROM_HISTORICAL_OPERATIONAL_TEXT; CHAINAGE_UNKNOWN"
+          },
+          {
+            "location_semantics": "approach toward Киевская",
+            "grade_magnitude_per_mille": null,
+            "direction": "uphill in Track-B travel",
+            "status": "CONSTRAINED_QUALITATIVE_ONLY"
+          }
+        ],
+        "exact_vertical_curve_pk": null,
+        "note": "This constrains local slope direction/magnitude only. It does not resolve UGR, absolute Z, or the grade break chainages."
+      },
+      {
+        "from": "Киевская",
+        "to": "Парк культуры",
+        "main_track": "KOLTSEVAYA_TRACK_B",
+        "status": "UNKNOWN",
+        "z_ugr_status": "Z_UNRESOLVED",
+        "grade_per_mille": null,
+        "exact_vertical_curve_pk": null,
+        "note": "No source-backed numerical Track-II UGR/grade interval located for this run."
+      }
+    ],
+    "excluded_non_main_track_evidence": {
+      "source_id": "S121",
+      "object": "Краснопресненская-side depot branch profile fragment",
+      "exclusion_reason": "Branch crown/profile data are not Track-B main-II UGR and must not be transferred to this mainline vertical alignment."
+    }
+  },
+  "civil_lining_constraints": {
+    "running_tunnel_longitudinal_family": {
+      "status": "UNKNOWN",
+      "source_backed_family_changes_on_requested_three_runs": null,
+      "note": "No source-backed longitudinal lining-family zoning for the Track-B running tunnels on these three interstation runs was located."
+    },
+    "local_known_exception": {
+      "event_id": "JUNCTION_KOL5_BELORUSSKAYA_DEPOT_WEST",
+      "status": "KNOWN_LOCAL_MATERIAL_CLASS",
+      "source_id": "S093",
+      "facts": [
+        "turnout/crossover chamber uses cast-iron tubings",
+        "end wall is monolithic reinforced concrete"
+      ],
+      "transfer_rule": "Local junction material evidence does not prove the lining family of adjacent running tunnels."
+    },
+    "first_geometry_test_archetype": {
+      "archetype_id": "rc_block_6100_5600",
+      "status": "CONSTRAINED_GEOMETRY_TEST_SELECTION_NOT_AS_BUILT_CLAIM",
+      "allowed_use": "first geometry integration run",
+      "forbidden_claim": "Do not label the whole Белорусская → Парк культуры Track-B segment as proven continuous rc_block_6100_5600 lining."
+    }
+  },
+  "geojson_file": "koltsevaya_track_b_belorusskaya_park_kultury_physical.geojson",
+  "unknowns": [
+    "Current relation/1462011/full member XML bytes.",
+    "Current exact railway=subway member way IDs and current member indices.",
+    "Complete ordered current OSM node IDs/raw nd refs for the requested segment.",
+    "Current graph degree and exact connected branch edges for switch nodes 309744783, 1189903147 and 4038142918.",
+    "Exact current Belorusskaya depot-branch OSM way/node IDs.",
+    "Exact Park Kultury branch/crossover edge decomposition and branch side relative to Track B.",
+    "Engineering/as-built XY and engineering chainage of all junction points.",
+    "Plan curve radii, tangent PKs and transition-curve parameters on all three requested interstation runs.",
+    "UGR/absolute Z and exact grade-break/vertical-curve PKs; only the local 38‰ Track-B-direction constraint after Krasnopresnenskaya is source-backed.",
+    "Longitudinal running-tunnel lining-family zoning across the requested segment."
+  ],
+  "provenance_sources": {
+    "S086": "NashTransport Belorusskaya Line 5 page; station PK and track development.",
+    "S087": "NashTransport Krasnopresnenskaya Line 5 page; station PK and track development.",
+    "S091": "NashTransport Park Kultury Line 5 page; station PK and track development.",
+    "S093": "Metrostroy historical photo/caption for Belorusskaya tunnel junction.",
+    "S105": "Park Kultury actual-site photo caption for switch No.4 / Sokolnicheskaya SSV.",
+    "S113": "NashTransport Kievskaya Line 5 page; no current station track development and station PK.",
+    "S121": "Krasnopresnenskaya-side depot branch project/profile fragment; explicitly excluded from main Track-B vertical alignment.",
+    "S134": "1983 Moscow Metro engineering collection; inner/outer direction and two single-track Krasnaya Presnya depot branches.",
+    "S137": "Current OpenStreetMap relation 1462011 page checked 2026-09-23.",
+    "S138": "Moscow_Metro_Pathfinder raw Overpass route snapshot, timestamp 2026-04-13T02:37:58Z.",
+    "S139": "Moscow_Metro_Pathfinder raw connected subway ways snapshot, timestamp 2026-04-05T03:59:54Z.",
+    "S140": "A. Z. Rubinov, Со служебного входа (1980), historical operational profile description for Krasnopresnenskaya → Kievskaya."
+  }
+}

@@ -460,7 +460,12 @@ def _strip_internal_lining_caps_in_blender(
     *,
     tolerance_m: float = 1e-8,
 ) -> int:
-    """Post-Boolean realtime cleanup of hidden internal ring end faces."""
+    """Post-Boolean cleanup of hidden internal ring end faces.
+
+    Transferred Moscow RC segments are classified from their source curved-mesh
+    topology, so cleanup remains exact after arbitrary 3D route yaw/pitch.
+    Legacy Stage-9 scenes retain the historical global-Y plane classifier.
+    """
     try:
         import bmesh  # type: ignore
     except ImportError as exc:  # pragma: no cover - Blender runtime only
@@ -469,13 +474,16 @@ def _strip_internal_lining_caps_in_blender(
     if "ringWidthM" not in package.metadata:
         raise ValueError("scene metadata lacks ringWidthM for lining cap cleanup")
     ring_width_m = float(package.metadata["ringWidthM"])
-    lining_objects = [o for o in package.objects if o.object_type == "lining_segment"]
+    lining_objects = [
+        obj for obj in package.objects
+        if obj.object_type == "lining_segment"
+    ]
     if not lining_objects:
         return 0
     global_ring_count = int(
         package.metadata.get(
             "ringCount",
-            max(o.ring_id for o in lining_objects) + 1,
+            max(obj.ring_id for obj in lining_objects) + 1,
         )
     )
     global_max_ring_id = global_ring_count - 1
@@ -488,76 +496,83 @@ def _strip_internal_lining_caps_in_blender(
                 f"lining object missing during cap cleanup: {scene_object.name}"
             )
         props = scene_object.custom_properties
-        origin_y = (
-            float(props.get("chunkWorldOriginY", 0.0))
-            if bool(props.get("coordinatesLocalizedToChunk", False))
-            else 0.0
+        transferred_moscow = bool(
+            props.get(
+                "stage9SegmentJointFastenerArchitectureTransferred",
+                False,
+            )
         )
-        if (
-            "liningRingFrontWorldYM" in props
-            and "liningRingBackWorldYM" in props
-        ):
-            front_y = float(props["liningRingFrontWorldYM"]) - origin_y
-            back_y = float(props["liningRingBackWorldYM"]) - origin_y
-            lining_ring_index = int(
-                props.get("liningRingIndex", scene_object.ring_id)
-            )
-            lining_ring_count = int(
-                props.get("liningGlobalRingCount", global_ring_count)
-            )
-            strip_front = lining_ring_index > 0
-            strip_back = lining_ring_index < lining_ring_count - 1
-        else:
-            front_y = (scene_object.ring_id - 0.5) * ring_width_m - origin_y
-            back_y = (scene_object.ring_id + 0.5) * ring_width_m - origin_y
-            strip_front = scene_object.ring_id > 0
-            strip_back = scene_object.ring_id < global_max_ring_id
+        lining_ring_index = int(
+            props.get("liningRingIndex", scene_object.ring_id)
+        )
+        lining_ring_count = int(
+            props.get("liningGlobalRingCount", global_ring_count)
+        )
+        strip_front = lining_ring_index > 0
+        strip_back = lining_ring_index < lining_ring_count - 1
 
         bm = bmesh.new()
         bm.from_mesh(obj.data)
-
-        # The Moscow RC Stage-9 architecture transfer uses its own 1.0 m
-        # civil-ring rhythm over the source assembly's 1.35 m longitudinal
-        # frame. Exact Blender Booleans can also perturb vertices on an end
-        # plane by a few floating-point ulps. For those transferred objects,
-        # classify the cap against the *actual* post-Boolean Y extrema, while
-        # retaining the metadata planes as a sanity check. The legacy Stage-9
-        # path keeps its original exact-plane behaviour.
-        transferred_moscow = bool(
-            props.get("stage9SegmentJointFastenerArchitectureTransferred", False)
-        )
-        cap_tolerance_m = tolerance_m
-        target_front_y = front_y
-        target_back_y = back_y
-        if transferred_moscow and bm.verts:
-            actual_front_y = min(float(vertex.co.y) for vertex in bm.verts)
-            actual_back_y = max(float(vertex.co.y) for vertex in bm.verts)
-            metadata_tolerance_m = 1e-4
-            if abs(actual_front_y - front_y) > metadata_tolerance_m:
-                raise RuntimeError(
-                    f"{scene_object.name}: Moscow lining front plane mismatch "
-                    f"(mesh={actual_front_y:.9f}, metadata={front_y:.9f})"
-                )
-            if abs(actual_back_y - back_y) > metadata_tolerance_m:
-                raise RuntimeError(
-                    f"{scene_object.name}: Moscow lining back plane mismatch "
-                    f"(mesh={actual_back_y:.9f}, metadata={back_y:.9f})"
-                )
-            target_front_y = actual_front_y
-            target_back_y = actual_back_y
-            cap_tolerance_m = max(tolerance_m, 1e-6)
-
         remove = []
-        for face in bm.faces:
-            ys = [float(vertex.co.y) for vertex in face.verts]
-            on_front = strip_front and all(
-                abs(y - target_front_y) <= cap_tolerance_m for y in ys
+
+        if transferred_moscow:
+            front_keys = _source_lining_boundary_vertex_keys(
+                scene_object,
+                "front",
             )
-            on_back = strip_back and all(
-                abs(y - target_back_y) <= cap_tolerance_m for y in ys
+            back_keys = _source_lining_boundary_vertex_keys(
+                scene_object,
+                "back",
             )
-            if on_front or on_back:
-                remove.append(face)
+            for face in bm.faces:
+                keys = tuple(
+                    _float32_vertex_key(
+                        (
+                            float(vertex.co.x),
+                            float(vertex.co.y),
+                            float(vertex.co.z),
+                        )
+                    )
+                    for vertex in face.verts
+                )
+                if (
+                    (strip_front and all(key in front_keys for key in keys))
+                    or (strip_back and all(key in back_keys for key in keys))
+                ):
+                    remove.append(face)
+            cleanup_mode = "source_curved_mesh_end_vertex_topology_v1"
+        else:
+            origin_y = (
+                float(props.get("chunkWorldOriginY", 0.0))
+                if bool(props.get("coordinatesLocalizedToChunk", False))
+                else 0.0
+            )
+            if (
+                "liningRingFrontWorldYM" in props
+                and "liningRingBackWorldYM" in props
+            ):
+                front_y = float(props["liningRingFrontWorldYM"]) - origin_y
+                back_y = float(props["liningRingBackWorldYM"]) - origin_y
+            else:
+                front_y = (
+                    (scene_object.ring_id - 0.5) * ring_width_m - origin_y
+                )
+                back_y = (
+                    (scene_object.ring_id + 0.5) * ring_width_m - origin_y
+                )
+                strip_front = scene_object.ring_id > 0
+                strip_back = scene_object.ring_id < global_max_ring_id
+            for face in bm.faces:
+                ys = [float(vertex.co.y) for vertex in face.verts]
+                on_front = strip_front and all(
+                    abs(y - front_y) <= tolerance_m for y in ys
+                )
+                on_back = strip_back and all(
+                    abs(y - back_y) <= tolerance_m for y in ys
+                )
+                if on_front or on_back:
+                    remove.append(face)
+            cleanup_mode = "legacy_metadata_y_plane"
 
         for face in remove:
             bm.faces.remove(face)
@@ -569,11 +584,7 @@ def _strip_internal_lining_caps_in_blender(
         obj["internalLongitudinalCapsStripped"] = True
         obj["longitudinalCapFacesRemoved"] = int(removed)
         obj["renderSurfaceOpenAtInternalRingBoundaries"] = True
-        obj["liningCapCleanupPlaneMode"] = (
-            "post_boolean_mesh_extrema_with_metadata_guard"
-            if transferred_moscow
-            else "legacy_metadata_plane"
-        )
+        obj["liningCapCleanupPlaneMode"] = cleanup_mode
 
     return removed_total
 

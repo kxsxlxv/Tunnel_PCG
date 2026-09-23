@@ -1755,23 +1755,39 @@ def test_stage10_5_periodic_assets_declare_exact_reusable_mesh_prototypes():
     instances_by_key = {}
     for obj in objects:
         props = obj.custom_properties
-        assert props["meshPrototypeMode"] == "translation_only_shared_mesh_v1"
+        assert props["meshPrototypeMode"] == "rigid_transform_shared_mesh_v2"
         assert props["meshPrototypeGeometryExact"] is True
         assert props["meshPrototypeLiDARSurfaceUnchanged"] is True
+        assert props["meshPrototypeReuseEligible"] is True
+        assert props["meshClusterEligible"] is True
+        assert props["meshClusterStatic"] is True
         assert int(props["meshPrototypeVertexCount"]) == len(obj.vertices)
         assert int(props["meshPrototypeFaceCount"]) == len(obj.faces)
 
-        translation = tuple(float(v) for v in props["meshPrototypeTranslationM"])
-        assert translation == (
+        transform = tuple(
+            float(v) for v in props["meshPrototypeTransformMatrix4x4"]
+        )
+        assert len(transform) == 16
+        assert (
+            transform[3],
+            transform[7],
+            transform[11],
+        ) == (
             float(props["alignmentOffsetX"]),
             float(props["alignmentWorldY"]),
             float(props["alignmentOffsetZ"]),
         )
         local = tuple(
             (
-                vertex[0] - translation[0],
-                vertex[1] - translation[1],
-                vertex[2] - translation[2],
+                transform[0] * (vertex[0] - transform[3])
+                + transform[4] * (vertex[1] - transform[7])
+                + transform[8] * (vertex[2] - transform[11]),
+                transform[1] * (vertex[0] - transform[3])
+                + transform[5] * (vertex[1] - transform[7])
+                + transform[9] * (vertex[2] - transform[11]),
+                transform[2] * (vertex[0] - transform[3])
+                + transform[6] * (vertex[1] - transform[7])
+                + transform[10] * (vertex[2] - transform[11]),
             )
             for vertex in obj.vertices
         )
@@ -1924,7 +1940,9 @@ def test_stage10_5_rc_chunk_first_accepts_frame_aware_external_alignment():
     lvt = first.objects_of_type("production_lvt_block")
     assert lvt
     assert all(
-        obj.custom_properties["meshPrototypeReuseEligible"] is False
+        obj.custom_properties["meshPrototypeReuseEligible"] is True
+        and obj.custom_properties["meshPrototypeMode"]
+        == "rigid_transform_shared_mesh_v2"
         for obj in lvt
     )
     assert all(

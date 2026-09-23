@@ -178,7 +178,7 @@ def _set_custom_properties(blender_object, properties: dict[str, Any]) -> None:
 
 def _mesh_prototype_payload(
     scene_object: SceneObject,
-) -> tuple[str, tuple[float, float, float], tuple[tuple[float, float, float], ...]] | None:
+) -> tuple[str, tuple[float, ...], tuple[tuple[float, float, float], ...]] | None:
     """Backward-compatible private alias for the engine-neutral prototype helper."""
     return scene_object_mesh_prototype_payload(scene_object)
 
@@ -200,9 +200,9 @@ def create_blender_object(
     if prototype is None:
         mesh = bpy.data.meshes.new(f"{scene_object.name}_MESH")
         mesh.from_pydata(scene_object.vertices, [], scene_object.faces)
-        object_translation = None
+        object_transform = None
     else:
-        prototype_key, object_translation, local_vertices = prototype
+        prototype_key, object_transform, local_vertices = prototype
         mesh = mesh_prototypes.get(prototype_key)
         if mesh is None:
             mesh = bpy.data.meshes.new(f"{scene_object.name}_PROTO_MESH")
@@ -218,8 +218,33 @@ def create_blender_object(
         mesh.update(calc_edges=True)
 
     obj = bpy.data.objects.new(scene_object.name, mesh)
-    if object_translation is not None:
-        obj.location = object_translation
+    if object_transform is not None:
+        linear = (
+            object_transform[0], object_transform[1], object_transform[2],
+            object_transform[4], object_transform[5], object_transform[6],
+            object_transform[8], object_transform[9], object_transform[10],
+        )
+        identity = (1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)
+        translation = (
+            object_transform[3],
+            object_transform[7],
+            object_transform[11],
+        )
+        if all(abs(a - b) <= 1e-12 for a, b in zip(linear, identity)):
+            obj.location = translation
+        else:
+            rows = (
+                tuple(object_transform[0:4]),
+                tuple(object_transform[4:8]),
+                tuple(object_transform[8:12]),
+                tuple(object_transform[12:16]),
+            )
+            try:
+                from mathutils import Matrix  # type: ignore
+            except ImportError:
+                obj.matrix_world = rows
+            else:
+                obj.matrix_world = Matrix(rows)
     collection.objects.link(obj)
     _set_custom_properties(obj, scene_object.custom_properties)
     return obj

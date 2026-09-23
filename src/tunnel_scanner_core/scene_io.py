@@ -15,7 +15,8 @@ from .scene import (
 
 
 SCENE_SCHEMA_VERSION = 1
-PROTOTYPE_SCENE_SCHEMA_VERSION = 2
+LEGACY_PROTOTYPE_SCENE_SCHEMA_VERSION = 2
+PROTOTYPE_SCENE_SCHEMA_VERSION = 3
 _MAX_PROTOTYPE_RECONSTRUCTION_ERROR_M = 1e-9
 
 
@@ -55,7 +56,7 @@ def scene_package_to_dict(
             data["vertices"] = obj.vertices
             data["faces"] = obj.faces
         else:
-            prototype_key, translation, local_vertices = prototype
+            prototype_key, transform, local_vertices = prototype
             stored = mesh_prototypes.get(prototype_key)
             if stored is None:
                 stored = {
@@ -99,8 +100,12 @@ def scene_package_to_dict(
                 (
                     max(
                         abs(
-                            reference[index]
-                            + translation[index]
+                            (
+                                transform[4 * index + 0] * reference[0]
+                                + transform[4 * index + 1] * reference[1]
+                                + transform[4 * index + 2] * reference[2]
+                                + transform[4 * index + 3]
+                            )
                             - world[index]
                         )
                         for index in range(3)
@@ -124,7 +129,7 @@ def scene_package_to_dict(
             )
             prototype_instance_count += 1
             data["meshPrototypeRef"] = prototype_key
-            data["meshTranslationM"] = translation
+            data["meshTransformMatrix4x4"] = transform
 
         if include_custom_properties:
             # Retained by default for schema/backward compatibility. The field
@@ -149,7 +154,7 @@ def scene_package_to_dict(
     }
     if prototype_instances:
         result["geometryEncoding"] = {
-            "mode": "translation_mesh_prototypes_v1",
+            "mode": "rigid_transform_mesh_prototypes_v2",
             "prototypeCount": len(mesh_prototypes),
             "prototypeInstanceCount": prototype_instance_count,
             "maxReconstructionErrorM": max_reconstruction_error_m,
@@ -204,6 +209,7 @@ def scene_package_from_dict(data: dict[str, Any]) -> ScenePackage:
     schema_version = int(data.get("schemaVersion", -1))
     if schema_version not in {
         SCENE_SCHEMA_VERSION,
+        LEGACY_PROTOTYPE_SCENE_SCHEMA_VERSION,
         PROTOTYPE_SCENE_SCHEMA_VERSION,
     }:
         raise ValueError(
@@ -241,20 +247,43 @@ def scene_package_from_dict(data: dict[str, Any]) -> ScenePackage:
                 raise ValueError(
                     f"unknown mesh prototype reference: {prototype_ref!r}"
                 ) from exc
-            raw_translation = raw.get("meshTranslationM")
-            if (
-                not isinstance(raw_translation, (list, tuple))
-                or len(raw_translation) != 3
-            ):
-                raise ValueError(
-                    f"{raw.get('name', '<unnamed>')}: prototype instance "
-                    "requires meshTranslationM[3]"
+            raw_transform = raw.get("meshTransformMatrix4x4")
+            if raw_transform is not None:
+                if (
+                    not isinstance(raw_transform, (list, tuple))
+                    or len(raw_transform) != 16
+                ):
+                    raise ValueError(
+                        f"{raw.get('name', '<unnamed>')}: prototype instance "
+                        "requires meshTransformMatrix4x4[16]"
+                    )
+                transform = tuple(float(value) for value in raw_transform)
+                vertices = tuple(
+                    (
+                        transform[0] * x + transform[1] * y
+                        + transform[2] * z + transform[3],
+                        transform[4] * x + transform[5] * y
+                        + transform[6] * z + transform[7],
+                        transform[8] * x + transform[9] * y
+                        + transform[10] * z + transform[11],
+                    )
+                    for x, y, z in local_vertices
                 )
-            tx, ty, tz = (float(value) for value in raw_translation)
-            vertices = tuple(
-                (x + tx, y + ty, z + tz)
-                for x, y, z in local_vertices
-            )
+            else:
+                raw_translation = raw.get("meshTranslationM")
+                if (
+                    not isinstance(raw_translation, (list, tuple))
+                    or len(raw_translation) != 3
+                ):
+                    raise ValueError(
+                        f"{raw.get('name', '<unnamed>')}: prototype instance "
+                        "requires meshTransformMatrix4x4[16] or meshTranslationM[3]"
+                    )
+                tx, ty, tz = (float(value) for value in raw_translation)
+                vertices = tuple(
+                    (x + tx, y + ty, z + tz)
+                    for x, y, z in local_vertices
+                )
 
         objects.append(
             SceneObject(

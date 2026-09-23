@@ -108,38 +108,109 @@ class SceneObject:
 
 
 
+def _mesh_prototype_transform_matrix(
+    scene_object: SceneObject,
+) -> tuple[float, ...] | None:
+    """Return a row-major local-to-world rigid transform for a prototype."""
+    props = scene_object.extra_properties
+    if props.get("meshPrototypeKey") is None:
+        return None
+    mode = props.get("meshPrototypeMode")
+    if mode == "translation_only_shared_mesh_v1":
+        raw_translation = props.get("meshPrototypeTranslationM")
+        if (
+            not isinstance(raw_translation, (list, tuple))
+            or len(raw_translation) != 3
+        ):
+            raise ValueError(
+                f"{scene_object.name}: meshPrototypeTranslationM must contain 3 values"
+            )
+        tx, ty, tz = (float(value) for value in raw_translation)
+        matrix = (
+            1.0, 0.0, 0.0, tx,
+            0.0, 1.0, 0.0, ty,
+            0.0, 0.0, 1.0, tz,
+            0.0, 0.0, 0.0, 1.0,
+        )
+    elif mode == "rigid_transform_shared_mesh_v2":
+        raw_matrix = props.get("meshPrototypeTransformMatrix4x4")
+        if (
+            not isinstance(raw_matrix, (list, tuple))
+            or len(raw_matrix) != 16
+        ):
+            raise ValueError(
+                f"{scene_object.name}: meshPrototypeTransformMatrix4x4 "
+                "must contain 16 row-major values"
+            )
+        matrix = tuple(float(value) for value in raw_matrix)
+    else:
+        raise ValueError(
+            f"{scene_object.name}: unsupported meshPrototypeMode {mode!r}"
+        )
+
+    if not all(math.isfinite(value) for value in matrix):
+        raise ValueError(f"{scene_object.name}: non-finite mesh prototype transform")
+    if any(
+        abs(actual - expected) > 1e-10
+        for actual, expected in zip(matrix[12:16], (0.0, 0.0, 0.0, 1.0))
+    ):
+        raise ValueError(f"{scene_object.name}: prototype transform is not affine")
+
+    axes = (
+        (matrix[0], matrix[4], matrix[8]),
+        (matrix[1], matrix[5], matrix[9]),
+        (matrix[2], matrix[6], matrix[10]),
+    )
+    for axis in axes:
+        if abs(sum(value * value for value in axis) - 1.0) > 1e-8:
+            raise ValueError(
+                f"{scene_object.name}: prototype transform rotation is not unit"
+            )
+    for i in range(3):
+        for j in range(i + 1, 3):
+            if abs(sum(axes[i][k] * axes[j][k] for k in range(3))) > 1e-8:
+                raise ValueError(
+                    f"{scene_object.name}: prototype transform rotation is not orthogonal"
+                )
+
+    if bool(props.get("coordinatesLocalizedToChunk", False)):
+        values = list(matrix)
+        values[3] -= float(props.get("chunkWorldOriginX", 0.0))
+        values[7] -= float(props.get("chunkWorldOriginY", 0.0))
+        values[11] -= float(props.get("chunkWorldOriginZ", 0.0))
+        matrix = tuple(values)
+    return matrix
+
+
+def _inverse_rigid_transform_point(
+    matrix: tuple[float, ...],
+    point: tuple[float, float, float],
+) -> tuple[float, float, float]:
+    dx = float(point[0]) - matrix[3]
+    dy = float(point[1]) - matrix[7]
+    dz = float(point[2]) - matrix[11]
+    return (
+        matrix[0] * dx + matrix[4] * dy + matrix[8] * dz,
+        matrix[1] * dx + matrix[5] * dy + matrix[9] * dz,
+        matrix[2] * dx + matrix[6] * dy + matrix[10] * dz,
+    )
+
+
 def scene_object_mesh_prototype_payload(
     scene_object: SceneObject,
 ) -> tuple[
     str,
-    tuple[float, float, float],
+    tuple[float, ...],
     tuple[tuple[float, float, float], ...],
 ] | None:
-    """Recover a declared translation-only prototype in the object's coordinates."""
+    """Recover a declared exact shared mesh plus its rigid instance transform."""
     props = scene_object.extra_properties
     key = props.get("meshPrototypeKey")
     if key is None:
         return None
-    if props.get("meshPrototypeMode") != "translation_only_shared_mesh_v1":
-        raise ValueError(
-            f"{scene_object.name}: unsupported meshPrototypeMode "
-            f"{props.get('meshPrototypeMode')!r}"
-        )
-    raw_translation = props.get("meshPrototypeTranslationM")
-    if (
-        not isinstance(raw_translation, (list, tuple))
-        or len(raw_translation) != 3
-    ):
-        raise ValueError(
-            f"{scene_object.name}: meshPrototypeTranslationM must contain 3 values"
-        )
-    tx, ty, tz = (float(value) for value in raw_translation)
-    if bool(props.get("coordinatesLocalizedToChunk", False)):
-        tx -= float(props.get("chunkWorldOriginX", 0.0))
-        ty -= float(props.get("chunkWorldOriginY", 0.0))
-        tz -= float(props.get("chunkWorldOriginZ", 0.0))
-    if not all(math.isfinite(value) for value in (tx, ty, tz)):
-        raise ValueError(f"{scene_object.name}: non-finite mesh prototype translation")
+    matrix = _mesh_prototype_transform_matrix(scene_object)
+    if matrix is None:
+        return None
 
     expected_vertices = int(
         props.get("meshPrototypeVertexCount", len(scene_object.vertices))
@@ -157,10 +228,10 @@ def scene_object_mesh_prototype_payload(
         )
 
     local_vertices = tuple(
-        (float(x) - tx, float(y) - ty, float(z) - tz)
-        for x, y, z in scene_object.vertices
+        _inverse_rigid_transform_point(matrix, vertex)
+        for vertex in scene_object.vertices
     )
-    return str(key), (tx, ty, tz), local_vertices
+    return str(key), matrix, local_vertices
 
 
 @dataclass(frozen=True)

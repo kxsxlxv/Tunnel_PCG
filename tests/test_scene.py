@@ -188,9 +188,9 @@ def test_prototype_scene_json_compacts_stage10_periodic_geometry(tmp_path):
     standard_data = json.loads(standard_path.read_text())
     prototype_data = json.loads(prototype_path.read_text())
     assert standard_data["schemaVersion"] == 1
-    assert prototype_data["schemaVersion"] == 2
+    assert prototype_data["schemaVersion"] == 3
     encoding = prototype_data["geometryEncoding"]
-    assert encoding["mode"] == "translation_mesh_prototypes_v1"
+    assert encoding["mode"] == "rigid_transform_mesh_prototypes_v2"
     assert int(encoding["prototypeCount"]) > 0
     assert int(encoding["prototypeInstanceCount"]) > int(
         encoding["prototypeCount"]
@@ -208,7 +208,11 @@ def test_prototype_scene_json_compacts_stage10_periodic_geometry(tmp_path):
     assert encoded_instances
     assert all("vertices" not in raw for raw in encoded_instances)
     assert all("faces" not in raw for raw in encoded_instances)
-    assert all("meshTranslationM" in raw for raw in encoded_instances)
+    assert all("meshTransformMatrix4x4" in raw for raw in encoded_instances)
+    assert all(
+        len(raw["meshTransformMatrix4x4"]) == 16
+        for raw in encoded_instances
+    )
     assert prototype_path.stat().st_size < standard_path.stat().st_size
 
     restored = read_scene_package_json(prototype_path)

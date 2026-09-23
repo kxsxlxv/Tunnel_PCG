@@ -2187,47 +2187,43 @@ def _periodic_mesh_prototype_properties(
     vertex_count: int,
     face_count: int,
 ) -> dict[str, Any]:
-    """Describe exact periodic-mesh reuse when the alignment needs translation only.
+    """Describe an exact static mesh instance using a full rigid transform.
 
-    The current scene schema supports translation-only prototypes. A real route
-    changes yaw/pitch at every event, so declaring those meshes as translation
-    instances would be geometrically wrong. Frame-aware routes therefore keep
-    the full world-space mesh until a rigid-transform prototype schema is added.
+    Periodic Stage-10 hardware is authored once in tunnel-local coordinates.
+    Route yaw and grade belong in the instance transform instead of duplicate
+    world-space vertex buffers, which makes these objects directly clusterable.
     """
     if not family or not local_name:
         raise ValueError("periodic mesh prototype family/name must not be empty")
     right, tangent, up = alignment_station_frame(station)
-    frame_props: dict[str, Any] = {
+    ox, oy, oz = alignment_station_origin(station)
+    prototype_key = (
+        f"stage10.5/{profile.provenance.canonical_sha256}/"
+        f"{family}/{local_name}"
+    )
+    transform = (
+        float(right[0]), float(tangent[0]), float(up[0]), float(ox),
+        float(right[1]), float(tangent[1]), float(up[1]), float(oy),
+        float(right[2]), float(tangent[2]), float(up[2]), float(oz),
+        0.0, 0.0, 0.0, 1.0,
+    )
+    return {
         "alignmentFrameMode": "zero_roll_tangent_gravity_up_v1",
         "alignmentTangentWorld": tangent,
         "alignmentRightWorld": right,
         "alignmentUpWorld": up,
-    }
-    if not alignment_station_uses_identity_frame(station):
-        return {
-            **frame_props,
-            "meshPrototypeReuseEligible": False,
-            "meshPrototypeReuseDisabledReason": (
-                "rigid_alignment_rotation_not_supported_by_translation_schema_v1"
-            ),
-        }
-    return {
-        **frame_props,
-        "meshPrototypeKey": (
-            f"stage10.5/{profile.provenance.canonical_sha256}/"
-            f"{family}/{local_name}"
-        ),
-        "meshPrototypeMode": "translation_only_shared_mesh_v1",
-        "meshPrototypeTranslationM": (
-            float(station.offset_x_m),
-            float(station.world_y_m),
-            float(station.offset_z_m),
-        ),
+        "meshPrototypeKey": prototype_key,
+        "meshPrototypeMode": "rigid_transform_shared_mesh_v2",
+        "meshPrototypeTransformMatrix4x4": transform,
         "meshPrototypeVertexCount": int(vertex_count),
         "meshPrototypeFaceCount": int(face_count),
         "meshPrototypeGeometryExact": True,
         "meshPrototypeLiDARSurfaceUnchanged": True,
         "meshPrototypeReuseEligible": True,
+        "meshClusterEligible": True,
+        "meshClusterStatic": True,
+        "meshClusterPrototypeKey": prototype_key,
+        "meshClusterMaterialKey": f"{prototype_key}/default_material",
     }
 
 

@@ -608,11 +608,13 @@ def test_mesh_prototype_payload_preserves_local_geometry_after_chunk_localizatio
     )
     payload = _mesh_prototype_payload(prototype_object)
     assert payload is not None
-    _key, translation, local_vertices = payload
+    _key, transform, local_vertices = payload
     for local_vertex, expected in zip(local_vertices, prototype_object.vertices):
-        reconstructed = tuple(
-            local_vertex[index] + translation[index]
-            for index in range(3)
+        x, y, z = local_vertex
+        reconstructed = (
+            transform[0] * x + transform[1] * y + transform[2] * z + transform[3],
+            transform[4] * x + transform[5] * y + transform[6] * z + transform[7],
+            transform[8] * x + transform[9] * y + transform[10] * z + transform[11],
         )
         assert all(
             abs(actual - target) <= 2e-12

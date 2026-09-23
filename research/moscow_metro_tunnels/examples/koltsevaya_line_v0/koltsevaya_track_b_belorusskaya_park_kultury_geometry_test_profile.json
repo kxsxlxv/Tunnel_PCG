@@ -1,0 +1,639 @@
+{
+  "schema_version": "0.1",
+  "research_date": "2026-09-23",
+  "file_role": "geometry_test_vertical_profile",
+  "track_id": "KOLTSEVAYA_TRACK_B",
+  "segment": "Белорусская → Краснопресненская → Киевская → Парк культуры",
+  "status": "SYNTHETIC_GEOMETRY_TEST_ONLY_NOT_AS_BUILT",
+  "source_truth_vertical_status": "Z_UNRESOLVED",
+  "purpose": "Exercise production geometry on simultaneous curved OSM-derived XY and non-flat Z/grade changes while preserving a strict distinction from source-backed engineering elevations.",
+  "horizontal_input": {
+    "file": "koltsevaya_track_b_belorusskaya_park_kultury_physical.geojson",
+    "status": "CONSTRAINED_OSM_SNAPSHOT",
+    "source_id": "S138",
+    "vertex_count": 57,
+    "plan_length_m": 5947.519
+  },
+  "vertical_datum_assumption": {
+    "datum_id": "TEST_FLAT_LOCAL_SURFACE_ZERO",
+    "definition": "At each station anchor, z_test_m = -published_depth_m. A single flat zero surface is assumed only to synthesize vertical relief.",
+    "engineering_meaning": "NONE",
+    "warning": "z_test_m is not UGR, not an absolute elevation, and not a reconstruction of the actual Moscow surface or track profile."
+  },
+  "station_depth_anchors": [
+    {
+      "station": "Белорусская",
+      "chainage_m": 0,
+      "published_depth_m": 42.5,
+      "z_test_m": -42.5,
+      "source": "stations.csv / secondary_station_reference"
+    },
+    {
+      "station": "Краснопресненская",
+      "chainage_m": 1787.247,
+      "published_depth_m": 35.5,
+      "z_test_m": -35.5,
+      "source": "stations.csv / news.metro.ru/f511.html"
+    },
+    {
+      "station": "Киевская",
+      "chainage_m": 3800.527,
+      "published_depth_m": 53,
+      "z_test_m": -53,
+      "alternate_published_depth_m": 48,
+      "selection_rule": "53 m chosen deliberately for the geometry-stress preset; 48 m retained as unresolved alternate",
+      "source": "stations.csv / news.metro.ru/f512.html"
+    },
+    {
+      "station": "Парк культуры",
+      "chainage_m": 5947.519,
+      "published_depth_m": 40,
+      "z_test_m": -40,
+      "source": "stations.csv / secondary_station_reference"
+    }
+  ],
+  "construction": {
+    "vertical_curve_model": "parabolic vertical curve implemented as linear grade transition",
+    "nominal_transition_length_m": 200,
+    "belorusskaya_to_krasnopresnenskaya": {
+      "station_to_station_delta_z_test_m": 7,
+      "constant_grade_permille": 4.41,
+      "profile": "0→+g over 200 m; +g; +g→0 over 200 m"
+    },
+    "krasnopresnenskaya_to_kievskaya": {
+      "source_backed_directional_constraint": "S140: immediately after Krasnopresnenskaya, 38‰ downhill in Track-B direction; later rises toward Kievskaya",
+      "synthetic_binding": {
+        "transition_to_downhill_m": 200,
+        "constant_downhill_grade_permille": -38,
+        "constant_downhill_length_m": 450,
+        "transition_to_low_point_m": 200,
+        "synthetic_low_point_chainage_m": 2637.247,
+        "synthetic_low_point_z_test_m": -60.2,
+        "rise_grade_permille": 7.474,
+        "rise_transition_m": 200,
+        "final_grade_at_kievskaya_permille": 0
+      },
+      "disclaimer": "Only 38‰ magnitude/direction and qualitative later rise are source-backed. All transition lengths, low-point chainage/Z and rise grade are geometry-test choices."
+    },
+    "kievskaya_to_park_kultury": {
+      "station_to_station_delta_z_test_m": 13,
+      "constant_grade_permille": 6.677,
+      "profile": "0→+g over 200 m; +g; +g→0 over 200 m"
+    }
+  },
+  "vertical_curve_checks": {
+    "steepest_test_grade_abs_permille": 38,
+    "normal_underground_limit_reference_permille": 40,
+    "difficult_short_limit_reference_permille": 45,
+    "minimum_test_vertical_curve_radius_approx_m": 5263.158,
+    "minimum_reference_main_interstation_radius_m": 5000,
+    "result": "PASS_FOR_GEOMETRY_TEST"
+  },
+  "control_points": [
+    {
+      "id": "BELORUSSKAYA",
+      "chainage_m": 0,
+      "z_test_m": -42.5,
+      "grade_permille": 0
+    },
+    {
+      "id": "BEL_KRP_UPGRADE_REACHED",
+      "chainage_m": 200,
+      "z_test_m": -42.059,
+      "grade_permille": 4.41
+    },
+    {
+      "id": "BEL_KRP_DECEL_START",
+      "chainage_m": 1587.247,
+      "z_test_m": -35.941,
+      "grade_permille": 4.41
+    },
+    {
+      "id": "KRASNOPRESNENSKAYA",
+      "chainage_m": 1787.247,
+      "z_test_m": -35.5,
+      "grade_permille": 0
+    },
+    {
+      "id": "DOWN_38_REACHED",
+      "chainage_m": 1987.247,
+      "z_test_m": -39.3,
+      "grade_permille": -38
+    },
+    {
+      "id": "DOWN_38_CONSTANT_END",
+      "chainage_m": 2437.247,
+      "z_test_m": -56.4,
+      "grade_permille": -38
+    },
+    {
+      "id": "SYNTHETIC_LOW_POINT",
+      "chainage_m": 2637.247,
+      "z_test_m": -60.2,
+      "grade_permille": 0
+    },
+    {
+      "id": "RISE_GRADE_REACHED",
+      "chainage_m": 2837.247,
+      "z_test_m": -59.453,
+      "grade_permille": 7.474
+    },
+    {
+      "id": "RISE_DECEL_START",
+      "chainage_m": 3600.527,
+      "z_test_m": -53.747,
+      "grade_permille": 7.474
+    },
+    {
+      "id": "KIEVSKAYA",
+      "chainage_m": 3800.527,
+      "z_test_m": -53,
+      "grade_permille": 0
+    },
+    {
+      "id": "KIEV_PARK_UPGRADE_REACHED",
+      "chainage_m": 4000.527,
+      "z_test_m": -52.332,
+      "grade_permille": 6.677
+    },
+    {
+      "id": "KIEV_PARK_DECEL_START",
+      "chainage_m": 5747.519,
+      "z_test_m": -40.668,
+      "grade_permille": 6.677
+    },
+    {
+      "id": "PARK_KULTURY",
+      "chainage_m": 5947.519,
+      "z_test_m": -40,
+      "grade_permille": 0
+    }
+  ],
+  "vertex_samples": [
+    {
+      "vertex_index": 0,
+      "chainage_m": 0,
+      "lon": 37.5839267,
+      "lat": 55.7762207,
+      "z_test_m": -42.5,
+      "grade_permille": 0
+    },
+    {
+      "vertex_index": 1,
+      "chainage_m": 108.947,
+      "lon": 37.5826878,
+      "lat": 55.7755319,
+      "z_test_m": -42.369,
+      "grade_permille": 2.402
+    },
+    {
+      "vertex_index": 2,
+      "chainage_m": 241.207,
+      "lon": 37.5811847,
+      "lat": 55.7746952,
+      "z_test_m": -41.877,
+      "grade_permille": 4.41
+    },
+    {
+      "vertex_index": 3,
+      "chainage_m": 299.864,
+      "lon": 37.5805766,
+      "lat": 55.7742936,
+      "z_test_m": -41.619,
+      "grade_permille": 4.41
+    },
+    {
+      "vertex_index": 4,
+      "chainage_m": 358.509,
+      "lon": 37.5800415,
+      "lat": 55.7738605,
+      "z_test_m": -41.36,
+      "grade_permille": 4.41
+    },
+    {
+      "vertex_index": 5,
+      "chainage_m": 417.116,
+      "lon": 37.5795847,
+      "lat": 55.7734003,
+      "z_test_m": -41.101,
+      "grade_permille": 4.41
+    },
+    {
+      "vertex_index": 6,
+      "chainage_m": 475.739,
+      "lon": 37.5792102,
+      "lat": 55.772917,
+      "z_test_m": -40.843,
+      "grade_permille": 4.41
+    },
+    {
+      "vertex_index": 7,
+      "chainage_m": 534.384,
+      "lon": 37.5789216,
+      "lat": 55.7724152,
+      "z_test_m": -40.584,
+      "grade_permille": 4.41
+    },
+    {
+      "vertex_index": 8,
+      "chainage_m": 593.051,
+      "lon": 37.5787218,
+      "lat": 55.7718997,
+      "z_test_m": -40.326,
+      "grade_permille": 4.41
+    },
+    {
+      "vertex_index": 9,
+      "chainage_m": 651.692,
+      "lon": 37.5786129,
+      "lat": 55.7713759,
+      "z_test_m": -40.067,
+      "grade_permille": 4.41
+    },
+    {
+      "vertex_index": 10,
+      "chainage_m": 1693.803,
+      "lon": 37.5772286,
+      "lat": 55.7620364,
+      "z_test_m": -35.596,
+      "grade_permille": 2.061
+    },
+    {
+      "vertex_index": 11,
+      "chainage_m": 1787.247,
+      "lon": 37.5771167,
+      "lat": 55.7611984,
+      "z_test_m": -35.5,
+      "grade_permille": 0
+    },
+    {
+      "vertex_index": 12,
+      "chainage_m": 1999.65,
+      "lon": 37.5768267,
+      "lat": 55.7592952,
+      "z_test_m": -39.771,
+      "grade_permille": -38
+    },
+    {
+      "vertex_index": 13,
+      "chainage_m": 2058.234,
+      "lon": 37.5766666,
+      "lat": 55.7587761,
+      "z_test_m": -41.998,
+      "grade_permille": -38
+    },
+    {
+      "vertex_index": 14,
+      "chainage_m": 2116.756,
+      "lon": 37.5764247,
+      "lat": 55.7582677,
+      "z_test_m": -44.221,
+      "grade_permille": -38
+    },
+    {
+      "vertex_index": 15,
+      "chainage_m": 2175.325,
+      "lon": 37.5761028,
+      "lat": 55.7577731,
+      "z_test_m": -46.447,
+      "grade_permille": -38
+    },
+    {
+      "vertex_index": 16,
+      "chainage_m": 2232.353,
+      "lon": 37.5757149,
+      "lat": 55.757309,
+      "z_test_m": -48.614,
+      "grade_permille": -38
+    },
+    {
+      "vertex_index": 17,
+      "chainage_m": 2279.253,
+      "lon": 37.575343,
+      "lat": 55.7569428,
+      "z_test_m": -50.396,
+      "grade_permille": -38
+    },
+    {
+      "vertex_index": 18,
+      "chainage_m": 3269.333,
+      "lon": 37.567151,
+      "lat": 55.7493252,
+      "z_test_m": -56.223,
+      "grade_permille": 7.474
+    },
+    {
+      "vertex_index": 19,
+      "chainage_m": 3347.584,
+      "lon": 37.5665638,
+      "lat": 55.7487039,
+      "z_test_m": -55.638,
+      "grade_permille": 7.474
+    },
+    {
+      "vertex_index": 20,
+      "chainage_m": 3425.836,
+      "lon": 37.5660876,
+      "lat": 55.7480532,
+      "z_test_m": -55.053,
+      "grade_permille": 7.474
+    },
+    {
+      "vertex_index": 21,
+      "chainage_m": 3504.023,
+      "lon": 37.5657275,
+      "lat": 55.7473799,
+      "z_test_m": -54.469,
+      "grade_permille": 7.474
+    },
+    {
+      "vertex_index": 22,
+      "chainage_m": 3582.263,
+      "lon": 37.5654862,
+      "lat": 55.7466895,
+      "z_test_m": -53.884,
+      "grade_permille": 7.474
+    },
+    {
+      "vertex_index": 23,
+      "chainage_m": 3660.559,
+      "lon": 37.5653664,
+      "lat": 55.7459886,
+      "z_test_m": -53.366,
+      "grade_permille": 5.231
+    },
+    {
+      "vertex_index": 24,
+      "chainage_m": 3800.527,
+      "lon": 37.5653063,
+      "lat": 55.7447303,
+      "z_test_m": -53,
+      "grade_permille": 0
+    },
+    {
+      "vertex_index": 25,
+      "chainage_m": 3999.761,
+      "lon": 37.5652137,
+      "lat": 55.7429393,
+      "z_test_m": -52.337,
+      "grade_permille": 6.651
+    },
+    {
+      "vertex_index": 26,
+      "chainage_m": 4028.284,
+      "lon": 37.5652104,
+      "lat": 55.7426828,
+      "z_test_m": -52.147,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 27,
+      "chainage_m": 4056.953,
+      "lon": 37.5652398,
+      "lat": 55.7424255,
+      "z_test_m": -51.956,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 28,
+      "chainage_m": 4093.379,
+      "lon": 37.5653244,
+      "lat": 55.7421014,
+      "z_test_m": -51.712,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 29,
+      "chainage_m": 4129.282,
+      "lon": 37.5654588,
+      "lat": 55.7417875,
+      "z_test_m": -51.473,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 30,
+      "chainage_m": 4165.051,
+      "lon": 37.565642,
+      "lat": 55.7414828,
+      "z_test_m": -51.234,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 31,
+      "chainage_m": 4197.907,
+      "lon": 37.5658524,
+      "lat": 55.7412121,
+      "z_test_m": -51.014,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 32,
+      "chainage_m": 4235.814,
+      "lon": 37.5661433,
+      "lat": 55.7409131,
+      "z_test_m": -50.761,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 33,
+      "chainage_m": 4274.634,
+      "lon": 37.566492,
+      "lat": 55.7406244,
+      "z_test_m": -50.502,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 34,
+      "chainage_m": 4319.151,
+      "lon": 37.566951,
+      "lat": 55.7403186,
+      "z_test_m": -50.205,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 35,
+      "chainage_m": 4366.089,
+      "lon": 37.5674974,
+      "lat": 55.7400295,
+      "z_test_m": -49.891,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 36,
+      "chainage_m": 4406.344,
+      "lon": 37.5680112,
+      "lat": 55.7398118,
+      "z_test_m": -49.623,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 37,
+      "chainage_m": 4444.135,
+      "lon": 37.5685267,
+      "lat": 55.7396349,
+      "z_test_m": -49.37,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 38,
+      "chainage_m": 4478.001,
+      "lon": 37.569012,
+      "lat": 55.7395003,
+      "z_test_m": -49.144,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 39,
+      "chainage_m": 4503.381,
+      "lon": 37.569388,
+      "lat": 55.7394149,
+      "z_test_m": -48.975,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 40,
+      "chainage_m": 4530.359,
+      "lon": 37.5697974,
+      "lat": 55.7393391,
+      "z_test_m": -48.795,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 41,
+      "chainage_m": 4562.347,
+      "lon": 37.5702933,
+      "lat": 55.7392697,
+      "z_test_m": -48.581,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 42,
+      "chainage_m": 4588.62,
+      "lon": 37.5707069,
+      "lat": 55.7392295,
+      "z_test_m": -48.406,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 43,
+      "chainage_m": 4605.072,
+      "lon": 37.5709679,
+      "lat": 55.7392122,
+      "z_test_m": -48.296,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 44,
+      "chainage_m": 4620.166,
+      "lon": 37.5712083,
+      "lat": 55.7392016,
+      "z_test_m": -48.195,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 45,
+      "chainage_m": 4711.933,
+      "lon": 37.5726732,
+      "lat": 55.7391702,
+      "z_test_m": -47.582,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 46,
+      "chainage_m": 4788.421,
+      "lon": 37.5738942,
+      "lat": 55.7391441,
+      "z_test_m": -47.072,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 47,
+      "chainage_m": 4832.938,
+      "lon": 37.5746039,
+      "lat": 55.7391185,
+      "z_test_m": -46.774,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 48,
+      "chainage_m": 4888.512,
+      "lon": 37.5754838,
+      "lat": 55.7390521,
+      "z_test_m": -46.403,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 49,
+      "chainage_m": 4934.864,
+      "lon": 37.5762089,
+      "lat": 55.7389676,
+      "z_test_m": -46.094,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 50,
+      "chainage_m": 5459.368,
+      "lon": 37.5842924,
+      "lat": 55.7377266,
+      "z_test_m": -42.592,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 51,
+      "chainage_m": 5488.879,
+      "lon": 37.5847445,
+      "lat": 55.7376514,
+      "z_test_m": -42.395,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 52,
+      "chainage_m": 5547.899,
+      "lon": 37.5856325,
+      "lat": 55.7374731,
+      "z_test_m": -42.001,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 53,
+      "chainage_m": 5606.928,
+      "lon": 37.5864948,
+      "lat": 55.7372583,
+      "z_test_m": -41.606,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 54,
+      "chainage_m": 5665.972,
+      "lon": 37.5873267,
+      "lat": 55.7370081,
+      "z_test_m": -41.212,
+      "grade_permille": 6.677
+    },
+    {
+      "vertex_index": 55,
+      "chainage_m": 5825.355,
+      "lon": 37.589517,
+      "lat": 55.7362774,
+      "z_test_m": -40.249,
+      "grade_permille": 4.078
+    },
+    {
+      "vertex_index": 56,
+      "chainage_m": 5947.519,
+      "lon": 37.5911968,
+      "lat": 55.7357183,
+      "z_test_m": -40,
+      "grade_permille": 0
+    }
+  ],
+  "runtime_contract": {
+    "recommended_runtime_mode": "geometry_test_3d",
+    "use_xy_from": "S138 dated OSM physical Track-B snapshot",
+    "use_z_from": "this synthetic profile only",
+    "may_generate_mesh": true,
+    "may_claim_as_built": false,
+    "may_replace_source_truth_z_unresolved": false,
+    "preserve_original_handoff_vertical_constraints": true
+  }
+}

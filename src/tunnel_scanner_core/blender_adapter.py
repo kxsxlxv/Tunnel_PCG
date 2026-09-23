@@ -301,6 +301,38 @@ def plan_bolt_boolean_operations(package: ScenePackage) -> tuple[BoltBooleanOper
     return tuple(operations)
 
 
+def plan_bolt_boolean_batches(
+    package: ScenePackage,
+    *,
+    batch_pocket_cutters: bool = True,
+) -> tuple[tuple[BoltBooleanOperation, ...], ...]:
+    """Group safe production pocket cuts by lining target.
+
+    Batching is enabled only when every planned Boolean is a removable pocket
+    cutter. If visible bolt heads also participate as Boolean tools, return
+    singleton batches so historical cutter/head ordering remains unchanged.
+    """
+    operations = plan_bolt_boolean_operations(package)
+    if not operations:
+        return ()
+    production_cutter_only = all(
+        op.tool_type == "bolt_pocket_cutter"
+        and op.remove_tool_after
+        for op in operations
+    )
+    if not batch_pocket_cutters or not production_cutter_only:
+        return tuple((op,) for op in operations)
+
+    grouped: dict[str, list[BoltBooleanOperation]] = {}
+    target_order: list[str] = []
+    for op in operations:
+        if op.target_name not in grouped:
+            grouped[op.target_name] = []
+            target_order.append(op.target_name)
+        grouped[op.target_name].append(op)
+    return tuple(tuple(grouped[target]) for target in target_order)
+
+
 def _apply_boolean_difference(bpy, target, tool, *, modifier_name: str) -> None:
     modifier = target.modifiers.new(name=modifier_name, type="BOOLEAN")
     modifier.operation = "DIFFERENCE"
@@ -411,24 +443,23 @@ def _apply_stage6_bolt_booleans(
     if not operations:
         return 0, 0, ()
 
-    production_cutter_only = all(
-        op.tool_type == "bolt_pocket_cutter"
-        and op.remove_tool_after
-        for op in operations
+    batches = plan_bolt_boolean_batches(
+        package,
+        batch_pocket_cutters=batch_pocket_cutters,
     )
-    if batch_pocket_cutters and production_cutter_only:
-        grouped: dict[str, list[BoltBooleanOperation]] = {}
-        target_order: list[str] = []
-        for op in operations:
-            if op.target_name not in grouped:
-                grouped[op.target_name] = []
-                target_order.append(op.target_name)
-            grouped[op.target_name].append(op)
-
+    batched_production_mode = (
+        len(batches) < len(operations)
+        and all(
+            len(batch) >= 1
+            and all(op.tool_type == "bolt_pocket_cutter" for op in batch)
+            for batch in batches
+        )
+    )
+    if batched_production_mode:
         removed: list[str] = []
         modifier_count = 0
-        for batch_index, target_name in enumerate(target_order):
-            batch = grouped[target_name]
+        for batch_index, batch in enumerate(batches):
+            target_name = batch[0].target_name
             target = bpy.data.objects.get(target_name)
             if target is None:
                 raise RuntimeError(

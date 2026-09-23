@@ -1,0 +1,865 @@
+{
+  "type": "FeatureCollection",
+  "name": "KOLTSEVAYA_TRACK_B_BELORUSSKAYA_TO_PARK_KULTURY_PHYSICAL_SNAPSHOT_HANDOFF",
+  "properties": {
+    "schema_version": "0.1",
+    "research_date": "2026-09-23",
+    "crs": "EPSG:4326",
+    "track_id": "KOLTSEVAYA_TRACK_B",
+    "relation_id": 1462011,
+    "knowledge_status": "CONSTRAINED",
+    "current_relation_full_acquired": false,
+    "main_geometry_source_id": "S138",
+    "main_geometry_source_timestamp": "2026-04-13T02:37:58Z",
+    "branch_candidate_source_id": "S139",
+    "branch_candidate_source_timestamp": "2026-04-05T03:59:54Z",
+    "warning": "OSM-derived XY is plan approximation. Snapshot IDs/geometry are not asserted as current relation/full truth."
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": "KOLTSEVAYA_TRACK_B_BELORUSSKAYA_PARK_KULTURY_CENTERLINE",
+      "properties": {
+        "feature_role": "SEGMENT_CENTERLINE",
+        "track_id": "KOLTSEVAYA_TRACK_B",
+        "operational_track_number": "II",
+        "direction": "counterclockwise",
+        "knowledge_status": "CONSTRAINED",
+        "source_id": "S138",
+        "source_snapshot_timestamp": "2026-04-13T02:37:58Z",
+        "length_m": 5947.519,
+        "boundary_rule": "exact S138 Track-B stop_position vertices at Белорусская and Парк культуры",
+        "current_osm_truth": false
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            37.5839267,
+            55.7762207
+          ],
+          [
+            37.5826878,
+            55.7755319
+          ],
+          [
+            37.5811847,
+            55.7746952
+          ],
+          [
+            37.5805766,
+            55.7742936
+          ],
+          [
+            37.5800415,
+            55.7738605
+          ],
+          [
+            37.5795847,
+            55.7734003
+          ],
+          [
+            37.5792102,
+            55.772917
+          ],
+          [
+            37.5789216,
+            55.7724152
+          ],
+          [
+            37.5787218,
+            55.7718997
+          ],
+          [
+            37.5786129,
+            55.7713759
+          ],
+          [
+            37.5772286,
+            55.7620364
+          ],
+          [
+            37.5771167,
+            55.7611984
+          ],
+          [
+            37.5768267,
+            55.7592952
+          ],
+          [
+            37.5766666,
+            55.7587761
+          ],
+          [
+            37.5764247,
+            55.7582677
+          ],
+          [
+            37.5761028,
+            55.7577731
+          ],
+          [
+            37.5757149,
+            55.757309
+          ],
+          [
+            37.575343,
+            55.7569428
+          ],
+          [
+            37.567151,
+            55.7493252
+          ],
+          [
+            37.5665638,
+            55.7487039
+          ],
+          [
+            37.5660876,
+            55.7480532
+          ],
+          [
+            37.5657275,
+            55.7473799
+          ],
+          [
+            37.5654862,
+            55.7466895
+          ],
+          [
+            37.5653664,
+            55.7459886
+          ],
+          [
+            37.5653063,
+            55.7447303
+          ],
+          [
+            37.5652137,
+            55.7429393
+          ],
+          [
+            37.5652104,
+            55.7426828
+          ],
+          [
+            37.5652398,
+            55.7424255
+          ],
+          [
+            37.5653244,
+            55.7421014
+          ],
+          [
+            37.5654588,
+            55.7417875
+          ],
+          [
+            37.565642,
+            55.7414828
+          ],
+          [
+            37.5658524,
+            55.7412121
+          ],
+          [
+            37.5661433,
+            55.7409131
+          ],
+          [
+            37.566492,
+            55.7406244
+          ],
+          [
+            37.566951,
+            55.7403186
+          ],
+          [
+            37.5674974,
+            55.7400295
+          ],
+          [
+            37.5680112,
+            55.7398118
+          ],
+          [
+            37.5685267,
+            55.7396349
+          ],
+          [
+            37.569012,
+            55.7395003
+          ],
+          [
+            37.569388,
+            55.7394149
+          ],
+          [
+            37.5697974,
+            55.7393391
+          ],
+          [
+            37.5702933,
+            55.7392697
+          ],
+          [
+            37.5707069,
+            55.7392295
+          ],
+          [
+            37.5709679,
+            55.7392122
+          ],
+          [
+            37.5712083,
+            55.7392016
+          ],
+          [
+            37.5726732,
+            55.7391702
+          ],
+          [
+            37.5738942,
+            55.7391441
+          ],
+          [
+            37.5746039,
+            55.7391185
+          ],
+          [
+            37.5754838,
+            55.7390521
+          ],
+          [
+            37.5762089,
+            55.7389676
+          ],
+          [
+            37.5842924,
+            55.7377266
+          ],
+          [
+            37.5847445,
+            55.7376514
+          ],
+          [
+            37.5856325,
+            55.7374731
+          ],
+          [
+            37.5864948,
+            55.7372583
+          ],
+          [
+            37.5873267,
+            55.7370081
+          ],
+          [
+            37.589517,
+            55.7362774
+          ],
+          [
+            37.5911968,
+            55.7357183
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KOLTSEVAYA_TRACK_B_OSM_SNAPSHOT_WAY_1086757198",
+      "properties": {
+        "feature_role": "MAINLINE_EDGE",
+        "classification": "MAINLINE_TRACK_B",
+        "knowledge_status": "CONSTRAINED",
+        "osm_way_id_snapshot": 1086757198,
+        "osm_way_id_current": null,
+        "route_relation_id": 1462011,
+        "snapshot_member_role": "",
+        "source_id": "S138",
+        "source_snapshot_timestamp": "2026-04-13T02:37:58Z",
+        "chainage_start_m": 0,
+        "chainage_end_m": 241.207,
+        "clipped_to_segment": false,
+        "from_way_vertex_index": 0,
+        "to_way_vertex_index": 2
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            37.5839267,
+            55.7762207
+          ],
+          [
+            37.5826878,
+            55.7755319
+          ],
+          [
+            37.5811847,
+            55.7746952
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KOLTSEVAYA_TRACK_B_OSM_SNAPSHOT_WAY_96969622",
+      "properties": {
+        "feature_role": "MAINLINE_EDGE",
+        "classification": "MAINLINE_TRACK_B",
+        "knowledge_status": "CONSTRAINED",
+        "osm_way_id_snapshot": 96969622,
+        "osm_way_id_current": null,
+        "route_relation_id": 1462011,
+        "snapshot_member_role": "",
+        "source_id": "S138",
+        "source_snapshot_timestamp": "2026-04-13T02:37:58Z",
+        "chainage_start_m": 241.207,
+        "chainage_end_m": 1999.65,
+        "clipped_to_segment": false,
+        "from_way_vertex_index": 0,
+        "to_way_vertex_index": 10
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            37.5811847,
+            55.7746952
+          ],
+          [
+            37.5805766,
+            55.7742936
+          ],
+          [
+            37.5800415,
+            55.7738605
+          ],
+          [
+            37.5795847,
+            55.7734003
+          ],
+          [
+            37.5792102,
+            55.772917
+          ],
+          [
+            37.5789216,
+            55.7724152
+          ],
+          [
+            37.5787218,
+            55.7718997
+          ],
+          [
+            37.5786129,
+            55.7713759
+          ],
+          [
+            37.5772286,
+            55.7620364
+          ],
+          [
+            37.5771167,
+            55.7611984
+          ],
+          [
+            37.5768267,
+            55.7592952
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KOLTSEVAYA_TRACK_B_OSM_SNAPSHOT_WAY_103056955",
+      "properties": {
+        "feature_role": "MAINLINE_EDGE",
+        "classification": "MAINLINE_TRACK_B",
+        "knowledge_status": "CONSTRAINED",
+        "osm_way_id_snapshot": 103056955,
+        "osm_way_id_current": null,
+        "route_relation_id": 1462011,
+        "snapshot_member_role": "",
+        "source_id": "S138",
+        "source_snapshot_timestamp": "2026-04-13T02:37:58Z",
+        "chainage_start_m": 1999.65,
+        "chainage_end_m": 3504.023,
+        "clipped_to_segment": false,
+        "from_way_vertex_index": 0,
+        "to_way_vertex_index": 9
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            37.5768267,
+            55.7592952
+          ],
+          [
+            37.5766666,
+            55.7587761
+          ],
+          [
+            37.5764247,
+            55.7582677
+          ],
+          [
+            37.5761028,
+            55.7577731
+          ],
+          [
+            37.5757149,
+            55.757309
+          ],
+          [
+            37.575343,
+            55.7569428
+          ],
+          [
+            37.567151,
+            55.7493252
+          ],
+          [
+            37.5665638,
+            55.7487039
+          ],
+          [
+            37.5660876,
+            55.7480532
+          ],
+          [
+            37.5657275,
+            55.7473799
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KOLTSEVAYA_TRACK_B_OSM_SNAPSHOT_WAY_370614076",
+      "properties": {
+        "feature_role": "MAINLINE_EDGE",
+        "classification": "MAINLINE_TRACK_B",
+        "knowledge_status": "CONSTRAINED",
+        "osm_way_id_snapshot": 370614076,
+        "osm_way_id_current": null,
+        "route_relation_id": 1462011,
+        "snapshot_member_role": "",
+        "source_id": "S138",
+        "source_snapshot_timestamp": "2026-04-13T02:37:58Z",
+        "chainage_start_m": 3504.023,
+        "chainage_end_m": 3999.761,
+        "clipped_to_segment": false,
+        "from_way_vertex_index": 0,
+        "to_way_vertex_index": 4
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            37.5657275,
+            55.7473799
+          ],
+          [
+            37.5654862,
+            55.7466895
+          ],
+          [
+            37.5653664,
+            55.7459886
+          ],
+          [
+            37.5653063,
+            55.7447303
+          ],
+          [
+            37.5652137,
+            55.7429393
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KOLTSEVAYA_TRACK_B_OSM_SNAPSHOT_WAY_370614074",
+      "properties": {
+        "feature_role": "MAINLINE_EDGE",
+        "classification": "MAINLINE_TRACK_B",
+        "knowledge_status": "CONSTRAINED",
+        "osm_way_id_snapshot": 370614074,
+        "osm_way_id_current": null,
+        "route_relation_id": 1462011,
+        "snapshot_member_role": "",
+        "source_id": "S138",
+        "source_snapshot_timestamp": "2026-04-13T02:37:58Z",
+        "chainage_start_m": 3999.761,
+        "chainage_end_m": 5947.519,
+        "clipped_to_segment": true,
+        "from_way_vertex_index": 0,
+        "to_way_vertex_index": 31
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            37.5652137,
+            55.7429393
+          ],
+          [
+            37.5652104,
+            55.7426828
+          ],
+          [
+            37.5652398,
+            55.7424255
+          ],
+          [
+            37.5653244,
+            55.7421014
+          ],
+          [
+            37.5654588,
+            55.7417875
+          ],
+          [
+            37.565642,
+            55.7414828
+          ],
+          [
+            37.5658524,
+            55.7412121
+          ],
+          [
+            37.5661433,
+            55.7409131
+          ],
+          [
+            37.566492,
+            55.7406244
+          ],
+          [
+            37.566951,
+            55.7403186
+          ],
+          [
+            37.5674974,
+            55.7400295
+          ],
+          [
+            37.5680112,
+            55.7398118
+          ],
+          [
+            37.5685267,
+            55.7396349
+          ],
+          [
+            37.569012,
+            55.7395003
+          ],
+          [
+            37.569388,
+            55.7394149
+          ],
+          [
+            37.5697974,
+            55.7393391
+          ],
+          [
+            37.5702933,
+            55.7392697
+          ],
+          [
+            37.5707069,
+            55.7392295
+          ],
+          [
+            37.5709679,
+            55.7392122
+          ],
+          [
+            37.5712083,
+            55.7392016
+          ],
+          [
+            37.5726732,
+            55.7391702
+          ],
+          [
+            37.5738942,
+            55.7391441
+          ],
+          [
+            37.5746039,
+            55.7391185
+          ],
+          [
+            37.5754838,
+            55.7390521
+          ],
+          [
+            37.5762089,
+            55.7389676
+          ],
+          [
+            37.5842924,
+            55.7377266
+          ],
+          [
+            37.5847445,
+            55.7376514
+          ],
+          [
+            37.5856325,
+            55.7374731
+          ],
+          [
+            37.5864948,
+            55.7372583
+          ],
+          [
+            37.5873267,
+            55.7370081
+          ],
+          [
+            37.589517,
+            55.7362774
+          ],
+          [
+            37.5911968,
+            55.7357183
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "STATION_KOL5_BELORUSSKAYA_TRACK_B",
+      "properties": {
+        "feature_role": "STATION_EVENT",
+        "station": "Белорусская",
+        "main_track": "KOLTSEVAYA_TRACK_B",
+        "knowledge_status": "CONSTRAINED",
+        "osm_stop_position_node_id_snapshot": 6937381513,
+        "current_osm_node_id": null,
+        "chainage_m": 0,
+        "chainage_status": "CONSTRAINED_OSM_PLAN_CHAINAGE_NOT_ENGINEERING_PK",
+        "source_id": "S138"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          37.5839267,
+          55.7762207
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "STATION_KOL5_KRASNOPRESNENSKAYA_TRACK_B",
+      "properties": {
+        "feature_role": "STATION_EVENT",
+        "station": "Краснопресненская",
+        "main_track": "KOLTSEVAYA_TRACK_B",
+        "knowledge_status": "CONSTRAINED",
+        "osm_stop_position_node_id_snapshot": 6937381516,
+        "current_osm_node_id": null,
+        "chainage_m": 1787.247,
+        "chainage_status": "CONSTRAINED_OSM_PLAN_CHAINAGE_NOT_ENGINEERING_PK",
+        "source_id": "S138"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          37.5771167,
+          55.7611984
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "STATION_KOL5_KIEVSKAYA_TRACK_B",
+      "properties": {
+        "feature_role": "STATION_EVENT",
+        "station": "Киевская",
+        "main_track": "KOLTSEVAYA_TRACK_B",
+        "knowledge_status": "CONSTRAINED",
+        "osm_stop_position_node_id_snapshot": 6937381518,
+        "current_osm_node_id": null,
+        "chainage_m": 3800.527,
+        "chainage_status": "CONSTRAINED_OSM_PLAN_CHAINAGE_NOT_ENGINEERING_PK",
+        "source_id": "S138"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          37.5653063,
+          55.7447303
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "STATION_KOL5_PARK_KULTURY_TRACK_B",
+      "properties": {
+        "feature_role": "STATION_EVENT",
+        "station": "Парк культуры",
+        "main_track": "KOLTSEVAYA_TRACK_B",
+        "knowledge_status": "CONSTRAINED",
+        "osm_stop_position_node_id_snapshot": 6937381520,
+        "current_osm_node_id": null,
+        "chainage_m": 5947.519,
+        "chainage_status": "CONSTRAINED_OSM_PLAN_CHAINAGE_NOT_ENGINEERING_PK",
+        "source_id": "S138"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          37.5911968,
+          55.7357183
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "JUNCTION_KOL5_BELORUSSKAYA_DEPOT_WEST",
+      "properties": {
+        "feature_role": "JUNCTION_EVENT",
+        "main_track": "KOLTSEVAYA_TRACK_B",
+        "knowledge_status": "CONSTRAINED",
+        "osm_switch_node_id_snapshot": 309744783,
+        "osm_switch_ref": "2",
+        "chainage_m": 108.947,
+        "exact_xy_status": "CONSTRAINED_OSM_SNAPSHOT_MATCH_NOT_CURRENT_ENGINEERING_XY",
+        "branch_side": "left",
+        "branch_side_status": "KNOWN_SOURCE_BACKED_RELATIVE_TO_TRACK_B_DIRECTION",
+        "physical_graph_degree_gt_2": null,
+        "physical_graph_degree_status": "UNKNOWN_AVAILABLE_CONNECTED-WAYS_SNAPSHOT_IS_8_DAYS_OLDER_AND_DOES_NOT_EXPOSE_A_THIRD_EDGE_AT_THIS_NODE",
+        "source_id": "S138"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          37.5826878,
+          55.7755319
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "JUNCTION_KOL5_KRASNOPRESNENSKAYA_TRACK_B_SWITCH_REF2",
+      "properties": {
+        "feature_role": "JUNCTION_EVENT",
+        "main_track": "KOLTSEVAYA_TRACK_B",
+        "knowledge_status": "CONSTRAINED",
+        "osm_switch_node_id_snapshot": 1398729304,
+        "osm_switch_ref": "2",
+        "chainage_m": 1693.803,
+        "exact_xy_status": "CONSTRAINED_OSM_SNAPSHOT_NOT_CURRENT_ENGINEERING_XY",
+        "branch_side": null,
+        "branch_side_status": "UNKNOWN",
+        "physical_graph_degree_gt_2": true,
+        "physical_graph_degree_status": "CONSTRAINED_MINIMUM_DEGREE_3_FROM_S138_MAINLINE_INTERIOR_PLUS_S139_CONNECTED_CROSSOVER_EDGE",
+        "source_id": "S138"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          37.5772286,
+          55.7620364
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "JUNCTION_KOL5_PARK_KULTURY_SWITCH_REF4",
+      "properties": {
+        "feature_role": "JUNCTION_EVENT",
+        "main_track": "KOLTSEVAYA_TRACK_B",
+        "knowledge_status": "CONSTRAINED",
+        "osm_switch_node_id_snapshot": 1189903147,
+        "osm_switch_ref": "4",
+        "chainage_m": 4711.933,
+        "exact_xy_status": "CONSTRAINED_OSM_SNAPSHOT_IDENTITY_MATCH_TO_SOURCE_SWITCH_NUMBER_NOT_CURRENT_ENGINEERING_XY",
+        "branch_side": null,
+        "branch_side_status": "UNKNOWN_RELATIVE_TO_TRACK_B; S105 ONLY_STATES_RIGHT_IN_PHOTOGRAPHED_ORIENTATION",
+        "physical_graph_degree_gt_2": null,
+        "physical_graph_degree_status": "UNKNOWN_CONNECTED-WAYS_SNAPSHOT_DOES_NOT_RESOLVE_THE_BRANCH_AT_THIS_LATER_RELATION-SNAPSHOT_SWITCH",
+        "source_id": "S138"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          37.5726732,
+          55.7391702
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "JUNCTION_KOL5_PARK_KULTURY_SWITCH_REF2",
+      "properties": {
+        "feature_role": "JUNCTION_EVENT",
+        "main_track": "KOLTSEVAYA_TRACK_B",
+        "knowledge_status": "CONSTRAINED",
+        "osm_switch_node_id_snapshot": 4038142918,
+        "osm_switch_ref": "2",
+        "chainage_m": 5825.355,
+        "exact_xy_status": "CONSTRAINED_OSM_SNAPSHOT_NOT_CURRENT_ENGINEERING_XY",
+        "branch_side": null,
+        "branch_side_status": "UNKNOWN",
+        "physical_graph_degree_gt_2": null,
+        "physical_graph_degree_status": "UNKNOWN_CONNECTED-WAYS_SNAPSHOT_DOES_NOT_RESOLVE_THE_BRANCH_AT_THIS_LATER_RELATION-SNAPSHOT_SWITCH",
+        "source_id": "S138"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          37.589517,
+          55.7362774
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM_SNAPSHOT_CROSSOVER_WAY_429982507",
+      "properties": {
+        "feature_role": "OFF_MAIN_EDGE",
+        "classification": "CROSSOVER_CANDIDATE",
+        "knowledge_status": "CONSTRAINED",
+        "osm_way_id_snapshot": 429982507,
+        "osm_way_id_current": null,
+        "railway": "subway",
+        "service": "crossover",
+        "usage": "main",
+        "source_id": "S139",
+        "source_snapshot_timestamp": "2026-04-05T03:59:54Z",
+        "attaches_to_track_b_switch_node_id_snapshot": 1398729304,
+        "current_osm_truth": false
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            37.5775362,
+            55.7627444
+          ],
+          [
+            37.5775038,
+            55.7626094
+          ],
+          [
+            37.5773013,
+            55.7622019
+          ],
+          [
+            37.5772286,
+            55.7620364
+          ]
+        ]
+      }
+    }
+  ]
+}

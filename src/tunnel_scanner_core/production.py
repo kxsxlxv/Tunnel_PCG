@@ -686,12 +686,21 @@ def sample_alignment_station(
         raise AssertionError("binary alignment bracket does not contain chainage")
 
     u = (chainage_m - a.chainage_m) / (b.chainage_m - a.chainage_m)
+    tangent = _normalize_vec3(
+        tuple(
+            a.tangent_world[index]
+            + u * (b.tangent_world[index] - a.tangent_world[index])
+            for index in range(3)
+        ),
+        name="interpolated alignment tangent",
+    )
     return AlignmentStation(
         chainage_m=float(chainage_m),
         world_y_m=a.world_y_m + u * (b.world_y_m - a.world_y_m),
         offset_x_m=a.offset_x_m + u * (b.offset_x_m - a.offset_x_m),
         offset_z_m=a.offset_z_m + u * (b.offset_z_m - a.offset_z_m),
         source="interpolated",
+        tangent_world=tangent,
     )
 
 
@@ -745,12 +754,21 @@ def _sample_alignment_station_with_terminal_extrapolation(
     if span <= 0.0:
         raise ValueError("terminal alignment stations are not increasing")
     u = (chainage_m - a.chainage_m) / span
+    tangent = _normalize_vec3(
+        tuple(
+            a.tangent_world[index]
+            + u * (b.tangent_world[index] - a.tangent_world[index])
+            for index in range(3)
+        ),
+        name="extrapolated alignment tangent",
+    )
     return AlignmentStation(
         chainage_m=float(chainage_m),
         world_y_m=a.world_y_m + u * (b.world_y_m - a.world_y_m),
         offset_x_m=a.offset_x_m + u * (b.offset_x_m - a.offset_x_m),
         offset_z_m=a.offset_z_m + u * (b.offset_z_m - a.offset_z_m),
         source=source,
+        tangent_world=tangent,
     )
 
 
@@ -950,16 +968,16 @@ def _periodic_cable_sag_alignment_stations(
             local = (1.0 - fraction) / (1.0 - peak_fraction)
         local = max(0.0, min(1.0, local))
         sag_factor = math.sin(0.5 * math.pi * local)
+        right, tangent, up = alignment_station_frame(base_station)
+        sag = amplitude * sag_factor
         result.append(
             AlignmentStation(
                 chainage_m=base_station.chainage_m,
-                world_y_m=base_station.world_y_m,
-                offset_x_m=base_station.offset_x_m,
-                offset_z_m=(
-                    base_station.offset_z_m
-                    - amplitude * sag_factor
-                ),
+                world_y_m=base_station.world_y_m - up[1] * sag,
+                offset_x_m=base_station.offset_x_m - up[0] * sag,
+                offset_z_m=base_station.offset_z_m - up[2] * sag,
                 source=f"{base_station.source}|cable_sag_irregular",
+                tangent_world=tangent,
             )
         )
     return tuple(result)

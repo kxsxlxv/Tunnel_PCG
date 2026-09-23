@@ -1068,11 +1068,7 @@ def build_sweep_mesh(
     for station in stations:
         for x, z in points:
             vertices.append(
-                (
-                    x + station.offset_x_m,
-                    station.world_y_m,
-                    z + station.offset_z_m,
-                )
+                transform_alignment_cross_section_point(station, x, z)
             )
 
     faces: list[Face] = []
@@ -2096,11 +2092,7 @@ def _build_stage10_2_periodic_scene_objects(
             )
             iid = stable_instance_id(key)
             vertices = tuple(
-                (
-                    x + station.offset_x_m,
-                    y + station.world_y_m,
-                    z + station.offset_z_m,
-                )
+                transform_alignment_local_point(station, x, y, z)
                 for x, y, z in local.vertices
             )
             result.append(
@@ -2270,11 +2262,7 @@ def _build_stage10_5_modern_permanent_way_scene_objects(
             )
             iid = stable_instance_id(key)
             vertices = tuple(
-                (
-                    x + station.offset_x_m,
-                    y + station.world_y_m,
-                    z + station.offset_z_m,
-                )
+                transform_alignment_local_point(station, x, y, z)
                 for x, y, z in local.vertices
             )
             result.append(
@@ -2376,11 +2364,7 @@ def _build_stage10_3_contact_scene_objects(
             )
             iid = stable_instance_id(key)
             vertices = tuple(
-                (
-                    x + station.offset_x_m,
-                    y + station.world_y_m,
-                    z + station.offset_z_m,
-                )
+                transform_alignment_local_point(station, x, y, z)
                 for x, y, z in local.vertices
             )
             result.append(
@@ -2500,11 +2484,7 @@ def _build_stage10_5_modern_contact_scene_objects(
             )
             iid = stable_instance_id(key)
             vertices = tuple(
-                (
-                    x + station.offset_x_m,
-                    y + station.world_y_m,
-                    z + station.offset_z_m,
-                )
+                transform_alignment_local_point(station, x, y, z)
                 for x, y, z in local.vertices
             )
             result.append(
@@ -2709,11 +2689,7 @@ def _build_stage10_5_service_rack_scene_objects(
             )
             iid = stable_instance_id(key)
             vertices = tuple(
-                (
-                    x + station.offset_x_m,
-                    y + station.world_y_m,
-                    z + station.offset_z_m,
-                )
+                transform_alignment_local_point(station, x, y, z)
                 for x, y, z in local.vertices
             )
             result.append(
@@ -2809,11 +2785,7 @@ def _build_stage10_5_water_main_support_scene_objects(
         key = f"{namespace}/services/water-main-support/{event_index:06d}"
         iid = stable_instance_id(key)
         vertices = tuple(
-            (
-                x + station.offset_x_m,
-                y + station.world_y_m,
-                z + station.offset_z_m,
-            )
+            transform_alignment_local_point(station, x, y, z)
             for x, y, z in local.vertices
         )
         result.append(
@@ -3548,11 +3520,7 @@ def _warp_civil_local_object_to_alignment(
             )
             extrapolated_sides.add(extrapolated_side)
         vertices.append(
-            (
-                xr + station.offset_x_m,
-                station.world_y_m,
-                zr + station.offset_z_m,
-            )
+            transform_alignment_cross_section_point(station, xr, zr)
         )
 
     # Preserve the legacy Stage-9 object types literally so the Blender

@@ -2156,15 +2156,32 @@ def _periodic_mesh_prototype_properties(
     vertex_count: int,
     face_count: int,
 ) -> dict[str, Any]:
-    """Describe a pure-translation periodic mesh for exact Blender instancing.
+    """Describe exact periodic-mesh reuse when the alignment needs translation only.
 
-    SceneObject vertices remain fully materialized in world coordinates for
-    backward compatibility. These properties let importers recover the shared
-    local mesh exactly and place each logical instance with an object transform.
+    The current scene schema supports translation-only prototypes. A real route
+    changes yaw/pitch at every event, so declaring those meshes as translation
+    instances would be geometrically wrong. Frame-aware routes therefore keep
+    the full world-space mesh until a rigid-transform prototype schema is added.
     """
     if not family or not local_name:
         raise ValueError("periodic mesh prototype family/name must not be empty")
+    right, tangent, up = alignment_station_frame(station)
+    frame_props: dict[str, Any] = {
+        "alignmentFrameMode": "zero_roll_tangent_gravity_up_v1",
+        "alignmentTangentWorld": tangent,
+        "alignmentRightWorld": right,
+        "alignmentUpWorld": up,
+    }
+    if not alignment_station_uses_identity_frame(station):
+        return {
+            **frame_props,
+            "meshPrototypeReuseEligible": False,
+            "meshPrototypeReuseDisabledReason": (
+                "rigid_alignment_rotation_not_supported_by_translation_schema_v1"
+            ),
+        }
     return {
+        **frame_props,
         "meshPrototypeKey": (
             f"stage10.5/{profile.provenance.canonical_sha256}/"
             f"{family}/{local_name}"
@@ -2179,6 +2196,7 @@ def _periodic_mesh_prototype_properties(
         "meshPrototypeFaceCount": int(face_count),
         "meshPrototypeGeometryExact": True,
         "meshPrototypeLiDARSurfaceUnchanged": True,
+        "meshPrototypeReuseEligible": True,
     }
 
 

@@ -5457,6 +5457,8 @@ def build_stage10_5_rc_modern_chunk_plan(
     ancillary_sampling_policy: AncillarySamplingPolicy | str = AncillarySamplingPolicy.REFERENCE,
     production_config: ProductionConfig,
     seed: int = 5812,
+    alignment_stations: Sequence[AlignmentStation] | None = None,
+    alignment_metadata: Mapping[str, Any] | None = None,
 ) -> Stage105RCModernChunkPlan:
     """Plan long RC Stage-10.5 export without materializing the full scene."""
     ring_config = ring_config or RingConfig()
@@ -5501,7 +5503,33 @@ def build_stage10_5_rc_modern_chunk_plan(
         ),
         seed=seed,
     )
-    stations = production_alignment_stations(source.assembly)
+    if alignment_stations is None:
+        stations = production_alignment_stations(source.assembly)
+        external_alignment = False
+    else:
+        stations = tuple(alignment_stations)
+        if len(stations) < 2:
+            raise ValueError("external alignment requires at least two stations")
+        if not math.isclose(stations[0].chainage_m, 0.0, abs_tol=1e-9):
+            raise ValueError("external alignment must start at chainage zero")
+        if any(
+            b.chainage_m <= a.chainage_m
+            for a, b in zip(stations, stations[1:])
+        ):
+            raise ValueError("external alignment chainage must be strictly increasing")
+        total_alignment = stations[-1].chainage_m
+        if not math.isclose(
+            source.assembly.length_by_chainage_m,
+            total_alignment,
+            rel_tol=0.0,
+            abs_tol=1e-6,
+        ):
+            raise ValueError(
+                "external alignment length must equal source scaffold length: "
+                f"{total_alignment:.9f} vs "
+                f"{source.assembly.length_by_chainage_m:.9f} m"
+            )
+        external_alignment = True
     specs = build_continuous_asset_specs(
         namespace=production_config.namespace,
         ancillary=ancillary,
@@ -5595,6 +5623,20 @@ def build_stage10_5_rc_modern_chunk_plan(
         "coordinatePrecisionIntent": (
             "double/global; no mandatory rebasing"
         ),
+        "alignmentMode": (
+            "external_frame_aware_zero_roll_v1"
+            if external_alignment
+            else "legacy_stage9_offset_sweep"
+        ),
+        "alignmentFrameAware": bool(
+            external_alignment
+            and any(
+                not alignment_station_uses_identity_frame(station)
+                for station in stations
+            )
+        ),
+        "externalAlignment": bool(external_alignment),
+        "alignmentMetadata": dict(alignment_metadata or {}),
         "domainStage": "10.5",
         "moscowProfileID": profile.profile_id,
         "moscowProfileSHA256": profile.provenance.canonical_sha256,

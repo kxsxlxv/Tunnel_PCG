@@ -16,6 +16,7 @@ from tunnel_scanner_core.blender_adapter import (
     _blender_custom_property_value,
     _float32_vertex_key,
     _mesh_prototype_payload,
+    _source_lining_boundary_vertex_keys,
     _source_lining_extrados_vertex_keys,
     build_scene_package_in_blender,
 )
@@ -161,6 +162,42 @@ def test_blender_adapter_builds_hierarchy_meshes_and_custom_props(monkeypatch):
     assert fake.data.collections.get("TunnelScanner::Ring_0012") is not None
     assert fake.data.collections.get("TunnelScanner::Ring_0012::Segments") is not None
     assert fake.data.collections.get("TunnelScanner::Ring_0012::Joints::PrescribedRadial") is not None
+
+
+def test_lining_boundary_vertex_keys_follow_curved_mesh_topology():
+    package = _package()
+    segment = next(
+        obj for obj in package.objects if obj.object_type == "lining_segment"
+    )
+    props = segment.custom_properties
+    nu = int(props["surfaceSubdivisions"])
+    nv = int(props["surfaceLongitudinalSubdivisions"])
+
+    front = _source_lining_boundary_vertex_keys(segment, "front")
+    back = _source_lining_boundary_vertex_keys(segment, "back")
+    start = _source_lining_boundary_vertex_keys(segment, "start")
+    end = _source_lining_boundary_vertex_keys(segment, "end")
+
+    assert len(front) == 2 * (nu + 1)
+    assert len(back) == 2 * (nu + 1)
+    assert len(start) == 2 * (nv + 1)
+    assert len(end) == 2 * (nv + 1)
+    assert front != back
+    assert start != end
+
+    dense_face_count = 2 * nu * nv
+    cap_face_count = 2 * nu
+    radial_faces = segment.faces[
+        dense_face_count + cap_face_count:
+    ]
+    assert len(radial_faces) == 2 * nv
+    for index, face in enumerate(radial_faces):
+        keys = {
+            _float32_vertex_key(segment.vertices[i])
+            for i in face
+        }
+        boundary = start if index % 2 == 0 else end
+        assert keys <= boundary
 
 
 def test_lining_extrados_classifier_uses_curved_mesh_outer_vertex_topology():

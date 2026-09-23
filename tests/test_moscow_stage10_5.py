@@ -1858,6 +1858,90 @@ def test_stage10_5_rc_chunk_first_3000_ring_first_chunk_is_local(monkeypatch):
     )
 
 
+def test_stage10_5_rc_chunk_first_accepts_frame_aware_external_alignment():
+    profile = load_stage10_initial_moscow_profile(
+        civil_archetype="rc_block_6100_5600"
+    )
+    stations = (
+        AlignmentStation(
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            "route-start",
+            tangent_world=(0.0, 1.0, 0.0),
+        ),
+        AlignmentStation(
+            2.0,
+            2.0,
+            0.0,
+            -0.02,
+            "route-corner",
+            tangent_world=(2**-0.5, 2**-0.5, -0.01),
+        ),
+        AlignmentStation(
+            4.0,
+            2.0,
+            2.0,
+            -0.04,
+            "route-end",
+            tangent_world=(1.0, 0.0, -0.01),
+        ),
+    )
+    plan = build_stage10_5_rc_modern_chunk_plan(
+        chunk_length_m=2.0,
+        boundary_policy=ChunkBoundaryPolicy.EXACT_LENGTH,
+        ring_config=RingConfig(width_m=1.0),
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=4,
+            ring_width_m=1.0,
+            displacement_amplitude_m=0.0,
+            axis_noise_sigma_m=0.0,
+            ring_rotation_strategy=RingRotationStrategy.RINGWISE_GAUSSIAN,
+        ),
+        surface_meshing=SurfaceMeshingConfig(max_sagitta_m=0.002),
+        include_bolts=True,
+        production_config=ProductionConfig(
+            namespace="stage10-5-external-frame-test",
+            moscow_profile=profile,
+            moscow_stage="10.5",
+            moscow_civil_topology="kba",
+        ),
+        seed=5812,
+        alignment_stations=stations,
+        alignment_metadata={
+            "trackID": "KOLTSEVAYA_TRACK_B",
+            "direction": "counterclockwise",
+        },
+    )
+    meta = plan.metadata["productionGeometry"]
+    assert meta["externalAlignment"] is True
+    assert meta["alignmentFrameAware"] is True
+    assert meta["alignmentMode"] == "external_frame_aware_zero_roll_v1"
+    assert meta["alignmentMetadata"]["trackID"] == "KOLTSEVAYA_TRACK_B"
+
+    first = build_stage10_5_rc_modern_chunk_scene_package(plan, 0)
+    lvt = first.objects_of_type("production_lvt_block")
+    assert lvt
+    assert all(
+        obj.custom_properties["meshPrototypeReuseEligible"] is False
+        for obj in lvt
+    )
+    assert all(
+        obj.custom_properties["alignmentFrameMode"]
+        == "zero_roll_tangent_gravity_up_v1"
+        for obj in lvt
+    )
+    lining = first.objects_of_type("lining_segment")
+    assert lining
+    # A frame-aware route must not collapse back to the legacy global-Y
+    # placement: the first chunk bends toward +X and descends.
+    xs = [vertex[0] for obj in lining for vertex in obj.vertices]
+    zs = [vertex[2] for obj in lining for vertex in obj.vertices]
+    assert max(xs) - min(xs) > 5.0
+    assert min(zs) < -2.5
+
+
 def test_stage10_5_rc_single_chunk_builder_matches_lazy_iterator():
     profile = load_stage10_initial_moscow_profile(
         civil_archetype="rc_block_6100_5600"

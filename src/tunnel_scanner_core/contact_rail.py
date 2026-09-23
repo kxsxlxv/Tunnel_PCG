@@ -285,13 +285,16 @@ def modern_contact_support_chainages(
 
     for a, b in zip(result, result[1:]):
         spacing = b - a
+        scale = max(abs(a), abs(b), abs(spacing), 1.0)
+        numerical_tol = max(1e-12, 64.0 * math.ulp(scale))
         if (
-            spacing < modern.support_normative_min_m - 1e-12
-            or spacing > modern.support_normative_max_m + 1e-12
+            spacing < modern.support_normative_min_m - numerical_tol
+            or spacing > modern.support_normative_max_m + numerical_tol
         ):
             raise ValueError(
-                f"modern contact-support spacing {spacing:.9f} m outside "
-                "normative range"
+                f"modern contact-support spacing {spacing:.17g} m outside "
+                f"normative range within numerical tolerance "
+                f"{numerical_tol:.3g} m"
             )
     return tuple(result)
 

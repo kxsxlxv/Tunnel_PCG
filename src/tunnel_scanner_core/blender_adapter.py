@@ -410,13 +410,62 @@ def _source_lining_extrados_vertex_keys(
         for i in range(1, len(vertices), 2)
     )
 
+
+def _source_lining_boundary_vertex_keys(
+    scene_object: SceneObject,
+    boundary: str,
+) -> frozenset[bytes]:
+    """Return source curved-mesh vertices on one topological boundary."""
+    props = scene_object.custom_properties
+    vertices = scene_object.vertices
+    nu = int(props.get("surfaceSubdivisions", 0))
+    nv = int(props.get("surfaceLongitudinalSubdivisions", 0))
+    expected_vertices = 2 * (nu + 1) * (nv + 1)
+    if (
+        scene_object.object_type != "lining_segment"
+        or nu <= 0
+        or nv <= 0
+        or len(vertices) != expected_vertices
+    ):
+        raise ValueError(
+            f"{scene_object.name}: invalid curved lining topology metadata"
+        )
+
+    def index(iv: int, iu: int, layer: int) -> int:
+        return 2 * (iv * (nu + 1) + iu) + layer
+
+    indices: list[int] = []
+    if boundary == "front":
+        for iu in range(nu + 1):
+            indices.extend((index(0, iu, 0), index(0, iu, 1)))
+    elif boundary == "back":
+        for iu in range(nu + 1):
+            indices.extend((index(nv, iu, 0), index(nv, iu, 1)))
+    elif boundary == "start":
+        for iv in range(nv + 1):
+            indices.extend((index(iv, 0, 0), index(iv, 0, 1)))
+    elif boundary == "end":
+        for iv in range(nv + 1):
+            indices.extend((index(iv, nu, 0), index(iv, nu, 1)))
+    else:
+        raise ValueError(f"unknown curved lining boundary: {boundary!r}")
+    return frozenset(
+        _float32_vertex_key(vertices[index])
+        for index in indices
+    )
+
 def _strip_internal_lining_caps_in_blender(
     bpy,
     package: ScenePackage,
     *,
     tolerance_m: float = 1e-8,
 ) -> int:
-    """Post-Boolean realtime cleanup of hidden internal ring end faces."""
+    """Post-Boolean cleanup of hidden internal ring end faces.
+
+    Transferred Moscow RC segments are classified from their source curved-mesh
+    topology, so cleanup remains exact after arbitrary 3D route yaw/pitch.
+    Legacy Stage-9 scenes retain the historical global-Y plane classifier.
+    """
     try:
         import bmesh  # type: ignore
     except ImportError as exc:  # pragma: no cover - Blender runtime only
@@ -425,13 +474,16 @@ def _strip_internal_lining_caps_in_blender(
     if "ringWidthM" not in package.metadata:
         raise ValueError("scene metadata lacks ringWidthM for lining cap cleanup")
     ring_width_m = float(package.metadata["ringWidthM"])
-    lining_objects = [o for o in package.objects if o.object_type == "lining_segment"]
+    lining_objects = [
+        obj for obj in package.objects
+        if obj.object_type == "lining_segment"
+    ]
     if not lining_objects:
         return 0
     global_ring_count = int(
         package.metadata.get(
             "ringCount",
-            max(o.ring_id for o in lining_objects) + 1,
+            max(obj.ring_id for obj in lining_objects) + 1,
         )
     )
     global_max_ring_id = global_ring_count - 1
@@ -444,76 +496,83 @@ def _strip_internal_lining_caps_in_blender(
                 f"lining object missing during cap cleanup: {scene_object.name}"
             )
         props = scene_object.custom_properties
-        origin_y = (
-            float(props.get("chunkWorldOriginY", 0.0))
-            if bool(props.get("coordinatesLocalizedToChunk", False))
-            else 0.0
+        transferred_moscow = bool(
+            props.get(
+                "stage9SegmentJointFastenerArchitectureTransferred",
+                False,
+            )
         )
-        if (
-            "liningRingFrontWorldYM" in props
-            and "liningRingBackWorldYM" in props
-        ):
-            front_y = float(props["liningRingFrontWorldYM"]) - origin_y
-            back_y = float(props["liningRingBackWorldYM"]) - origin_y
-            lining_ring_index = int(
-                props.get("liningRingIndex", scene_object.ring_id)
-            )
-            lining_ring_count = int(
-                props.get("liningGlobalRingCount", global_ring_count)
-            )
-            strip_front = lining_ring_index > 0
-            strip_back = lining_ring_index < lining_ring_count - 1
-        else:
-            front_y = (scene_object.ring_id - 0.5) * ring_width_m - origin_y
-            back_y = (scene_object.ring_id + 0.5) * ring_width_m - origin_y
-            strip_front = scene_object.ring_id > 0
-            strip_back = scene_object.ring_id < global_max_ring_id
+        lining_ring_index = int(
+            props.get("liningRingIndex", scene_object.ring_id)
+        )
+        lining_ring_count = int(
+            props.get("liningGlobalRingCount", global_ring_count)
+        )
+        strip_front = lining_ring_index > 0
+        strip_back = lining_ring_index < lining_ring_count - 1
 
         bm = bmesh.new()
         bm.from_mesh(obj.data)
-
-        # The Moscow RC Stage-9 architecture transfer uses its own 1.0 m
-        # civil-ring rhythm over the source assembly's 1.35 m longitudinal
-        # frame. Exact Blender Booleans can also perturb vertices on an end
-        # plane by a few floating-point ulps. For those transferred objects,
-        # classify the cap against the *actual* post-Boolean Y extrema, while
-        # retaining the metadata planes as a sanity check. The legacy Stage-9
-        # path keeps its original exact-plane behaviour.
-        transferred_moscow = bool(
-            props.get("stage9SegmentJointFastenerArchitectureTransferred", False)
-        )
-        cap_tolerance_m = tolerance_m
-        target_front_y = front_y
-        target_back_y = back_y
-        if transferred_moscow and bm.verts:
-            actual_front_y = min(float(vertex.co.y) for vertex in bm.verts)
-            actual_back_y = max(float(vertex.co.y) for vertex in bm.verts)
-            metadata_tolerance_m = 1e-4
-            if abs(actual_front_y - front_y) > metadata_tolerance_m:
-                raise RuntimeError(
-                    f"{scene_object.name}: Moscow lining front plane mismatch "
-                    f"(mesh={actual_front_y:.9f}, metadata={front_y:.9f})"
-                )
-            if abs(actual_back_y - back_y) > metadata_tolerance_m:
-                raise RuntimeError(
-                    f"{scene_object.name}: Moscow lining back plane mismatch "
-                    f"(mesh={actual_back_y:.9f}, metadata={back_y:.9f})"
-                )
-            target_front_y = actual_front_y
-            target_back_y = actual_back_y
-            cap_tolerance_m = max(tolerance_m, 1e-6)
-
         remove = []
-        for face in bm.faces:
-            ys = [float(vertex.co.y) for vertex in face.verts]
-            on_front = strip_front and all(
-                abs(y - target_front_y) <= cap_tolerance_m for y in ys
+
+        if transferred_moscow:
+            front_keys = _source_lining_boundary_vertex_keys(
+                scene_object,
+                "front",
             )
-            on_back = strip_back and all(
-                abs(y - target_back_y) <= cap_tolerance_m for y in ys
+            back_keys = _source_lining_boundary_vertex_keys(
+                scene_object,
+                "back",
             )
-            if on_front or on_back:
-                remove.append(face)
+            for face in bm.faces:
+                keys = tuple(
+                    _float32_vertex_key(
+                        (
+                            float(vertex.co.x),
+                            float(vertex.co.y),
+                            float(vertex.co.z),
+                        )
+                    )
+                    for vertex in face.verts
+                )
+                if (
+                    (strip_front and all(key in front_keys for key in keys))
+                    or (strip_back and all(key in back_keys for key in keys))
+                ):
+                    remove.append(face)
+            cleanup_mode = "source_curved_mesh_end_vertex_topology_v1"
+        else:
+            origin_y = (
+                float(props.get("chunkWorldOriginY", 0.0))
+                if bool(props.get("coordinatesLocalizedToChunk", False))
+                else 0.0
+            )
+            if (
+                "liningRingFrontWorldYM" in props
+                and "liningRingBackWorldYM" in props
+            ):
+                front_y = float(props["liningRingFrontWorldYM"]) - origin_y
+                back_y = float(props["liningRingBackWorldYM"]) - origin_y
+            else:
+                front_y = (
+                    (scene_object.ring_id - 0.5) * ring_width_m - origin_y
+                )
+                back_y = (
+                    (scene_object.ring_id + 0.5) * ring_width_m - origin_y
+                )
+                strip_front = scene_object.ring_id > 0
+                strip_back = scene_object.ring_id < global_max_ring_id
+            for face in bm.faces:
+                ys = [float(vertex.co.y) for vertex in face.verts]
+                on_front = strip_front and all(
+                    abs(y - front_y) <= tolerance_m for y in ys
+                )
+                on_back = strip_back and all(
+                    abs(y - back_y) <= tolerance_m for y in ys
+                )
+                if on_front or on_back:
+                    remove.append(face)
+            cleanup_mode = "legacy_metadata_y_plane"
 
         for face in remove:
             bm.faces.remove(face)
@@ -525,11 +584,7 @@ def _strip_internal_lining_caps_in_blender(
         obj["internalLongitudinalCapsStripped"] = True
         obj["longitudinalCapFacesRemoved"] = int(removed)
         obj["renderSurfaceOpenAtInternalRingBoundaries"] = True
-        obj["liningCapCleanupPlaneMode"] = (
-            "post_boolean_mesh_extrema_with_metadata_guard"
-            if transferred_moscow
-            else "legacy_metadata_plane"
-        )
+        obj["liningCapCleanupPlaneMode"] = cleanup_mode
 
     return removed_total
 
@@ -542,14 +597,23 @@ def _strip_coincident_lining_interfaces_in_blender(
     radial_span_tolerance_m: float = 1e-5,
     y_span_tolerance_m: float = 1e-8,
 ) -> int:
-    """Remove radial segment-boundary surfaces independent of face tessellation."""
+    """Remove hidden radial segment-boundary surfaces.
+
+    Transferred Moscow RC segments use source curved-mesh boundary topology,
+    which is invariant under arbitrary route yaw/pitch. Legacy Stage-9 geometry
+    retains the analytical global-Y classifier for backward compatibility.
+    """
     try:
         import bmesh  # type: ignore
     except ImportError as exc:  # pragma: no cover - Blender runtime only
-        raise RuntimeError("bmesh is required for lining interface cleanup") from exc
+        raise RuntimeError(
+            "bmesh is required for lining interface cleanup"
+        ) from exc
 
     if "ringWidthM" not in package.metadata:
-        raise ValueError("scene metadata lacks ringWidthM for lining interface cleanup")
+        raise ValueError(
+            "scene metadata lacks ringWidthM for lining interface cleanup"
+        )
     ring_width_m = float(package.metadata["ringWidthM"])
 
     def angle_delta(a_deg: float, b_deg: float) -> float:
@@ -560,123 +624,212 @@ def _strip_coincident_lining_interfaces_in_blender(
         if scene_object.object_type != "lining_segment":
             continue
         props = scene_object.custom_properties
-        required = (
-            "segmentFrontStartDeg",
-            "segmentFrontEndDeg",
-            "segmentBackStartDeg",
-            "segmentBackEndDeg",
-            "ringTranslationX",
-            "ringTranslationY",
-            "ringTranslationZ",
-            "ringRotationDeg",
-        )
-        if any(key not in props for key in required):
-            raise ValueError(
-                f"{scene_object.name}: missing angular boundary metadata for Stage-9 cleanup"
-            )
-
-        local_ring_width_m = float(
-            props.get("liningRingWidthM", ring_width_m)
-        )
-        tx = float(props["ringTranslationX"])
-        ty = float(props["ringTranslationY"])
-        tz = float(props["ringTranslationZ"])
-        localized = bool(props.get("coordinatesLocalizedToChunk", False))
-        origin_x = float(props.get("chunkWorldOriginX", 0.0)) if localized else 0.0
-        origin_y = float(props.get("chunkWorldOriginY", 0.0)) if localized else 0.0
-        origin_z = float(props.get("chunkWorldOriginZ", 0.0)) if localized else 0.0
-        tx -= origin_x
-        ty -= origin_y
-        tz -= origin_z
-        stitched = bool(props.get("productionRingAlignmentStitched", False))
-        rotation = math.radians(float(props["ringRotationDeg"]))
-        c = math.cos(rotation)
-        sr = math.sin(rotation)
-        fs = float(props["segmentFrontStartDeg"])
-        fe = float(props["segmentFrontEndDeg"])
-        bs = float(props["segmentBackStartDeg"])
-        be = float(props["segmentBackEndDeg"])
-
         obj = bpy.data.objects.get(scene_object.name)
         if obj is None:
             raise RuntimeError(
-                f"lining object missing during interface cleanup: {scene_object.name}"
+                f"lining object missing during interface cleanup: "
+                f"{scene_object.name}"
             )
 
         bm = bmesh.new()
         bm.from_mesh(obj.data)
         remove = []
-        for face in bm.faces:
-            samples = []
-            for vertex in face.verts:
-                x = float(vertex.co.x)
-                y = float(vertex.co.y)
-                z = float(vertex.co.z)
-                local_y = y - ty
-                center_x = tx
-                center_z = tz
-                if stitched:
-                    front_x = float(props["productionRingFrontOffsetX"]) - origin_x
-                    front_z = float(props["productionRingFrontOffsetZ"]) - origin_z
-                    centre_x = float(props["productionRingCenterOffsetX"]) - origin_x
-                    centre_z = float(props["productionRingCenterOffsetZ"]) - origin_z
-                    back_x = float(props["productionRingBackOffsetX"]) - origin_x
-                    back_z = float(props["productionRingBackOffsetZ"]) - origin_z
-                    if local_y <= 0.0:
-                        u = min(
-                            1.0,
-                            max(
-                                0.0,
-                                (local_y + 0.5 * local_ring_width_m)
-                                / (0.5 * local_ring_width_m),
-                            ),
-                        )
-                        center_x = front_x + u * (centre_x - front_x)
-                        center_z = front_z + u * (centre_z - front_z)
-                    else:
-                        u = min(
-                            1.0,
-                            max(0.0, local_y / (0.5 * local_ring_width_m)),
-                        )
-                        center_x = centre_x + u * (back_x - centre_x)
-                        center_z = centre_z + u * (back_z - centre_z)
+        transferred_moscow = bool(
+            props.get(
+                "stage9SegmentJointFastenerArchitectureTransferred",
+                False,
+            )
+        )
 
-                dx = x - center_x
-                dz = z - center_z
-                local_x = c * dx - sr * dz
-                local_z = sr * dx + c * dz
-                samples.append(
-                    (
-                        local_y,
-                        math.hypot(local_x, local_z),
-                        math.degrees(math.atan2(local_x, local_z)),
+        if transferred_moscow:
+            start_keys = _source_lining_boundary_vertex_keys(
+                scene_object,
+                "start",
+            )
+            end_keys = _source_lining_boundary_vertex_keys(
+                scene_object,
+                "end",
+            )
+            for face in bm.faces:
+                keys = tuple(
+                    _float32_vertex_key(
+                        (
+                            float(vertex.co.x),
+                            float(vertex.co.y),
+                            float(vertex.co.z),
+                        )
                     )
+                    for vertex in face.verts
+                )
+                if (
+                    all(key in start_keys for key in keys)
+                    or all(key in end_keys for key in keys)
+                ):
+                    remove.append(face)
+            cleanup_mode = "source_curved_mesh_radial_vertex_topology_v1"
+        else:
+            required = (
+                "segmentFrontStartDeg",
+                "segmentFrontEndDeg",
+                "segmentBackStartDeg",
+                "segmentBackEndDeg",
+                "ringTranslationX",
+                "ringTranslationY",
+                "ringTranslationZ",
+                "ringRotationDeg",
+            )
+            if any(key not in props for key in required):
+                bm.free()
+                raise ValueError(
+                    f"{scene_object.name}: missing angular boundary metadata "
+                    "for Stage-9 cleanup"
                 )
 
-            ys = [sample[0] for sample in samples]
-            radii = [sample[1] for sample in samples]
-            if max(ys) - min(ys) <= y_span_tolerance_m:
-                continue
-            if max(radii) - min(radii) <= radial_span_tolerance_m:
-                continue
+            local_ring_width_m = float(
+                props.get("liningRingWidthM", ring_width_m)
+            )
+            tx = float(props["ringTranslationX"])
+            ty = float(props["ringTranslationY"])
+            tz = float(props["ringTranslationZ"])
+            localized = bool(
+                props.get("coordinatesLocalizedToChunk", False)
+            )
+            origin_x = (
+                float(props.get("chunkWorldOriginX", 0.0))
+                if localized
+                else 0.0
+            )
+            origin_y = (
+                float(props.get("chunkWorldOriginY", 0.0))
+                if localized
+                else 0.0
+            )
+            origin_z = (
+                float(props.get("chunkWorldOriginZ", 0.0))
+                if localized
+                else 0.0
+            )
+            tx -= origin_x
+            ty -= origin_y
+            tz -= origin_z
+            stitched = bool(
+                props.get("productionRingAlignmentStitched", False)
+            )
+            rotation = math.radians(float(props["ringRotationDeg"]))
+            c = math.cos(rotation)
+            sr = math.sin(rotation)
+            fs = float(props["segmentFrontStartDeg"])
+            fe = float(props["segmentFrontEndDeg"])
+            bs = float(props["segmentBackStartDeg"])
+            be = float(props["segmentBackEndDeg"])
 
-            start_match = True
-            end_match = True
-            for local_y, _radius, alpha in samples:
-                v = (
-                    local_y + 0.5 * local_ring_width_m
-                ) / local_ring_width_m
-                v = min(1.0, max(0.0, v))
-                expected_start = fs + v * (bs - fs)
-                expected_end = fe + v * (be - fe)
-                start_match = start_match and (
-                    abs(angle_delta(alpha, expected_start)) <= angle_tolerance_deg
-                )
-                end_match = end_match and (
-                    abs(angle_delta(alpha, expected_end)) <= angle_tolerance_deg
-                )
-            if start_match or end_match:
-                remove.append(face)
+            for face in bm.faces:
+                samples = []
+                for vertex in face.verts:
+                    x = float(vertex.co.x)
+                    y = float(vertex.co.y)
+                    z = float(vertex.co.z)
+                    local_y = y - ty
+                    center_x = tx
+                    center_z = tz
+                    if stitched:
+                        front_x = (
+                            float(props["productionRingFrontOffsetX"])
+                            - origin_x
+                        )
+                        front_z = (
+                            float(props["productionRingFrontOffsetZ"])
+                            - origin_z
+                        )
+                        centre_x = (
+                            float(props["productionRingCenterOffsetX"])
+                            - origin_x
+                        )
+                        centre_z = (
+                            float(props["productionRingCenterOffsetZ"])
+                            - origin_z
+                        )
+                        back_x = (
+                            float(props["productionRingBackOffsetX"])
+                            - origin_x
+                        )
+                        back_z = (
+                            float(props["productionRingBackOffsetZ"])
+                            - origin_z
+                        )
+                        if local_y <= 0.0:
+                            u = min(
+                                1.0,
+                                max(
+                                    0.0,
+                                    (
+                                        local_y
+                                        + 0.5 * local_ring_width_m
+                                    )
+                                    / (0.5 * local_ring_width_m),
+                                ),
+                            )
+                            center_x = (
+                                front_x + u * (centre_x - front_x)
+                            )
+                            center_z = (
+                                front_z + u * (centre_z - front_z)
+                            )
+                        else:
+                            u = min(
+                                1.0,
+                                max(
+                                    0.0,
+                                    local_y
+                                    / (0.5 * local_ring_width_m),
+                                ),
+                            )
+                            center_x = (
+                                centre_x + u * (back_x - centre_x)
+                            )
+                            center_z = (
+                                centre_z + u * (back_z - centre_z)
+                            )
+
+                    dx = x - center_x
+                    dz = z - center_z
+                    local_x = c * dx - sr * dz
+                    local_z = sr * dx + c * dz
+                    samples.append(
+                        (
+                            local_y,
+                            math.hypot(local_x, local_z),
+                            math.degrees(math.atan2(local_x, local_z)),
+                        )
+                    )
+
+                ys = [sample[0] for sample in samples]
+                radii = [sample[1] for sample in samples]
+                if max(ys) - min(ys) <= y_span_tolerance_m:
+                    continue
+                if max(radii) - min(radii) <= radial_span_tolerance_m:
+                    continue
+
+                start_match = True
+                end_match = True
+                for local_y, _radius, alpha in samples:
+                    v = (
+                        local_y + 0.5 * local_ring_width_m
+                    ) / local_ring_width_m
+                    v = min(1.0, max(0.0, v))
+                    expected_start = fs + v * (bs - fs)
+                    expected_end = fe + v * (be - fe)
+                    start_match = start_match and (
+                        abs(angle_delta(alpha, expected_start))
+                        <= angle_tolerance_deg
+                    )
+                    end_match = end_match and (
+                        abs(angle_delta(alpha, expected_end))
+                        <= angle_tolerance_deg
+                    )
+                if start_match or end_match:
+                    remove.append(face)
+            cleanup_mode = "legacy_analytical_angular_boundary_v1"
 
         for face in remove:
             bm.faces.remove(face)
@@ -688,6 +841,7 @@ def _strip_coincident_lining_interfaces_in_blender(
         obj["segmentBoundaryFacesStripped"] = True
         obj["segmentBoundaryFacesRemoved"] = int(removed)
         obj["renderSurfaceOpenAtSegmentInterfaces"] = True
+        obj["segmentBoundaryCleanupMode"] = cleanup_mode
 
     return removed_total
 

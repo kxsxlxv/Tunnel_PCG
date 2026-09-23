@@ -1,8 +1,10 @@
+import json
 import math
 
 import numpy as np
 
 from tunnel_scanner_core import (
+    AlignmentStation,
     AncillaryConfig,
     ChunkBoundaryPolicy,
     LabelPolicy,
@@ -11,11 +13,13 @@ from tunnel_scanner_core import (
     RingConfig,
     RingRotationStrategy,
     TunnelAssemblyConfig,
+    alignment_station_frame,
     audit_exact_coincident_faces,
     build_chunk_scene_packages,
     build_production_tunnel,
     iter_chunk_scene_packages,
     clipped_alignment_stations,
+    load_frame_alignment_geojson,
     build_procedural_nominal_tunnel,
     finalize_production_render_scene,
     plan_chunks,
@@ -23,6 +27,7 @@ from tunnel_scanner_core import (
     sample_tunnel_assembly,
     sample_alignment_station,
     stable_instance_id,
+    transform_alignment_local_point,
     strip_exact_coincident_lining_interface_faces,
     strip_internal_lining_cap_faces,
     strip_lining_segment_boundary_faces,
@@ -48,6 +53,106 @@ def _production(
         production_config=ProductionConfig(namespace=namespace),
         seed=5812,
     )
+
+
+def test_alignment_frame_identity_preserves_legacy_xyz_mapping():
+    station = AlignmentStation(
+        chainage_m=0.0,
+        world_y_m=20.0,
+        offset_x_m=10.0,
+        offset_z_m=30.0,
+        source="identity",
+    )
+    assert transform_alignment_local_point(
+        station,
+        2.0,
+        3.0,
+        4.0,
+    ) == (12.0, 23.0, 34.0)
+
+
+def test_alignment_frame_rotates_local_y_to_route_tangent_without_roll():
+    station = AlignmentStation(
+        chainage_m=0.0,
+        world_y_m=20.0,
+        offset_x_m=10.0,
+        offset_z_m=30.0,
+        source="turn-east",
+        tangent_world=(1.0, 0.0, 0.0),
+    )
+    right, tangent, up = alignment_station_frame(station)
+    assert right == (0.0, -1.0, 0.0)
+    assert tangent == (1.0, 0.0, 0.0)
+    assert up == (0.0, 0.0, 1.0)
+    assert transform_alignment_local_point(
+        station,
+        2.0,
+        3.0,
+        4.0,
+    ) == (13.0, 18.0, 34.0)
+
+
+def test_load_frame_alignment_geojson_uses_explicit_chainage_and_3d_tangent(
+    tmp_path,
+):
+    path = tmp_path / "alignment.geojson"
+    path.write_text(
+        json.dumps(
+            {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "properties": {
+                            "track_id": "TRACK_B",
+                            "direction": "counterclockwise",
+                            "vertex_chainage_m": [0.0, 100.0, 200.0],
+                        },
+                        "geometry": {
+                            "type": "LineString",
+                            "coordinates": [
+                                [37.0, 55.0, -40.0],
+                                [37.001, 55.0, -39.0],
+                                [37.002, 55.001, -38.0],
+                            ],
+                        },
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    stations = load_frame_alignment_geojson(
+        path,
+        expected_track_id="TRACK_B",
+        expected_direction="counterclockwise",
+    )
+    assert [station.chainage_m for station in stations] == [
+        0.0,
+        100.0,
+        200.0,
+    ]
+    assert math.isclose(stations[0].offset_x_m, 0.0, abs_tol=1e-9)
+    assert math.isclose(stations[0].world_y_m, 0.0, abs_tol=1e-9)
+    assert stations[0].offset_z_m == -40.0
+    assert stations[-1].offset_z_m == -38.0
+    for station in stations:
+        right, tangent, up = alignment_station_frame(station)
+        assert math.isclose(
+            sum(value * value for value in tangent),
+            1.0,
+            abs_tol=1e-12,
+        )
+        assert math.isclose(
+            sum(right[i] * tangent[i] for i in range(3)),
+            0.0,
+            abs_tol=1e-12,
+        )
+        assert math.isclose(
+            sum(up[i] * tangent[i] for i in range(3)),
+            0.0,
+            abs_tol=1e-12,
+        )
 
 
 def test_stable_instance_ids_are_deterministic_positive_and_key_sensitive():

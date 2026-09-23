@@ -73,7 +73,8 @@ def main() -> None:
     )
     if result.boolean_operations_applied:
         print(
-            f"Applied {result.boolean_operations_applied} Stage-6 Boolean operations; "
+            f"Applied {result.boolean_operations_applied} logical Stage-6 pocket cuts "
+            f"in {result.boolean_modifier_applications} Blender Boolean modifiers; "
             f"removed {len(result.removed_tool_names)} pocket cutters."
         )
     if result.lining_cap_faces_removed:

@@ -16,6 +16,7 @@ from dataclasses import dataclass
 import json
 import math
 import struct
+import time
 from typing import Any
 
 from .scene import (
@@ -31,6 +32,8 @@ class BlenderBuildResult:
     object_names: tuple[str, ...]
     mesh_names: tuple[str, ...]
     boolean_operations_applied: int = 0
+    boolean_modifier_applications: int = 0
+    bolt_boolean_batching_enabled: bool = False
     removed_tool_names: tuple[str, ...] = ()
     lining_cap_faces_removed: int = 0
     lining_interface_faces_removed: int = 0
@@ -38,6 +41,9 @@ class BlenderBuildResult:
     mesh_prototype_count: int = 0
     mesh_prototype_instance_count: int = 0
     shared_mesh_data_blocks_saved: int = 0
+    object_creation_seconds: float = 0.0
+    boolean_seconds: float = 0.0
+    cleanup_seconds: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -332,12 +338,147 @@ def _apply_boolean_difference(bpy, target, tool, *, modifier_name: str) -> None:
         target.data.update(calc_edges=True)
 
 
-def _apply_stage6_bolt_booleans(bpy, package: ScenePackage) -> tuple[int, tuple[str, ...]]:
+def _remove_blender_mesh_object(bpy, obj) -> None:
+    mesh = obj.data
+    bpy.data.objects.remove(obj, do_unlink=True)
+    if getattr(mesh, "users", 1) == 0:
+        bpy.data.meshes.remove(mesh)
+
+
+def _combined_boolean_tool_for_target(
+    bpy,
+    target,
+    tools,
+    *,
+    name: str,
+):
+    """Combine disconnected cutter solids into target-local coordinates.
+
+    Difference by one mesh containing disjoint closed components is
+    geometrically equivalent to sequential differences by those components.
+    Keeping the combined mesh in target-local coordinates also makes this safe
+    if a future importer places the target with a non-identity object transform.
+    """
+    if not tools:
+        raise ValueError("combined Boolean tool requires at least one source tool")
+
+    target_inverse = target.matrix_world.inverted()
+    vertices = []
+    faces = []
+    for tool in tools:
+        transform = target_inverse @ tool.matrix_world
+        base = len(vertices)
+        vertices.extend(
+            tuple(float(value) for value in (transform @ vertex.co))
+            for vertex in tool.data.vertices
+        )
+        faces.extend(
+            tuple(base + int(index) for index in polygon.vertices)
+            for polygon in tool.data.polygons
+        )
+
+    mesh = bpy.data.meshes.new(f"{name}_MESH")
+    mesh.from_pydata(vertices, [], faces)
+    mesh.update(calc_edges=True)
+    combined = bpy.data.objects.new(name, mesh)
+    combined.matrix_world = target.matrix_world.copy()
+
+    source_collections = list(getattr(tools[0], "users_collection", ()))
+    collection = (
+        source_collections[0]
+        if source_collections
+        else bpy.context.scene.collection
+    )
+    collection.objects.link(combined)
+    return combined
+
+
+def _apply_stage6_bolt_booleans(
+    bpy,
+    package: ScenePackage,
+    *,
+    batch_pocket_cutters: bool = True,
+) -> tuple[int, int, tuple[str, ...]]:
+    """Apply Stage-6 Booleans, batching production pocket cutters per segment.
+
+    Production visible-head mode contains only pocket-cutter Boolean operations:
+    three disjoint cutters target each TYPE1 lining segment. Applying their
+    disconnected union in one Exact Boolean reduces modifier evaluation count
+    by 3x without changing the set-theoretic result. Legacy/debug scenes that
+    also use bolt heads as Boolean tools keep the historical sequential order.
+    """
     operations = plan_bolt_boolean_operations(package)
     if not operations:
-        return 0, ()
+        return 0, 0, ()
+
+    production_cutter_only = all(
+        op.tool_type == "bolt_pocket_cutter"
+        and op.remove_tool_after
+        for op in operations
+    )
+    if batch_pocket_cutters and production_cutter_only:
+        grouped: dict[str, list[BoltBooleanOperation]] = {}
+        target_order: list[str] = []
+        for op in operations:
+            if op.target_name not in grouped:
+                grouped[op.target_name] = []
+                target_order.append(op.target_name)
+            grouped[op.target_name].append(op)
+
+        removed: list[str] = []
+        modifier_count = 0
+        for batch_index, target_name in enumerate(target_order):
+            batch = grouped[target_name]
+            target = bpy.data.objects.get(target_name)
+            if target is None:
+                raise RuntimeError(
+                    f"Boolean target missing in Blender: {target_name}"
+                )
+            tools = []
+            for op in batch:
+                tool = bpy.data.objects.get(op.tool_name)
+                if tool is None:
+                    raise RuntimeError(
+                        f"Boolean tool missing in Blender: {op.tool_name}"
+                    )
+                tools.append(tool)
+
+            if len(tools) == 1:
+                boolean_tool = tools[0]
+                combined_tool = None
+            else:
+                boolean_tool = _combined_boolean_tool_for_target(
+                    bpy,
+                    target,
+                    tools,
+                    name=(
+                        f"TS_BATCH_R{batch[0].ring_id:04d}_"
+                        f"{batch_index:04d}_CUTTERS"
+                    ),
+                )
+                combined_tool = boolean_tool
+
+            _apply_boolean_difference(
+                bpy,
+                target,
+                boolean_tool,
+                modifier_name=(
+                    f"TS_R{batch[0].ring_id:04d}_"
+                    f"BATCH_{batch_index:04d}_bolt_pocket_cutters"
+                ),
+            )
+            modifier_count += 1
+
+            if combined_tool is not None:
+                _remove_blender_mesh_object(bpy, combined_tool)
+            for op, tool in zip(batch, tools):
+                _remove_blender_mesh_object(bpy, tool)
+                removed.append(op.tool_name)
+
+        return len(operations), modifier_count, tuple(removed)
 
     removed: list[str] = []
+    modifier_count = 0
     for op in operations:
         target = bpy.data.objects.get(op.target_name)
         tool = bpy.data.objects.get(op.tool_name)
@@ -353,14 +494,12 @@ def _apply_stage6_bolt_booleans(bpy, package: ScenePackage) -> tuple[int, tuple[
                 f"TS_R{op.ring_id:04d}_BOLT_{op.bolt_index:03d}_{op.tool_type}"
             ),
         )
+        modifier_count += 1
         if op.remove_tool_after:
-            mesh = tool.data
-            bpy.data.objects.remove(tool, do_unlink=True)
+            _remove_blender_mesh_object(bpy, tool)
             removed.append(op.tool_name)
-            if getattr(mesh, "users", 1) == 0:
-                bpy.data.meshes.remove(mesh)
 
-    return len(operations), tuple(removed)
+    return len(operations), modifier_count, tuple(removed)
 
 
 def _float32_vertex_key(vertex_xyz) -> bytes:

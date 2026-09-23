@@ -441,12 +441,43 @@ def load_frame_alignment_geojson(
     if data.get("type") != "FeatureCollection":
         raise ValueError("alignment GeoJSON must be a FeatureCollection")
     features = data.get("features")
-    if not isinstance(features, list) or len(features) != 1:
-        raise ValueError("alignment GeoJSON must contain exactly one feature")
-    feature = features[0]
+    if not isinstance(features, list):
+        raise ValueError("alignment GeoJSON features must be a list")
+    candidates = [
+        feature
+        for feature in features
+        if isinstance(feature, dict)
+        and isinstance(feature.get("geometry"), dict)
+        and feature["geometry"].get("type") == "LineString"
+        and isinstance(feature.get("properties"), dict)
+        and feature["properties"].get("feature_role")
+        == "GEOMETRY_TEST_ALIGNMENT_3D"
+    ]
+    if len(candidates) != 1:
+        # Generic external alignments used by tests/tools may not carry the
+        # pilot-specific feature_role. Accept exactly one unambiguous LineString
+        # with explicit vertex_chainage_m, but never guess between candidates.
+        generic = [
+            feature
+            for feature in features
+            if isinstance(feature, dict)
+            and isinstance(feature.get("geometry"), dict)
+            and feature["geometry"].get("type") == "LineString"
+            and isinstance(feature.get("properties"), dict)
+            and isinstance(
+                feature["properties"].get("vertex_chainage_m"),
+                list,
+            )
+        ]
+        if len(generic) != 1:
+            raise ValueError(
+                "alignment GeoJSON must contain exactly one unambiguous "
+                "3D LineString alignment feature"
+            )
+        feature = generic[0]
+    else:
+        feature = candidates[0]
     geometry = feature.get("geometry", {})
-    if geometry.get("type") != "LineString":
-        raise ValueError("alignment feature must be a LineString")
     coordinates = geometry.get("coordinates")
     props = feature.get("properties", {})
     chainages = props.get("vertex_chainage_m")

@@ -1066,8 +1066,14 @@ def build_scene_package_in_blender(
     strip_coincident_lining_interfaces: bool = False,
     strip_hidden_lining_extrados: bool = False,
     reuse_mesh_prototypes: bool = True,
+    batch_bolt_pocket_booleans: bool = True,
+    omit_bolt_boolean_tools: bool = False,
 ) -> BlenderBuildResult:
     bpy = _require_bpy()
+    if apply_bolt_booleans and omit_bolt_boolean_tools:
+        raise ValueError(
+            "omit_bolt_boolean_tools requires apply_bolt_booleans=False"
+        )
 
     existing = bpy.data.collections.get(root_collection_name)
     if clear_existing_root and existing is not None:
@@ -1095,7 +1101,13 @@ def build_scene_package_in_blender(
         {} if reuse_mesh_prototypes else None
     )
     mesh_prototype_instance_count = 0
+    object_creation_started = time.perf_counter()
     for scene_object in package.objects:
+        if (
+            omit_bolt_boolean_tools
+            and scene_object.object_type == "bolt_pocket_cutter"
+        ):
+            continue
         target = _ensure_collection_path(bpy, root, scene_object.collection_path)
         if (
             mesh_prototypes is not None
@@ -1111,6 +1123,7 @@ def build_scene_package_in_blender(
         object_names.append(obj.name)
         mesh_names.append(obj.data.name)
 
+    object_creation_seconds = time.perf_counter() - object_creation_started
     mesh_prototype_count = len(mesh_prototypes or {})
     root["meshPrototypeReuseEnabled"] = bool(reuse_mesh_prototypes)
     root["meshPrototypeCount"] = int(mesh_prototype_count)
@@ -1120,10 +1133,22 @@ def build_scene_package_in_blender(
     )
 
     boolean_count = 0
+    boolean_modifier_count = 0
     removed_tools: tuple[str, ...] = ()
+    boolean_started = time.perf_counter()
     if apply_bolt_booleans:
-        boolean_count, removed_tools = _apply_stage6_bolt_booleans(bpy, package)
+        (
+            boolean_count,
+            boolean_modifier_count,
+            removed_tools,
+        ) = _apply_stage6_bolt_booleans(
+            bpy,
+            package,
+            batch_pocket_cutters=batch_bolt_pocket_booleans,
+        )
+    boolean_seconds = time.perf_counter() - boolean_started
 
+    cleanup_started = time.perf_counter()
     lining_cap_faces_removed = 0
     if strip_internal_lining_caps:
         lining_cap_faces_removed = _strip_internal_lining_caps_in_blender(
@@ -1142,6 +1167,8 @@ def build_scene_package_in_blender(
             _strip_hidden_lining_extrados_in_blender(bpy, package)
         )
 
+    cleanup_seconds = time.perf_counter() - cleanup_started
+
     surviving_object_names = tuple(
         name for name in object_names if bpy.data.objects.get(name) is not None
     )
@@ -1155,6 +1182,10 @@ def build_scene_package_in_blender(
         object_names=surviving_object_names,
         mesh_names=surviving_mesh_names,
         boolean_operations_applied=boolean_count,
+        boolean_modifier_applications=boolean_modifier_count,
+        bolt_boolean_batching_enabled=bool(
+            batch_bolt_pocket_booleans and apply_bolt_booleans
+        ),
         removed_tool_names=removed_tools,
         lining_cap_faces_removed=lining_cap_faces_removed,
         lining_interface_faces_removed=lining_interface_faces_removed,
@@ -1165,4 +1196,7 @@ def build_scene_package_in_blender(
             0,
             mesh_prototype_instance_count - mesh_prototype_count,
         ),
+        object_creation_seconds=object_creation_seconds,
+        boolean_seconds=boolean_seconds,
+        cleanup_seconds=cleanup_seconds,
     )

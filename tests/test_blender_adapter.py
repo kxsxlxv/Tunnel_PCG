@@ -298,6 +298,103 @@ def test_visible_bolt_heads_only_package_keeps_pocket_boolean_plan():
     )
 
 
+def test_production_pocket_boolean_batches_group_three_cutters_per_segment():
+    from tunnel_scanner_core.bolts import (
+        BoltConfig,
+        BoltLayoutType,
+        BoltPerturbationConfig,
+        build_bolt_set,
+    )
+    from tunnel_scanner_core.blender_adapter import (
+        plan_bolt_boolean_batches,
+        plan_bolt_boolean_operations,
+    )
+
+    cfg = RingConfig()
+    angles = sample_six_segment_angles(seed=5812)
+    ring = build_ring_mesh(cfg, angles)
+    joints = build_prescribed_joint_set(
+        ring,
+        sample_joint_config(seed=5812),
+    )
+    bolts = build_bolt_set(
+        ring,
+        BoltConfig(),
+        BoltLayoutType.TYPE1_CENTERED,
+        seed=5812,
+        perturbation_config=BoltPerturbationConfig(
+            sigma_m=0.0,
+            sigma_fraction=0.0,
+        ),
+    )
+    package = build_nominal_scene_package(
+        ring,
+        joints,
+        ring_id=12,
+        bolts=bolts,
+        visible_bolt_heads_only=True,
+    )
+    operations = plan_bolt_boolean_operations(package)
+    batches = plan_bolt_boolean_batches(package)
+
+    assert len(operations) == 18
+    assert len(batches) == 6
+    assert all(len(batch) == 3 for batch in batches)
+    assert all(
+        len({op.target_name for op in batch}) == 1
+        for batch in batches
+    )
+    assert {
+        op.tool_name
+        for batch in batches
+        for op in batch
+    } == {op.tool_name for op in operations}
+
+
+def test_debug_head_boolean_mode_is_never_reordered_by_batch_planner():
+    from tunnel_scanner_core.bolts import (
+        BoltConfig,
+        BoltLayoutType,
+        BoltPerturbationConfig,
+        build_bolt_set,
+    )
+    from tunnel_scanner_core.blender_adapter import (
+        plan_bolt_boolean_batches,
+        plan_bolt_boolean_operations,
+    )
+
+    cfg = RingConfig()
+    ring = build_ring_mesh(cfg, sample_six_segment_angles(seed=5812))
+    joints = build_prescribed_joint_set(
+        ring,
+        sample_joint_config(seed=5812),
+    )
+    bolts = build_bolt_set(
+        ring,
+        BoltConfig(),
+        BoltLayoutType.TYPE1_CENTERED,
+        seed=5812,
+        perturbation_config=BoltPerturbationConfig(
+            sigma_m=0.0,
+            sigma_fraction=0.0,
+        ),
+    )
+    package = build_nominal_scene_package(
+        ring,
+        joints,
+        ring_id=12,
+        bolts=bolts,
+        visible_bolt_heads_only=False,
+    )
+    operations = plan_bolt_boolean_operations(package)
+    batches = plan_bolt_boolean_batches(package)
+
+    assert len(operations) == 36
+    assert len(batches) == len(operations)
+    assert all(len(batch) == 1 for batch in batches)
+    assert [batch[0] for batch in batches] == list(operations)
+
+
 def test_stage6_boolean_plan_orders_pocket_before_head_for_each_bolt():
     from tunnel_scanner_core.bolts import (
         BoltConfig,

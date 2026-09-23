@@ -72,6 +72,40 @@
       "relation_member_indices_status": "UNKNOWN_GEOJSON_EXPORT_DOES_NOT_PRESERVE_RELATION_MEMBER_ORDER",
       "raw_way_node_refs": null,
       "raw_way_node_refs_status": "UNKNOWN_GEOJSON_EXPORT_DOES_NOT_PRESERVE_OSM_ND_REFS"
+    },
+    "snapshot_topology_audit": {
+      "status": "CONSTRAINED",
+      "route_snapshot_source_id": "S138",
+      "connected_ways_snapshot_source_id": "S139",
+      "tagged_railway_switch_nodes_on_segment_snapshot": [
+        309744783,
+        1398729304,
+        1189903147,
+        4038142918
+      ],
+      "degree_gt_2_nodes_proven_by_exact_coordinate_connectivity_in_S139": [
+        {
+          "node_id_from_S138": 1398729304,
+          "wgs84": [
+            37.5772286,
+            55.7620364
+          ],
+          "minimum_degree": 3,
+          "incident_mainline_way_id": 96969622,
+          "incident_off_main_way_id": 429982507,
+          "off_main_edge_tags": {
+            "service": "crossover",
+            "usage": "main"
+          },
+          "status": "CONSTRAINED"
+        }
+      ],
+      "tagged_switches_with_degree_unresolved": [
+        309744783,
+        1189903147,
+        4038142918
+      ],
+      "rule": "A railway=switch tag is not automatically promoted to degree>2 unless connected physical ways establish the degree in the available snapshot."
     }
   },
   "mainline_edges": [

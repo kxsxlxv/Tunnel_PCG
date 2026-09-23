@@ -160,7 +160,17 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--lateral-wavelength-m", type=float, default=50.0)
     parser.add_argument("--vertical-wavelength-m", type=float, default=100.0)
     parser.add_argument("--axis-noise-sigma", type=float, default=0.005)
-    parser.add_argument("--sagitta-mm", type=float, default=2.0)
+    parser.add_argument(
+        "--sagitta-mm",
+        type=float,
+        default=5.0,
+        help=(
+            "Maximum curved-surface chord sagitta in millimetres for non-rail "
+            "sensor/render geometry. Default: 5 mm; use 10 for a coarser "
+            "realtime/LiDAR build or 2 for the former high-density baseline. "
+            "The reconstructed R65 transverse profile is unchanged."
+        ),
+    )
     parser.add_argument("--chunk-m", type=float, default=None)
     parser.add_argument(
         "--workers",
@@ -1076,6 +1086,7 @@ def main() -> None:
         "generatedLengthM": build.assembly.length_by_chainage_m,
         "globalCoordinates": True,
         "sourceRingWidthM": ring_cfg.width_m,
+        "surfaceToleranceM": surface_meshing.max_sagitta_m,
         "includeBolts": (
             not args.no_bolts
             and (

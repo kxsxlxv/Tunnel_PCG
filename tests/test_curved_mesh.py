@@ -14,8 +14,11 @@ from tunnel_scanner_core import (
     sample_closed_deformation,
     sample_six_segment_angles,
 )
+from tunnel_scanner_core.angles import SegmentAngularExtent
 from tunnel_scanner_core.curved_mesh import (
+    _max_grid_cell_angular_span_deg,
     max_angular_step_deg,
+    required_circle_subdivisions,
     required_grid_subdivisions,
     required_subdivisions,
     sagitta_m,
@@ -45,6 +48,33 @@ def test_max_angular_step_and_sagitta_are_inverse():
     for eps in (0.010, 0.005, 0.002, 0.001):
         step = max_angular_step_deg(r, eps)
         assert math.isclose(sagitta_m(r, step), eps, rel_tol=0, abs_tol=1e-12)
+
+
+def test_5mm_and_10mm_circle_tolerances_reduce_civil_sections():
+    radius_m = 3.05
+    assert required_circle_subdivisions(radius_m, 0.002) == 87
+    assert required_circle_subdivisions(radius_m, 0.005) == 55
+    assert required_circle_subdivisions(radius_m, 0.010) == 39
+
+
+def test_twisted_grid_uses_exact_cell_span_without_relaxing_tolerance():
+    extent = SegmentAngularExtent(
+        name="twisted_test",
+        kind="A",
+        front_start_deg=0.0,
+        front_end_deg=70.0,
+        back_start_deg=10.0,
+        back_end_deg=60.0,
+    )
+    meshing = SurfaceMeshingConfig(max_sagitta_m=0.005)
+    nu, nv = required_grid_subdivisions(3.05, extent, meshing)
+
+    # The former span_u/nu + span_v/nv bound chose 22 x 3 = 66 cells.
+    # Exact bilinear cell-span evaluation needs only 20 x 3 = 60 while
+    # preserving the same strict 5 mm radial sagitta contract.
+    assert (nu, nv) == (20, 3)
+    max_step = _max_grid_cell_angular_span_deg(extent, nu, nv)
+    assert sagitta_m(3.05, max_step) <= meshing.max_sagitta_m + 1e-12
 
 
 def test_expected_subdivision_counts_for_67_5_degree_segment():

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import lru_cache
 import math
 
 from .angles import SegmentAngularExtent
@@ -152,12 +153,69 @@ def _spans(extent: SegmentAngularExtent) -> tuple[float, float]:
     return circumferential, twist
 
 
+def _alpha_deg_at(
+    extent: SegmentAngularExtent,
+    u: float,
+    v: float,
+) -> float:
+    start = extent.front_start_deg + v * (
+        extent.back_start_deg - extent.front_start_deg
+    )
+    end = extent.front_end_deg + v * (
+        extent.back_end_deg - extent.front_end_deg
+    )
+    return start + u * (end - start)
+
+
+def _max_grid_cell_angular_span_deg(
+    extent: SegmentAngularExtent,
+    nu: int,
+    nv: int,
+) -> float:
+    """Exact maximum angular range of any uniform parameter-grid cell.
+
+    Segment angle alpha(u, v) is bilinear.  For a fixed cell size, every
+    pairwise difference between corresponding cell corners is affine in the
+    cell origin.  The maximum absolute affine value over the origin rectangle
+    occurs at one of its four corners, so inspecting the four extreme cells is
+    sufficient; no nu*nv scan is required.
+    """
+    if nu < 1 or nv < 1:
+        raise ValueError("grid subdivision counts must be positive")
+    du = 1.0 / nu
+    dv = 1.0 / nv
+    u_starts = (0.0,) if nu == 1 else (0.0, 1.0 - du)
+    v_starts = (0.0,) if nv == 1 else (0.0, 1.0 - dv)
+
+    result = 0.0
+    for u0 in u_starts:
+        for v0 in v_starts:
+            values = (
+                _alpha_deg_at(extent, u0, v0),
+                _alpha_deg_at(extent, u0 + du, v0),
+                _alpha_deg_at(extent, u0, v0 + dv),
+                _alpha_deg_at(extent, u0 + du, v0 + dv),
+            )
+            result = max(result, max(values) - min(values))
+    return result
+
+
+@lru_cache(maxsize=4096)
 def required_grid_subdivisions(
     outer_radius_m: float,
     extent: SegmentAngularExtent,
     meshing: SurfaceMeshingConfig,
 ) -> tuple[int, int]:
-    """Choose (circumferential, longitudinal) subdivisions conservatively."""
+    """Choose the smallest exact cell grid satisfying the sagitta bound.
+
+    The old implementation bounded every cell by span_u/nu + span_v/nv.  That
+    triangle-inequality bound is safe but can over-tessellate tapered/twisted
+    segments because its two maxima need not occur in the same cell.  This
+    search evaluates the exact maximum angular range of the bilinear cell and
+    minimizes cell count, then vertex count, without relaxing max_sagitta_m.
+    Results are cached because production rings repeatedly reuse the same
+    profile/extent/tolerance combinations.
+    """
     span_u, span_v = _spans(extent)
     if span_u <= 1e-14:
         raise ValueError(f"{extent.name}: degenerate angular span")
@@ -167,28 +225,47 @@ def required_grid_subdivisions(
 
     min_n = meshing.min_subdivisions
     max_n = meshing.max_subdivisions
-
-    if span_v <= 1e-15:
-        nv_start = min_n
-    else:
-        nv_start = max(min_n, int(math.floor(span_v / limit)) + 1)
+    nu_start = max(min_n, int(math.ceil(span_u / limit)))
+    nv_start = (
+        min_n
+        if span_v <= 1e-15
+        else max(min_n, int(math.ceil(span_v / limit)))
+    )
 
     best: tuple[int, int, int, int] | None = None
-    nv = nv_start
-    while nv <= max_n:
-        dv = span_v / nv
-        allowance = limit - dv
-        if allowance > 1e-15:
-            nu = max(min_n, int(math.ceil(span_u / allowance)))
-            if nu <= max_n:
-                cells = nu * nv
-                vertices_proxy = (nu + 1) * (nv + 1)
-                candidate = (cells, vertices_proxy, nu, nv)
-                if best is None or candidate < best:
-                    best = candidate
-        if best is not None and nv >= best[0]:
+    for nv in range(nv_start, max_n + 1):
+        if best is not None and nu_start * nv > best[0]:
             break
-        nv += 1
+
+        nu_hi = max_n
+        if best is not None:
+            nu_hi = min(nu_hi, best[0] // nv)
+        if nu_hi < nu_start:
+            continue
+        if (
+            _max_grid_cell_angular_span_deg(extent, nu_hi, nv)
+            > limit + 1e-12
+        ):
+            continue
+
+        lo = nu_start
+        hi = nu_hi
+        while lo < hi:
+            mid = (lo + hi) // 2
+            if (
+                _max_grid_cell_angular_span_deg(extent, mid, nv)
+                <= limit + 1e-12
+            ):
+                hi = mid
+            else:
+                lo = mid + 1
+
+        nu = lo
+        cells = nu * nv
+        vertices_proxy = (nu + 1) * (nv + 1)
+        candidate = (cells, vertices_proxy, nu, nv)
+        if best is None or candidate < best:
+            best = candidate
 
     if best is None:
         raise ValueError(
@@ -293,14 +370,11 @@ def build_curved_segment_mesh(
     if volume < 0.0:
         ff = _flip_faces(ff)
 
-    span_u, span_v = _spans(e)
-    du = span_u / nu
-    dv = span_v / nv
-    conservative_step = du + dv
-    achieved = sagitta_m(outer_radius_m, conservative_step)
+    max_cell_step = _max_grid_cell_angular_span_deg(e, nu, nv)
+    achieved = sagitta_m(outer_radius_m, max_cell_step)
     if achieved > meshing.max_sagitta_m + 1e-12:
         raise AssertionError(
-            f"internal error: achieved conservative sagitta {achieved} exceeds "
+            f"internal error: achieved cell sagitta {achieved} exceeds "
             f"requested {meshing.max_sagitta_m}"
         )
 

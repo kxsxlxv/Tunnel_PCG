@@ -92,7 +92,17 @@ def parse_args() -> argparse.Namespace:
         choices=tuple(strategy.value for strategy in RingRotationStrategy),
         default=RingRotationStrategy.RINGWISE_GAUSSIAN.value,
     )
-    parser.add_argument("--sagitta-mm", type=float, default=2.0)
+    parser.add_argument(
+        "--sagitta-mm",
+        type=float,
+        default=5.0,
+        help=(
+            "Maximum curved-surface chord sagitta in millimetres for non-rail "
+            "sensor/render geometry. Default: 5 mm. Use 10 for a coarser "
+            "realtime/LiDAR build or 2 for the former high-density baseline. "
+            "The R65 rail profile is generated independently."
+        ),
+    )
     parser.add_argument("--no-bolts", action="store_true")
     parser.add_argument("--pretty-json", action="store_true")
     parser.add_argument("--prototype-json", action="store_true")
@@ -169,6 +179,25 @@ def _events_in_window(
     return result
 
 
+def _package_mesh_stats(package) -> dict:
+    vertices_by_type: dict[str, int] = {}
+    faces_by_type: dict[str, int] = {}
+    for obj in package.objects:
+        object_type = str(obj.object_type)
+        vertices_by_type[object_type] = (
+            vertices_by_type.get(object_type, 0) + len(obj.vertices)
+        )
+        faces_by_type[object_type] = (
+            faces_by_type.get(object_type, 0) + len(obj.faces)
+        )
+    return {
+        "meshVertexCount": sum(vertices_by_type.values()),
+        "meshFaceCount": sum(faces_by_type.values()),
+        "meshVerticesByObjectType": dict(sorted(vertices_by_type.items())),
+        "meshFacesByObjectType": dict(sorted(faces_by_type.items())),
+    }
+
+
 def _init_worker(
     plan,
     chunk_dir: Path,
@@ -204,6 +233,7 @@ def _write_worker(chunk_id: int) -> dict:
         compact=_WORKER_COMPACT,
         prototype_instances=_WORKER_PROTOTYPES,
     )
+    mesh_stats = _package_mesh_stats(package)
     return {
         "chunkID": int(chunk_id),
         "path": path.name,
@@ -211,6 +241,7 @@ def _write_worker(chunk_id: int) -> dict:
         "endChainageM": float(meta["endChainageM"]),
         "ringIDs": list(meta["ringIDs"]),
         "objectCount": len(package.objects),
+        **mesh_stats,
         "vertexCoordinatesLocalized": bool(
             meta["vertexCoordinatesLocalized"]
         ),
@@ -450,6 +481,14 @@ def main() -> None:
     )
 
     object_total = sum(int(entry["objectCount"]) for entry in entries)
+    vertex_total = sum(int(entry["meshVertexCount"]) for entry in entries)
+    face_total = sum(int(entry["meshFaceCount"]) for entry in entries)
+    faces_by_type: dict[str, int] = {}
+    for entry in entries:
+        for object_type, count in entry["meshFacesByObjectType"].items():
+            faces_by_type[object_type] = (
+                faces_by_type.get(object_type, 0) + int(count)
+            )
     summary = {
         "stage": "10.5",
         "pilot": manifest["pilot"],
@@ -489,6 +528,12 @@ def main() -> None:
         "chunkCount": len(entries),
         "chunkLengthRequestedM": args.chunk_m,
         "serializedChunkObjectCount": object_total,
+        "serializedChunkVertexCount": vertex_total,
+        "serializedChunkFaceCount": face_total,
+        "serializedChunkFacesByObjectType": dict(
+            sorted(faces_by_type.items())
+        ),
+        "surfaceToleranceM": surface_meshing.max_sagitta_m,
         "chunksLocalizedForBlender": localize,
         "parallelChunkWorkers": effective_workers,
         "compactSceneJson": compact,

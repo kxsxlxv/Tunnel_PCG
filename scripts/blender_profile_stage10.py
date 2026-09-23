@@ -432,7 +432,9 @@ def main() -> None:
         "deltaByObjectType": delta,
         "blenderBuild": {
             "rootCollectionName": result.root_collection_name,
-            "booleanOperationsApplied": result.boolean_operations_applied,
+            "booleanLogicalOperations": result.boolean_operations_applied,
+            "booleanModifierApplications": result.boolean_modifier_applications,
+            "boltBooleanBatchingEnabled": result.bolt_boolean_batching_enabled,
             "removedToolCount": len(result.removed_tool_names),
             "liningCapFacesRemoved": result.lining_cap_faces_removed,
             "liningInterfaceFacesRemoved": result.lining_interface_faces_removed,
@@ -440,6 +442,9 @@ def main() -> None:
             "meshPrototypeCount": result.mesh_prototype_count,
             "meshPrototypeInstanceCount": result.mesh_prototype_instance_count,
             "sharedMeshDataBlocksSaved": result.shared_mesh_data_blocks_saved,
+            "objectCreationSeconds": result.object_creation_seconds,
+            "booleanSeconds": result.boolean_seconds,
+            "cleanupSeconds": result.cleanup_seconds,
         },
     }
 
@@ -452,11 +457,15 @@ def main() -> None:
     print("")
     print(
         "Cleanup: "
-        f"{result.boolean_operations_applied} Boolean ops, "
+        f"{result.boolean_operations_applied} logical Boolean cuts in "
+        f"{result.boolean_modifier_applications} modifiers, "
         f"{len(result.removed_tool_names)} cutters removed, "
         f"{result.lining_cap_faces_removed} lining-cap faces removed, "
         f"{result.lining_interface_faces_removed} coincident interface faces removed, "
-        f"{result.lining_extrados_faces_removed} hidden extrados faces removed"
+        f"{result.lining_extrados_faces_removed} hidden extrados faces removed; "
+        f"timing create={result.object_creation_seconds:.2f}s, "
+        f"boolean={result.boolean_seconds:.2f}s, "
+        f"cleanup={result.cleanup_seconds:.2f}s"
     )
     print(
         "Prototype reuse: "

@@ -6,6 +6,7 @@ import argparse
 import json
 from pathlib import Path
 import sys
+import time
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -36,6 +37,32 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--save-blend", type=Path, default=None)
     parser.add_argument("--root-collection", default="TunnelScanner")
     parser.add_argument("--no-bolt-booleans", action="store_true")
+    parser.add_argument(
+        "--no-batch-bolt-booleans",
+        action="store_true",
+        help=(
+            "Debug/performance comparison: apply each pocket cutter with its "
+            "own Boolean modifier instead of batching cutters by lining segment."
+        ),
+    )
+    parser.add_argument(
+        "--validate-meshes",
+        action="store_true",
+        help=(
+            "Run Blender Mesh.validate() on every generated object. Off by "
+            "default for trusted Tunnel_PCG ScenePackages because it is costly "
+            "on multi-chunk imports."
+        ),
+    )
+    parser.add_argument(
+        "--fast-route-preview",
+        action="store_true",
+        help=(
+            "Skip bolt-pocket cutter objects and all bolt-pocket Booleans while "
+            "keeping visible bolt heads. This preserves route/civil/track "
+            "placement but is NOT final LiDAR geometry."
+        ),
+    )
     parser.add_argument(
         "--keep-internal-lining-caps",
         action="store_true",
@@ -216,12 +243,23 @@ def main() -> None:
     import bpy  # type: ignore
 
     total_boolean = 0
+    total_boolean_modifiers = 0
+    total_object_creation_seconds = 0.0
+    total_boolean_seconds = 0.0
+    total_cleanup_seconds = 0.0
     total_caps = 0
     total_interfaces = 0
     total_extrados = 0
     current_names = []
     first = True
 
+    if args.fast_route_preview and args.no_bolt_booleans:
+        raise ValueError(
+            "--fast-route-preview already disables bolt Booleans; "
+            "do not combine it with --no-bolt-booleans"
+        )
+
+    wall_started = time.perf_counter()
     print(
         f"Importing {len(entries)} chunks from {manifest_path.name}; "
         f"route={manifest.get('trackID', 'unknown')} "
@@ -236,7 +274,11 @@ def main() -> None:
             package,
             root_collection_name=args.root_collection,
             clear_existing_root=first,
-            apply_bolt_booleans=not args.no_bolt_booleans,
+            validate_mesh=args.validate_meshes,
+            apply_bolt_booleans=(
+                not args.no_bolt_booleans
+                and not args.fast_route_preview
+            ),
             strip_internal_lining_caps=not args.keep_internal_lining_caps,
             strip_coincident_lining_interfaces=(
                 not args.keep_coincident_lining_interfaces
@@ -245,6 +287,10 @@ def main() -> None:
                 not args.keep_hidden_lining_extrados
             ),
             reuse_mesh_prototypes=not args.no_mesh_prototype_reuse,
+            batch_bolt_pocket_booleans=(
+                not args.no_batch_bolt_booleans
+            ),
+            omit_bolt_boolean_tools=args.fast_route_preview,
         )
         first = False
         names = tuple(result.object_names)
@@ -272,6 +318,10 @@ def main() -> None:
 
         current_names.extend(names)
         total_boolean += result.boolean_operations_applied
+        total_boolean_modifiers += result.boolean_modifier_applications
+        total_object_creation_seconds += result.object_creation_seconds
+        total_boolean_seconds += result.boolean_seconds
+        total_cleanup_seconds += result.cleanup_seconds
         total_caps += result.lining_cap_faces_removed
         total_interfaces += result.lining_interface_faces_removed
         total_extrados += result.lining_extrados_faces_removed
@@ -279,7 +329,11 @@ def main() -> None:
         print(
             f"[{ordinal}/{len(entries)}] chunk {chunk_id:05d}: "
             f"{len(names)} surviving objects, "
-            f"{result.boolean_operations_applied} Boolean ops, "
+            f"{result.boolean_operations_applied} logical pocket cuts in "
+            f"{result.boolean_modifier_applications} Boolean modifiers; "
+            f"timing create={result.object_creation_seconds:.2f}s, "
+            f"boolean={result.boolean_seconds:.2f}s, "
+            f"cleanup={result.cleanup_seconds:.2f}s; "
             f"{result.lining_cap_faces_removed} caps, "
             f"{result.lining_interface_faces_removed} interfaces, "
             f"{result.lining_extrados_faces_removed} extrados faces removed"
@@ -299,12 +353,18 @@ def main() -> None:
             manifest.get("mayClaimAsBuilt", False)
         )
 
+    wall_seconds = time.perf_counter() - wall_started
     print(
         "Whole-route import complete: "
         f"{len(current_names)} surviving objects; "
-        f"{total_boolean} Boolean ops; "
+        f"{total_boolean} logical pocket cuts in "
+        f"{total_boolean_modifiers} Boolean modifiers; "
         f"{total_caps} cap faces, {total_interfaces} interface faces, "
-        f"{total_extrados} extrados faces removed."
+        f"{total_extrados} extrados faces removed. "
+        f"Timing totals: create={total_object_creation_seconds:.2f}s, "
+        f"boolean={total_boolean_seconds:.2f}s, "
+        f"cleanup={total_cleanup_seconds:.2f}s, "
+        f"wall={wall_seconds:.2f}s."
     )
 
     if args.save_blend is not None:

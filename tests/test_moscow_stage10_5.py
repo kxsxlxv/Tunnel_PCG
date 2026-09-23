@@ -1805,6 +1805,21 @@ def test_stage10_5_periodic_assets_declare_exact_reusable_mesh_prototypes():
             local_by_key[key] = (local, obj.faces)
         instances_by_key[key] = instances_by_key.get(key, 0) + 1
 
+    # R2K11 left/right wall placements are congruent hardware. They must
+    # resolve to one canonical mesh buffer; side placement belongs in transform.
+    rack_keys = {
+        str(obj.custom_properties["meshPrototypeKey"])
+        for obj in objects
+        if obj.object_type == "production_cable_rack_r2k11"
+    }
+    assert len(rack_keys) == 1
+    assert all(
+        float(obj.custom_properties["meshPrototypeLocalVariantResidualM"])
+        <= 1e-9
+        for obj in objects
+        if obj.object_type == "production_cable_rack_r2k11"
+    )
+
     # At least the 600 mm permanent-way chain must create many logical
     # instances from a small fixed prototype set.
     assert any(count >= 5 for count in instances_by_key.values())

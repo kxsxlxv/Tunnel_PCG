@@ -2178,6 +2178,64 @@ def _build_stage10_2_periodic_scene_objects(
     return tuple(result)
 
 
+def _mat4_mul(
+    left: Sequence[float],
+    right: Sequence[float],
+) -> tuple[float, ...]:
+    if len(left) != 16 or len(right) != 16:
+        raise ValueError("4x4 matrix multiplication requires 16 values")
+    return tuple(
+        float(
+            sum(
+                float(left[4 * row + k]) * float(right[4 * k + col])
+                for k in range(4)
+            )
+        )
+        for row in range(4)
+        for col in range(4)
+    )
+
+
+def _orthogonal_mesh_variant_transform(
+    reference_vertices: Sequence[Vec3],
+    variant_vertices: Sequence[Vec3],
+    *,
+    tolerance_m: float = 1e-9,
+) -> tuple[tuple[float, ...], float, float]:
+    """Fit one exact orthogonal+translation transform between congruent meshes.
+
+    Reflection is intentionally permitted: engine Mesh Cluster instances may
+    carry scale, so mirrored left/right hardware can still use one vertex/index
+    buffer. The returned determinant makes that explicit in metadata.
+    """
+    if len(reference_vertices) != len(variant_vertices) or not reference_vertices:
+        raise ValueError("mesh variants must have the same non-zero vertex count")
+    a = np.asarray(reference_vertices, dtype=float)
+    b = np.asarray(variant_vertices, dtype=float)
+    center_a = np.mean(a, axis=0)
+    center_b = np.mean(b, axis=0)
+    centered_a = a - center_a
+    centered_b = b - center_b
+    u, _singular, vt = np.linalg.svd(centered_a.T @ centered_b)
+    rotation = vt.T @ u.T
+    translation = center_b - rotation @ center_a
+    reconstructed = (rotation @ a.T).T + translation
+    residual = float(np.max(np.linalg.norm(reconstructed - b, axis=1)))
+    if residual > tolerance_m:
+        raise ValueError(
+            "mesh variants are not congruent under an orthogonal transform: "
+            f"max residual {residual:.9g} m > {tolerance_m:.9g} m"
+        )
+    determinant = float(np.linalg.det(rotation))
+    matrix = (
+        float(rotation[0, 0]), float(rotation[0, 1]), float(rotation[0, 2]), float(translation[0]),
+        float(rotation[1, 0]), float(rotation[1, 1]), float(rotation[1, 2]), float(translation[1]),
+        float(rotation[2, 0]), float(rotation[2, 1]), float(rotation[2, 2]), float(translation[2]),
+        0.0, 0.0, 0.0, 1.0,
+    )
+    return matrix, residual, determinant
+
+
 def _periodic_mesh_prototype_properties(
     *,
     profile: MoscowStage10Profile,
@@ -2186,12 +2244,13 @@ def _periodic_mesh_prototype_properties(
     station: AlignmentStation,
     vertex_count: int,
     face_count: int,
+    local_variant_transform: Sequence[float] | None = None,
 ) -> dict[str, Any]:
-    """Describe an exact static mesh instance using a full rigid transform.
+    """Describe an exact static mesh instance using a full affine isometry.
 
-    Periodic Stage-10 hardware is authored once in tunnel-local coordinates.
-    Route yaw and grade belong in the instance transform instead of duplicate
-    world-space vertex buffers, which makes these objects directly clusterable.
+    Periodic Stage-10 hardware is authored once in canonical asset coordinates.
+    Route yaw/grade and optional left/right mounting transforms belong in the
+    instance transform instead of duplicate world-space vertex buffers.
     """
     if not family or not local_name:
         raise ValueError("periodic mesh prototype family/name must not be empty")
@@ -2201,12 +2260,33 @@ def _periodic_mesh_prototype_properties(
         f"stage10.5/{profile.provenance.canonical_sha256}/"
         f"{family}/{local_name}"
     )
-    transform = (
+    route_transform = (
         float(right[0]), float(tangent[0]), float(up[0]), float(ox),
         float(right[1]), float(tangent[1]), float(up[1]), float(oy),
         float(right[2]), float(tangent[2]), float(up[2]), float(oz),
         0.0, 0.0, 0.0, 1.0,
     )
+    if local_variant_transform is None:
+        variant_transform = (
+            1.0, 0.0, 0.0, 0.0,
+            0.0, 1.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0, 1.0,
+        )
+    else:
+        if len(local_variant_transform) != 16:
+            raise ValueError("local mesh variant transform must contain 16 values")
+        variant_transform = tuple(float(v) for v in local_variant_transform)
+    transform = _mat4_mul(route_transform, variant_transform)
+    linear = np.asarray(
+        (
+            (transform[0], transform[1], transform[2]),
+            (transform[4], transform[5], transform[6]),
+            (transform[8], transform[9], transform[10]),
+        ),
+        dtype=float,
+    )
+    determinant = float(np.linalg.det(linear))
     return {
         "alignmentFrameMode": "zero_roll_tangent_gravity_up_v1",
         "alignmentTangentWorld": tangent,
@@ -2215,6 +2295,9 @@ def _periodic_mesh_prototype_properties(
         "meshPrototypeKey": prototype_key,
         "meshPrototypeMode": "rigid_transform_shared_mesh_v2",
         "meshPrototypeTransformMatrix4x4": transform,
+        "meshPrototypeLocalVariantTransformMatrix4x4": variant_transform,
+        "meshPrototypeTransformDeterminant": determinant,
+        "meshPrototypeUsesReflection": determinant < 0.0,
         "meshPrototypeVertexCount": int(vertex_count),
         "meshPrototypeFaceCount": int(face_count),
         "meshPrototypeGeometryExact": True,
@@ -2703,6 +2786,21 @@ def _build_stage10_5_service_rack_scene_objects(
         )
         for side in (-1, 1)
     }
+    canonical_local = local_by_side[1]
+    variant_transform_by_side: dict[int, tuple[float, ...]] = {}
+    variant_residual_by_side: dict[int, float] = {}
+    variant_determinant_by_side: dict[int, float] = {}
+    for side, local in local_by_side.items():
+        if local.faces != canonical_local.faces:
+            raise ValueError("R2K11 side meshes do not share canonical topology")
+        matrix, residual, determinant = _orthogonal_mesh_variant_transform(
+            canonical_local.vertices,
+            local.vertices,
+        )
+        variant_transform_by_side[side] = matrix
+        variant_residual_by_side[side] = residual
+        variant_determinant_by_side[side] = determinant
+
     chainages = cable_rack_chainages(
         assembly.length_by_chainage_m,
         profile,
@@ -2780,10 +2878,19 @@ def _build_stage10_5_service_rack_scene_objects(
                         **_periodic_mesh_prototype_properties(
                             profile=profile,
                             family="r2k11-cable-rack",
-                            local_name=local.name_suffix,
+                            local_name="R2K11_CANONICAL",
                             station=station,
-                            vertex_count=len(local.vertices),
-                            face_count=len(local.faces),
+                            vertex_count=len(canonical_local.vertices),
+                            face_count=len(canonical_local.faces),
+                            local_variant_transform=(
+                                variant_transform_by_side[side_sign]
+                            ),
+                        ),
+                        "meshPrototypeLocalVariantResidualM": (
+                            variant_residual_by_side[side_sign]
+                        ),
+                        "meshPrototypeLocalVariantDeterminant": (
+                            variant_determinant_by_side[side_sign]
                         ),
                         "moscowProfileID": profile.profile_id,
                         "moscowProfileSHA256": (

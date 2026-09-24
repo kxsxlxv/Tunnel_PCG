@@ -136,6 +136,23 @@ private:
 		Unigine::Math::vec3 half_extents;
 	};
 
+	struct AABB
+	{
+		Unigine::Math::Vec3 minimum;
+		Unigine::Math::Vec3 maximum;
+	};
+
+	struct BVHNode
+	{
+		AABB bound;
+		int left = -1;
+		int right = -1;
+		int start = 0;
+		int count = 0;
+
+		bool isLeaf() const { return left < 0 && right < 0; }
+	};
+
 	struct RouteRuntime
 	{
 		std::string route_id;
@@ -145,6 +162,10 @@ private:
 		double length_m = 0.0;
 		double current_start_chainage_m = 0.0;
 		std::vector<OBB> boxes;
+		std::vector<AABB> box_aabbs;
+		std::vector<int> bvh_box_indices;
+		std::vector<BVHNode> bvh_nodes;
+		int bvh_root = -1;
 		bool enabled = true;
 
 		double path_lateral_offset_bound_m = -1.0;
@@ -194,6 +215,28 @@ private:
 		const VehiclePose &left,
 		const VehiclePose &right,
 		int depth);
+	AABB obbWorldAABB(const OBB &box) const;
+	static AABB unionAABB(const AABB &a, const AABB &b);
+	static bool pointInAABB(
+		const Unigine::Math::Vec3 &point,
+		const AABB &box);
+	static bool aabbIntersectsAABB(
+		const AABB &a,
+		const AABB &b);
+	void buildRouteBVH(RouteRuntime &route);
+	int buildRouteBVHNode(
+		RouteRuntime &route,
+		int start,
+		int end);
+	bool routeContainsPointBVH(
+		const RouteRuntime &route,
+		const Unigine::Math::Vec3 &point) const;
+	bool routeIntersectsAABBBVH(
+		const RouteRuntime &route,
+		const AABB &aabb) const;
+	static AABB worldBoundBoxToAABB(
+		const Unigine::Math::WorldBoundBox &bound);
+
 	Unigine::Math::WorldBoundBox routeBroadPhase(
 		const RouteRuntime &route) const;
 	Unigine::Math::WorldBoundBox allRoutesBroadPhase() const;

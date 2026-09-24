@@ -67,7 +67,9 @@ For engine objects the manager uses:
 3. SAT against every future vehicle OBB.
 
 For LiDAR points call classifyPoint() directly; this avoids reducing point-cloud
-relevance to ray intersections.
+relevance to ray intersections. The manager rebuilds a balanced BVH over the
+future OBB world AABBs on every envelope update, so point classification prunes
+most future poses before the exact OBB containment test.
 
 Vehicle/track gauging inputs are separate from path-estimation uncertainty.
 The component exposes the documented 0.016 m body/bogie free-clearance upper

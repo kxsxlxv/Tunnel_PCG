@@ -12,6 +12,7 @@
 #include <cmath>
 #include <iterator>
 #include <limits>
+#include <numeric>
 
 using namespace Unigine;
 using namespace Unigine::Math;
@@ -599,6 +600,10 @@ void RailSweptEnvelopeManager::rebuildEnvelopes()
 	for (auto &route : routes)
 	{
 		route.boxes.clear();
+		route.box_aabbs.clear();
+		route.bvh_box_indices.clear();
+		route.bvh_nodes.clear();
+		route.bvh_root = -1;
 		double local_start =
 			global_leading_s - route.global_chainage_origin_m;
 		if (local_start < double(vehicle_base_m.get())
@@ -622,43 +627,296 @@ void RailSweptEnvelopeManager::rebuildEnvelopes()
 			left = right;
 			current = next;
 		}
+		buildRouteBVH(route);
 	}
+}
+
+RailSweptEnvelopeManager::AABB
+RailSweptEnvelopeManager::obbWorldAABB(const OBB &box) const
+{
+	Vec3 minimum(std::numeric_limits<double>::max());
+	Vec3 maximum(-std::numeric_limits<double>::max());
+
+	for (int sx : {-1, 1})
+	{
+		for (int sy : {-1, 1})
+		{
+			for (int sz : {-1, 1})
+			{
+				Vec3 corner = box.center
+					+ Vec3(box.right)
+						* (double(sx) * box.half_extents.x)
+					+ Vec3(box.forward)
+						* (double(sy) * box.half_extents.y)
+					+ Vec3(box.up)
+						* (double(sz) * box.half_extents.z);
+				minimum.x = std::min(minimum.x, corner.x);
+				minimum.y = std::min(minimum.y, corner.y);
+				minimum.z = std::min(minimum.z, corner.z);
+				maximum.x = std::max(maximum.x, corner.x);
+				maximum.y = std::max(maximum.y, corner.y);
+				maximum.z = std::max(maximum.z, corner.z);
+			}
+		}
+	}
+	return {minimum, maximum};
+}
+
+RailSweptEnvelopeManager::AABB
+RailSweptEnvelopeManager::unionAABB(
+	const AABB &a,
+	const AABB &b)
+{
+	return {
+		Vec3(
+			std::min(a.minimum.x, b.minimum.x),
+			std::min(a.minimum.y, b.minimum.y),
+			std::min(a.minimum.z, b.minimum.z)),
+		Vec3(
+			std::max(a.maximum.x, b.maximum.x),
+			std::max(a.maximum.y, b.maximum.y),
+			std::max(a.maximum.z, b.maximum.z)),
+	};
+}
+
+bool RailSweptEnvelopeManager::pointInAABB(
+	const Vec3 &point,
+	const AABB &box)
+{
+	return point.x >= box.minimum.x
+		&& point.x <= box.maximum.x
+		&& point.y >= box.minimum.y
+		&& point.y <= box.maximum.y
+		&& point.z >= box.minimum.z
+		&& point.z <= box.maximum.z;
+}
+
+bool RailSweptEnvelopeManager::aabbIntersectsAABB(
+	const AABB &a,
+	const AABB &b)
+{
+	return a.minimum.x <= b.maximum.x
+		&& a.maximum.x >= b.minimum.x
+		&& a.minimum.y <= b.maximum.y
+		&& a.maximum.y >= b.minimum.y
+		&& a.minimum.z <= b.maximum.z
+		&& a.maximum.z >= b.minimum.z;
+}
+
+RailSweptEnvelopeManager::AABB
+RailSweptEnvelopeManager::worldBoundBoxToAABB(
+	const WorldBoundBox &bound)
+{
+	Vec3 center = bound.getCenter();
+	Vec3 half = bound.getSize() * 0.5;
+	return {center - half, center + half};
+}
+
+void RailSweptEnvelopeManager::buildRouteBVH(RouteRuntime &route)
+{
+	route.box_aabbs.clear();
+	route.bvh_box_indices.clear();
+	route.bvh_nodes.clear();
+	route.bvh_root = -1;
+	if (route.boxes.empty())
+		return;
+
+	route.box_aabbs.reserve(route.boxes.size());
+	for (const OBB &box : route.boxes)
+		route.box_aabbs.emplace_back(obbWorldAABB(box));
+
+	route.bvh_box_indices.resize(route.boxes.size());
+	std::iota(
+		route.bvh_box_indices.begin(),
+		route.bvh_box_indices.end(),
+		0);
+	route.bvh_nodes.reserve(route.boxes.size() * 2);
+	route.bvh_root = buildRouteBVHNode(
+		route,
+		0,
+		int(route.bvh_box_indices.size()));
+}
+
+int RailSweptEnvelopeManager::buildRouteBVHNode(
+	RouteRuntime &route,
+	int start,
+	int end)
+{
+	if (start >= end)
+		return -1;
+
+	AABB bound =
+		route.box_aabbs[size_t(route.bvh_box_indices[size_t(start)])];
+	for (int i = start + 1; i < end; ++i)
+	{
+		bound = unionAABB(
+			bound,
+			route.box_aabbs[
+				size_t(route.bvh_box_indices[size_t(i)])]);
+	}
+
+	const int node_index = int(route.bvh_nodes.size());
+	route.bvh_nodes.emplace_back();
+	route.bvh_nodes[size_t(node_index)].bound = bound;
+
+	const int count = end - start;
+	constexpr int LEAF_SIZE = 4;
+	if (count <= LEAF_SIZE)
+	{
+		BVHNode &leaf = route.bvh_nodes[size_t(node_index)];
+		leaf.start = start;
+		leaf.count = count;
+		return node_index;
+	}
+
+	Vec3 centroid_minimum(std::numeric_limits<double>::max());
+	Vec3 centroid_maximum(-std::numeric_limits<double>::max());
+	for (int i = start; i < end; ++i)
+	{
+		const AABB &box = route.box_aabbs[
+			size_t(route.bvh_box_indices[size_t(i)])];
+		Vec3 centroid = (box.minimum + box.maximum) * 0.5;
+		centroid_minimum.x = std::min(centroid_minimum.x, centroid.x);
+		centroid_minimum.y = std::min(centroid_minimum.y, centroid.y);
+		centroid_minimum.z = std::min(centroid_minimum.z, centroid.z);
+		centroid_maximum.x = std::max(centroid_maximum.x, centroid.x);
+		centroid_maximum.y = std::max(centroid_maximum.y, centroid.y);
+		centroid_maximum.z = std::max(centroid_maximum.z, centroid.z);
+	}
+	Vec3 extent = centroid_maximum - centroid_minimum;
+	int axis = 0;
+	if (extent.y > extent.x && extent.y >= extent.z)
+		axis = 1;
+	else if (extent.z > extent.x && extent.z > extent.y)
+		axis = 2;
+
+	auto centroid_axis = [&](int box_index)
+	{
+		const AABB &box = route.box_aabbs[size_t(box_index)];
+		if (axis == 0)
+			return 0.5 * (box.minimum.x + box.maximum.x);
+		if (axis == 1)
+			return 0.5 * (box.minimum.y + box.maximum.y);
+		return 0.5 * (box.minimum.z + box.maximum.z);
+	};
+
+	std::sort(
+		route.bvh_box_indices.begin() + start,
+		route.bvh_box_indices.begin() + end,
+		[&](int lhs, int rhs)
+		{
+			double a = centroid_axis(lhs);
+			double b = centroid_axis(rhs);
+			if (a != b)
+				return a < b;
+			return lhs < rhs;
+		});
+
+	const int middle = start + count / 2;
+	const int left = buildRouteBVHNode(route, start, middle);
+	const int right = buildRouteBVHNode(route, middle, end);
+	BVHNode &node = route.bvh_nodes[size_t(node_index)];
+	node.left = left;
+	node.right = right;
+	return node_index;
+}
+
+bool RailSweptEnvelopeManager::routeContainsPointBVH(
+	const RouteRuntime &route,
+	const Vec3 &point) const
+{
+	if (route.bvh_root < 0)
+		return false;
+
+	int stack[128];
+	int stack_size = 0;
+	stack[stack_size++] = route.bvh_root;
+	while (stack_size > 0)
+	{
+		const int node_index = stack[--stack_size];
+		const BVHNode &node = route.bvh_nodes[size_t(node_index)];
+		if (!pointInAABB(point, node.bound))
+			continue;
+
+		if (node.isLeaf())
+		{
+			for (int i = 0; i < node.count; ++i)
+			{
+				const int box_index = route.bvh_box_indices[
+					size_t(node.start + i)];
+				if (!pointInAABB(
+						point,
+						route.box_aabbs[size_t(box_index)]))
+					continue;
+				if (pointInBox(
+						point,
+						route.boxes[size_t(box_index)]))
+					return true;
+			}
+			continue;
+		}
+
+		if (node.left >= 0 && stack_size < 128)
+			stack[stack_size++] = node.left;
+		if (node.right >= 0 && stack_size < 128)
+			stack[stack_size++] = node.right;
+	}
+	return false;
+}
+
+bool RailSweptEnvelopeManager::routeIntersectsAABBBVH(
+	const RouteRuntime &route,
+	const AABB &aabb) const
+{
+	if (route.bvh_root < 0)
+		return false;
+
+	WorldBoundBox world_aabb(aabb.minimum, aabb.maximum);
+	std::vector<int> stack;
+	stack.reserve(32);
+	stack.push_back(route.bvh_root);
+	while (!stack.empty())
+	{
+		const int node_index = stack.back();
+		stack.pop_back();
+		const BVHNode &node = route.bvh_nodes[size_t(node_index)];
+		if (!aabbIntersectsAABB(aabb, node.bound))
+			continue;
+
+		if (node.isLeaf())
+		{
+			for (int i = 0; i < node.count; ++i)
+			{
+				const int box_index = route.bvh_box_indices[
+					size_t(node.start + i)];
+				if (!aabbIntersectsAABB(
+						aabb,
+						route.box_aabbs[size_t(box_index)]))
+					continue;
+				if (boxIntersectsAABB(
+						route.boxes[size_t(box_index)],
+						world_aabb))
+					return true;
+			}
+			continue;
+		}
+
+		if (node.left >= 0)
+			stack.push_back(node.left);
+		if (node.right >= 0)
+			stack.push_back(node.right);
+	}
+	return false;
 }
 
 Math::WorldBoundBox RailSweptEnvelopeManager::routeBroadPhase(
 	const RouteRuntime &route) const
 {
-	Vec3 minimum(
-		std::numeric_limits<double>::max());
-	Vec3 maximum(
-		-std::numeric_limits<double>::max());
-
-	for (const OBB &box : route.boxes)
-	{
-		for (int sx : {-1, 1})
-		{
-			for (int sy : {-1, 1})
-			{
-				for (int sz : {-1, 1})
-				{
-					Vec3 corner = box.center
-						+ Vec3(box.right)
-							* (double(sx) * box.half_extents.x)
-						+ Vec3(box.forward)
-							* (double(sy) * box.half_extents.y)
-						+ Vec3(box.up)
-							* (double(sz) * box.half_extents.z);
-					minimum.x = std::min(minimum.x, corner.x);
-					minimum.y = std::min(minimum.y, corner.y);
-					minimum.z = std::min(minimum.z, corner.z);
-					maximum.x = std::max(maximum.x, corner.x);
-					maximum.y = std::max(maximum.y, corner.y);
-					maximum.z = std::max(maximum.z, corner.z);
-				}
-			}
-		}
-	}
-	return WorldBoundBox(minimum, maximum);
+	if (route.bvh_root < 0)
+		return WorldBoundBox(Vec3(0.0), Vec3(0.0));
+	const AABB &bound =
+		route.bvh_nodes[size_t(route.bvh_root)].bound;
+	return WorldBoundBox(bound.minimum, bound.maximum);
 }
 
 Math::WorldBoundBox RailSweptEnvelopeManager::allRoutesBroadPhase() const
@@ -799,12 +1057,9 @@ bool RailSweptEnvelopeManager::routeIntersectsAABB(
 	const RouteRuntime &route,
 	const WorldBoundBox &aabb) const
 {
-	for (const OBB &box : route.boxes)
-	{
-		if (boxIntersectsAABB(box, aabb))
-			return true;
-	}
-	return false;
+	return routeIntersectsAABBBVH(
+		route,
+		worldBoundBoxToAABB(aabb));
 }
 
 bool RailSweptEnvelopeManager::objectMatchesMask(
@@ -886,15 +1141,8 @@ RailSweptEnvelopeManager::classifyPoint(const Vec3 &point) const
 		if (active.size() > 0
 			&& route.route_id == active.get())
 			active_present = true;
-		bool route_hit = false;
-		for (const OBB &box : route.boxes)
-		{
-			if (pointInBox(point, box))
-			{
-				route_hit = true;
-				break;
-			}
-		}
+		const bool route_hit =
+			routeContainsPointBVH(route, point);
 		if (!route_hit)
 			continue;
 		++hits;

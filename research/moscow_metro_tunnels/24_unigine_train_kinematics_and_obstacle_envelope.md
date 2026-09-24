@@ -457,16 +457,30 @@ UNIGINE SDK-facing reference:
 - applies independent bogie tangent/up frames and one rigid carbody chord;
 - supports one already-resolved route hypothesis only.
 
-The next UNIGINE runtime layer mirrors rail_obstacle.py:
-- route hypotheses are separate SplineGraph paths;
-- each hypothesis produces a future sampled OBB chain from the same two-bogie
-  chord kinematics;
+UNIGINE multi-route obstacle reference is now implemented in:
+- research/moscow_metro_tunnels/reference_impl/unigine_train/
+  RailSweptEnvelopeManager.h/.cpp.
+
+It mirrors rail_obstacle.py:
+- route hypotheses are separate SplineGraph paths configured through
+  PROP_ARRAY_STRUCT;
+- current train chainage comes from Train81775Kinematics;
+- each feasible hypothesis produces an adaptively refined future OBB chain from
+  the same 12.6 m two-bogie chord kinematics;
 - World::getIntersection(WorldBoundBox, ...) is used only as broad phase;
-- candidate world nodes are then tested against the route OBB chain;
+- candidate objects use getWorldBoundBox() followed by OBB-vs-AABB SAT;
+- LiDAR points can be classified directly with classifyPoint(), without ray
+  intersection;
+- an empty/invalid active route does not suppress unresolved alternatives;
 - unresolved routes are unioned and retain ROUTE_AMBIGUOUS classification.
 
-This manager must sit above the single-route vehicle component so a turnout is
-not resolved implicitly by whichever spline happens to be loaded first.
+This manager sits above the single-route vehicle component so a turnout is not
+resolved implicitly by whichever spline happens to be loaded first.
+
+The UNIGINE implementation is grounded in the supplied SDK documentation for
+SplineGraph, Component System array structs, fixed-physics updates, world
+bounding-volume intersections, node world bounds and Visualizer. It remains
+reference code until compiled against the user's installed UNIGINE SDK.
 
 ---
 

@@ -36,6 +36,9 @@ public:
 	PROP_PARAM(Toggle, loop_route, false);
 	PROP_PARAM(Toggle, debug_visualization, true);
 
+	double getLeadingChainageM() const { return leading_chainage_m; }
+	double getRouteLengthM() const { return route_length_m; }
+
 private:
 	struct SegmentArcLut
 	{

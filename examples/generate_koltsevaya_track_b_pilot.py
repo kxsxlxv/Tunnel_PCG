@@ -313,6 +313,7 @@ def main() -> None:
         moscow_stage="10.5",
         moscow_service_preset="modern",
         moscow_civil_topology=args.civil_topology,
+        mesh_cluster_identical_civil_rings=True,
     )
 
     alignment_metadata = {

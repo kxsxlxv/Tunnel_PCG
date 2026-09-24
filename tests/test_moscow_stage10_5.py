@@ -1826,6 +1826,138 @@ def test_stage10_5_periodic_assets_declare_exact_reusable_mesh_prototypes():
     assert len(local_by_key) < len(objects)
 
 
+def test_stage10_5_clustered_civil_rings_share_one_prebaked_mesh():
+    profile = load_stage10_initial_moscow_profile(
+        civil_archetype="rc_block_6100_5600"
+    )
+    plan = build_stage10_5_rc_modern_chunk_plan(
+        chunk_length_m=2.0,
+        boundary_policy=ChunkBoundaryPolicy.EXACT_LENGTH,
+        ring_config=RingConfig(width_m=1.0),
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=2,
+            ring_width_m=1.0,
+            displacement_amplitude_m=0.0,
+            axis_noise_sigma_m=0.0,
+            ring_rotation_strategy=RingRotationStrategy.RINGWISE_GAUSSIAN,
+        ),
+        surface_meshing=SurfaceMeshingConfig(max_sagitta_m=0.005),
+        include_bolts=True,
+        production_config=ProductionConfig(
+            namespace="stage10-5-clustered-civil-ring",
+            moscow_profile=profile,
+            moscow_stage="10.5",
+            moscow_civil_topology="kba",
+            mesh_cluster_identical_civil_rings=True,
+        ),
+        seed=5812,
+    )
+    assert plan.civil_ring_asset is not None
+    assert plan.civil_ring_asset.segment_count == 6
+    assert plan.civil_ring_asset.bolt_pocket_count == 18
+    assert plan.civil_ring_asset.bolt_head_count == 18
+    assert plan.civil_ring_asset.csg_backend == "manifold3d"
+    assert plan.metadata["productionGeometry"]["civilRingCanonicalMeshCount"] == 1
+    assert plan.metadata["productionGeometry"][
+        "civilRingPerInstanceBlenderBooleanCount"
+    ] == 0
+
+    chunk = build_stage10_5_rc_modern_chunk_scene_package(plan, 0)
+    rings = chunk.objects_of_type("production_moscow_civil_ring_cluster")
+    assert len(rings) == 2
+    assert chunk.objects_of_type("lining_segment") == ()
+    assert chunk.objects_of_type("bolt_pocket_cutter") == ()
+    assert chunk.objects_of_type("bolt_head") == ()
+
+    keys = {
+        str(ring.custom_properties["meshPrototypeKey"])
+        for ring in rings
+    }
+    assert len(keys) == 1
+    assert all(
+        ring.custom_properties["meshPrototypeMode"]
+        == "rigid_transform_shared_mesh_v2"
+        and ring.custom_properties["meshClusterEligible"] is True
+        and ring.custom_properties["canonicalCivilRingBlenderBooleanRequired"]
+        is False
+        and ring.custom_properties["canonicalCivilRingPerInstanceGeometrySampling"]
+        is False
+        and ring.faces == rings[0].faces
+        for ring in rings
+    )
+
+    canonical_vertices = []
+    for ring in rings:
+        matrix = tuple(
+            float(v)
+            for v in ring.custom_properties["meshPrototypeTransformMatrix4x4"]
+        )
+        local = tuple(
+            (
+                matrix[0] * (vertex[0] - matrix[3])
+                + matrix[4] * (vertex[1] - matrix[7])
+                + matrix[8] * (vertex[2] - matrix[11]),
+                matrix[1] * (vertex[0] - matrix[3])
+                + matrix[5] * (vertex[1] - matrix[7])
+                + matrix[9] * (vertex[2] - matrix[11]),
+                matrix[2] * (vertex[0] - matrix[3])
+                + matrix[6] * (vertex[1] - matrix[7])
+                + matrix[10] * (vertex[2] - matrix[11]),
+            )
+            for vertex in ring.vertices
+        )
+        canonical_vertices.append(local)
+    for actual, expected in zip(
+        canonical_vertices[1],
+        canonical_vertices[0],
+    ):
+        assert all(
+            math.isclose(a, b, abs_tol=2e-12)
+            for a, b in zip(actual, expected)
+        )
+
+
+def test_stage10_5_materialized_clustered_civil_rings_use_rigid_instances():
+    profile = load_stage10_initial_moscow_profile(
+        civil_archetype="rc_block_6100_5600"
+    )
+    build = build_production_tunnel(
+        ring_config=RingConfig(width_m=1.0),
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=2,
+            ring_width_m=1.0,
+            displacement_amplitude_m=0.0,
+            axis_noise_sigma_m=0.0,
+            ring_rotation_strategy=RingRotationStrategy.RINGWISE_GAUSSIAN,
+        ),
+        surface_meshing=SurfaceMeshingConfig(max_sagitta_m=0.005),
+        include_bolts=False,
+        production_config=ProductionConfig(
+            namespace="stage10-5-materialized-clustered-civil",
+            moscow_profile=profile,
+            moscow_stage="10.5",
+            moscow_civil_topology="kba",
+            mesh_cluster_identical_civil_rings=True,
+        ),
+        seed=5812,
+    )
+    rings = build.scene.objects_of_type(
+        "production_moscow_civil_ring_cluster"
+    )
+    assert len(rings) == 2
+    assert build.scene.objects_of_type("lining_segment") == ()
+    assert {
+        ring.custom_properties["meshPrototypeKey"]
+        for ring in rings
+    } == {rings[0].custom_properties["meshPrototypeKey"]}
+    assert build.scene.metadata["productionGeometry"][
+        "civilRingRepresentation"
+    ] == "canonical_rigid_mesh_cluster_v1"
+    assert build.scene.metadata["productionGeometry"][
+        "ringGeometryAlignmentMap"
+    ] == "rigid_center_station_frame_plus_axial_roll_v1"
+
+
 def test_stage10_5_rc_chunk_first_3000_ring_first_chunk_is_local(monkeypatch):
     profile = load_stage10_initial_moscow_profile(
         civil_archetype="rc_block_6100_5600"

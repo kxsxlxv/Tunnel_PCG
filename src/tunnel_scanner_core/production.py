@@ -56,6 +56,7 @@ from .mesh import (
     build_hexahedral_segment,
     build_ring_mesh,
 )
+from .mesh_csg import subtract_closed_meshes
 from .moscow import (
     MoscowStage10Profile,
     R65ProductionProfile,
@@ -3522,6 +3523,361 @@ def _moscow_rc_legacy_ring_mesh(
     )
 
 
+@dataclass(frozen=True)
+class _CanonicalCivilRingAsset:
+    asset_id: str
+    topology: str
+    width_m: float
+    vertices: tuple[Vec3, ...]
+    faces: tuple[Face, ...]
+    face_groups: tuple[Mapping[str, Any], ...]
+    segment_count: int
+    bolt_pocket_count: int
+    bolt_head_count: int
+    csg_backend: str
+
+
+def _axial_ring_rotation_matrix(rotation_y_deg: float) -> tuple[float, ...]:
+    angle = math.radians(float(rotation_y_deg))
+    c = math.cos(angle)
+    si = math.sin(angle)
+    return (
+        c, 0.0, si, 0.0,
+        0.0, 1.0, 0.0, 0.0,
+        -si, 0.0, c, 0.0,
+        0.0, 0.0, 0.0, 1.0,
+    )
+
+
+def _build_canonical_moscow_rc_ring_asset(
+    *,
+    profile: MoscowStage10Profile,
+    topology: str,
+    surface_meshing: SurfaceMeshingConfig,
+    include_bolts: bool,
+    include_prescribed_outer_joint_solids: bool,
+    seed: int,
+    width_m: float,
+) -> _CanonicalCivilRingAsset:
+    """Bake one rigid Moscow RC ring asset for engine instancing.
+
+    Segment topology, visible heads and pocket recesses are authored once in
+    ring-local coordinates.  Per-ring stochastic geometry is intentionally
+    removed here: only the historical axial roll stream remains per instance.
+    """
+    if width_m <= 0.0 or width_m > profile.ring_pitch_m + 1e-9:
+        raise ValueError("canonical civil-ring width is outside profile pitch")
+    canonical_ring_index = 0
+    ring = _moscow_rc_legacy_ring_mesh(
+        profile,
+        topology=topology,
+        ring_index=canonical_ring_index,
+        width_m=width_m,
+        seed=seed,
+    )
+    joint_config = sample_joint_config(
+        seed=_stage9_child_seed(seed, canonical_ring_index, 2)
+    )
+    joints = (
+        build_prescribed_joint_set(ring, joint_config)
+        if include_prescribed_outer_joint_solids
+        else PrescribedJointSet(
+            config=joint_config,
+            radial=(),
+            circumferential_front=(),
+            circumferential_back=(),
+        )
+    )
+
+    full_width = width_m >= profile.ring_pitch_m - 1e-9
+    bolts = None
+    if include_bolts and full_width:
+        bolt_cfg = sample_bolt_config(
+            seed=_stage9_child_seed(seed, canonical_ring_index, 3)
+        )
+        bolt_cfg = replace(
+            bolt_cfg,
+            head_ring_vertices=required_circle_subdivisions(
+                bolt_cfg.head_radius_m,
+                surface_meshing.max_sagitta_m,
+                min_subdivisions=6,
+            ),
+        )
+        bolts = build_bolt_set(
+            ring,
+            bolt_cfg,
+            BoltLayoutType.TYPE1_CENTERED,
+            seed=_stage9_child_seed(seed, canonical_ring_index, 4),
+            perturbation_config=BoltPerturbationConfig(
+                sigma_m=0.0,
+                sigma_fraction=0.0,
+            ),
+        )
+
+    package = build_nominal_scene_package(
+        ring,
+        joints,
+        ring_id=canonical_ring_index,
+        include_radial_joints=include_prescribed_outer_joint_solids,
+        include_circumferential_front=False,
+        include_circumferential_back=include_prescribed_outer_joint_solids,
+        label_policy=LabelPolicy.STSD_COARSE,
+        surface_meshing=surface_meshing,
+        bolts=bolts,
+        bolt_boolean_overlap_m=0.005,
+        visible_bolt_heads_only=True,
+    )
+    segments = tuple(
+        obj for obj in package.objects
+        if obj.object_type == "lining_segment"
+    )
+    cutters = tuple(
+        obj for obj in package.objects
+        if obj.object_type == "bolt_pocket_cutter"
+    )
+    heads = tuple(
+        obj for obj in package.objects
+        if obj.object_type == "bolt_head"
+    )
+    joints_to_keep = tuple(
+        obj for obj in package.objects
+        if obj.object_type in {
+            "prescribed_radial_joint",
+            "prescribed_circumferential_joint",
+        }
+    )
+
+    cutters_by_target: dict[str, list[SceneObject]] = {}
+    for cutter in cutters:
+        target = str(cutter.extra_properties["booleanTarget"])
+        cutters_by_target.setdefault(target, []).append(cutter)
+
+    parts: list[tuple[Sequence[Vec3], Sequence[Face]]] = []
+    face_groups: list[Mapping[str, Any]] = []
+    face_cursor = 0
+    for segment in segments:
+        segment_cutters = cutters_by_target.get(segment.name, [])
+        if segment_cutters:
+            vertices, faces = subtract_closed_meshes(
+                segment.vertices,
+                segment.faces,
+                tuple(
+                    (cutter.vertices, cutter.faces)
+                    for cutter in segment_cutters
+                ),
+                name=f"canonical_ring:{topology}:{segment.segment_name}",
+            )
+        else:
+            vertices, faces = segment.vertices, segment.faces
+        parts.append((vertices, faces))
+        face_groups.append(
+            {
+                "kind": "lining_segment",
+                "segmentID": segment.segment_id,
+                "segmentName": segment.segment_name,
+                "labelID": segment.label_id,
+                "semanticClass": segment.semantic_class,
+                "faceStart": face_cursor,
+                "faceCount": len(faces),
+            }
+        )
+        face_cursor += len(faces)
+
+    for head in heads:
+        parts.append((head.vertices, head.faces))
+        face_groups.append(
+            {
+                "kind": "bolt_head",
+                "boltIndex": int(head.extra_properties["boltIndex"]),
+                "segmentID": head.segment_id,
+                "segmentName": head.segment_name,
+                "labelID": head.label_id,
+                "semanticClass": head.semantic_class,
+                "faceStart": face_cursor,
+                "faceCount": len(head.faces),
+            }
+        )
+        face_cursor += len(head.faces)
+
+    for joint in joints_to_keep:
+        parts.append((joint.vertices, joint.faces))
+        face_groups.append(
+            {
+                "kind": joint.object_type,
+                "segmentID": joint.segment_id,
+                "segmentName": joint.segment_name,
+                "labelID": joint.label_id,
+                "semanticClass": joint.semantic_class,
+                "faceStart": face_cursor,
+                "faceCount": len(joint.faces),
+            }
+        )
+        face_cursor += len(joint.faces)
+
+    vertices, faces = _combine_geometry_parts(parts)
+    sagitta_um = int(round(surface_meshing.max_sagitta_m * 1_000_000.0))
+    width_um = int(round(width_m * 1_000_000.0))
+    asset_id = (
+        f"RC_{topology.upper()}_W{width_um}UM_"
+        f"SAG{sagitta_um}UM_B{1 if bolts is not None else 0}_SEED{int(seed)}"
+    )
+    return _CanonicalCivilRingAsset(
+        asset_id=asset_id,
+        topology=topology,
+        width_m=float(width_m),
+        vertices=vertices,
+        faces=faces,
+        face_groups=tuple(face_groups),
+        segment_count=len(segments),
+        bolt_pocket_count=len(cutters),
+        bolt_head_count=len(heads),
+        csg_backend=("manifold3d" if cutters else "none"),
+    )
+
+
+def _build_clustered_moscow_rc_ring_objects(
+    *,
+    profile: MoscowStage10Profile,
+    topology: str,
+    namespace: str,
+    assembly: TunnelAssembly,
+    stations: Sequence[AlignmentStation],
+    label_policy: LabelPolicy,
+    civil_roll_assembly: TunnelAssembly,
+    full_asset: _CanonicalCivilRingAsset,
+    partial_asset: _CanonicalCivilRingAsset | None,
+    seed: int,
+    start_chainage_m: float | None = None,
+    end_chainage_m: float | None = None,
+) -> tuple[SceneObject, ...]:
+    """Instantiate one canonical rigid ring mesh along the Stage-10 alignment."""
+    ranges = civil_ring_ranges(
+        assembly.length_by_chainage_m,
+        ring_pitch_m=profile.ring_pitch_m,
+    )
+    if civil_roll_assembly.config.n_rings != len(ranges):
+        raise ValueError("civil_roll_assembly ring count mismatch")
+    label_id, semantic = _civil_semantics(label_policy)
+    tunnel_instance_id = stable_instance_id(f"{namespace}/tunnel")
+    source_ring_width = assembly.config.ring_width_m
+    result: list[SceneObject] = []
+
+    for ring_index, start_chainage, end_chainage in ranges:
+        midpoint = 0.5 * (start_chainage + end_chainage)
+        if not _chainage_selected_for_window(
+            midpoint,
+            total_length_m=assembly.length_by_chainage_m,
+            start_chainage_m=start_chainage_m,
+            end_chainage_m=end_chainage_m,
+        ):
+            continue
+        width = end_chainage - start_chainage
+        full_width = width >= profile.ring_pitch_m - 1e-9
+        asset = full_asset if full_width else partial_asset
+        if asset is None:
+            raise ValueError("partial civil ring requires a partial canonical asset")
+
+        pose = civil_roll_assembly.poses[ring_index]
+        station = sample_alignment_station(stations, midpoint)
+        axial_rotation = _axial_ring_rotation_matrix(pose.rotation_y_deg)
+        prototype = _periodic_mesh_prototype_properties(
+            profile=profile,
+            family="moscow-civil-ring",
+            local_name=asset.asset_id,
+            station=station,
+            vertex_count=len(asset.vertices),
+            face_count=len(asset.faces),
+            local_variant_transform=axial_rotation,
+        )
+        transform = tuple(
+            float(value)
+            for value in prototype["meshPrototypeTransformMatrix4x4"]
+        )
+        vertices = tuple(
+            _transform_point_mat4(transform, vertex)
+            for vertex in asset.vertices
+        )
+        representative_ring_id = min(
+            assembly.config.n_rings - 1,
+            max(0, int(math.floor(midpoint / source_ring_width))),
+        )
+        key = (
+            f"{namespace}/civil-ring-cluster/"
+            f"ring/{ring_index:06d}"
+        )
+        iid = stable_instance_id(key)
+        result.append(
+            SceneObject(
+                name=f"PROD_MOSCOW_RC_RING_{ring_index:06d}",
+                vertices=vertices,
+                faces=asset.faces,
+                object_type="production_moscow_civil_ring_cluster",
+                ring_id=representative_ring_id,
+                label_id=label_id,
+                instance_id=iid,
+                semantic_class=semantic,
+                reconstruction="stage10_5_canonical_rigid_rc_ring_mesh_cluster_v1",
+                collection_path=(
+                    "Tunnel",
+                    namespace,
+                    "CivilShell",
+                    "ClusteredRings",
+                ),
+                extra_properties={
+                    "persistentKey": key,
+                    "persistentInstanceID": iid,
+                    "tunnelInstanceID": tunnel_instance_id,
+                    "identityScope": "periodic_moscow_civil_ring_mesh_cluster",
+                    "domainGeometryStage": "10.5",
+                    "eventChainageM": midpoint,
+                    "chunkAssignmentDatum": "moscow_ring_midpoint_chainage",
+                    "moscowCivilRingIndex": ring_index,
+                    "moscowCivilRingStartChainageM": start_chainage,
+                    "moscowCivilRingEndChainageM": end_chainage,
+                    "moscowCivilRingPitchM": profile.ring_pitch_m,
+                    "partialFinalRing": not full_width,
+                    "civilFamily": profile.civil_family,
+                    "moscowCivilTopology": topology,
+                    "canonicalCivilRingAssetID": asset.asset_id,
+                    "canonicalCivilRingSeed": int(seed),
+                    "canonicalCivilRingWidthM": asset.width_m,
+                    "canonicalCivilRingSegmentCount": asset.segment_count,
+                    "canonicalCivilRingFaceGroups": asset.face_groups,
+                    "canonicalCivilRingBoltPocketCount": asset.bolt_pocket_count,
+                    "canonicalCivilRingBoltHeadCount": asset.bolt_head_count,
+                    "canonicalCivilRingCSGBackend": asset.csg_backend,
+                    "canonicalCivilRingPocketsPrebaked": (
+                        asset.bolt_pocket_count > 0
+                    ),
+                    "canonicalCivilRingBlenderBooleanRequired": False,
+                    "canonicalCivilRingPerInstanceGeometrySampling": False,
+                    "canonicalCivilRingRigidBody": True,
+                    "legacyPerVertexAlignmentWarpApplied": False,
+                    "legacyPerVertexAlignmentWarpGeometryEquivalent": False,
+                    "civilRingPlacementMode": (
+                        "center_station_frame_plus_axial_roll_v1"
+                    ),
+                    "ringRotationDeg": float(pose.rotation_y_deg),
+                    "ringNominalRotationDeg": float(pose.nominal_rotation_deg),
+                    "ringAngularImperfectionDeg": float(
+                        pose.angular_imperfection_deg
+                    ),
+                    "moscowCivilRotationStrategy": (
+                        assembly.config.ring_rotation_strategy.value
+                    ),
+                    "moscowCivilRotationSeed": civil_roll_assembly.seed,
+                    "ringTranslationX": station.offset_x_m,
+                    "ringTranslationY": station.world_y_m,
+                    "ringTranslationZ": station.offset_z_m,
+                    **prototype,
+                    "moscowProfileID": profile.profile_id,
+                    "moscowProfileSHA256": profile.provenance.canonical_sha256,
+                },
+            )
+        )
+    return tuple(result)
+
+
 @dataclass
 class _CivilRingWarpContext:
     ring_index: int
@@ -4137,6 +4493,7 @@ class ProductionConfig:
     keep_prescribed_outer_joint_solids: bool = False
     moscow_civil_bolts_enabled: bool = True
     keep_moscow_civil_bolt_pocket_booleans: bool = False
+    mesh_cluster_identical_civil_rings: bool = False
     stitch_ring_geometry: bool = True
     stable_reidentify_ring_objects: bool = True
 
@@ -4179,6 +4536,14 @@ class ProductionConfig:
         ):
             raise ValueError(
                 "modern Moscow service preset is currently bounded to Stage 10.5"
+            )
+        if (
+            self.mesh_cluster_identical_civil_rings
+            and self.keep_moscow_civil_bolt_pocket_booleans
+        ):
+            raise ValueError(
+                "canonical clustered civil rings prebake bolt pockets; "
+                "per-ring Blender bolt Booleans cannot also be enabled"
             )
 
     @property
@@ -4430,24 +4795,71 @@ def build_production_scene(
                     5812,
                 )
             )
-            stage10_4_civil_objects = (
-                _build_stage10_4_rc_stage9_architecture_objects(
+            if config.mesh_cluster_identical_civil_rings:
+                civil_roll_assembly = _sample_moscow_civil_roll_assembly(
+                    source_assembly=source_build.assembly,
+                    profile=config.moscow_profile,
+                    civil_ring_count=stage10_4_civil_ring_count,
+                    master_seed=master_seed,
+                )
+                full_asset = _build_canonical_moscow_rc_ring_asset(
                     profile=config.moscow_profile,
                     topology=config.resolved_moscow_civil_topology,
-                    namespace=config.namespace,
-                    assembly=source_build.assembly,
-                    stations=stations,
                     surface_meshing=surface_meshing,
                     include_bolts=config.moscow_civil_bolts_enabled,
-                    include_bolt_pocket_booleans=(
-                        config.keep_moscow_civil_bolt_pocket_booleans
-                    ),
                     include_prescribed_outer_joint_solids=(
                         config.keep_prescribed_outer_joint_solids
                     ),
                     seed=master_seed,
+                    width_m=config.moscow_profile.ring_pitch_m,
                 )
-            )
+                final_width = civil_ranges[-1][2] - civil_ranges[-1][1]
+                partial_asset = None
+                if final_width < config.moscow_profile.ring_pitch_m - 1e-9:
+                    partial_asset = _build_canonical_moscow_rc_ring_asset(
+                        profile=config.moscow_profile,
+                        topology=config.resolved_moscow_civil_topology,
+                        surface_meshing=surface_meshing,
+                        include_bolts=False,
+                        include_prescribed_outer_joint_solids=(
+                            config.keep_prescribed_outer_joint_solids
+                        ),
+                        seed=master_seed,
+                        width_m=final_width,
+                    )
+                stage10_4_civil_objects = (
+                    _build_clustered_moscow_rc_ring_objects(
+                        profile=config.moscow_profile,
+                        topology=config.resolved_moscow_civil_topology,
+                        namespace=config.namespace,
+                        assembly=source_build.assembly,
+                        stations=stations,
+                        label_policy=source_scene.label_policy,
+                        civil_roll_assembly=civil_roll_assembly,
+                        full_asset=full_asset,
+                        partial_asset=partial_asset,
+                        seed=master_seed,
+                    )
+                )
+            else:
+                stage10_4_civil_objects = (
+                    _build_stage10_4_rc_stage9_architecture_objects(
+                        profile=config.moscow_profile,
+                        topology=config.resolved_moscow_civil_topology,
+                        namespace=config.namespace,
+                        assembly=source_build.assembly,
+                        stations=stations,
+                        surface_meshing=surface_meshing,
+                        include_bolts=config.moscow_civil_bolts_enabled,
+                        include_bolt_pocket_booleans=(
+                            config.keep_moscow_civil_bolt_pocket_booleans
+                        ),
+                        include_prescribed_outer_joint_solids=(
+                            config.keep_prescribed_outer_joint_solids
+                        ),
+                        seed=master_seed,
+                    )
+                )
         else:
             stage10_4_civil_objects = _build_stage10_4_civil_shell_objects(
                 profile=config.moscow_profile,
@@ -4487,9 +4899,18 @@ def build_production_scene(
                 ),
                 "ringGeometryStitchedToAlignment": config.stitch_ring_geometry,
                 "ringGeometryAlignmentMap": (
-                    "piecewise_linear_xz_by_local_y"
-                    if config.stitch_ring_geometry
-                    else "stage7_rigid_ring_translation"
+                    "rigid_center_station_frame_plus_axial_roll_v1"
+                    if config.mesh_cluster_identical_civil_rings
+                    else (
+                        "piecewise_linear_xz_by_local_y"
+                        if config.stitch_ring_geometry
+                        else "stage7_rigid_ring_translation"
+                    )
+                ),
+                "civilRingRepresentation": (
+                    "canonical_rigid_mesh_cluster_v1"
+                    if config.mesh_cluster_identical_civil_rings
+                    else "legacy_stage9_per_vertex_alignment_warp"
                 ),
                 "internalAncillaryCaps": 0,
                 "railProfile": (
@@ -5599,6 +6020,8 @@ class Stage105RCModernChunkPlan:
     chunks: tuple[ChunkDescriptor, ...]
     boundary_policy: ChunkBoundaryPolicy
     civil_roll_assembly: TunnelAssembly
+    civil_ring_asset: _CanonicalCivilRingAsset | None
+    civil_partial_ring_asset: _CanonicalCivilRingAsset | None
     seed: int
     metadata: Mapping[str, Any]
 
@@ -5726,6 +6149,34 @@ def build_stage10_5_rc_modern_chunk_plan(
         master_seed=seed,
     )
 
+    civil_ring_asset: _CanonicalCivilRingAsset | None = None
+    civil_partial_ring_asset: _CanonicalCivilRingAsset | None = None
+    if production_config.mesh_cluster_identical_civil_rings:
+        civil_ring_asset = _build_canonical_moscow_rc_ring_asset(
+            profile=profile,
+            topology=production_config.resolved_moscow_civil_topology,
+            surface_meshing=surface_meshing,
+            include_bolts=production_config.moscow_civil_bolts_enabled,
+            include_prescribed_outer_joint_solids=(
+                production_config.keep_prescribed_outer_joint_solids
+            ),
+            seed=seed,
+            width_m=profile.ring_pitch_m,
+        )
+        final_width = civil_ranges[-1][2] - civil_ranges[-1][1]
+        if final_width < profile.ring_pitch_m - 1e-9:
+            civil_partial_ring_asset = _build_canonical_moscow_rc_ring_asset(
+                profile=profile,
+                topology=production_config.resolved_moscow_civil_topology,
+                surface_meshing=surface_meshing,
+                include_bolts=False,
+                include_prescribed_outer_joint_solids=(
+                    production_config.keep_prescribed_outer_joint_solids
+                ),
+                seed=seed,
+                width_m=final_width,
+            )
+
     modern_pw = profile.modern_permanent_way
     rail_centers = r65_rail_center_offsets_for_gauge(
         profile.track.gauge_m,
@@ -5812,6 +6263,32 @@ def build_stage10_5_rc_modern_chunk_plan(
         "railProfile": "stage10_1_r65_gost_r51685_2022",
         "sourceRingGeometryMaterialized": False,
         "sourceRingGeometrySkippedAsFullyReplaced": True,
+        "civilRingRepresentation": (
+            "canonical_rigid_mesh_cluster_v1"
+            if production_config.mesh_cluster_identical_civil_rings
+            else "legacy_stage9_per_vertex_alignment_warp"
+        ),
+        "civilRingCanonicalMeshCount": (
+            (1 if civil_ring_asset is not None else 0)
+            + (1 if civil_partial_ring_asset is not None else 0)
+        ),
+        "civilRingCanonicalPrototypeID": (
+            None if civil_ring_asset is None else civil_ring_asset.asset_id
+        ),
+        "civilRingPrebakedPocketCountPerFullRing": (
+            0 if civil_ring_asset is None
+            else civil_ring_asset.bolt_pocket_count
+        ),
+        "civilRingPerInstanceBlenderBooleanCount": (
+            0 if production_config.mesh_cluster_identical_civil_rings
+            else (civil_segment_count if include_bolts else 0)
+        ),
+        "civilRingRigidInstancePlacement": bool(
+            production_config.mesh_cluster_identical_civil_rings
+        ),
+        "civilRingLegacyPerVertexWarp": not bool(
+            production_config.mesh_cluster_identical_civil_rings
+        ),
         "chunking": "chunk_first_generation_without_full_scene",
         "chunkFirstGeneration": True,
         "continuousSweepAlignmentCompaction": (
@@ -5933,6 +6410,8 @@ def build_stage10_5_rc_modern_chunk_plan(
         chunks=chunks,
         boundary_policy=resolved_boundary_policy,
         civil_roll_assembly=civil_roll_assembly,
+        civil_ring_asset=civil_ring_asset,
+        civil_partial_ring_asset=civil_partial_ring_asset,
         seed=int(seed),
         metadata=metadata,
     )
@@ -6008,27 +6487,47 @@ def build_stage10_5_rc_modern_chunk_scene_package(
             end_chainage_m=end,
         )
     )
-    periodic.extend(
-        _build_stage10_4_rc_stage9_architecture_objects(
-            profile=profile,
-            topology=plan.config.resolved_moscow_civil_topology,
-            namespace=plan.config.namespace,
-            assembly=assembly,
-            stations=plan.alignment_stations,
-            surface_meshing=plan.surface_meshing,
-            include_bolts=plan.config.moscow_civil_bolts_enabled,
-            include_bolt_pocket_booleans=(
-                plan.config.keep_moscow_civil_bolt_pocket_booleans
-            ),
-            include_prescribed_outer_joint_solids=(
-                plan.config.keep_prescribed_outer_joint_solids
-            ),
-            seed=plan.seed,
-            start_chainage_m=start,
-            end_chainage_m=end,
-            civil_roll_assembly=plan.civil_roll_assembly,
+    if plan.config.mesh_cluster_identical_civil_rings:
+        if plan.civil_ring_asset is None:
+            raise AssertionError("clustered civil-ring plan lost canonical asset")
+        periodic.extend(
+            _build_clustered_moscow_rc_ring_objects(
+                profile=profile,
+                topology=plan.config.resolved_moscow_civil_topology,
+                namespace=plan.config.namespace,
+                assembly=assembly,
+                stations=plan.alignment_stations,
+                label_policy=plan.source_build.scene.label_policy,
+                civil_roll_assembly=plan.civil_roll_assembly,
+                full_asset=plan.civil_ring_asset,
+                partial_asset=plan.civil_partial_ring_asset,
+                seed=plan.seed,
+                start_chainage_m=start,
+                end_chainage_m=end,
+            )
         )
-    )
+    else:
+        periodic.extend(
+            _build_stage10_4_rc_stage9_architecture_objects(
+                profile=profile,
+                topology=plan.config.resolved_moscow_civil_topology,
+                namespace=plan.config.namespace,
+                assembly=assembly,
+                stations=plan.alignment_stations,
+                surface_meshing=plan.surface_meshing,
+                include_bolts=plan.config.moscow_civil_bolts_enabled,
+                include_bolt_pocket_booleans=(
+                    plan.config.keep_moscow_civil_bolt_pocket_booleans
+                ),
+                include_prescribed_outer_joint_solids=(
+                    plan.config.keep_prescribed_outer_joint_solids
+                ),
+                seed=plan.seed,
+                start_chainage_m=start,
+                end_chainage_m=end,
+                civil_roll_assembly=plan.civil_roll_assembly,
+            )
+        )
 
     chunk_prefix = ("Chunks", f"Chunk_{chunk.chunk_id:05d}")
     objects: list[SceneObject] = [

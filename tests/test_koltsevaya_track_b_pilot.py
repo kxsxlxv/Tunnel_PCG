@@ -93,6 +93,7 @@ def test_koltsevaya_track_b_first_chunk_builds_on_frame_aware_route():
             moscow_stage="10.5",
             moscow_service_preset="modern",
             moscow_civil_topology="kba",
+            mesh_cluster_identical_civil_rings=True,
         ),
         seed=5812,
         alignment_stations=stations,
@@ -118,14 +119,16 @@ def test_koltsevaya_track_b_first_chunk_builds_on_frame_aware_route():
         0,
         localize_coordinates=True,
     )
-    assert chunk.objects_of_type("lining_segment")
+    rings = chunk.objects_of_type("production_moscow_civil_ring_cluster")
+    assert rings
+    assert chunk.objects_of_type("lining_segment") == ()
     assert chunk.objects_of_type("production_lvt_block")
     assert chunk.objects_of_type("production_rail")
     assert chunk.metadata["productionChunk"]["vertexCoordinatesLocalized"] is True
 
     vertices = [
         vertex
-        for obj in chunk.objects_of_type("lining_segment")
+        for obj in rings
         for vertex in obj.vertices
     ]
     assert vertices

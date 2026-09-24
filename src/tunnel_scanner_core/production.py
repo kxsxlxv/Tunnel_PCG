@@ -56,7 +56,6 @@ from .mesh import (
     build_hexahedral_segment,
     build_ring_mesh,
 )
-from .mesh_csg import subtract_closed_meshes
 from .moscow import (
     MoscowStage10Profile,
     R65ProductionProfile,
@@ -3658,6 +3657,10 @@ def _build_canonical_moscow_rc_ring_asset(
     for segment in segments:
         segment_cutters = cutters_by_target.get(segment.name, [])
         if segment_cutters:
+            # Keep manifold3d out of Blender/runtime import paths. It is needed
+            # only once while authoring the canonical ring asset.
+            from .mesh_csg import subtract_closed_meshes
+
             vertices, faces = subtract_closed_meshes(
                 segment.vertices,
                 segment.faces,

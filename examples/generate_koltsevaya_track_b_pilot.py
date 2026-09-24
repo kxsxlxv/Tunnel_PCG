@@ -469,6 +469,22 @@ def main() -> None:
         "chunkFirstGeneration": True,
         "localizedForBlender": localize,
         "prototypeSceneJson": bool(args.prototype_json),
+        "prototypeSceneSchemaVersion": 3 if args.prototype_json else 1,
+        "geometryEncoding": (
+            "rigid_transform_mesh_prototypes_v2"
+            if args.prototype_json
+            else "expanded_world_vertices"
+        ),
+        "engineMeshClusterReady": bool(args.prototype_json),
+        "civilRingRepresentation": production_meta[
+            "civilRingRepresentation"
+        ],
+        "civilRingCanonicalPrototypeID": production_meta[
+            "civilRingCanonicalPrototypeID"
+        ],
+        "civilRingPerInstanceBlenderBooleanCount": production_meta[
+            "civilRingPerInstanceBlenderBooleanCount"
+        ],
         "parallelChunkWorkers": effective_workers,
         "moscowProfileID": profile.profile_id,
         "moscowProfileSHA256": profile.provenance.canonical_sha256,

@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "vehicle_family": "Moskva-2020",
+  "model": "81-775",
+  "purpose": "engine-neutral train kinematics and obstacle-envelope reference inputs",
+  "dimensions_source": "user-supplied 81-775.md",
+  "dimensions": {
+    "length_over_coupler_heads_m": 20.08,
+    "maximum_vehicle_width_m": 2.74,
+    "empty_vehicle_height_above_top_of_rail_m": 3.68,
+    "vehicle_base_m": 12.6,
+    "bogies_per_vehicle": 2,
+    "axles_per_bogie": 2
+  },
+  "documented_motion": {
+    "body_bogie_central_stop_clearance_each_side_m": {
+      "nominal": 0.015,
+      "tolerance": 0.001,
+      "upper_documented_free_clearance": 0.016
+    }
+  },
+  "modeling_interpretation": {
+    "vehicle_base_as_bogie_pivot_spacing": {
+      "value_m": 12.6,
+      "status": "engineering interpretation for rigid-chord model",
+      "note": "The target note retains the source term база вагона; current metro gauging terminology places four-axle guiding sections through vertical bogie kingpin axes."
+    },
+    "symmetric_end_overhang_proxy_m": {
+      "value": 3.74,
+      "derived_from": "(length_over_coupler_heads_m - vehicle_base_m) / 2",
+      "status": "screening proxy only; not verified rigid carbody end geometry"
+    }
+  },
+  "unknown_required_for_complete_kinematic_envelope": {
+    "bogie_wheelbase_m": null,
+    "exact_carbody_length_m": null,
+    "exact_bogie_pivot_positions_relative_to_body_ends_m": null,
+    "exterior_profile_xyz": null,
+    "underframe_and_current_collector_envelope": null,
+    "maximum_secondary_suspension_lateral_displacement_m": null,
+    "maximum_secondary_suspension_vertical_displacement_m": null,
+    "maximum_carbody_roll_rad": null,
+    "wheel_rail_lateral_play_m": null,
+    "maintenance_and_wear_allowances": null
+  },
+  "safety_status": "PROVISIONAL_GEOMETRIC_MODEL_NOT_COMPLETE_KINEMATIC_GAUGE"
+}

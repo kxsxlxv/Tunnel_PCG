@@ -1,3 +1,4 @@
+import json
 import math
 
 import tunnel_scanner_core.production as production_module
@@ -1957,6 +1958,76 @@ def test_stage10_5_materialized_clustered_civil_rings_use_rigid_instances():
         "ringGeometryAlignmentMap"
     ] == "rigid_center_station_frame_plus_axial_roll_v1"
 
+
+
+
+def test_stage10_5_clustered_ring_prototype_json_has_one_mesh_two_instances(
+    tmp_path,
+):
+    from tunnel_scanner_core import (
+        read_scene_package_json,
+        write_scene_package_json,
+    )
+
+    profile = load_stage10_initial_moscow_profile(
+        civil_archetype="rc_block_6100_5600"
+    )
+    plan = build_stage10_5_rc_modern_chunk_plan(
+        chunk_length_m=2.0,
+        boundary_policy=ChunkBoundaryPolicy.EXACT_LENGTH,
+        ring_config=RingConfig(width_m=1.0),
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=2,
+            ring_width_m=1.0,
+            displacement_amplitude_m=0.0,
+            axis_noise_sigma_m=0.0,
+            ring_rotation_strategy=RingRotationStrategy.RINGWISE_GAUSSIAN,
+        ),
+        surface_meshing=SurfaceMeshingConfig(max_sagitta_m=0.005),
+        include_bolts=True,
+        production_config=ProductionConfig(
+            namespace="stage10-5-clustered-prototype-json",
+            moscow_profile=profile,
+            moscow_stage="10.5",
+            moscow_civil_topology="kba",
+            mesh_cluster_identical_civil_rings=True,
+        ),
+        seed=5812,
+    )
+    chunk = build_stage10_5_rc_modern_chunk_scene_package(plan, 0)
+    path = tmp_path / "clustered_ring.json"
+    write_scene_package_json(
+        chunk,
+        path,
+        compact=True,
+        prototype_instances=True,
+    )
+
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    assert raw["schemaVersion"] == 3
+    ring_objects = [
+        obj for obj in raw["objects"]
+        if obj["objectType"] == "production_moscow_civil_ring_cluster"
+    ]
+    assert len(ring_objects) == 2
+    ring_refs = {obj["meshPrototypeRef"] for obj in ring_objects}
+    assert len(ring_refs) == 1
+    ring_ref = next(iter(ring_refs))
+    assert ring_ref in raw["meshPrototypes"]
+    assert all(
+        "meshTransformMatrix4x4" in obj
+        and "vertices" not in obj
+        and "faces" not in obj
+        for obj in ring_objects
+    )
+
+    restored = read_scene_package_json(path)
+    restored_rings = restored.objects_of_type(
+        "production_moscow_civil_ring_cluster"
+    )
+    assert restored_rings == chunk.objects_of_type(
+        "production_moscow_civil_ring_cluster"
+    )
 
 def test_stage10_5_rc_chunk_first_3000_ring_first_chunk_is_local(monkeypatch):
     profile = load_stage10_initial_moscow_profile(

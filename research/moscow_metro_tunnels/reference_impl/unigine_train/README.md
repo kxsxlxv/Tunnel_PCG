@@ -16,6 +16,28 @@ does not contain the UNIGINE SDK.
   WorldBoundBox broad phase, and then applies OBB-vs-AABB SAT before assigning
   ACTIVE_ROUTE / ALL_FEASIBLE_ROUTES / ROUTE_AMBIGUOUS relevance.
 
+## Coordinate-space binding
+
+The native .spl remains in Tunnel_PCG route coordinates. If the imported tunnel
+is moved/rotated in the UNIGINE scene, set **Spline Space Node** on
+Train81775Kinematics to the same transformed root/dummy that represents that
+Tunnel_PCG coordinate frame. The component applies this node's world transform
+to spline positions, tangents and up vectors. RailSweptEnvelopeManager reuses
+the exact same transform from Train81775Kinematics.
+
+The transform must be rigid (unit scale). Non-unit scale is logged as a warning
+because chainage and the 12.6 m bogie-centre chord are metric quantities.
+
+Do not compensate a coordinate-frame mismatch by editing Initial Leading
+Chainage or by adding arbitrary Z offsets to the train.
+
+UNIGINE's calcSegmentUpVector() is not used by these reference components.
+The supplied SDK documents axis-angle interpolation based on
+cross(start_up,end_up); when both endpoint up vectors are identical, the
+installed engine version can return NaN. The components instead interpolate
+the stored endpoint up vectors robustly and re-orthogonalize them against the
+track tangent.
+
 ## Input path
 
 Use the .spl file emitted by:

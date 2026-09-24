@@ -27,8 +27,51 @@ namespace
 
 	vec3 orthogonal_up(const vec3 &forward, const vec3 &up_hint)
 	{
-		vec3 right = normalize(cross(forward, up_hint));
-		return normalize(cross(right, forward));
+		vec3 f = normalize(forward);
+		vec3 hint = up_hint;
+		if (length2(hint) <= 1e-12f)
+			hint = vec3(0.0f, 0.0f, 1.0f);
+		hint = normalize(hint);
+
+		vec3 right = cross(f, hint);
+		if (length2(right) <= 1e-12f)
+		{
+			hint = std::abs(f.z) < 0.9f
+				? vec3(0.0f, 0.0f, 1.0f)
+				: vec3(1.0f, 0.0f, 0.0f);
+			right = cross(f, hint);
+		}
+		right = normalize(right);
+		return normalize(cross(right, f));
+	}
+
+	vec3 interpolate_segment_up(
+		const SplineGraphPtr &graph,
+		int segment,
+		float t)
+	{
+		vec3 start = graph->getSegmentStartUpVector(segment);
+		vec3 end = graph->getSegmentEndUpVector(segment);
+		if (length2(start) <= 1e-12f)
+			start = vec3(0.0f, 0.0f, 1.0f);
+		if (length2(end) <= 1e-12f)
+			end = start;
+		start = normalize(start);
+		end = normalize(end);
+
+		vec3 blended = start * (1.0f - t) + end * t;
+		if (length2(blended) <= 1e-12f)
+			blended = start;
+		return normalize(blended);
+	}
+
+	vec3 transform_direction(
+		const Mat4 &transform,
+		const vec3 &direction)
+	{
+		Vec3 origin = transform * Vec3(0.0);
+		Vec3 endpoint = transform * Vec3(direction);
+		return normalize(vec3(endpoint - origin));
 	}
 }
 
@@ -109,6 +152,46 @@ void Train81775Kinematics::init()
 		log_node_position("trailing_bogie", trailing_bogie_node.get());
 	}
 
+	spline_to_world_transform = Mat4_identity;
+	if (spline_space_node.get())
+	{
+		spline_to_world_transform =
+			spline_space_node.get()->getWorldTransform();
+		const vec3 scale =
+			spline_to_world_transform.getScale();
+		if (diagnostic_logging.get())
+		{
+			const Vec3 translation =
+				spline_to_world_transform.getTranslate();
+			Log::message(
+				"[Train81775] Spline Space Node id=%d "
+				"translation=(%.6f, %.6f, %.6f) "
+				"scale=(%.6f, %.6f, %.6f)\n",
+				spline_space_node.get()->getID(),
+				translation.x,
+				translation.y,
+				translation.z,
+				double(scale.x),
+				double(scale.y),
+				double(scale.z));
+		}
+		if (
+			std::abs(double(scale.x) - 1.0) > 1e-4
+			|| std::abs(double(scale.y) - 1.0) > 1e-4
+			|| std::abs(double(scale.z) - 1.0) > 1e-4)
+		{
+			Log::warning(
+				"[Train81775] Spline Space Node has non-unit scale. "
+				"Rail chainage/chord geometry assumes a rigid transform.\n");
+		}
+	}
+	else if (diagnostic_logging.get())
+	{
+		Log::warning(
+			"[Train81775] Spline Space Node is empty; raw .spl coordinates "
+			"will be treated as UNIGINE world coordinates.\n");
+	}
+
 	if (vehicle_base_m.get() <= 0.0f)
 	{
 		Log::error("Train81775Kinematics: vehicle_base_m must be positive\n");
@@ -137,10 +220,21 @@ void Train81775Kinematics::init()
 			"[Train81775] Spline loaded: segments=%d route_length=%.6f m\n",
 			spline_graph->getNumSegments(),
 			route_length_m);
+		TrackSample route_start_local = sample_route_local(0.0);
+		TrackSample route_end_local =
+			sample_route_local(route_length_m);
 		TrackSample route_start = sample_route(0.0);
 		TrackSample route_end = sample_route(route_length_m);
-		log_track_sample("route_start", 0.0, route_start);
-		log_track_sample("route_end", route_length_m, route_end);
+		log_track_sample("route_start_local", 0.0, route_start_local);
+		log_track_sample(
+			"route_end_local",
+			route_length_m,
+			route_end_local);
+		log_track_sample("route_start_world", 0.0, route_start);
+		log_track_sample(
+			"route_end_world",
+			route_length_m,
+			route_end);
 	}
 	if (route_length_m <= double(vehicle_base_m.get()))
 	{
@@ -166,6 +260,18 @@ void Train81775Kinematics::init()
 		const TrackSample front = sample_route(leading_chainage_m);
 		const TrackSample rear = sample_route(trailing_s);
 		const Vec3 body = (front.position + rear.position) * 0.5;
+		const Vec3 current_body =
+			carbody_node.get()->getWorldPosition();
+		const double initial_snap_distance =
+			distance3(current_body, body);
+		if (initial_snap_distance > 5.0)
+		{
+			Log::warning(
+				"[Train81775] Initial spline target is %.3f m from the "
+				"current carbody position. Set Spline Space Node to the "
+				"same transformed root/dummy used by the imported tunnel.\n",
+				initial_snap_distance);
+		}
 		Log::message(
 			"[Train81775] Initial resolved chainage: leading=%.6f trailing=%.6f "
 			"chord=%.6f m body_target=(%.6f, %.6f, %.6f)\n",
@@ -240,7 +346,7 @@ double Train81775Kinematics::normalize_route_chainage(double chainage_m) const
 }
 
 Train81775Kinematics::TrackSample
-Train81775Kinematics::sample_route(double chainage_m) const
+Train81775Kinematics::sample_route_local(double chainage_m) const
 {
 	double s = normalize_route_chainage(chainage_m);
 	int segment = int(arc_luts.size()) - 1;
@@ -276,10 +382,31 @@ Train81775Kinematics::sample_route(double chainage_m) const
 	float t = float(t0 + (t1 - t0) * alpha);
 
 	Vec3 position = spline_graph->calcSegmentPoint(segment, t);
-	vec3 tangent = normalize(spline_graph->calcSegmentTangent(segment, t));
-	vec3 up_hint = normalize(spline_graph->calcSegmentUpVector(segment, t));
+	vec3 tangent = normalize(
+		spline_graph->calcSegmentTangent(segment, t));
+	vec3 up_hint = interpolate_segment_up(
+		spline_graph,
+		segment,
+		t);
 	vec3 up = orthogonal_up(tangent, up_hint);
 	return {position, tangent, up};
+}
+
+Train81775Kinematics::TrackSample
+Train81775Kinematics::sample_route(double chainage_m) const
+{
+	const TrackSample local = sample_route_local(chainage_m);
+	const Vec3 world_position =
+		spline_to_world_transform * local.position;
+	const vec3 world_tangent = transform_direction(
+		spline_to_world_transform,
+		local.tangent);
+	const vec3 world_up_hint = transform_direction(
+		spline_to_world_transform,
+		local.up);
+	const vec3 world_up =
+		orthogonal_up(world_tangent, world_up_hint);
+	return {world_position, world_tangent, world_up};
 }
 
 double Train81775Kinematics::solve_trailing_chainage(

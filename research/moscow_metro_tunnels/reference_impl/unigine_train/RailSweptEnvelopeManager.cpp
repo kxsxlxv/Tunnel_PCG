@@ -39,8 +39,51 @@ namespace
 
 	vec3 safe_up(const vec3 &forward, const vec3 &up_hint)
 	{
-		vec3 right = normalize(cross(forward, up_hint));
-		return normalize(cross(right, forward));
+		vec3 f = normalize(forward);
+		vec3 hint = up_hint;
+		if (length2(hint) <= 1e-12f)
+			hint = vec3(0.0f, 0.0f, 1.0f);
+		hint = normalize(hint);
+
+		vec3 right = cross(f, hint);
+		if (length2(right) <= 1e-12f)
+		{
+			hint = std::abs(f.z) < 0.9f
+				? vec3(0.0f, 0.0f, 1.0f)
+				: vec3(1.0f, 0.0f, 0.0f);
+			right = cross(f, hint);
+		}
+		right = normalize(right);
+		return normalize(cross(right, f));
+	}
+
+	vec3 interpolate_segment_up(
+		const SplineGraphPtr &graph,
+		int segment,
+		float t)
+	{
+		vec3 start = graph->getSegmentStartUpVector(segment);
+		vec3 end = graph->getSegmentEndUpVector(segment);
+		if (length2(start) <= 1e-12f)
+			start = vec3(0.0f, 0.0f, 1.0f);
+		if (length2(end) <= 1e-12f)
+			end = start;
+		start = normalize(start);
+		end = normalize(end);
+
+		vec3 blended = start * (1.0f - t) + end * t;
+		if (length2(blended) <= 1e-12f)
+			blended = start;
+		return normalize(blended);
+	}
+
+	vec3 transform_direction(
+		const Mat4 &transform,
+		const vec3 &direction)
+	{
+		Vec3 origin = transform * Vec3(0.0);
+		Vec3 endpoint = transform * Vec3(direction);
+		return normalize(vec3(endpoint - origin));
 	}
 
 	double vector_angle(const vec3 &a, const vec3 &b)
@@ -272,8 +315,17 @@ void RailSweptEnvelopeManager::init()
 			isSafetyComplete() ? 1 : 0,
 			vehicleTrackAllowanceComplete() ? 1 : 0);
 	}
-	rebuildEnvelopes();
-	queryWorldObjects();
+	if (train->isReady())
+	{
+		rebuildEnvelopes();
+		queryWorldObjects();
+	}
+	else if (diagnostic_logging.get())
+	{
+		Log::message(
+			"[RailEnvelope] Train component is not initialized yet; "
+			"envelope build is deferred to update().\n");
+	}
 	if (diagnostic_logging.get())
 		Log::message("[RailEnvelope] INIT complete\n");
 }
@@ -378,9 +430,23 @@ RailSweptEnvelopeManager::sampleRoute(
 	Vec3 position = route.spline->calcSegmentPoint(segment, t);
 	vec3 tangent = normalize(
 		route.spline->calcSegmentTangent(segment, t));
-	vec3 up_hint = normalize(
-		route.spline->calcSegmentUpVector(segment, t));
-	return {position, tangent, safe_up(tangent, up_hint)};
+	vec3 up_hint = interpolate_segment_up(
+		route.spline,
+		segment,
+		t);
+	vec3 up = safe_up(tangent, up_hint);
+
+	if (train && train->isReady())
+	{
+		const Mat4 &transform =
+			train->getSplineToWorldTransform();
+		position = transform * position;
+		tangent = transform_direction(transform, tangent);
+		up = safe_up(
+			tangent,
+			transform_direction(transform, up));
+	}
+	return {position, tangent, up};
 }
 
 double RailSweptEnvelopeManager::solveTrailingChainage(
@@ -661,7 +727,7 @@ void RailSweptEnvelopeManager::appendAdaptiveInterval(
 
 void RailSweptEnvelopeManager::rebuildEnvelopes()
 {
-	if (!train)
+	if (!train || !train->isReady())
 		return;
 
 	const double global_leading_s = train->getLeadingChainageM();
@@ -1352,7 +1418,7 @@ void RailSweptEnvelopeManager::renderDebug() const
 
 void RailSweptEnvelopeManager::update()
 {
-	if (!ready)
+	if (!ready || !train || !train->isReady())
 		return;
 	rebuildEnvelopes();
 	queryWorldObjects();

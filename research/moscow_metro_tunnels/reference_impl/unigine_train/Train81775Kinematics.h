@@ -24,6 +24,11 @@ public:
 	COMPONENT_SHUTDOWN(shutdown);
 
 	PROP_PARAM(File, spline_file);
+	// Optional rigid transform from Tunnel_PCG spline coordinates into the
+	// UNIGINE world. Point this at the same transformed root/dummy used for the
+	// imported tunnel. Leave empty only when the tunnel is already in raw
+	// Tunnel_PCG world coordinates.
+	PROP_PARAM(Node, spline_space_node);
 	PROP_PARAM(Node, carbody_node);
 	PROP_PARAM(Node, leading_bogie_node);
 	PROP_PARAM(Node, trailing_bogie_node);
@@ -40,6 +45,11 @@ public:
 
 	double getLeadingChainageM() const { return leading_chainage_m; }
 	double getRouteLengthM() const { return route_length_m; }
+	bool isReady() const { return ready; }
+	const Unigine::Math::Mat4 &getSplineToWorldTransform() const
+	{
+		return spline_to_world_transform;
+	}
 
 private:
 	struct SegmentArcLut
@@ -62,6 +72,7 @@ private:
 	void shutdown();
 
 	void rebuild_arc_length_luts();
+	TrackSample sample_route_local(double chainage_m) const;
 	TrackSample sample_route(double chainage_m) const;
 	double solve_trailing_chainage(double leading_chainage_m) const;
 	void apply_vehicle_pose();
@@ -76,6 +87,8 @@ private:
 
 	Unigine::SplineGraphPtr spline_graph;
 	std::vector<SegmentArcLut> arc_luts;
+	Unigine::Math::Mat4 spline_to_world_transform =
+		Unigine::Math::Mat4_identity;
 	double route_length_m = 0.0;
 	double leading_chainage_m = 0.0;
 	double current_speed_mps = 0.0;

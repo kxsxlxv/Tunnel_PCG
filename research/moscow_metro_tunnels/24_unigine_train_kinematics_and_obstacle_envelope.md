@@ -519,7 +519,15 @@ It mirrors rail_obstacle.py:
 - LiDAR points can be classified directly with classifyPoint(), without ray
   intersection;
 - an empty/invalid active route does not suppress unresolved alternatives;
-- unresolved routes are unioned and retain ROUTE_AMBIGUOUS classification.
+- unresolved routes are unioned and retain ROUTE_AMBIGUOUS classification;
+- GOST q/w, vehicle dynamics and track tolerances are separate properties with
+  unknown-by-default sentinel values;
+- every route has its own future-path offset/heading/curvature/vertical/grade/
+  cant uncertainty bounds, or an explicit exact-ground-truth mode;
+- yaw/roll and growing centreline uncertainty expand each future OBB using the
+  same formulas as the Python oracle;
+- isSafetyComplete() is false until both allowance and path-uncertainty ledgers
+  are complete.
 
 This manager sits above the single-route vehicle component so a turnout is not
 resolved implicitly by whichever spline happens to be loaded first.

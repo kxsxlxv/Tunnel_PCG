@@ -48,7 +48,12 @@ Each route_hypotheses entry contains:
 - route_id;
 - native .spl file;
 - global_chainage_origin_m;
-- enabled flag.
+- enabled flag;
+- either path_uncertainty_exact_ground_truth=true for simulator truth, or
+  explicit non-negative bounds for lateral offset, heading, curvature,
+  vertical offset, grade and cant/roll uncertainty.
+
+Negative uncertainty values mean **unknown**, not zero.
 
 Leave active_route_id empty while a turnout route is unresolved. In that state
 the manager treats every enabled and geometrically feasible route as live. A
@@ -64,9 +69,15 @@ For engine objects the manager uses:
 For LiDAR points call classifyPoint() directly; this avoids reducing point-cloud
 relevance to ray intersections.
 
-The default known_lateral_allowance_m is only 0.016 m, corresponding to the
-documented 15 +/- 1 mm central-stop free clearance. It is intentionally named
-"known" allowance and is not a claim that all dynamic gauging terms are known.
+Vehicle/track gauging inputs are separate from path-estimation uncertainty.
+The component exposes the documented 0.016 m body/bogie free-clearance upper
+value plus explicit GOST q and w slots, dynamic lateral/vertical/roll terms and
+track tolerances. All unsourced terms default to -1 (unknown). The 0.016 m value
+is not treated as a complete sourced w.
+
+isSafetyComplete() returns true only when all vehicle/track allowance terms and
+all enabled route path-uncertainty terms are explicitly supplied. Ground-truth
+simulation should use each route's path_uncertainty_exact_ground_truth toggle.
 
 ## Important limitations
 

@@ -43,6 +43,17 @@ public:
 		PROP_PARAM(File, spline_file);
 		PROP_PARAM(Double, global_chainage_origin_m, 0.0);
 		PROP_PARAM(Toggle, enabled, true);
+
+		// Path-fit uncertainty. Negative values mean unknown. For simulator
+		// ground truth set exact_ground_truth=true instead of relying on
+		// default zeros.
+		PROP_PARAM(Toggle, path_uncertainty_exact_ground_truth, false);
+		PROP_PARAM(Float, path_lateral_offset_bound_m, -1.0f);
+		PROP_PARAM(Float, path_heading_bound_rad, -1.0f);
+		PROP_PARAM(Float, path_curvature_bound_per_m, -1.0f);
+		PROP_PARAM(Float, path_vertical_offset_bound_m, -1.0f);
+		PROP_PARAM(Float, path_grade_bound_rad, -1.0f);
+		PROP_PARAM(Float, path_cant_roll_bound_rad, -1.0f);
 	};
 
 	PROP_PARAM(Node, train_kinematics_node);
@@ -59,8 +70,17 @@ public:
 	PROP_PARAM(Float, vehicle_length_proxy_m, 20.08f);
 	PROP_PARAM(Float, vehicle_width_m, 2.74f);
 	PROP_PARAM(Float, vehicle_height_above_tor_m, 3.68f);
-	PROP_PARAM(Float, known_lateral_allowance_m, 0.016f);
-	PROP_PARAM(Float, known_vertical_allowance_m, 0.0f);
+
+	// Vehicle/track gauging allowance ledger. Negative values mean unknown.
+	// The 0.016 m stop gap is source-backed but is not a complete GOST w.
+	PROP_PARAM(Float, documented_body_bogie_lateral_free_m, 0.016f);
+	PROP_PARAM(Float, gost_q_bogie_frame_relative_wheelset_m, -1.0f);
+	PROP_PARAM(Float, gost_w_carbody_relative_bogie_m, -1.0f);
+	PROP_PARAM(Float, additional_vehicle_lateral_dynamic_m, -1.0f);
+	PROP_PARAM(Float, vehicle_vertical_dynamic_m, -1.0f);
+	PROP_PARAM(Float, vehicle_roll_bound_rad, -1.0f);
+	PROP_PARAM(Float, track_lateral_tolerance_m, -1.0f);
+	PROP_PARAM(Float, track_vertical_tolerance_m, -1.0f);
 
 	// 0 disables mask filtering. Otherwise an object is considered only when
 	// at least one surface has a matching intersection mask.
@@ -80,6 +100,7 @@ public:
 	Relevance classifyPoint(const Unigine::Math::Vec3 &point) const;
 	const std::vector<Detection> &getDetections() const { return detections; }
 	int getDetectionCount() const { return int(detections.size()); }
+	bool isSafetyComplete() const;
 
 private:
 	struct SegmentArcLut
@@ -122,8 +143,17 @@ private:
 		Unigine::SplineGraphPtr spline;
 		std::vector<SegmentArcLut> arc_luts;
 		double length_m = 0.0;
+		double current_start_chainage_m = 0.0;
 		std::vector<OBB> boxes;
 		bool enabled = true;
+
+		double path_lateral_offset_bound_m = -1.0;
+		double path_heading_bound_rad = -1.0;
+		double path_curvature_bound_per_m = -1.0;
+		double path_vertical_offset_bound_m = -1.0;
+		double path_grade_bound_rad = -1.0;
+		double path_cant_roll_bound_rad = -1.0;
+		bool path_uncertainty_complete = false;
 	};
 
 	void init();
@@ -139,11 +169,24 @@ private:
 	VehiclePose vehiclePose(
 		const RouteRuntime &route,
 		double leading_chainage_m) const;
-	OBB carbodyBox(const VehiclePose &pose) const;
+	OBB carbodyBox(
+		const VehiclePose &pose,
+		const RouteRuntime &route,
+		double lookahead_m) const;
 	double poseDeviation(
 		const VehiclePose &left,
 		const VehiclePose &middle,
 		const VehiclePose &right) const;
+
+	double knownBodyBogieLateralM() const;
+	double knownLateralAllowanceM() const;
+	double knownVerticalAllowanceM() const;
+	double knownRollBoundRad() const;
+	bool vehicleTrackAllowanceComplete() const;
+	static double maximumRotatedExtent(
+		double primary_half_extent_m,
+		double coupled_half_extent_m,
+		double angle_bound_rad);
 
 	void rebuildEnvelopes();
 	void appendAdaptiveInterval(

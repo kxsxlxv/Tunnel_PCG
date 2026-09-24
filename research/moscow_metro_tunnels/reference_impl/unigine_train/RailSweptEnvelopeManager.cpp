@@ -21,6 +21,7 @@ REGISTER_COMPONENT(RailSweptEnvelopeManager);
 namespace
 {
 	constexpr double EPS = 1e-9;
+	constexpr double HALF_PI = 1.57079632679489661923;
 	constexpr int CHORD_SOLVER_ITERATIONS = 48;
 
 	double dot_axis(const Vec3 &value, const vec3 &axis)
@@ -97,6 +98,13 @@ void RailSweptEnvelopeManager::init()
 			"RailSweptEnvelopeManager: invalid envelope sampling parameters\n");
 		return;
 	}
+	if (documented_body_bogie_lateral_free_m.get() < 0.0f
+		|| (vehicle_roll_bound_rad.get() >= float(HALF_PI)))
+	{
+		Log::error(
+			"RailSweptEnvelopeManager: invalid vehicle allowance parameters\n");
+		return;
+	}
 
 	routes.clear();
 	for (int i = 0; i < route_hypotheses.size(); ++i)
@@ -120,6 +128,53 @@ void RailSweptEnvelopeManager::init()
 		runtime.global_chainage_origin_m =
 			double(param->global_chainage_origin_m.get());
 		runtime.enabled = true;
+
+		if (param->path_uncertainty_exact_ground_truth.get())
+		{
+			runtime.path_lateral_offset_bound_m = 0.0;
+			runtime.path_heading_bound_rad = 0.0;
+			runtime.path_curvature_bound_per_m = 0.0;
+			runtime.path_vertical_offset_bound_m = 0.0;
+			runtime.path_grade_bound_rad = 0.0;
+			runtime.path_cant_roll_bound_rad = 0.0;
+			runtime.path_uncertainty_complete = true;
+		}
+		else
+		{
+			runtime.path_lateral_offset_bound_m =
+				double(param->path_lateral_offset_bound_m.get());
+			runtime.path_heading_bound_rad =
+				double(param->path_heading_bound_rad.get());
+			runtime.path_curvature_bound_per_m =
+				double(param->path_curvature_bound_per_m.get());
+			runtime.path_vertical_offset_bound_m =
+				double(param->path_vertical_offset_bound_m.get());
+			runtime.path_grade_bound_rad =
+				double(param->path_grade_bound_rad.get());
+			runtime.path_cant_roll_bound_rad =
+				double(param->path_cant_roll_bound_rad.get());
+
+			const double half_pi = HALF_PI;
+			const bool invalid_angle =
+				runtime.path_heading_bound_rad >= half_pi
+				|| runtime.path_grade_bound_rad >= half_pi
+				|| runtime.path_cant_roll_bound_rad >= half_pi;
+			if (invalid_angle)
+			{
+				Log::warning(
+					"RailSweptEnvelopeManager: skipping route %s with invalid path angle bound\n",
+					route_id.get());
+				continue;
+			}
+			runtime.path_uncertainty_complete =
+				runtime.path_lateral_offset_bound_m >= 0.0
+				&& runtime.path_heading_bound_rad >= 0.0
+				&& runtime.path_curvature_bound_per_m >= 0.0
+				&& runtime.path_vertical_offset_bound_m >= 0.0
+				&& runtime.path_grade_bound_rad >= 0.0
+				&& runtime.path_cant_roll_bound_rad >= 0.0;
+		}
+
 		if (!loadRoute(runtime, spline_path.get()))
 		{
 			Log::error(
@@ -330,11 +385,134 @@ RailSweptEnvelopeManager::vehiclePose(
 	return pose;
 }
 
+double RailSweptEnvelopeManager::knownBodyBogieLateralM() const
+{
+	double known = double(documented_body_bogie_lateral_free_m.get());
+	double gost_w = double(gost_w_carbody_relative_bogie_m.get());
+	if (gost_w >= 0.0)
+		known = std::max(known, gost_w);
+	return known;
+}
+
+double RailSweptEnvelopeManager::knownLateralAllowanceM() const
+{
+	double total = knownBodyBogieLateralM();
+	const double values[] = {
+		double(gost_q_bogie_frame_relative_wheelset_m.get()),
+		double(additional_vehicle_lateral_dynamic_m.get()),
+		double(track_lateral_tolerance_m.get()),
+	};
+	for (double value : values)
+	{
+		if (value >= 0.0)
+			total += value;
+	}
+	return total;
+}
+
+double RailSweptEnvelopeManager::knownVerticalAllowanceM() const
+{
+	double total = 0.0;
+	const double values[] = {
+		double(vehicle_vertical_dynamic_m.get()),
+		double(track_vertical_tolerance_m.get()),
+	};
+	for (double value : values)
+	{
+		if (value >= 0.0)
+			total += value;
+	}
+	return total;
+}
+
+double RailSweptEnvelopeManager::knownRollBoundRad() const
+{
+	double value = double(vehicle_roll_bound_rad.get());
+	return value >= 0.0 ? value : 0.0;
+}
+
+bool RailSweptEnvelopeManager::vehicleTrackAllowanceComplete() const
+{
+	return gost_q_bogie_frame_relative_wheelset_m.get() >= 0.0f
+		&& gost_w_carbody_relative_bogie_m.get() >= 0.0f
+		&& additional_vehicle_lateral_dynamic_m.get() >= 0.0f
+		&& vehicle_vertical_dynamic_m.get() >= 0.0f
+		&& vehicle_roll_bound_rad.get() >= 0.0f
+		&& track_lateral_tolerance_m.get() >= 0.0f
+		&& track_vertical_tolerance_m.get() >= 0.0f;
+}
+
+double RailSweptEnvelopeManager::maximumRotatedExtent(
+	double primary_half_extent_m,
+	double coupled_half_extent_m,
+	double angle_bound_rad)
+{
+	double bound = clamp(angle_bound_rad, 0.0, HALF_PI);
+	double optimum = std::atan2(
+		coupled_half_extent_m,
+		primary_half_extent_m);
+	if (bound >= optimum)
+		return std::hypot(
+			primary_half_extent_m,
+			coupled_half_extent_m);
+	return primary_half_extent_m * std::cos(bound)
+		+ coupled_half_extent_m * std::sin(bound);
+}
+
 RailSweptEnvelopeManager::OBB
-RailSweptEnvelopeManager::carbodyBox(const VehiclePose &pose) const
+RailSweptEnvelopeManager::carbodyBox(
+	const VehiclePose &pose,
+	const RouteRuntime &route,
+	double lookahead_m) const
 {
 	const double height = double(vehicle_height_above_tor_m.get());
 	const double inflation = double(max_pose_deviation_m.get());
+	const double d = std::max(0.0, lookahead_m);
+
+	auto known = [](double value)
+	{
+		return value >= 0.0 ? value : 0.0;
+	};
+
+	const double lateral_center_bound =
+		known(route.path_lateral_offset_bound_m)
+		+ d * std::tan(known(route.path_heading_bound_rad))
+		+ 0.5 * d * d
+			* known(route.path_curvature_bound_per_m);
+	const double yaw_bound =
+		known(route.path_heading_bound_rad)
+		+ d * known(route.path_curvature_bound_per_m);
+	const double vertical_center_bound =
+		known(route.path_vertical_offset_bound_m)
+		+ d * std::tan(known(route.path_grade_bound_rad));
+	const double total_roll_bound =
+		knownRollBoundRad()
+		+ known(route.path_cant_roll_bound_rad);
+
+	const double base_width =
+		0.5 * double(vehicle_width_m.get())
+		+ knownLateralAllowanceM();
+	const double base_length =
+		0.5 * double(vehicle_length_proxy_m.get());
+	const double base_height =
+		0.5 * height + knownVerticalAllowanceM();
+
+	const double yaw_width = maximumRotatedExtent(
+		base_width,
+		base_length,
+		yaw_bound);
+	const double yaw_length = maximumRotatedExtent(
+		base_length,
+		base_width,
+		yaw_bound);
+	const double roll_width = maximumRotatedExtent(
+		yaw_width,
+		base_height,
+		total_roll_bound);
+	const double roll_height = maximumRotatedExtent(
+		base_height,
+		yaw_width,
+		total_roll_bound);
 
 	OBB box;
 	box.right = pose.body_right;
@@ -343,14 +521,9 @@ RailSweptEnvelopeManager::carbodyBox(const VehiclePose &pose) const
 	box.center = pose.body_position
 		+ Vec3(pose.body_up) * (0.5 * height);
 	box.half_extents = vec3(
-		0.5f * vehicle_width_m.get()
-			+ known_lateral_allowance_m.get()
-			+ float(inflation),
-		0.5f * vehicle_length_proxy_m.get()
-			+ float(inflation),
-		0.5f * vehicle_height_above_tor_m.get()
-			+ known_vertical_allowance_m.get()
-			+ float(inflation));
+		float(roll_width + lateral_center_bound + inflation),
+		float(yaw_length + inflation),
+		float(roll_height + vertical_center_bound + inflation));
 	return box;
 }
 
@@ -397,7 +570,12 @@ void RailSweptEnvelopeManager::appendAdaptiveInterval(
 	if (error <= double(max_pose_deviation_m.get())
 		|| depth >= maximum_refinement_depth.get())
 	{
-		route.boxes.emplace_back(carbodyBox(right));
+		route.boxes.emplace_back(
+			carbodyBox(
+				right,
+				route,
+				right.leading_chainage_m
+					- route.current_start_chainage_m));
 		return;
 	}
 
@@ -430,9 +608,11 @@ void RailSweptEnvelopeManager::rebuildEnvelopes()
 		double local_end = std::min(
 			route.length_m,
 			local_start + lookahead);
+		route.current_start_chainage_m = local_start;
 
 		VehiclePose left = vehiclePose(route, local_start);
-		route.boxes.emplace_back(carbodyBox(left));
+		route.boxes.emplace_back(
+			carbodyBox(left, route, 0.0));
 		double current = local_start;
 		while (current < local_end - EPS)
 		{
@@ -675,6 +855,18 @@ RailSweptEnvelopeManager::classifyHits(
 	if (hit_count == feasible_count)
 		return Relevance::ALL_FEASIBLE_ROUTES;
 	return Relevance::ROUTE_AMBIGUOUS;
+}
+
+bool RailSweptEnvelopeManager::isSafetyComplete() const
+{
+	if (!vehicleTrackAllowanceComplete() || routes.empty())
+		return false;
+	for (const auto &route : routes)
+	{
+		if (route.enabled && !route.path_uncertainty_complete)
+			return false;
+	}
+	return true;
 }
 
 RailSweptEnvelopeManager::Relevance

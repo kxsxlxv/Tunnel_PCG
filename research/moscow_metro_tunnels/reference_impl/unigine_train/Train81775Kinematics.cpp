@@ -25,6 +25,13 @@ namespace
 		return length(a - b);
 	}
 
+	double dot_axis(const Vec3 &value, const vec3 &axis)
+	{
+		return value.x * double(axis.x)
+			+ value.y * double(axis.y)
+			+ value.z * double(axis.z);
+	}
+
 	vec3 orthogonal_up(const vec3 &forward, const vec3 &up_hint)
 	{
 		vec3 f = normalize(forward);
@@ -73,6 +80,42 @@ namespace
 		Vec3 endpoint = transform * Vec3(direction);
 		return normalize(vec3(endpoint - origin));
 	}
+}
+
+Vec3 Train81775Kinematics::mapSplinePointToWorld(
+	const Vec3 &local_point) const
+{
+	const Vec3 base_point =
+		spline_to_world_transform * local_point;
+	if (!automatic_spawn_anchor_active)
+		return base_point;
+
+	const Vec3 delta = base_point - anchor_source_position;
+	const double x = dot_axis(delta, anchor_source_right);
+	const double y = dot_axis(delta, anchor_source_forward);
+	const double z = dot_axis(delta, anchor_source_up);
+	return anchor_target_position
+		+ Vec3(anchor_target_right) * x
+		+ Vec3(anchor_target_forward) * y
+		+ Vec3(anchor_target_up) * z;
+}
+
+vec3 Train81775Kinematics::mapSplineDirectionToWorld(
+	const vec3 &local_direction) const
+{
+	const vec3 base_direction = transform_direction(
+		spline_to_world_transform,
+		local_direction);
+	if (!automatic_spawn_anchor_active)
+		return base_direction;
+
+	const float x = dot(base_direction, anchor_source_right);
+	const float y = dot(base_direction, anchor_source_forward);
+	const float z = dot(base_direction, anchor_source_up);
+	return normalize(
+		anchor_target_right * x
+		+ anchor_target_forward * y
+		+ anchor_target_up * z);
 }
 
 void Train81775Kinematics::log_node_position(
@@ -151,6 +194,11 @@ void Train81775Kinematics::init()
 		log_node_position("leading_bogie", leading_bogie_node.get());
 		log_node_position("trailing_bogie", trailing_bogie_node.get());
 	}
+
+	automatic_spawn_anchor_active = false;
+	bogie_visual_offsets_active = false;
+	leading_bogie_visual_offset = vec3_zero;
+	trailing_bogie_visual_offset = vec3_zero;
 
 	spline_to_world_transform = Mat4_identity;
 	if (spline_space_node.get())
@@ -253,6 +301,13 @@ void Train81775Kinematics::init()
 			leading_chainage_m,
 			double(vehicle_base_m.get()) + 0.01,
 			route_length_m);
+
+	if (auto_anchor_to_initial_vehicle_frame.get())
+	{
+		configure_automatic_spawn_anchor();
+		if (preserve_initial_bogie_visual_offsets.get())
+			capture_initial_bogie_visual_offsets();
+	}
 
 	if (diagnostic_logging.get())
 	{
@@ -397,16 +452,141 @@ Train81775Kinematics::sample_route(double chainage_m) const
 {
 	const TrackSample local = sample_route_local(chainage_m);
 	const Vec3 world_position =
-		spline_to_world_transform * local.position;
-	const vec3 world_tangent = transform_direction(
-		spline_to_world_transform,
-		local.tangent);
-	const vec3 world_up_hint = transform_direction(
-		spline_to_world_transform,
-		local.up);
+		mapSplinePointToWorld(local.position);
+	const vec3 world_tangent =
+		mapSplineDirectionToWorld(local.tangent);
+	const vec3 world_up_hint =
+		mapSplineDirectionToWorld(local.up);
 	const vec3 world_up =
 		orthogonal_up(world_tangent, world_up_hint);
 	return {world_position, world_tangent, world_up};
+}
+
+void Train81775Kinematics::configure_automatic_spawn_anchor()
+{
+	const double trailing_s =
+		solve_trailing_chainage(leading_chainage_m);
+	const TrackSample front = sample_route(leading_chainage_m);
+	const TrackSample rear = sample_route(trailing_s);
+
+	const Vec3 source_position =
+		(front.position + rear.position) * 0.5;
+	const vec3 source_forward = normalize(
+		vec3(front.position - rear.position));
+	vec3 source_up_hint = front.up + rear.up;
+	if (length2(source_up_hint) <= 1e-12f)
+		source_up_hint = front.up;
+	const vec3 source_up =
+		orthogonal_up(source_forward, source_up_hint);
+	const vec3 source_right =
+		normalize(cross(source_forward, source_up));
+
+	// The existing vehicle asset defines only the spawn frame. The component
+	// positions it on the selected route automatically; no hand placement on
+	// the spline is required.
+	const Vec3 target_position =
+		carbody_node.get()->getWorldPosition();
+
+	vec3 target_forward = vec3(
+		leading_bogie_node.get()->getWorldPosition()
+		- trailing_bogie_node.get()->getWorldPosition());
+	if (length2(target_forward) <= 1e-12f)
+		target_forward = vec3(0.0f, 1.0f, 0.0f);
+	target_forward = normalize(target_forward);
+
+	vec3 target_up_hint(0.0f, 0.0f, 1.0f);
+	const vec3 target_up =
+		orthogonal_up(target_forward, target_up_hint);
+	const vec3 target_right =
+		normalize(cross(target_forward, target_up));
+
+	anchor_source_position = source_position;
+	anchor_source_right = source_right;
+	anchor_source_forward = source_forward;
+	anchor_source_up = source_up;
+	anchor_target_position = target_position;
+	anchor_target_right = target_right;
+	anchor_target_forward = target_forward;
+	anchor_target_up = target_up;
+	automatic_spawn_anchor_active = true;
+
+	if (diagnostic_logging.get())
+	{
+		Log::message(
+			"[Train81775] AUTO SPAWN anchor enabled: "
+			"route body at s=%.6f mapped from "
+			"(%.6f, %.6f, %.6f) to vehicle spawn "
+			"(%.6f, %.6f, %.6f)\n",
+			leading_chainage_m,
+			source_position.x,
+			source_position.y,
+			source_position.z,
+			target_position.x,
+			target_position.y,
+			target_position.z);
+		Log::message(
+			"[Train81775] AUTO SPAWN forward source=(%.6f, %.6f, %.6f) "
+			"target=(%.6f, %.6f, %.6f)\n",
+			double(source_forward.x),
+			double(source_forward.y),
+			double(source_forward.z),
+			double(target_forward.x),
+			double(target_forward.y),
+			double(target_forward.z));
+	}
+}
+
+void Train81775Kinematics::capture_initial_bogie_visual_offsets()
+{
+	const double trailing_s =
+		solve_trailing_chainage(leading_chainage_m);
+	const TrackSample front = sample_route(leading_chainage_m);
+	const TrackSample rear = sample_route(trailing_s);
+
+	auto capture = [](const TrackSample &sample, const Vec3 &actual)
+	{
+		const vec3 right =
+			normalize(cross(sample.tangent, sample.up));
+		const Vec3 delta = actual - sample.position;
+		return vec3(
+			float(dot_axis(delta, right)),
+			float(dot_axis(delta, sample.tangent)),
+			float(dot_axis(delta, sample.up)));
+	};
+
+	leading_bogie_visual_offset = capture(
+		front,
+		leading_bogie_node.get()->getWorldPosition());
+	trailing_bogie_visual_offset = capture(
+		rear,
+		trailing_bogie_node.get()->getWorldPosition());
+	bogie_visual_offsets_active = true;
+
+	if (diagnostic_logging.get())
+	{
+		Log::message(
+			"[Train81775] Preserved visual bogie offsets: "
+			"leading=(%.6f, %.6f, %.6f) "
+			"trailing=(%.6f, %.6f, %.6f)\n",
+			double(leading_bogie_visual_offset.x),
+			double(leading_bogie_visual_offset.y),
+			double(leading_bogie_visual_offset.z),
+			double(trailing_bogie_visual_offset.x),
+			double(trailing_bogie_visual_offset.y),
+			double(trailing_bogie_visual_offset.z));
+	}
+}
+
+Vec3 Train81775Kinematics::apply_bogie_visual_offset(
+	const TrackSample &sample,
+	const vec3 &local_offset) const
+{
+	const vec3 right =
+		normalize(cross(sample.tangent, sample.up));
+	return sample.position
+		+ Vec3(right) * double(local_offset.x)
+		+ Vec3(sample.tangent) * double(local_offset.y)
+		+ Vec3(sample.up) * double(local_offset.z);
 }
 
 double Train81775Kinematics::solve_trailing_chainage(
@@ -466,13 +646,27 @@ void Train81775Kinematics::apply_vehicle_pose()
 	TrackSample front = sample_route(leading_chainage_m);
 	TrackSample rear = sample_route(trailing_s);
 
-	leading_bogie_node.get()->setWorldPosition(front.position);
+	const Vec3 leading_visual_position =
+		bogie_visual_offsets_active
+			? apply_bogie_visual_offset(
+				front,
+				leading_bogie_visual_offset)
+			: front.position;
+	leading_bogie_node.get()->setWorldPosition(
+		leading_visual_position);
 	leading_bogie_node.get()->setWorldDirection(
 		front.tangent,
 		front.up,
 		AXIS_Y);
 
-	trailing_bogie_node.get()->setWorldPosition(rear.position);
+	const Vec3 trailing_visual_position =
+		bogie_visual_offsets_active
+			? apply_bogie_visual_offset(
+				rear,
+				trailing_bogie_visual_offset)
+			: rear.position;
+	trailing_bogie_node.get()->setWorldPosition(
+		trailing_visual_position);
 	trailing_bogie_node.get()->setWorldDirection(
 		rear.tangent,
 		rear.up,
@@ -536,8 +730,10 @@ void Train81775Kinematics::update()
 	if (!ready || !debug_visualization.get())
 		return;
 
-	Vec3 front = leading_bogie_node.get()->getWorldPosition();
-	Vec3 rear = trailing_bogie_node.get()->getWorldPosition();
+	const double trailing_s =
+		solve_trailing_chainage(leading_chainage_m);
+	Vec3 front = sample_route(leading_chainage_m).position;
+	Vec3 rear = sample_route(trailing_s).position;
 	Visualizer::renderLine3D(front, rear, vec4_green);
 	Visualizer::renderPoint3D(front, 0.08f, vec4_green);
 	Visualizer::renderPoint3D(rear, 0.08f, vec4_green);

@@ -438,13 +438,11 @@ RailSweptEnvelopeManager::sampleRoute(
 
 	if (train && train->isReady())
 	{
-		const Mat4 &transform =
-			train->getSplineToWorldTransform();
-		position = transform * position;
-		tangent = transform_direction(transform, tangent);
+		position = train->mapSplinePointToWorld(position);
+		tangent = train->mapSplineDirectionToWorld(tangent);
 		up = safe_up(
 			tangent,
-			transform_direction(transform, up));
+			train->mapSplineDirectionToWorld(up));
 	}
 	return {position, tangent, up};
 }

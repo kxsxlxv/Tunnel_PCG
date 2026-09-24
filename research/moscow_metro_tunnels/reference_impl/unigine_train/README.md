@@ -16,6 +16,27 @@ does not contain the UNIGINE SDK.
   WorldBoundBox broad phase, and then applies OBB-vs-AABB SAT before assigning
   ACTIVE_ROUTE / ALL_FEASIBLE_ROUTES / ROUTE_AMBIGUOUS relevance.
 
+## Automatic train spawn
+
+By default Train81775Kinematics has
+`Auto Anchor To Initial Vehicle Frame = true`. The vehicle does **not** need to
+be hand-positioned on the generated spline. The component uses the authored
+vehicle frame (carbody origin plus front/rear bogie direction) as a scene spawn
+frame, maps the route pose at `Initial Leading Chainage M` onto it, preserves
+the existing visual offsets of the two bogie meshes, and then advances the
+vehicle along the route.
+
+For a prefab authored at the scene origin this means the normal workflow is:
+- leave the vehicle asset at its authored origin;
+- choose `Initial Leading Chainage M`;
+- press Play.
+
+The runtime computes carbody/bogie positions itself.
+
+`Spline Space Node` remains optional. It is useful only when the whole imported
+tunnel has a meaningful rigid root transform. A root with identity transform
+does not fix geometry whose rebase was baked into mesh vertices.
+
 ## Coordinate-space binding
 
 The native .spl remains in Tunnel_PCG route coordinates. If the imported tunnel

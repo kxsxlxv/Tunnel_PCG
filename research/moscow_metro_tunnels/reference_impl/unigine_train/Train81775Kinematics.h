@@ -29,6 +29,11 @@ public:
 	// imported tunnel. Leave empty only when the tunnel is already in raw
 	// Tunnel_PCG world coordinates.
 	PROP_PARAM(Node, spline_space_node);
+	// Default runtime behavior: use the authored/imported vehicle frame as an
+	// automatic spawn frame for Initial Leading Chainage. No hand placement on
+	// the spline is required.
+	PROP_PARAM(Toggle, auto_anchor_to_initial_vehicle_frame, true);
+	PROP_PARAM(Toggle, preserve_initial_bogie_visual_offsets, true);
 	PROP_PARAM(Node, carbody_node);
 	PROP_PARAM(Node, leading_bogie_node);
 	PROP_PARAM(Node, trailing_bogie_node);
@@ -50,6 +55,10 @@ public:
 	{
 		return spline_to_world_transform;
 	}
+	Unigine::Math::Vec3 mapSplinePointToWorld(
+		const Unigine::Math::Vec3 &local_point) const;
+	Unigine::Math::vec3 mapSplineDirectionToWorld(
+		const Unigine::Math::vec3 &local_direction) const;
 
 private:
 	struct SegmentArcLut
@@ -74,6 +83,11 @@ private:
 	void rebuild_arc_length_luts();
 	TrackSample sample_route_local(double chainage_m) const;
 	TrackSample sample_route(double chainage_m) const;
+	void configure_automatic_spawn_anchor();
+	void capture_initial_bogie_visual_offsets();
+	Unigine::Math::Vec3 apply_bogie_visual_offset(
+		const TrackSample &sample,
+		const Unigine::Math::vec3 &local_offset) const;
 	double solve_trailing_chainage(double leading_chainage_m) const;
 	void apply_vehicle_pose();
 	void log_node_position(
@@ -89,6 +103,29 @@ private:
 	std::vector<SegmentArcLut> arc_luts;
 	Unigine::Math::Mat4 spline_to_world_transform =
 		Unigine::Math::Mat4_identity;
+
+	bool automatic_spawn_anchor_active = false;
+	Unigine::Math::Vec3 anchor_source_position;
+	Unigine::Math::vec3 anchor_source_right =
+		Unigine::Math::vec3(1.0f, 0.0f, 0.0f);
+	Unigine::Math::vec3 anchor_source_forward =
+		Unigine::Math::vec3(0.0f, 1.0f, 0.0f);
+	Unigine::Math::vec3 anchor_source_up =
+		Unigine::Math::vec3(0.0f, 0.0f, 1.0f);
+	Unigine::Math::Vec3 anchor_target_position;
+	Unigine::Math::vec3 anchor_target_right =
+		Unigine::Math::vec3(1.0f, 0.0f, 0.0f);
+	Unigine::Math::vec3 anchor_target_forward =
+		Unigine::Math::vec3(0.0f, 1.0f, 0.0f);
+	Unigine::Math::vec3 anchor_target_up =
+		Unigine::Math::vec3(0.0f, 0.0f, 1.0f);
+
+	bool bogie_visual_offsets_active = false;
+	Unigine::Math::vec3 leading_bogie_visual_offset =
+		Unigine::Math::vec3_zero;
+	Unigine::Math::vec3 trailing_bogie_visual_offset =
+		Unigine::Math::vec3_zero;
+
 	double route_length_m = 0.0;
 	double leading_chainage_m = 0.0;
 	double current_speed_mps = 0.0;

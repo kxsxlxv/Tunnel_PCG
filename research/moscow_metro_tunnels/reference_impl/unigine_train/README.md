@@ -23,7 +23,9 @@ Use the .spl file emitted by:
 examples/generate_koltsevaya_track_b_pilot.py
 
 The generator writes the exact same C1 route interpolation used by Tunnel_PCG
-continuous rail geometry as a native UNIGINE SplineGraph text file.
+continuous rail geometry as a native UNIGINE SplineGraph text file. Its points
+are vertically shifted to the Stage-10 **track-axis UGR** datum before export;
+do not replace it with the raw alignment/core-origin spline.
 
 The component:
 1. loads the SplineGraph;

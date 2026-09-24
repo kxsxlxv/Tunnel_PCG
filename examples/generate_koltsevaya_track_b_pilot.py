@@ -385,7 +385,17 @@ def main() -> None:
     output = args.output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     unigine_spline_path = output.with_name(output.stem + "_track.spl")
-    write_unigine_spline_graph_spl(alignment, unigine_spline_path)
+    _track_x_core, track_ugr_core_z_m = (
+        profile.coordinate.research_xz_to_core_xz(
+            profile.datums.track_axis_x_m,
+            profile.datums.ugr_z_m,
+        )
+    )
+    write_unigine_spline_graph_spl(
+        alignment,
+        unigine_spline_path,
+        local_z_offset_m=track_ugr_core_z_m,
+    )
     chunk_dir = output.with_name(output.stem + "_chunks")
     chunk_dir.mkdir(parents=True, exist_ok=True)
     localize = not args.global_chunk_coordinates
@@ -508,6 +518,8 @@ def main() -> None:
         ),
         "unigineRailSplineFormat": "UNIGINE_SPLINE_GRAPH_SPL_V1",
         "unigineRailSplineMatchesRuntimeAlignment": True,
+        "unigineRailSplineDatum": "TRACK_AXIS_UGR",
+        "unigineRailSplineLocalZOffsetM": track_ugr_core_z_m,
         "routeSections": sections,
         "stationEvents": station_events,
         "junctionEvents": handoff["junction_events"],

@@ -68,6 +68,45 @@ def test_unigine_spline_export_matches_tunnel_pcg_cubic_alignment():
         )
 
 
+def test_unigine_spline_export_can_shift_alignment_origin_to_track_ugr():
+    stations = (
+        AlignmentStation(
+            0.0,
+            0.0,
+            2.0,
+            10.0,
+            "external_geojson:test:vertex_0000",
+            (0.0, 1.0, 0.0),
+        ),
+        AlignmentStation(
+            10.0,
+            10.0,
+            2.0,
+            11.0,
+            "external_geojson:test:vertex_0001",
+            (0.0, 1.0, 0.1),
+        ),
+    )
+    payload = unigine_spline_graph_dict(
+        stations,
+        local_z_offset_m=-1.67,
+    )
+    assert math.isclose(payload["points"][0][0], 2.0, abs_tol=1e-12)
+    assert math.isclose(payload["points"][0][1], 0.0, abs_tol=1e-12)
+    assert math.isclose(payload["points"][0][2], 8.33, abs_tol=1e-12)
+    assert math.isclose(payload["points"][1][2], 9.33, abs_tol=1e-12)
+    # A constant datum shift does not alter Hermite/Bezier derivatives.
+    unshifted = unigine_spline_graph_dict(stations)
+    assert (
+        payload["segments"][0]["start_tangent"]
+        == unshifted["segments"][0]["start_tangent"]
+    )
+    assert (
+        payload["segments"][0]["end_tangent"]
+        == unshifted["segments"][0]["end_tangent"]
+    )
+
+
 def test_unigine_spline_writer_emits_native_spl_json(tmp_path):
     stations = (
         AlignmentStation(

@@ -440,9 +440,19 @@ kinematic gauge. Its lower plane is Top Of Rail because the supplied source
 does not give a complete underframe/bogie/current-collector contour. Detailed
 running gear remains a separate future volume.
 
+Coordinate rule: every vehicle TrackFrame position is the **track axis at UGR**.
+Do not feed the raw Stage-9/10 alignment/core origin directly into vehicle
+kinematics. The Koltsevaya .spl exporter now applies the Moscow profile's
+profile-to-core UGR offset explicitly.
+
 UNIGINE path bridge:
 - src/tunnel_scanner_core/unigine_spline.py converts the same C1 alignment used
   by Tunnel_PCG rails into native UNIGINE .spl cubic-Bezier data;
+- the spline points are shifted from the generic alignment/core origin to the
+  actual Stage-10 track-axis UGR datum before export. For the current Moscow
+  profile this is the profile-to-core Z offset (currently -1.670 m), so the
+  train path lies on the running-rail head plane rather than the lining/core
+  datum;
 - the Koltsevaya pilot writes <output_stem>_track.spl and records it in the
   manifest;
 - the Hermite-to-Bezier conversion is tested point-for-point.

@@ -648,9 +648,11 @@ bool RailSweptEnvelopeManager::isIgnored(const ObjectPtr &candidate) const
 {
 	if (!candidate)
 		return true;
+	const int candidate_id = candidate->getID();
 	for (int i = 0; i < ignored_nodes.size(); ++i)
 	{
-		if (candidate == ignored_nodes[i].get())
+		NodePtr ignored = ignored_nodes[i].get();
+		if (ignored && ignored->getID() == candidate_id)
 			return true;
 	}
 	return false;

@@ -15,6 +15,8 @@ from .production import (
 
 def unigine_spline_graph_dict(
     stations: Sequence[AlignmentStation],
+    *,
+    local_z_offset_m: float = 0.0,
 ) -> dict[str, Any]:
     """Convert the C1 alignment into UNIGINE .spl cubic-Bezier data.
 
@@ -31,8 +33,13 @@ def unigine_spline_graph_dict(
         if right.chainage_m <= left.chainage_m:
             raise ValueError("alignment chainages must increase strictly")
 
+    z_offset = float(local_z_offset_m)
     points = [
-        [float(value) for value in alignment_station_origin(station)]
+        [
+            float(alignment_station_origin(station)[0]),
+            float(alignment_station_origin(station)[1]),
+            float(alignment_station_origin(station)[2] + z_offset),
+        ]
         for station in stations
     ]
     segments: list[dict[str, Any]] = []
@@ -65,13 +72,17 @@ def write_unigine_spline_graph_spl(
     stations: Sequence[AlignmentStation],
     path: str | Path,
     *,
+    local_z_offset_m: float = 0.0,
     indent: int = 2,
 ) -> Path:
     """Write a UNIGINE SplineGraph .spl JSON text file."""
 
     output = Path(path)
     output.parent.mkdir(parents=True, exist_ok=True)
-    payload = unigine_spline_graph_dict(stations)
+    payload = unigine_spline_graph_dict(
+        stations,
+        local_z_offset_m=local_z_offset_m,
+    )
     output.write_text(
         json.dumps(payload, indent=indent, ensure_ascii=False) + "\n",
         encoding="utf-8",

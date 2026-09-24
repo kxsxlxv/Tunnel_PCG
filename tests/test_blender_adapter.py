@@ -569,6 +569,85 @@ def test_stage10_blender_adapter_reuses_periodic_mesh_datablocks(monkeypatch):
     assert root["sharedMeshDataBlocksSaved"] == result.shared_mesh_data_blocks_saved
 
 
+def test_blender_adapter_reuses_prototype_datablocks_across_chunk_calls(
+    monkeypatch,
+):
+    from tunnel_scanner_core import (
+        ChunkBoundaryPolicy,
+        ProductionConfig,
+        TunnelAssemblyConfig,
+        build_chunk_scene_packages,
+        build_production_tunnel,
+        load_stage10_initial_moscow_profile,
+    )
+
+    fake = _FakeBpy()
+    monkeypatch.setitem(sys.modules, "bpy", fake)
+    profile = load_stage10_initial_moscow_profile()
+    build = build_production_tunnel(
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=4,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.0,
+        ),
+        include_bolts=False,
+        production_config=ProductionConfig(
+            namespace="blender-stage10-cross-chunk-prototype-reuse",
+            moscow_profile=profile,
+            moscow_stage="10.5",
+        ),
+        seed=5812,
+    )
+    chunks = build_chunk_scene_packages(
+        build,
+        chunk_length_m=2.0,
+        boundary_policy=ChunkBoundaryPolicy.EXACT_LENGTH,
+        localize_coordinates=False,
+    )
+    assert len(chunks) >= 2
+
+    cache = {}
+    first_result = build_scene_package_in_blender(
+        chunks[0],
+        apply_bolt_booleans=False,
+        reuse_mesh_prototypes=True,
+        mesh_prototype_cache=cache,
+    )
+    second_result = build_scene_package_in_blender(
+        chunks[1],
+        clear_existing_root=False,
+        apply_bolt_booleans=False,
+        reuse_mesh_prototypes=True,
+        mesh_prototype_cache=cache,
+    )
+
+    first_blocks = chunks[0].objects_of_type("production_lvt_block")
+    second_blocks = chunks[1].objects_of_type("production_lvt_block")
+    assert first_blocks
+    assert second_blocks
+    key = first_blocks[0].custom_properties["meshPrototypeKey"]
+    assert any(
+        block.custom_properties["meshPrototypeKey"] == key
+        for block in second_blocks
+    )
+    first_obj = fake.data.objects.get(first_blocks[0].name)
+    second_scene = next(
+        block
+        for block in second_blocks
+        if block.custom_properties["meshPrototypeKey"] == key
+    )
+    second_obj = fake.data.objects.get(second_scene.name)
+    assert first_obj is not None
+    assert second_obj is not None
+    assert first_obj.data is second_obj.data
+    assert key in cache
+    assert first_result.mesh_prototype_count > 0
+    assert second_result.mesh_prototype_instance_count > 0
+
+    root = fake.data.collections.get("TunnelScanner")
+    assert root["meshPrototypeCount"] == len(cache)
+
+
 def test_mesh_prototype_payload_preserves_local_geometry_after_chunk_localization():
     from tunnel_scanner_core import (
         ChunkBoundaryPolicy,

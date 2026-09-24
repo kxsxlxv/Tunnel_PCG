@@ -250,6 +250,10 @@ def main() -> None:
     total_caps = 0
     total_interfaces = 0
     total_extrados = 0
+    total_mesh_prototype_instances = 0
+    shared_mesh_prototypes = (
+        None if args.no_mesh_prototype_reuse else {}
+    )
     current_names = []
     first = True
 
@@ -287,6 +291,7 @@ def main() -> None:
                 not args.keep_hidden_lining_extrados
             ),
             reuse_mesh_prototypes=not args.no_mesh_prototype_reuse,
+            mesh_prototype_cache=shared_mesh_prototypes,
             batch_bolt_pocket_booleans=(
                 not args.no_batch_bolt_booleans
             ),
@@ -325,6 +330,7 @@ def main() -> None:
         total_caps += result.lining_cap_faces_removed
         total_interfaces += result.lining_interface_faces_removed
         total_extrados += result.lining_extrados_faces_removed
+        total_mesh_prototype_instances += result.mesh_prototype_instance_count
 
         print(
             f"[{ordinal}/{len(entries)}] chunk {chunk_id:05d}: "
@@ -352,6 +358,16 @@ def main() -> None:
         root["mayClaimAsBuilt"] = bool(
             manifest.get("mayClaimAsBuilt", False)
         )
+        if shared_mesh_prototypes is not None:
+            root["meshPrototypeCount"] = len(shared_mesh_prototypes)
+            root["meshPrototypeInstanceCount"] = (
+                total_mesh_prototype_instances
+            )
+            root["sharedMeshDataBlocksSaved"] = max(
+                0,
+                total_mesh_prototype_instances
+                - len(shared_mesh_prototypes),
+            )
 
     wall_seconds = time.perf_counter() - wall_started
     print(
@@ -364,7 +380,13 @@ def main() -> None:
         f"Timing totals: create={total_object_creation_seconds:.2f}s, "
         f"boolean={total_boolean_seconds:.2f}s, "
         f"cleanup={total_cleanup_seconds:.2f}s, "
-        f"wall={wall_seconds:.2f}s."
+        f"wall={wall_seconds:.2f}s. "
+        + (
+            f"Shared mesh prototypes: {len(shared_mesh_prototypes)} data blocks "
+            f"for {total_mesh_prototype_instances} instances."
+            if shared_mesh_prototypes is not None
+            else "Shared mesh prototype reuse disabled."
+        )
     )
 
     if args.save_blend is not None:

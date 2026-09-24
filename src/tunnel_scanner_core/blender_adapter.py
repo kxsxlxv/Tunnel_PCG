@@ -1132,6 +1132,7 @@ def build_scene_package_in_blender(
     strip_coincident_lining_interfaces: bool = False,
     strip_hidden_lining_extrados: bool = False,
     reuse_mesh_prototypes: bool = True,
+    mesh_prototype_cache: dict[str, Any] | None = None,
     batch_bolt_pocket_booleans: bool = True,
     omit_bolt_boolean_tools: bool = False,
 ) -> BlenderBuildResult:
@@ -1163,9 +1164,16 @@ def build_scene_package_in_blender(
 
     object_names: list[str] = []
     mesh_names: list[str] = []
-    mesh_prototypes: dict[str, Any] | None = (
-        {} if reuse_mesh_prototypes else None
-    )
+    mesh_prototypes: dict[str, Any] | None
+    if reuse_mesh_prototypes:
+        mesh_prototypes = (
+            mesh_prototype_cache
+            if mesh_prototype_cache is not None
+            else {}
+        )
+    else:
+        mesh_prototypes = None
+    package_prototype_keys: set[str] = set()
     mesh_prototype_instance_count = 0
     object_creation_started = time.perf_counter()
     for scene_object in package.objects:
@@ -1180,6 +1188,9 @@ def build_scene_package_in_blender(
             and scene_object.extra_properties.get("meshPrototypeKey") is not None
         ):
             mesh_prototype_instance_count += 1
+            package_prototype_keys.add(
+                str(scene_object.extra_properties["meshPrototypeKey"])
+            )
         obj = create_blender_object(
             scene_object,
             target,
@@ -1190,11 +1201,13 @@ def build_scene_package_in_blender(
         mesh_names.append(obj.data.name)
 
     object_creation_seconds = time.perf_counter() - object_creation_started
-    mesh_prototype_count = len(mesh_prototypes or {})
+    mesh_prototype_count = len(package_prototype_keys)
+    mesh_prototype_data_block_count = len(mesh_prototypes or {})
     root["meshPrototypeReuseEnabled"] = bool(reuse_mesh_prototypes)
     root["meshValidationEnabled"] = bool(validate_mesh)
     root["postBooleanMeshValidationEnabled"] = bool(validate_mesh)
-    root["meshPrototypeCount"] = int(mesh_prototype_count)
+    root["meshPrototypeCount"] = int(mesh_prototype_data_block_count)
+    root["meshPrototypePackageCount"] = int(mesh_prototype_count)
     root["meshPrototypeInstanceCount"] = int(mesh_prototype_instance_count)
     root["sharedMeshDataBlocksSaved"] = int(
         max(0, mesh_prototype_instance_count - mesh_prototype_count)

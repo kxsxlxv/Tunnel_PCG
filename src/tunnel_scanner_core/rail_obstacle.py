@@ -196,33 +196,190 @@ def carbody_screening_proxy(
     )
 
 
+@dataclass(frozen=True)
+class PathEstimationUncertainty:
+    """Deterministic future-track estimation error bounds.
+
+    These terms describe uncertainty of the locally estimated future path, not
+    vehicle motion and not track-maintenance tolerances. None means
+    unavailable/unknown and therefore prevents a safety-complete result.
+
+    Conservative bound propagation:
+    lateral(d) = offset + d*tan(heading) + 0.5*d^2*curvature
+    yaw(d)     = heading + d*curvature
+    vertical(d)= z_offset + d*tan(grade)
+    """
+
+    lateral_offset_bound_m: float | None = None
+    heading_bound_rad: float | None = None
+    curvature_bound_per_m: float | None = None
+    vertical_offset_bound_m: float | None = None
+    grade_bound_rad: float | None = None
+    cant_roll_bound_rad: float | None = None
+
+    def __post_init__(self) -> None:
+        linear_names = (
+            "lateral_offset_bound_m",
+            "curvature_bound_per_m",
+            "vertical_offset_bound_m",
+        )
+        angular_names = (
+            "heading_bound_rad",
+            "grade_bound_rad",
+            "cant_roll_bound_rad",
+        )
+        for name in linear_names:
+            value = getattr(self, name)
+            if value is None:
+                continue
+            if not math.isfinite(float(value)) or float(value) < 0.0:
+                raise ValueError(f"{name} must be finite and non-negative")
+        for name in angular_names:
+            value = getattr(self, name)
+            if value is None:
+                continue
+            value = float(value)
+            if not math.isfinite(value) or not (0.0 <= value < 0.5 * math.pi):
+                raise ValueError(f"{name} must be in [0, pi/2)")
+
+    @classmethod
+    def exact_ground_truth(cls) -> "PathEstimationUncertainty":
+        """Explicitly state that simulation uses the known ground-truth path."""
+        return cls(
+            lateral_offset_bound_m=0.0,
+            heading_bound_rad=0.0,
+            curvature_bound_per_m=0.0,
+            vertical_offset_bound_m=0.0,
+            grade_bound_rad=0.0,
+            cant_roll_bound_rad=0.0,
+        )
+
+    @property
+    def missing_terms(self) -> tuple[str, ...]:
+        names = (
+            "lateral_offset_bound_m",
+            "heading_bound_rad",
+            "curvature_bound_per_m",
+            "vertical_offset_bound_m",
+            "grade_bound_rad",
+            "cant_roll_bound_rad",
+        )
+        return tuple(name for name in names if getattr(self, name) is None)
+
+    @property
+    def complete(self) -> bool:
+        return not self.missing_terms
+
+    @staticmethod
+    def _known(value: float | None) -> float:
+        return 0.0 if value is None else float(value)
+
+    def lateral_center_bound_m(self, lookahead_m: float) -> float:
+        d = max(0.0, float(lookahead_m))
+        return (
+            self._known(self.lateral_offset_bound_m)
+            + d * math.tan(self._known(self.heading_bound_rad))
+            + 0.5 * d * d * self._known(self.curvature_bound_per_m)
+        )
+
+    def yaw_bound_rad(self, lookahead_m: float) -> float:
+        d = max(0.0, float(lookahead_m))
+        return (
+            self._known(self.heading_bound_rad)
+            + d * self._known(self.curvature_bound_per_m)
+        )
+
+    def vertical_center_bound_m(self, lookahead_m: float) -> float:
+        d = max(0.0, float(lookahead_m))
+        return (
+            self._known(self.vertical_offset_bound_m)
+            + d * math.tan(self._known(self.grade_bound_rad))
+        )
+
+    def roll_bound_rad(self) -> float:
+        return self._known(self.cant_roll_bound_rad)
+
+
+def _maximum_rotated_extent(
+    primary_half_extent_m: float,
+    coupled_half_extent_m: float,
+    angle_bound_rad: float,
+) -> float:
+    """Maximum a*cos(theta)+b*sin(theta) for abs(theta) <= angle_bound."""
+    a = float(primary_half_extent_m)
+    b = float(coupled_half_extent_m)
+    bound = max(0.0, min(float(angle_bound_rad), 0.5 * math.pi))
+    optimum = math.atan2(b, a)
+    if bound >= optimum:
+        return math.hypot(a, b)
+    return a * math.cos(bound) + b * math.sin(bound)
+
 def carbody_obb_from_pose(
     pose: RailVehiclePose,
     *,
     geometry: RailVehicleGeometry = MOSKVA_2020_81_775,
     allowance: EnvelopeAllowanceBudget | None = None,
+    path_uncertainty: PathEstimationUncertainty | None = None,
+    lookahead_m: float = 0.0,
     numerical_inflation_m: float = 0.0,
 ) -> OrientedBox3:
     """Create the current above-TOR rectangular obstacle screening proxy."""
 
     allowance = allowance or EnvelopeAllowanceBudget()
+    path_uncertainty = path_uncertainty or PathEstimationUncertainty()
     proxy = carbody_screening_proxy(geometry)
-    lateral = allowance.known_lateral_allowance_m()
-    vertical = allowance.known_vertical_allowance_m()
     height = proxy.top_above_tor_m - proxy.bottom_above_tor_m
     center_z = proxy.bottom_above_tor_m + 0.5 * height
     center = _add(
         pose.carbody.position,
         _mul(pose.carbody.up, center_z),
     )
+
+    base_width = proxy.half_width_m + allowance.known_lateral_allowance_m()
+    base_length = proxy.half_length_m
+    base_height = 0.5 * height + allowance.known_vertical_allowance_m()
+
+    yaw_bound = path_uncertainty.yaw_bound_rad(lookahead_m)
+    yaw_width = _maximum_rotated_extent(
+        base_width,
+        base_length,
+        yaw_bound,
+    )
+    yaw_length = _maximum_rotated_extent(
+        base_length,
+        base_width,
+        yaw_bound,
+    )
+
+    total_roll_bound = (
+        allowance.known_roll_bound_rad()
+        + path_uncertainty.roll_bound_rad()
+    )
+    roll_width = _maximum_rotated_extent(
+        yaw_width,
+        base_height,
+        total_roll_bound,
+    )
+    roll_height = _maximum_rotated_extent(
+        base_height,
+        yaw_width,
+        total_roll_bound,
+    )
+
     return OrientedBox3(
         center=center,
         right=pose.carbody.right,
         forward=pose.carbody.forward,
         up=pose.carbody.up,
-        half_width_m=proxy.half_width_m + lateral,
-        half_length_m=proxy.half_length_m,
-        half_height_m=0.5 * height + vertical,
+        half_width_m=(
+            roll_width
+            + path_uncertainty.lateral_center_bound_m(lookahead_m)
+        ),
+        half_length_m=yaw_length,
+        half_height_m=(
+            roll_height
+            + path_uncertainty.vertical_center_bound_m(lookahead_m)
+        ),
         source_chainage_m=pose.leading_bogie.chainage_m,
         numerical_inflation_m=float(numerical_inflation_m),
     )
@@ -269,6 +426,7 @@ class RouteSweptEnvelope:
     route_id: str
     boxes: tuple[OrientedBox3, ...]
     allowance: EnvelopeAllowanceBudget
+    path_uncertainty: PathEstimationUncertainty
     sampling: SweptEnvelopeSamplingConfig
     source_start_chainage_m: float
     source_end_chainage_m: float
@@ -281,7 +439,10 @@ class RouteSweptEnvelope:
 
     @property
     def safety_complete(self) -> bool:
-        return self.allowance.safety_complete
+        return (
+            self.allowance.safety_complete
+            and self.path_uncertainty.complete
+        )
 
     @property
     def broad_phase_aabb(self) -> AABB3:
@@ -451,11 +612,15 @@ def build_route_swept_envelope(
     lookahead_m: float,
     geometry: RailVehicleGeometry = MOSKVA_2020_81_775,
     allowance: EnvelopeAllowanceBudget | None = None,
+    path_uncertainty: PathEstimationUncertainty | None = None,
     sampling: SweptEnvelopeSamplingConfig | None = None,
 ) -> RouteSweptEnvelope:
     if lookahead_m < 0.0:
         raise ValueError("lookahead_m must be non-negative")
     allowance = allowance or EnvelopeAllowanceBudget()
+    path_uncertainty = (
+        path_uncertainty or PathEstimationUncertainty()
+    )
     sampling = sampling or SweptEnvelopeSamplingConfig()
     end = hypothesis.leading_chainage_m + float(lookahead_m)
     if hypothesis.maximum_leading_chainage_m is not None:
@@ -477,6 +642,12 @@ def build_route_swept_envelope(
             pose,
             geometry=geometry,
             allowance=allowance,
+            path_uncertainty=path_uncertainty,
+            lookahead_m=max(
+                0.0,
+                pose.leading_bogie.chainage_m
+                - hypothesis.leading_chainage_m,
+            ),
             numerical_inflation_m=sampling.max_pose_deviation_m,
         )
         for pose in poses
@@ -485,6 +656,7 @@ def build_route_swept_envelope(
         route_id=hypothesis.route_id,
         boxes=boxes,
         allowance=allowance,
+        path_uncertainty=path_uncertainty,
         sampling=sampling,
         source_start_chainage_m=hypothesis.leading_chainage_m,
         source_end_chainage_m=end,
@@ -498,12 +670,16 @@ def build_multi_route_swept_envelope(
     lookahead_m: float,
     geometry: RailVehicleGeometry = MOSKVA_2020_81_775,
     allowances_by_route: Mapping[str, EnvelopeAllowanceBudget] | None = None,
+    path_uncertainties_by_route: (
+        Mapping[str, PathEstimationUncertainty] | None
+    ) = None,
     sampling: SweptEnvelopeSamplingConfig | None = None,
 ) -> MultiRouteSweptEnvelope:
     hypotheses = tuple(hypotheses)
     if not hypotheses:
         raise ValueError("at least one route hypothesis is required")
     allowances_by_route = allowances_by_route or {}
+    path_uncertainties_by_route = path_uncertainties_by_route or {}
     return MultiRouteSweptEnvelope(
         routes=tuple(
             build_route_swept_envelope(
@@ -513,6 +689,10 @@ def build_multi_route_swept_envelope(
                 allowance=allowances_by_route.get(
                     hypothesis.route_id,
                     EnvelopeAllowanceBudget(),
+                ),
+                path_uncertainty=path_uncertainties_by_route.get(
+                    hypothesis.route_id,
+                    PathEstimationUncertainty(),
                 ),
                 sampling=sampling,
             )

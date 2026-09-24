@@ -248,6 +248,16 @@ number: the central stop clearance is 15 +/- 1 mm on each side. The reference
 budget therefore records **16 mm as a known documented upper free-clearance
 term**, but marks the total safety envelope incomplete.
 
+ГОСТ Appendix В terms are now represented explicitly:
+- **q** = bogie-frame lateral displacement relative to the wheelset in the
+  guiding section;
+- **w** = carbody lateral displacement relative to the bogie frame in the
+  guiding section.
+
+The supplied 81-775 material does not provide complete target values for q or
+w. They therefore remain unknown. The 16 mm documented stop gap is evidence for
+body/bogie free motion, not a silent replacement for the complete normative w.
+
 ### 6.1 Recommended runtime representation
 
 For obstacle testing, sample future vehicle poses along time or travelled
@@ -279,15 +289,38 @@ Do not hide the difference.
 
 A practical uncertainty model should propagate sampled path hypotheses rather
 than only inflating one nominal line by a constant scalar. Each hypothesis
-carries its own:
+carries explicit deterministic error bounds for:
 - lateral offset;
 - heading;
-- curvature/transition estimate;
-- optional vertical/cant estimate.
+- curvature/transition fit;
+- vertical offset;
+- grade;
+- cant/roll of the estimated track frame.
 
-The obstacle-relevance volume is the union of the corresponding vehicle swept
-volumes over the retained hypotheses. This naturally represents nonlinear
-growth of position error at look-ahead distance.
+The engine-neutral reference now separates these terms from vehicle/track
+allowances. For a look-ahead distance d it uses the conservative first-order
+bound model:
+
+lateral_bound(d) =
+    lateral_offset + d*tan(heading_error) + 0.5*d^2*curvature_error
+
+yaw_bound(d) =
+    heading_error + d*curvature_error
+
+vertical_bound(d) =
+    vertical_offset + d*tan(grade_error)
+
+Yaw and roll uncertainty expand the OBB extents geometrically; they are not
+approximated as a constant lateral scalar.
+
+A missing uncertainty term is **unknown**, not zero. Synthetic evaluation using
+the known generated centreline must opt in explicitly through
+PathEstimationUncertainty.exact_ground_truth(). This keeps ground-truth
+evaluation distinct from detector evaluation.
+
+The obstacle-relevance volume remains the union of corresponding vehicle swept
+volumes over retained route/path hypotheses. This naturally represents
+nonlinear growth of position error at look-ahead distance.
 
 ---
 
@@ -419,7 +452,11 @@ Implemented in the engine-neutral Python core:
 - independent bogie poses;
 - rigid carbody chord pose;
 - exact and small-angle circular-throw screening;
-- explicit incomplete allowance budget;
+- explicit incomplete ГОСТ q/w + vehicle/track allowance budget;
+- separate future-path estimation uncertainty model with explicit
+  exact-ground-truth mode;
+- look-ahead-dependent OBB growth from offset/heading/curvature/grade/cant
+  uncertainty;
 - turnout route-hypothesis obstacle classification;
 - above-TOR rectangular 81-775 screening OBB derived only from the currently
   sourced overall width/height/coupler-head length;
@@ -502,5 +539,11 @@ is **not yet a complete safety-certified rolling-stock kinematic gauge**.
 Do not label the obstacle volume complete until the missing target-vehicle
 allowances and detailed target geometry have been sourced or measured.
 
-In particular, do not interpret the documented 15 +/- 1 mm lateral-stop
-clearance as the entire lateral dynamic allowance.
+In particular:
+- do not interpret the documented 15 +/- 1 mm lateral-stop clearance as the
+  entire lateral dynamic allowance or as a sourced ГОСТ w value;
+- do not substitute zero for unknown q/w, roll, suspension, track or
+  path-estimation terms;
+- use exact-ground-truth zero uncertainty only when evaluating against the
+  simulator's known generated track, not when emulating the LiDAR detector's
+  locally estimated future track.

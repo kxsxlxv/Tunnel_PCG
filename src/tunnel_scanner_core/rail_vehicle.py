@@ -375,32 +375,59 @@ def screening_circular_curve_throw(
 
 @dataclass(frozen=True)
 class EnvelopeAllowanceBudget:
-    """Explicit allowance ledger for obstacle-relevance geometry.
+    """Vehicle/track allowance ledger using ГОСТ 23961 terminology.
 
-    Unknown safety-relevant terms intentionally default to None. The
-    documented 15 +/- 1 mm body/bogie lateral-stop clearance is included as a
-    known term but is not represented as the complete dynamic allowance.
+    The user-supplied 81-775 material documents only a 15 +/- 1 mm free
+    clearance between the central lateral stop and each side stop. That value
+    is retained as evidence, but the complete ГОСТ quantities q and w are not
+    available for the target vehicle and therefore default to None.
+
+    q: bogie-frame lateral motion relative to the wheelset in a guiding section.
+    w: carbody lateral motion relative to the bogie frame in a guiding section.
     """
 
     documented_body_bogie_lateral_free_m: float = 0.016
+    gost_q_bogie_frame_relative_wheelset_m: float | None = None
+    gost_w_carbody_relative_bogie_m: float | None = None
     additional_vehicle_lateral_dynamic_m: float | None = None
     vehicle_vertical_dynamic_m: float | None = None
-    wheel_bogie_lateral_play_m: float | None = None
+    vehicle_roll_bound_rad: float | None = None
     track_lateral_tolerance_m: float | None = None
     track_vertical_tolerance_m: float | None = None
-    path_estimation_lateral_m: float | None = None
-    path_estimation_vertical_m: float | None = None
+
+    def __post_init__(self) -> None:
+        scalar_names = (
+            "documented_body_bogie_lateral_free_m",
+            "gost_q_bogie_frame_relative_wheelset_m",
+            "gost_w_carbody_relative_bogie_m",
+            "additional_vehicle_lateral_dynamic_m",
+            "vehicle_vertical_dynamic_m",
+            "track_lateral_tolerance_m",
+            "track_vertical_tolerance_m",
+        )
+        for name in scalar_names:
+            value = getattr(self, name)
+            if value is None:
+                continue
+            if not math.isfinite(float(value)) or float(value) < 0.0:
+                raise ValueError(f"{name} must be finite and non-negative")
+        if self.vehicle_roll_bound_rad is not None:
+            value = float(self.vehicle_roll_bound_rad)
+            if not math.isfinite(value) or not (0.0 <= value < 0.5 * math.pi):
+                raise ValueError(
+                    "vehicle_roll_bound_rad must be in [0, pi/2)"
+                )
 
     @property
     def missing_safety_terms(self) -> tuple[str, ...]:
         names = (
+            "gost_q_bogie_frame_relative_wheelset_m",
+            "gost_w_carbody_relative_bogie_m",
             "additional_vehicle_lateral_dynamic_m",
             "vehicle_vertical_dynamic_m",
-            "wheel_bogie_lateral_play_m",
+            "vehicle_roll_bound_rad",
             "track_lateral_tolerance_m",
             "track_vertical_tolerance_m",
-            "path_estimation_lateral_m",
-            "path_estimation_vertical_m",
         )
         return tuple(name for name in names if getattr(self, name) is None)
 
@@ -408,13 +435,21 @@ class EnvelopeAllowanceBudget:
     def safety_complete(self) -> bool:
         return not self.missing_safety_terms
 
+    def known_body_bogie_lateral_m(self) -> float:
+        """Use sourced w when available; otherwise retain the documented free gap."""
+        if self.gost_w_carbody_relative_bogie_m is not None:
+            return max(
+                self.documented_body_bogie_lateral_free_m,
+                float(self.gost_w_carbody_relative_bogie_m),
+            )
+        return self.documented_body_bogie_lateral_free_m
+
     def known_lateral_allowance_m(self) -> float:
         values = (
-            self.documented_body_bogie_lateral_free_m,
+            self.known_body_bogie_lateral_m(),
+            self.gost_q_bogie_frame_relative_wheelset_m,
             self.additional_vehicle_lateral_dynamic_m,
-            self.wheel_bogie_lateral_play_m,
             self.track_lateral_tolerance_m,
-            self.path_estimation_lateral_m,
         )
         return sum(float(value) for value in values if value is not None)
 
@@ -422,9 +457,15 @@ class EnvelopeAllowanceBudget:
         values = (
             self.vehicle_vertical_dynamic_m,
             self.track_vertical_tolerance_m,
-            self.path_estimation_vertical_m,
         )
         return sum(float(value) for value in values if value is not None)
+
+    def known_roll_bound_rad(self) -> float:
+        return (
+            0.0
+            if self.vehicle_roll_bound_rad is None
+            else float(self.vehicle_roll_bound_rad)
+        )
 
 
 class ObstacleRouteRelevance(str, Enum):

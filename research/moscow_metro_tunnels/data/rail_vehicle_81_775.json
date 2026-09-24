@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "vehicle_family": "Moskva-2020",
   "model": "81-775",
   "purpose": "engine-neutral train kinematics and obstacle-envelope reference inputs",
@@ -16,8 +16,15 @@
     "body_bogie_central_stop_clearance_each_side_m": {
       "nominal": 0.015,
       "tolerance": 0.001,
-      "upper_documented_free_clearance": 0.016
+      "upper_documented_free_clearance": 0.016,
+      "note": "This documented free clearance is not the complete kinematic-envelope w allowance."
     }
+  },
+  "normative_allowance_contract": {
+    "standard": "GOST 23961-2024 Appendix V",
+    "q_bogie_frame_relative_wheelset_m": null,
+    "w_carbody_relative_bogie_m": null,
+    "note": "q and w remain unsourced for target 81-775; do not replace them with zero."
   },
   "modeling_interpretation": {
     "vehicle_base_as_bogie_pivot_spacing": {
@@ -30,6 +37,16 @@
       "derived_from": "(length_over_coupler_heads_m - vehicle_base_m) / 2",
       "status": "screening proxy only; not verified rigid carbody end geometry"
     }
+  },
+  "path_estimation_uncertainty": {
+    "status": "SEPARATE_RUNTIME_INPUT",
+    "lateral_offset_bound_m": null,
+    "heading_bound_rad": null,
+    "curvature_bound_per_m": null,
+    "vertical_offset_bound_m": null,
+    "grade_bound_rad": null,
+    "cant_roll_bound_rad": null,
+    "note": "These are detector/path-fit uncertainty bounds, not vehicle or track-maintenance allowances. Synthetic ground truth must be marked explicitly as zero-bound rather than inferred."
   },
   "unknown_required_for_complete_kinematic_envelope": {
     "bogie_wheelbase_m": null,

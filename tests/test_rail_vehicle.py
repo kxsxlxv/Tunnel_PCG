@@ -146,8 +146,40 @@ def test_allowance_budget_refuses_to_imply_unknown_dynamics_are_zero():
     assert budget.safety_complete is False
     assert math.isclose(budget.known_lateral_allowance_m(), 0.016)
     assert budget.known_vertical_allowance_m() == 0.0
-    assert "wheel_bogie_lateral_play_m" in budget.missing_safety_terms
-    assert "path_estimation_lateral_m" in budget.missing_safety_terms
+    assert (
+        "gost_q_bogie_frame_relative_wheelset_m"
+        in budget.missing_safety_terms
+    )
+    assert (
+        "gost_w_carbody_relative_bogie_m"
+        in budget.missing_safety_terms
+    )
+    assert "vehicle_roll_bound_rad" in budget.missing_safety_terms
+
+
+def test_gost_q_w_allowances_are_explicit_and_do_not_erase_source_gap():
+    budget = EnvelopeAllowanceBudget(
+        gost_q_bogie_frame_relative_wheelset_m=0.004,
+        gost_w_carbody_relative_bogie_m=0.010,
+        additional_vehicle_lateral_dynamic_m=0.006,
+        vehicle_vertical_dynamic_m=0.008,
+        vehicle_roll_bound_rad=0.01,
+        track_lateral_tolerance_m=0.003,
+        track_vertical_tolerance_m=0.004,
+    )
+    # The sourced 16 mm stop clearance remains the larger known body/bogie
+    # term until a target-vehicle w >= 16 mm is documented.
+    assert math.isclose(budget.known_body_bogie_lateral_m(), 0.016)
+    assert math.isclose(
+        budget.known_lateral_allowance_m(),
+        0.016 + 0.004 + 0.006 + 0.003,
+    )
+    assert math.isclose(
+        budget.known_vertical_allowance_m(),
+        0.008 + 0.004,
+    )
+    assert math.isclose(budget.known_roll_bound_rad(), 0.01)
+    assert budget.safety_complete is True
 
 
 def test_turnout_without_resolved_route_uses_union_and_tags_ambiguity():

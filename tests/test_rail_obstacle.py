@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 
 from tunnel_scanner_core.rail_obstacle import (
+    PathEstimationUncertainty,
     RouteHypothesis,
     SweptEnvelopeSamplingConfig,
     build_multi_route_swept_envelope,
@@ -191,6 +192,79 @@ def test_unresolved_turnout_uses_union_and_preserves_route_ambiguity():
     )
 
 
+def test_path_estimation_uncertainty_is_explicit_and_grows_with_lookahead():
+    uncertainty = PathEstimationUncertainty(
+        lateral_offset_bound_m=0.020,
+        heading_bound_rad=math.radians(0.25),
+        curvature_bound_per_m=0.0002,
+        vertical_offset_bound_m=0.010,
+        grade_bound_rad=math.radians(0.10),
+        cant_roll_bound_rad=math.radians(0.20),
+    )
+    assert uncertainty.complete is True
+    assert uncertainty.lateral_center_bound_m(50.0) > (
+        uncertainty.lateral_center_bound_m(5.0)
+    )
+    assert uncertainty.yaw_bound_rad(50.0) > uncertainty.yaw_bound_rad(5.0)
+    assert uncertainty.vertical_center_bound_m(50.0) > (
+        uncertainty.vertical_center_bound_m(5.0)
+    )
+
+    envelope = build_route_swept_envelope(
+        RouteHypothesis(
+            route_id="straight",
+            frame_at=_straight_frame,
+            leading_chainage_m=25.0,
+        ),
+        lookahead_m=20.0,
+        path_uncertainty=uncertainty,
+        sampling=SweptEnvelopeSamplingConfig(
+            max_chainage_step_m=10.0,
+            max_pose_deviation_m=0.005,
+        ),
+    )
+    assert envelope.boxes[-1].half_width_m > envelope.boxes[0].half_width_m
+    assert envelope.boxes[-1].half_length_m > envelope.boxes[0].half_length_m
+    assert envelope.boxes[-1].half_height_m > envelope.boxes[0].half_height_m
+
+
+def test_missing_path_uncertainty_is_not_silently_treated_as_zero():
+    complete_vehicle_track = EnvelopeAllowanceBudget(
+        documented_body_bogie_lateral_free_m=0.016,
+        gost_q_bogie_frame_relative_wheelset_m=0.005,
+        gost_w_carbody_relative_bogie_m=0.016,
+        additional_vehicle_lateral_dynamic_m=0.010,
+        vehicle_vertical_dynamic_m=0.010,
+        vehicle_roll_bound_rad=0.01,
+        track_lateral_tolerance_m=0.005,
+        track_vertical_tolerance_m=0.005,
+    )
+    envelope = build_route_swept_envelope(
+        RouteHypothesis(
+            route_id="straight",
+            frame_at=_straight_frame,
+            leading_chainage_m=25.0,
+        ),
+        lookahead_m=5.0,
+        allowance=complete_vehicle_track,
+    )
+    assert envelope.allowance.safety_complete is True
+    assert envelope.path_uncertainty.complete is False
+    assert envelope.safety_complete is False
+
+    exact = build_route_swept_envelope(
+        RouteHypothesis(
+            route_id="straight",
+            frame_at=_straight_frame,
+            leading_chainage_m=25.0,
+        ),
+        lookahead_m=5.0,
+        allowance=complete_vehicle_track,
+        path_uncertainty=PathEstimationUncertainty.exact_ground_truth(),
+    )
+    assert exact.safety_complete is True
+
+
 def test_envelope_reports_incomplete_safety_allowance_budget():
     envelope = build_route_swept_envelope(
         RouteHypothesis(
@@ -208,13 +282,13 @@ def test_envelope_reports_incomplete_safety_allowance_budget():
 
     complete = EnvelopeAllowanceBudget(
         documented_body_bogie_lateral_free_m=0.016,
+        gost_q_bogie_frame_relative_wheelset_m=0.005,
+        gost_w_carbody_relative_bogie_m=0.016,
         additional_vehicle_lateral_dynamic_m=0.010,
         vehicle_vertical_dynamic_m=0.010,
-        wheel_bogie_lateral_play_m=0.005,
+        vehicle_roll_bound_rad=0.01,
         track_lateral_tolerance_m=0.005,
         track_vertical_tolerance_m=0.005,
-        path_estimation_lateral_m=0.010,
-        path_estimation_vertical_m=0.010,
     )
     completed = build_route_swept_envelope(
         RouteHypothesis(
@@ -224,5 +298,6 @@ def test_envelope_reports_incomplete_safety_allowance_budget():
         ),
         lookahead_m=5.0,
         allowance=complete,
+        path_uncertainty=PathEstimationUncertainty.exact_ground_truth(),
     )
     assert completed.safety_complete is True

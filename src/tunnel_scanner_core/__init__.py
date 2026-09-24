@@ -245,6 +245,7 @@ from .rail_vehicle import (
 from .rail_obstacle import (
     AABB3,
     CarbodyScreeningProxy,
+    PathEstimationUncertainty,
     MultiRouteSweptEnvelope,
     OrientedBox3,
     RouteHypothesis,
@@ -490,6 +491,7 @@ __all__ = [
     "build_nominal_scene_package",
     "AABB3",
     "CarbodyScreeningProxy",
+    "PathEstimationUncertainty",
     "MultiRouteSweptEnvelope",
     "OrientedBox3",
     "RouteHypothesis",

@@ -2,12 +2,16 @@
 
 #include <UnigineLog.h>
 #include <UnigineMathLib.h>
+#include <UnigineMesh.h>
 #include <UniginePhysics.h>
 #include <UnigineVisualizer.h>
+#include <UnigineWorld.h>
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <iterator>
+#include <limits>
 #include <utility>
 
 using namespace Unigine;
@@ -197,6 +201,7 @@ void Train81775Kinematics::init()
 
 	automatic_spawn_anchor_active = false;
 	bogie_visual_offsets_active = false;
+	carbody_visual_offset = vec3_zero;
 	leading_bogie_visual_offset = vec3_zero;
 	trailing_bogie_visual_offset = vec3_zero;
 
@@ -302,11 +307,30 @@ void Train81775Kinematics::init()
 			double(vehicle_base_m.get()) + 0.01,
 			route_length_m);
 
-	if (auto_anchor_to_initial_vehicle_frame.get())
+	// Capture authored vehicle offsets before any runtime placement. This
+	// preserves the model's carbody/bogie relationship while the kinematic
+	// pivots themselves are placed on the running-rail axis.
+	if (preserve_initial_bogie_visual_offsets.get())
+		capture_initial_bogie_visual_offsets();
+
+	bool registered_to_tunnel_rails = false;
+	if (auto_register_to_tunnel_rails.get())
+	{
+		registered_to_tunnel_rails =
+			configure_automatic_tunnel_rail_registration();
+		if (!registered_to_tunnel_rails)
+		{
+			Log::error(
+				"[Train81775] Automatic tunnel-rail registration failed. "
+				"The train will not be moved onto an unregistered route.\n");
+			spline_graph.clear();
+			arc_luts.clear();
+			return;
+		}
+	}
+	else if (auto_anchor_to_initial_vehicle_frame.get())
 	{
 		configure_automatic_spawn_anchor();
-		if (preserve_initial_bogie_visual_offsets.get())
-			capture_initial_bogie_visual_offsets();
 	}
 
 	if (diagnostic_logging.get())
@@ -319,12 +343,15 @@ void Train81775Kinematics::init()
 			carbody_node.get()->getWorldPosition();
 		const double initial_snap_distance =
 			distance3(current_body, body);
-		if (initial_snap_distance > 5.0)
+		if (
+			initial_snap_distance > 5.0
+			&& !registered_to_tunnel_rails
+			&& !auto_anchor_to_initial_vehicle_frame.get())
 		{
 			Log::warning(
 				"[Train81775] Initial spline target is %.3f m from the "
-				"current carbody position. Set Spline Space Node to the "
-				"same transformed root/dummy used by the imported tunnel.\n",
+				"current carbody position. Enable automatic tunnel-rail "
+				"registration or provide a valid Spline Space Node.\n",
 				initial_snap_distance);
 		}
 		Log::message(
@@ -462,6 +489,292 @@ Train81775Kinematics::sample_route(double chainage_m) const
 	return {world_position, world_tangent, world_up};
 }
 
+bool Train81775Kinematics::collect_static_mesh_world_vertices(
+	const char *node_name,
+	std::vector<Vec3> &vertices,
+	Vec3 &centroid) const
+{
+	vertices.clear();
+	centroid = Vec3(0.0);
+
+	NodePtr node = World::getNodeByName(node_name);
+	if (!node)
+	{
+		Log::error(
+			"[Train81775] Rail registration node not found: '%s'\n",
+			node_name);
+		return false;
+	}
+
+	ObjectMeshStaticPtr object =
+		checked_ptr_cast<ObjectMeshStatic>(node);
+	if (!object)
+	{
+		Log::error(
+			"[Train81775] Rail registration node '%s' is not "
+			"ObjectMeshStatic (type=%s)\n",
+			node_name,
+			node->getTypeName());
+		return false;
+	}
+
+	ConstMeshPtr mesh = object->getMeshForceRAM();
+	if (!mesh)
+	{
+		Log::error(
+			"[Train81775] Could not load mesh RAM for '%s'\n",
+			node_name);
+		return false;
+	}
+
+	const Mat4 world = object->getWorldTransform();
+	Vec3 sum(0.0);
+	for (int surface = 0; surface < mesh->getNumSurfaces(); ++surface)
+	{
+		const int count = mesh->getNumVertex(surface);
+		for (int i = 0; i < count; ++i)
+		{
+			const Vec3 point =
+				world * Vec3(mesh->getVertex(i, surface));
+			vertices.push_back(point);
+			sum += point;
+		}
+	}
+	if (vertices.empty())
+	{
+		Log::error(
+			"[Train81775] Rail registration mesh '%s' has no vertices\n",
+			node_name);
+		return false;
+	}
+	centroid = sum / double(vertices.size());
+	return true;
+}
+
+bool Train81775Kinematics::configure_automatic_tunnel_rail_registration()
+{
+	const int chunk_id = registration_chunk_id.get();
+	const double chunk_length =
+		double(registration_chunk_length_m.get());
+	if (chunk_id < 0 || !std::isfinite(chunk_length) || chunk_length <= 0.0)
+	{
+		Log::error(
+			"[Train81775] Invalid rail-registration chunk parameters: "
+			"chunk=%d length=%.6f\n",
+			chunk_id,
+			chunk_length);
+		return false;
+	}
+
+	char rail0_name[128];
+	char rail1_name[128];
+	char next_rail0_name[128];
+	char next_rail1_name[128];
+	std::snprintf(
+		rail0_name,
+		sizeof(rail0_name),
+		"CH%05d__PROD_RAIL_0",
+		chunk_id);
+	std::snprintf(
+		rail1_name,
+		sizeof(rail1_name),
+		"CH%05d__PROD_RAIL_1",
+		chunk_id);
+	std::snprintf(
+		next_rail0_name,
+		sizeof(next_rail0_name),
+		"CH%05d__PROD_RAIL_0",
+		chunk_id + 1);
+	std::snprintf(
+		next_rail1_name,
+		sizeof(next_rail1_name),
+		"CH%05d__PROD_RAIL_1",
+		chunk_id + 1);
+
+	std::vector<Vec3> rail0_vertices;
+	std::vector<Vec3> rail1_vertices;
+	std::vector<Vec3> next_rail0_vertices;
+	std::vector<Vec3> next_rail1_vertices;
+	Vec3 rail0_centroid;
+	Vec3 rail1_centroid;
+	Vec3 next_rail0_centroid;
+	Vec3 next_rail1_centroid;
+
+	if (
+		!collect_static_mesh_world_vertices(
+			rail0_name,
+			rail0_vertices,
+			rail0_centroid)
+		|| !collect_static_mesh_world_vertices(
+			rail1_name,
+			rail1_vertices,
+			rail1_centroid)
+		|| !collect_static_mesh_world_vertices(
+			next_rail0_name,
+			next_rail0_vertices,
+			next_rail0_centroid)
+		|| !collect_static_mesh_world_vertices(
+			next_rail1_name,
+			next_rail1_vertices,
+			next_rail1_centroid))
+	{
+		Log::error(
+			"[Train81775] Automatic rail registration expects two "
+			"consecutive chunk rail pairs named "
+			"CHxxxxx__PROD_RAIL_0/1.\n");
+		return false;
+	}
+
+	const Vec3 center0 =
+		(rail0_centroid + rail1_centroid) * 0.5;
+	const Vec3 center1 =
+		(next_rail0_centroid + next_rail1_centroid) * 0.5;
+
+	vec3 target_forward = vec3(center1 - center0);
+	if (length2(target_forward) <= 1e-10f)
+	{
+		Log::error(
+			"[Train81775] Consecutive rail chunk centroids are coincident; "
+			"cannot determine route direction.\n");
+		return false;
+	}
+	target_forward = normalize(target_forward);
+
+	vec3 target_right = vec3(rail1_centroid - rail0_centroid);
+	target_right -=
+		target_forward * dot(target_right, target_forward);
+	if (length2(target_right) <= 1e-10f)
+	{
+		Log::error(
+			"[Train81775] Rail-pair centroids do not define a lateral axis.\n");
+		return false;
+	}
+	target_right = normalize(target_right);
+	vec3 target_up = normalize(
+		cross(target_right, target_forward));
+
+	auto top_axis_point = [&](
+		const Vec3 &pair_center,
+		const std::vector<Vec3> &a,
+		const std::vector<Vec3> &b)
+	{
+		double maximum_up =
+			-std::numeric_limits<double>::infinity();
+		for (const Vec3 &point : a)
+			maximum_up = std::max(
+				maximum_up,
+				dot_axis(point - pair_center, target_up));
+		for (const Vec3 &point : b)
+			maximum_up = std::max(
+				maximum_up,
+				dot_axis(point - pair_center, target_up));
+		return pair_center
+			+ Vec3(target_up) * maximum_up;
+	};
+
+	const Vec3 target_position = top_axis_point(
+		center0,
+		rail0_vertices,
+		rail1_vertices);
+	const Vec3 target_position_next = top_axis_point(
+		center1,
+		next_rail0_vertices,
+		next_rail1_vertices);
+
+	const double source_reference_s =
+		(double(chunk_id) + 0.5) * chunk_length;
+	if (
+		source_reference_s <= 0.0
+		|| source_reference_s >= route_length_m)
+	{
+		Log::error(
+			"[Train81775] Registration source chainage %.6f is outside "
+			"the loaded route [0, %.6f].\n",
+			source_reference_s,
+			route_length_m);
+		return false;
+	}
+
+	// At this point no registration anchor is active, so this is the raw
+	// spline frame after the optional Spline Space Node transform.
+	const TrackSample source =
+		sample_route(source_reference_s);
+	const vec3 source_forward = source.tangent;
+	const vec3 source_up = source.up;
+	const vec3 source_right = normalize(
+		cross(source_forward, source_up));
+
+	anchor_source_position = source.position;
+	anchor_source_right = source_right;
+	anchor_source_forward = source_forward;
+	anchor_source_up = source_up;
+	anchor_target_position = target_position;
+	anchor_target_right = target_right;
+	anchor_target_forward = target_forward;
+	anchor_target_up = target_up;
+	automatic_spawn_anchor_active = true;
+
+	// Validate the rigid registration against the next actual rail chunk.
+	const double next_reference_s =
+		source_reference_s + chunk_length;
+	double next_error = 0.0;
+	if (next_reference_s < route_length_m)
+	{
+		const Vec3 mapped_next =
+			sample_route(next_reference_s).position;
+		next_error =
+			distance3(mapped_next, target_position_next);
+	}
+
+	if (diagnostic_logging.get())
+	{
+		const double rail_center_spacing =
+			std::abs(dot_axis(
+				rail1_centroid - rail0_centroid,
+				target_right));
+		Log::message(
+			"[Train81775] AUTO RAIL REGISTRATION found '%s'/'%s' "
+			"and next chunk pair.\n",
+			rail0_name,
+			rail1_name);
+		Log::message(
+			"[Train81775] AUTO RAIL REGISTRATION source_s=%.6f "
+			"source=(%.6f, %.6f, %.6f) "
+			"target_UGR=(%.6f, %.6f, %.6f)\n",
+			source_reference_s,
+			source.position.x,
+			source.position.y,
+			source.position.z,
+			target_position.x,
+			target_position.y,
+			target_position.z);
+		Log::message(
+			"[Train81775] AUTO RAIL REGISTRATION forward="
+			"(%.6f, %.6f, %.6f) right=(%.6f, %.6f, %.6f) "
+			"up=(%.6f, %.6f, %.6f) rail_center_spacing=%.6f m "
+			"next_chunk_error=%.6f m\n",
+			double(target_forward.x),
+			double(target_forward.y),
+			double(target_forward.z),
+			double(target_right.x),
+			double(target_right.y),
+			double(target_right.z),
+			double(target_up.x),
+			double(target_up.y),
+			double(target_up.z),
+			rail_center_spacing,
+			next_error);
+	}
+	if (next_error > 0.25)
+	{
+		Log::warning(
+			"[Train81775] Rail registration next-chunk residual is %.3f m. "
+			"Check Registration Chunk Length M and imported rail names.\n",
+			next_error);
+	}
+	return true;
+}
+
 void Train81775Kinematics::configure_automatic_spawn_anchor()
 {
 	const double trailing_s =
@@ -538,36 +851,58 @@ void Train81775Kinematics::configure_automatic_spawn_anchor()
 
 void Train81775Kinematics::capture_initial_bogie_visual_offsets()
 {
-	const double trailing_s =
-		solve_trailing_chainage(leading_chainage_m);
-	const TrackSample front = sample_route(leading_chainage_m);
-	const TrackSample rear = sample_route(trailing_s);
+	const Vec3 body =
+		carbody_node.get()->getWorldPosition();
+	const Vec3 front =
+		leading_bogie_node.get()->getWorldPosition();
+	const Vec3 rear =
+		trailing_bogie_node.get()->getWorldPosition();
+	const Vec3 midpoint = (front + rear) * 0.5;
 
-	auto capture = [](const TrackSample &sample, const Vec3 &actual)
+	vec3 forward = vec3(front - rear);
+	if (length2(forward) <= 1e-12f)
+		forward = vec3(0.0f, 1.0f, 0.0f);
+	forward = normalize(forward);
+	const vec3 up =
+		orthogonal_up(forward, vec3(0.0f, 0.0f, 1.0f));
+	const vec3 right =
+		normalize(cross(forward, up));
+
+	auto to_local = [&](const Vec3 &delta)
 	{
-		const vec3 right =
-			normalize(cross(sample.tangent, sample.up));
-		const Vec3 delta = actual - sample.position;
 		return vec3(
 			float(dot_axis(delta, right)),
-			float(dot_axis(delta, sample.tangent)),
-			float(dot_axis(delta, sample.up)));
+			float(dot_axis(delta, forward)),
+			float(dot_axis(delta, up)));
 	};
 
-	leading_bogie_visual_offset = capture(
-		front,
-		leading_bogie_node.get()->getWorldPosition());
-	trailing_bogie_visual_offset = capture(
-		rear,
-		trailing_bogie_node.get()->getWorldPosition());
+	carbody_visual_offset =
+		to_local(body - midpoint);
+
+	const Vec3 ideal_front =
+		midpoint
+		+ Vec3(forward)
+			* (0.5 * double(vehicle_base_m.get()));
+	const Vec3 ideal_rear =
+		midpoint
+		- Vec3(forward)
+			* (0.5 * double(vehicle_base_m.get()));
+	leading_bogie_visual_offset =
+		to_local(front - ideal_front);
+	trailing_bogie_visual_offset =
+		to_local(rear - ideal_rear);
 	bogie_visual_offsets_active = true;
 
 	if (diagnostic_logging.get())
 	{
 		Log::message(
-			"[Train81775] Preserved visual bogie offsets: "
-			"leading=(%.6f, %.6f, %.6f) "
-			"trailing=(%.6f, %.6f, %.6f)\n",
+			"[Train81775] Authored vehicle offsets: "
+			"carbody=(%.6f, %.6f, %.6f) "
+			"leading_bogie=(%.6f, %.6f, %.6f) "
+			"trailing_bogie=(%.6f, %.6f, %.6f)\n",
+			double(carbody_visual_offset.x),
+			double(carbody_visual_offset.y),
+			double(carbody_visual_offset.z),
 			double(leading_bogie_visual_offset.x),
 			double(leading_bogie_visual_offset.y),
 			double(leading_bogie_visual_offset.z),
@@ -677,7 +1012,23 @@ void Train81775Kinematics::apply_vehicle_pose()
 	vec3 body_up_hint = normalize(front.up + rear.up);
 	vec3 body_up = orthogonal_up(body_forward, body_up_hint);
 
-	carbody_node.get()->setWorldPosition(body_position);
+	const vec3 body_right =
+		normalize(cross(body_forward, body_up));
+	const Vec3 carbody_visual_position =
+		bogie_visual_offsets_active
+			? (
+				body_position
+				+ Vec3(body_right)
+					* double(carbody_visual_offset.x)
+				+ Vec3(body_forward)
+					* double(carbody_visual_offset.y)
+				+ Vec3(body_up)
+					* double(carbody_visual_offset.z)
+			)
+			: body_position;
+
+	carbody_node.get()->setWorldPosition(
+		carbody_visual_position);
 	carbody_node.get()->setWorldDirection(
 		body_forward,
 		body_up,

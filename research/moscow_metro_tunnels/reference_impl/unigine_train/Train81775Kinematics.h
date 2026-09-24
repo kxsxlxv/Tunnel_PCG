@@ -2,6 +2,7 @@
 
 #include <UnigineComponentSystem.h>
 #include <UnigineNodes.h>
+#include <UnigineObjects.h>
 #include <UnigineSplineGraph.h>
 
 #include <vector>
@@ -29,10 +30,17 @@ public:
 	// imported tunnel. Leave empty only when the tunnel is already in raw
 	// Tunnel_PCG world coordinates.
 	PROP_PARAM(Node, spline_space_node);
-	// Default runtime behavior: use the authored/imported vehicle frame as an
-	// automatic spawn frame for Initial Leading Chainage. No hand placement on
-	// the spline is required.
-	PROP_PARAM(Toggle, auto_anchor_to_initial_vehicle_frame, true);
+	// Default runtime behavior: register the route against the actual generated
+	// running-rail meshes in the UNIGINE world. No manual train placement is
+	// required. The expected chunk-first names are
+	// CHxxxxx__PROD_RAIL_0 / CHxxxxx__PROD_RAIL_1.
+	PROP_PARAM(Toggle, auto_register_to_tunnel_rails, true);
+	PROP_PARAM(Int, registration_chunk_id, 0);
+	PROP_PARAM(Float, registration_chunk_length_m, 20.0f);
+
+	// Legacy fallback only. Keep disabled for a generated tunnel because it
+	// aligns the route to the vehicle spawn frame, not to the tunnel.
+	PROP_PARAM(Toggle, auto_anchor_to_initial_vehicle_frame, false);
 	PROP_PARAM(Toggle, preserve_initial_bogie_visual_offsets, true);
 	PROP_PARAM(Node, carbody_node);
 	PROP_PARAM(Node, leading_bogie_node);
@@ -83,8 +91,13 @@ private:
 	void rebuild_arc_length_luts();
 	TrackSample sample_route_local(double chainage_m) const;
 	TrackSample sample_route(double chainage_m) const;
+	bool configure_automatic_tunnel_rail_registration();
 	void configure_automatic_spawn_anchor();
 	void capture_initial_bogie_visual_offsets();
+	bool collect_static_mesh_world_vertices(
+		const char *node_name,
+		std::vector<Unigine::Math::Vec3> &vertices,
+		Unigine::Math::Vec3 &centroid) const;
 	Unigine::Math::Vec3 apply_bogie_visual_offset(
 		const TrackSample &sample,
 		const Unigine::Math::vec3 &local_offset) const;
@@ -121,6 +134,8 @@ private:
 		Unigine::Math::vec3(0.0f, 0.0f, 1.0f);
 
 	bool bogie_visual_offsets_active = false;
+	Unigine::Math::vec3 carbody_visual_offset =
+		Unigine::Math::vec3_zero;
 	Unigine::Math::vec3 leading_bogie_visual_offset =
 		Unigine::Math::vec3_zero;
 	Unigine::Math::vec3 trailing_bogie_visual_offset =

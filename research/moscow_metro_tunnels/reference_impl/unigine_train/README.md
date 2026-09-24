@@ -16,26 +16,47 @@ does not contain the UNIGINE SDK.
   WorldBoundBox broad phase, and then applies OBB-vs-AABB SAT before assigning
   ACTIVE_ROUTE / ALL_FEASIBLE_ROUTES / ROUTE_AMBIGUOUS relevance.
 
-## Automatic train spawn
+## Automatic registration to generated rails
 
-By default Train81775Kinematics has
-`Auto Anchor To Initial Vehicle Frame = true`. The vehicle does **not** need to
-be hand-positioned on the generated spline. The component uses the authored
-vehicle frame (carbody origin plus front/rear bogie direction) as a scene spawn
-frame, maps the route pose at `Initial Leading Chainage M` onto it, preserves
-the existing visual offsets of the two bogie meshes, and then advances the
-vehicle along the route.
+The default setup does not use the initial train position as the route origin.
+`Train81775Kinematics` now registers the native route against the actual
+Stage-10 running-rail meshes already present in the UNIGINE world.
 
-For a prefab authored at the scene origin this means the normal workflow is:
-- leave the vehicle asset at its authored origin;
-- choose `Initial Leading Chainage M`;
-- press Play.
+Default properties:
 
-The runtime computes carbody/bogie positions itself.
+```text
+Auto Register To Tunnel Rails = true
+Registration Chunk Id = 0
+Registration Chunk Length M = 20
+Auto Anchor To Initial Vehicle Frame = false
+```
 
-`Spline Space Node` remains optional. It is useful only when the whole imported
-tunnel has a meaningful rigid root transform. A root with identity transform
-does not fix geometry whose rebase was baked into mesh vertices.
+For the default chunk-first Koltsevaya build the component looks up:
+
+```text
+CH00000__PROD_RAIL_0
+CH00000__PROD_RAIL_1
+CH00001__PROD_RAIL_0
+CH00001__PROD_RAIL_1
+```
+
+It loads the two static rail meshes from RAM, transforms their vertices to
+UNIGINE world coordinates, derives route-forward from two consecutive chunk
+centres, derives the lateral axis from the two rail centroids, obtains UGR from
+the topmost rail-head vertices, and creates a rigid route-to-world
+registration. Only after that registration succeeds does the component place
+the 81-775 at `Initial Leading Chainage M`.
+
+If those generated rail nodes are absent or are not ObjectMeshStatic, startup
+fails deliberately instead of driving the train along an unregistered route.
+
+The authored vehicle is also sampled before placement. Its carbody offset from
+the bogie midpoint and the small visual offsets of each bogie from the nominal
+12.6 m pivot spacing are preserved automatically. Therefore the carbody asset
+origin is not forced onto UGR.
+
+`Auto Anchor To Initial Vehicle Frame` remains only a legacy fallback and
+should stay disabled for a generated Tunnel_PCG tunnel.
 
 ## Coordinate-space binding
 

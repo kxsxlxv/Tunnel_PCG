@@ -34,6 +34,7 @@ from tunnel_scanner_core import (
     load_frame_alignment_geojson,
     load_stage10_initial_moscow_profile,
     write_scene_package_json,
+    write_unigine_spline_graph_spl,
 )
 
 
@@ -383,6 +384,8 @@ def main() -> None:
 
     output = args.output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
+    unigine_spline_path = output.with_name(output.stem + "_track.spl")
+    write_unigine_spline_graph_spl(alignment, unigine_spline_path)
     chunk_dir = output.with_name(output.stem + "_chunks")
     chunk_dir.mkdir(parents=True, exist_ok=True)
     localize = not args.global_chunk_coordinates
@@ -500,6 +503,11 @@ def main() -> None:
         "externalAlignmentInterpolation": production_meta[
             "externalAlignmentInterpolation"
         ],
+        "unigineRailSpline": str(
+            unigine_spline_path.relative_to(output.parent)
+        ),
+        "unigineRailSplineFormat": "UNIGINE_SPLINE_GRAPH_SPL_V1",
+        "unigineRailSplineMatchesRuntimeAlignment": True,
         "routeSections": sections,
         "stationEvents": station_events,
         "junctionEvents": handoff["junction_events"],
@@ -573,6 +581,9 @@ def main() -> None:
         "parallelChunkWorkers": effective_workers,
         "compactSceneJson": compact,
         "prototypeSceneJson": bool(args.prototype_json),
+        "unigineRailSpline": str(
+            unigine_spline_path.relative_to(output.parent)
+        ),
         "chunkManifest": str(manifest_path.relative_to(output.parent)),
         "sceneJson": None,
     }

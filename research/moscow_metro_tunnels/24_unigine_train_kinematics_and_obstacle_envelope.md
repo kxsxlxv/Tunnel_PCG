@@ -428,8 +428,26 @@ src/tunnel_scanner_core/rail_vehicle.py
 Tests:
 tests/test_rail_vehicle.py
 
-The next implementation layer is the UNIGINE C++ component that maps SplineGraph
-evaluation to this same tested geometry.
+UNIGINE path bridge:
+- src/tunnel_scanner_core/unigine_spline.py converts the same C1 alignment used
+  by Tunnel_PCG rails into native UNIGINE .spl cubic-Bezier data;
+- the Koltsevaya pilot writes <output_stem>_track.spl and records it in the
+  manifest;
+- the Hermite-to-Bezier conversion is tested point-for-point.
+
+UNIGINE SDK-facing reference:
+- research/moscow_metro_tunnels/reference_impl/unigine_train/
+  Train81775Kinematics.h/.cpp;
+- loads the .spl with SplineGraph;
+- builds an arc-length LUT because spline parameter t is not distance;
+- advances the leading bogie from COMPONENT_UPDATE_PHYSICS;
+- solves the trailing-bogie chord constraint every physics step;
+- applies independent bogie tangent/up frames and one rigid carbody chord;
+- supports one already-resolved route hypothesis only.
+
+The route-hypothesis/swept-volume manager remains the next runtime layer. It
+must sit above this single-route vehicle component so a turnout is not resolved
+implicitly by whichever spline happens to be loaded first.
 
 ---
 

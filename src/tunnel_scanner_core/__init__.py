@@ -242,6 +242,10 @@ from .rail_vehicle import (
     screening_circular_curve_throw,
     solve_trailing_bogie_chainage,
 )
+from .unigine_spline import (
+    unigine_spline_graph_dict,
+    write_unigine_spline_graph_spl,
+)
 from .scene_io import (
     SCENE_SCHEMA_VERSION,
     read_scene_package_json,
@@ -471,6 +475,8 @@ __all__ = [
     "ScenePackage",
     "build_deformed_scene_package",
     "build_nominal_scene_package",
+    "unigine_spline_graph_dict",
+    "write_unigine_spline_graph_spl",
     "SCENE_SCHEMA_VERSION",
     "read_scene_package_json",
     "scene_package_from_dict",

@@ -40,9 +40,9 @@ void Train81775Kinematics::init()
 		Log::error("Train81775Kinematics: spline_file is empty\n");
 		return;
 	}
-	if (carbody_node.get().nullCheck()
-		|| leading_bogie_node.get().nullCheck()
-		|| trailing_bogie_node.get().nullCheck())
+	if (!carbody_node.get()
+		|| !leading_bogie_node.get()
+		|| !trailing_bogie_node.get())
 	{
 		Log::error(
 			"Train81775Kinematics: carbody and both bogie nodes are required\n");

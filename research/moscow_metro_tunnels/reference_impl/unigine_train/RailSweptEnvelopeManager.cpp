@@ -1079,7 +1079,7 @@ bool RailSweptEnvelopeManager::objectMatchesMask(
 	return false;
 }
 
-bool RailSweptEnvelopeManager::isIgnored(const ObjectPtr &candidate) const
+bool RailSweptEnvelopeManager::isIgnored(const ObjectPtr &candidate)
 {
 	if (!candidate)
 		return true;

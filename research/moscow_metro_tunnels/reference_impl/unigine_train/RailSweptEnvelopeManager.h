@@ -249,7 +249,7 @@ private:
 		const RouteRuntime &route,
 		const Unigine::Math::WorldBoundBox &aabb) const;
 	bool objectMatchesMask(const Unigine::ObjectPtr &object) const;
-	bool isIgnored(const Unigine::ObjectPtr &object) const;
+	bool isIgnored(const Unigine::ObjectPtr &object);
 
 	Relevance classifyHits(
 		int hit_count,

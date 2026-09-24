@@ -119,6 +119,14 @@ def _rack_center_angle(
     return a
 
 
+def r2k11_mount_angle_rad(
+    profile: MoscowStage10Profile,
+    side_sign: int,
+) -> float:
+    """Wall-mount polar angle for the R2K11 assembly centre."""
+    return _rack_center_angle(profile, side_sign)
+
+
 def _horn_angle(
     profile: MoscowStage10Profile,
     side_sign: int,

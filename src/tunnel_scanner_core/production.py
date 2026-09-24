@@ -86,6 +86,7 @@ from .services import (
     cable_rack_chainages,
     modern_cable_sections_core,
     modern_water_main_section_core,
+    r2k11_mount_angle_rad,
     water_main_support_chainages,
 )
 from .civil import (
@@ -2196,46 +2197,69 @@ def _mat4_mul(
     )
 
 
-def _orthogonal_mesh_variant_transform(
-    reference_vertices: Sequence[Vec3],
-    variant_vertices: Sequence[Vec3],
-    *,
-    tolerance_m: float = 1e-9,
-) -> tuple[tuple[float, ...], float, float]:
-    """Fit one exact orthogonal+translation transform between congruent meshes.
+def _transform_point_mat4(
+    matrix: Sequence[float],
+    point: Vec3,
+) -> Vec3:
+    if len(matrix) != 16:
+        raise ValueError("point transform requires a 4x4 matrix")
+    x, y, z = (float(value) for value in point)
+    return (
+        float(matrix[0] * x + matrix[1] * y + matrix[2] * z + matrix[3]),
+        float(matrix[4] * x + matrix[5] * y + matrix[6] * z + matrix[7]),
+        float(matrix[8] * x + matrix[9] * y + matrix[10] * z + matrix[11]),
+    )
 
-    Reflection is intentionally permitted: engine Mesh Cluster instances may
-    carry scale, so mirrored left/right hardware can still use one vertex/index
-    buffer. The returned determinant makes that explicit in metadata.
+
+def _r2k11_canonical_variant_transform(
+    profile: MoscowStage10Profile,
+    *,
+    canonical_side_sign: int,
+    side_sign: int,
+) -> tuple[float, ...]:
+    """Map one canonical R2K11 mesh into either side-specific wall frame.
+
+    R2K11 uses the same physical upright and K1350.002 horns on both walls.
+    The side convention reverses the tangential "up" basis, so the exact
+    mapping is an orthogonal isometry and is a reflection for opposite sides.
+    Engine Mesh Cluster instances support scale, therefore the mirrored side
+    still uses the identical vertex/index buffer.
     """
-    if len(reference_vertices) != len(variant_vertices) or not reference_vertices:
-        raise ValueError("mesh variants must have the same non-zero vertex count")
-    a = np.asarray(reference_vertices, dtype=float)
-    b = np.asarray(variant_vertices, dtype=float)
-    center_a = np.mean(a, axis=0)
-    center_b = np.mean(b, axis=0)
-    centered_a = a - center_a
-    centered_b = b - center_b
-    u, _singular, vt = np.linalg.svd(centered_a.T @ centered_b)
-    rotation = vt.T @ u.T
-    translation = center_b - rotation @ center_a
-    reconstructed = (rotation @ a.T).T + translation
-    residual = float(np.max(np.linalg.norm(reconstructed - b, axis=1)))
-    if residual > tolerance_m:
-        raise ValueError(
-            "mesh variants are not congruent under an orthogonal transform: "
-            f"max residual {residual:.9g} m > {tolerance_m:.9g} m"
+    if canonical_side_sign not in (-1, 1) or side_sign not in (-1, 1):
+        raise ValueError("R2K11 side signs must be +/-1")
+
+    def basis(sign: int) -> np.ndarray:
+        a = r2k11_mount_angle_rad(profile, sign)
+        inward = np.asarray((-math.sin(a), -math.cos(a)), dtype=float)
+        up = np.asarray(
+            (-sign * math.cos(a), sign * math.sin(a)),
+            dtype=float,
         )
-    determinant = float(np.linalg.det(rotation))
-    matrix = (
-        float(rotation[0, 0]), float(rotation[0, 1]), float(rotation[0, 2]), float(translation[0]),
-        float(rotation[1, 0]), float(rotation[1, 1]), float(rotation[1, 2]), float(translation[1]),
-        float(rotation[2, 0]), float(rotation[2, 1]), float(rotation[2, 2]), float(translation[2]),
+        return np.column_stack((inward, up))
+
+    source = basis(canonical_side_sign)
+    target = basis(side_sign)
+    xz = target @ source.T
+    return (
+        float(xz[0, 0]), 0.0, float(xz[0, 1]), 0.0,
+        0.0, 1.0, 0.0, 0.0,
+        float(xz[1, 0]), 0.0, float(xz[1, 1]), 0.0,
         0.0, 0.0, 0.0, 1.0,
     )
-    return matrix, residual, determinant
 
 
+def _max_point_cloud_distance_m(
+    left: Sequence[Vec3],
+    right: Sequence[Vec3],
+) -> float:
+    """Symmetric nearest-point residual for a one-time asset equivalence guard."""
+    if len(left) != len(right) or not left:
+        raise ValueError("point clouds must have equal non-zero size")
+    a = np.asarray(left, dtype=float)
+    b = np.asarray(right, dtype=float)
+    max_ab = max(float(np.min(np.linalg.norm(b - point, axis=1))) for point in a)
+    max_ba = max(float(np.min(np.linalg.norm(a - point, axis=1))) for point in b)
+    return max(max_ab, max_ba)
 def _periodic_mesh_prototype_properties(
     *,
     profile: MoscowStage10Profile,
@@ -2786,20 +2810,28 @@ def _build_stage10_5_service_rack_scene_objects(
         )
         for side in (-1, 1)
     }
-    canonical_local = local_by_side[1]
+    canonical_side_sign = 1
+    canonical_local = local_by_side[canonical_side_sign]
     variant_transform_by_side: dict[int, tuple[float, ...]] = {}
     variant_residual_by_side: dict[int, float] = {}
-    variant_determinant_by_side: dict[int, float] = {}
     for side, local in local_by_side.items():
-        if local.faces != canonical_local.faces:
-            raise ValueError("R2K11 side meshes do not share canonical topology")
-        matrix, residual, determinant = _orthogonal_mesh_variant_transform(
-            canonical_local.vertices,
-            local.vertices,
+        variant = _r2k11_canonical_variant_transform(
+            profile,
+            canonical_side_sign=canonical_side_sign,
+            side_sign=side,
         )
-        variant_transform_by_side[side] = matrix
+        transformed = tuple(
+            _transform_point_mat4(variant, vertex)
+            for vertex in canonical_local.vertices
+        )
+        residual = _max_point_cloud_distance_m(transformed, local.vertices)
+        if residual > 1e-9:
+            raise ValueError(
+                "R2K11 side geometry is not an exact isometric placement of "
+                f"the canonical asset: side={side}, residual={residual:.9g} m"
+            )
+        variant_transform_by_side[side] = variant
         variant_residual_by_side[side] = residual
-        variant_determinant_by_side[side] = determinant
 
     chainages = cable_rack_chainages(
         assembly.length_by_chainage_m,
@@ -2831,9 +2863,14 @@ def _build_stage10_5_service_rack_scene_objects(
                 f"{event_index:06d}/{side_name}"
             )
             iid = stable_instance_id(key)
+            variant_transform = variant_transform_by_side[side_sign]
+            canonical_side_vertices = tuple(
+                _transform_point_mat4(variant_transform, vertex)
+                for vertex in canonical_local.vertices
+            )
             vertices = tuple(
                 transform_alignment_local_point(station, x, y, z)
-                for x, y, z in local.vertices
+                for x, y, z in canonical_side_vertices
             )
             result.append(
                 SceneObject(
@@ -2842,13 +2879,13 @@ def _build_stage10_5_service_rack_scene_objects(
                         f"{'NEG' if side_sign < 0 else 'POS'}"
                     ),
                     vertices=vertices,
-                    faces=local.faces,
+                    faces=canonical_local.faces,
                     object_type=local.object_type,
                     ring_id=source_ring_id,
                     label_id=label_id,
                     instance_id=iid,
                     semantic_class=semantic,
-                    reconstruction="stage10_5_r2k11_wall_cable_rack",
+                    reconstruction="stage10_5_r2k11_canonical_mesh_cluster_asset",
                     collection_path=(
                         "Tunnel",
                         namespace,
@@ -2882,16 +2919,12 @@ def _build_stage10_5_service_rack_scene_objects(
                             station=station,
                             vertex_count=len(canonical_local.vertices),
                             face_count=len(canonical_local.faces),
-                            local_variant_transform=(
-                                variant_transform_by_side[side_sign]
-                            ),
+                            local_variant_transform=variant_transform,
                         ),
                         "meshPrototypeLocalVariantResidualM": (
                             variant_residual_by_side[side_sign]
                         ),
-                        "meshPrototypeLocalVariantDeterminant": (
-                            variant_determinant_by_side[side_sign]
-                        ),
+                        "meshPrototypeCanonicalSideSign": canonical_side_sign,
                         "moscowProfileID": profile.profile_id,
                         "moscowProfileSHA256": (
                             profile.provenance.canonical_sha256

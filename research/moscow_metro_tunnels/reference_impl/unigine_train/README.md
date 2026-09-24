@@ -97,6 +97,28 @@ isSafetyComplete() returns true only when all vehicle/track allowance terms and
 all enabled route path-uncertainty terms are explicitly supplied. Ground-truth
 simulation should use each route's path_uncertainty_exact_ground_truth toggle.
 
+## Runtime diagnostics
+
+Both UNIGINE reference components now expose diagnostic logging toggles.
+
+Train81775Kinematics:
+- Diagnostic Logging = true prints the spline path, node world positions before
+  the first snap, spline segment count/length, route start/end samples, resolved
+  leading/trailing chainages, target body position, node positions after the
+  snap and the first N physics ticks.
+- Diagnostic Physics Ticks controls how many initial fixed-physics updates are
+  logged.
+
+RailSweptEnvelopeManager:
+- Diagnostic Logging = true prints every route hypothesis including whether it
+  is enabled, its spline path and exact-ground-truth flag, loaded route
+  geometry, safety-completeness state and the first N envelope updates.
+- Diagnostic Updates controls the initial update count.
+
+These logs are specifically intended for diagnosing UNIGINE world-space /
+spline-space mismatches when runtime object transforms cannot be inspected in
+the editor while Play mode is active.
+
 ## Important limitations
 
 - Train81775Kinematics represents one already-resolved route.

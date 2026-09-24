@@ -32,9 +32,62 @@ namespace
 	}
 }
 
+void Train81775Kinematics::log_node_position(
+	const char *label,
+	const NodePtr &target) const
+{
+	if (!diagnostic_logging.get() || !target)
+		return;
+	Vec3 p = target->getWorldPosition();
+	Log::message(
+		"[Train81775] %s node_id=%d world=(%.6f, %.6f, %.6f)\n",
+		label,
+		target->getID(),
+		p.x,
+		p.y,
+		p.z);
+}
+
+void Train81775Kinematics::log_track_sample(
+	const char *label,
+	double chainage_m,
+	const TrackSample &sample) const
+{
+	if (!diagnostic_logging.get())
+		return;
+	Log::message(
+		"[Train81775] %s s=%.6f pos=(%.6f, %.6f, %.6f) "
+		"tangent=(%.6f, %.6f, %.6f) up=(%.6f, %.6f, %.6f)\n",
+		label,
+		chainage_m,
+		sample.position.x,
+		sample.position.y,
+		sample.position.z,
+		double(sample.tangent.x),
+		double(sample.tangent.y),
+		double(sample.tangent.z),
+		double(sample.up.x),
+		double(sample.up.y),
+		double(sample.up.z));
+}
+
 void Train81775Kinematics::init()
 {
 	String spline_path = spline_file.get();
+	if (diagnostic_logging.get())
+	{
+		Log::message(
+			"[Train81775] INIT begin spline='%s' speed=%.6f m/s "
+			"initial_leading_s=%.6f base=%.6f length_proxy=%.6f "
+			"arc_samples=%d loop=%d\n",
+			spline_path.get(),
+			double(speed_mps.get()),
+			double(initial_leading_chainage_m.get()),
+			double(vehicle_base_m.get()),
+			double(vehicle_length_proxy_m.get()),
+			arc_length_samples_per_segment.get(),
+			loop_route.get() ? 1 : 0);
+	}
 	if (spline_path.size() <= 0)
 	{
 		Log::error("Train81775Kinematics: spline_file is empty\n");
@@ -48,6 +101,14 @@ void Train81775Kinematics::init()
 			"Train81775Kinematics: carbody and both bogie nodes are required\n");
 		return;
 	}
+	if (diagnostic_logging.get())
+	{
+		Log::message("[Train81775] Node positions BEFORE spline snap:\n");
+		log_node_position("carbody", carbody_node.get());
+		log_node_position("leading_bogie", leading_bogie_node.get());
+		log_node_position("trailing_bogie", trailing_bogie_node.get());
+	}
+
 	if (vehicle_base_m.get() <= 0.0f)
 	{
 		Log::error("Train81775Kinematics: vehicle_base_m must be positive\n");
@@ -70,6 +131,17 @@ void Train81775Kinematics::init()
 	}
 
 	rebuild_arc_length_luts();
+	if (diagnostic_logging.get())
+	{
+		Log::message(
+			"[Train81775] Spline loaded: segments=%d route_length=%.6f m\n",
+			spline_graph->getNumSegments(),
+			route_length_m);
+		TrackSample route_start = sample_route(0.0);
+		TrackSample route_end = sample_route(route_length_m);
+		log_track_sample("route_start", 0.0, route_start);
+		log_track_sample("route_end", route_length_m, route_end);
+	}
 	if (route_length_m <= double(vehicle_base_m.get()))
 	{
 		Log::error(
@@ -88,12 +160,43 @@ void Train81775Kinematics::init()
 			double(vehicle_base_m.get()) + 0.01,
 			route_length_m);
 
+	if (diagnostic_logging.get())
+	{
+		const double trailing_s = solve_trailing_chainage(leading_chainage_m);
+		const TrackSample front = sample_route(leading_chainage_m);
+		const TrackSample rear = sample_route(trailing_s);
+		const Vec3 body = (front.position + rear.position) * 0.5;
+		Log::message(
+			"[Train81775] Initial resolved chainage: leading=%.6f trailing=%.6f "
+			"chord=%.6f m body_target=(%.6f, %.6f, %.6f)\n",
+			leading_chainage_m,
+			trailing_s,
+			distance3(front.position, rear.position),
+			body.x,
+			body.y,
+			body.z);
+		log_track_sample("initial_leading", leading_chainage_m, front);
+		log_track_sample("initial_trailing", trailing_s, rear);
+	}
+
 	visualizer_was_enabled = Visualizer::isEnabled();
 	if (debug_visualization.get())
 		Visualizer::setEnabled(true);
 
 	ready = true;
+	diagnostic_ticks_remaining = std::max(
+		0,
+		diagnostic_physics_ticks.get());
 	apply_vehicle_pose();
+
+	if (diagnostic_logging.get())
+	{
+		Log::message("[Train81775] Node positions AFTER initial spline snap:\n");
+		log_node_position("carbody", carbody_node.get());
+		log_node_position("leading_bogie", leading_bogie_node.get());
+		log_node_position("trailing_bogie", trailing_bogie_node.get());
+		Log::message("[Train81775] INIT complete ready=1\n");
+	}
 }
 
 void Train81775Kinematics::rebuild_arc_length_luts()
@@ -269,13 +372,36 @@ void Train81775Kinematics::update_physics()
 	if (!ready)
 		return;
 
-	leading_chainage_m += current_speed_mps * double(Physics::getIFps());
+	const double dt = double(Physics::getIFps());
+	const double before_s = leading_chainage_m;
+	leading_chainage_m += current_speed_mps * dt;
 	if (!loop_route.get() && leading_chainage_m >= route_length_m)
 	{
 		leading_chainage_m = route_length_m;
 		current_speed_mps = 0.0;
 	}
 	apply_vehicle_pose();
+
+	if (diagnostic_logging.get() && diagnostic_ticks_remaining > 0)
+	{
+		const double trailing_s =
+			solve_trailing_chainage(leading_chainage_m);
+		Log::message(
+			"[Train81775] PHYS tick=%d dt=%.9f speed=%.6f "
+			"leading_s: %.6f -> %.6f trailing_s=%.6f\n",
+			diagnostic_physics_ticks.get()
+				- diagnostic_ticks_remaining
+				+ 1,
+			dt,
+			current_speed_mps,
+			before_s,
+			leading_chainage_m,
+			trailing_s);
+		log_node_position("carbody", carbody_node.get());
+		log_node_position("leading_bogie", leading_bogie_node.get());
+		log_node_position("trailing_bogie", trailing_bogie_node.get());
+		--diagnostic_ticks_remaining;
+	}
 }
 
 void Train81775Kinematics::update()
@@ -294,6 +420,8 @@ void Train81775Kinematics::update()
 
 void Train81775Kinematics::shutdown()
 {
+	if (diagnostic_logging.get())
+		Log::message("[Train81775] SHUTDOWN\n");
 	if (debug_visualization.get())
 		Visualizer::setEnabled(visualizer_was_enabled);
 	ready = false;

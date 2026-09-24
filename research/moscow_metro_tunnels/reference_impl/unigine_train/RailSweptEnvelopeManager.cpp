@@ -62,6 +62,17 @@ namespace
 
 void RailSweptEnvelopeManager::init()
 {
+	if (diagnostic_logging.get())
+	{
+		Log::message(
+			"[RailEnvelope] INIT begin hypotheses=%d active_route='%s' "
+			"lookahead=%.3f step=%.3f pose_tol=%.6f\n",
+			route_hypotheses.size(),
+			active_route_id.get().get(),
+			double(lookahead_m.get()),
+			double(max_chainage_step_m.get()),
+			double(max_pose_deviation_m.get()));
+	}
 	if (!train_kinematics_node.get())
 	{
 		Log::error(
@@ -76,6 +87,15 @@ void RailSweptEnvelopeManager::init()
 			"RailSweptEnvelopeManager: Train81775Kinematics component not found\n");
 		return;
 	}
+	if (diagnostic_logging.get())
+	{
+		Log::message(
+			"[RailEnvelope] Train component found: leading_s=%.6f "
+			"train_route_length=%.6f\n",
+			train->getLeadingChainageM(),
+			train->getRouteLengthM());
+	}
+
 	if (route_hypotheses.size() <= 0)
 	{
 		Log::error(
@@ -111,11 +131,29 @@ void RailSweptEnvelopeManager::init()
 	for (int i = 0; i < route_hypotheses.size(); ++i)
 	{
 		auto &param = route_hypotheses[i];
-		if (!param->enabled.get())
-			continue;
-
 		String route_id = param->route_id.get();
 		String spline_path = param->spline_file.get();
+		if (diagnostic_logging.get())
+		{
+			Log::message(
+				"[RailEnvelope] hypothesis[%d] id='%s' enabled=%d "
+				"spline='%s' global_origin_s=%.6f exact_ground_truth=%d\n",
+				i,
+				route_id.get(),
+				param->enabled.get() ? 1 : 0,
+				spline_path.get(),
+				double(param->global_chainage_origin_m.get()),
+				param->path_uncertainty_exact_ground_truth.get() ? 1 : 0);
+		}
+		if (!param->enabled.get())
+		{
+			if (diagnostic_logging.get())
+				Log::warning(
+					"[RailEnvelope] hypothesis[%d] is DISABLED and will be ignored\n",
+					i);
+			continue;
+		}
+
 		if (route_id.size() <= 0 || spline_path.size() <= 0)
 		{
 			Log::warning(
@@ -184,6 +222,29 @@ void RailSweptEnvelopeManager::init()
 				spline_path.get());
 			continue;
 		}
+		if (diagnostic_logging.get())
+		{
+			const TrackSample start_sample = sampleRoute(runtime, 0.0);
+			const TrackSample end_sample =
+				sampleRoute(runtime, runtime.length_m);
+			Log::message(
+				"[RailEnvelope] route '%s' loaded segments=%d length=%.6f "
+				"path_uncertainty_complete=%d\n",
+				runtime.route_id.c_str(),
+				runtime.spline->getNumSegments(),
+				runtime.length_m,
+				runtime.path_uncertainty_complete ? 1 : 0);
+			Log::message(
+				"[RailEnvelope] route '%s' start=(%.6f, %.6f, %.6f) "
+				"end=(%.6f, %.6f, %.6f)\n",
+				runtime.route_id.c_str(),
+				start_sample.position.x,
+				start_sample.position.y,
+				start_sample.position.z,
+				end_sample.position.x,
+				end_sample.position.y,
+				end_sample.position.z);
+		}
 		routes.emplace_back(std::move(runtime));
 	}
 
@@ -199,8 +260,22 @@ void RailSweptEnvelopeManager::init()
 		Visualizer::setEnabled(true);
 
 	ready = true;
+	diagnostic_updates_remaining = std::max(
+		0,
+		diagnostic_updates.get());
+	if (diagnostic_logging.get())
+	{
+		Log::message(
+			"[RailEnvelope] INIT ready routes=%d safety_complete=%d "
+			"vehicle_track_allowance_complete=%d\n",
+			int(routes.size()),
+			isSafetyComplete() ? 1 : 0,
+			vehicleTrackAllowanceComplete() ? 1 : 0);
+	}
 	rebuildEnvelopes();
 	queryWorldObjects();
+	if (diagnostic_logging.get())
+		Log::message("[RailEnvelope] INIT complete\n");
 }
 
 bool RailSweptEnvelopeManager::loadRoute(
@@ -1281,11 +1356,56 @@ void RailSweptEnvelopeManager::update()
 		return;
 	rebuildEnvelopes();
 	queryWorldObjects();
+
+	if (diagnostic_logging.get() && diagnostic_updates_remaining > 0)
+	{
+		Log::message(
+			"[RailEnvelope] UPDATE #%d train_leading_s=%.6f "
+			"detections=%d routes=%d\n",
+			diagnostic_updates.get()
+				- diagnostic_updates_remaining
+				+ 1,
+			train ? train->getLeadingChainageM() : -1.0,
+			int(detections.size()),
+			int(routes.size()));
+		for (const auto &route : routes)
+		{
+			Log::message(
+				"[RailEnvelope] route '%s': boxes=%d bvh_nodes=%d "
+				"local_start_s=%.6f length=%.6f uncertainty_complete=%d\n",
+				route.route_id.c_str(),
+				int(route.boxes.size()),
+				int(route.bvh_nodes.size()),
+				route.current_start_chainage_m,
+				route.length_m,
+				route.path_uncertainty_complete ? 1 : 0);
+			if (!route.boxes.empty())
+			{
+				const WorldBoundBox broad = routeBroadPhase(route);
+				const Vec3 center = broad.getCenter();
+				const Vec3 size = broad.getSize();
+				Log::message(
+					"[RailEnvelope] route '%s' broad center=(%.6f, %.6f, %.6f) "
+					"size=(%.6f, %.6f, %.6f)\n",
+					route.route_id.c_str(),
+					center.x,
+					center.y,
+					center.z,
+					size.x,
+					size.y,
+					size.z);
+			}
+		}
+		--diagnostic_updates_remaining;
+	}
+
 	renderDebug();
 }
 
 void RailSweptEnvelopeManager::shutdown()
 {
+	if (diagnostic_logging.get())
+		Log::message("[RailEnvelope] SHUTDOWN\n");
 	if (debug_visualization.get())
 		Visualizer::setEnabled(visualizer_was_enabled);
 	detections.clear();

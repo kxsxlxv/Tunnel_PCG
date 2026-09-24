@@ -35,6 +35,8 @@ public:
 	PROP_PARAM(Int, arc_length_samples_per_segment, 128);
 	PROP_PARAM(Toggle, loop_route, false);
 	PROP_PARAM(Toggle, debug_visualization, true);
+	PROP_PARAM(Toggle, diagnostic_logging, true);
+	PROP_PARAM(Int, diagnostic_physics_ticks, 5);
 
 	double getLeadingChainageM() const { return leading_chainage_m; }
 	double getRouteLengthM() const { return route_length_m; }
@@ -63,6 +65,13 @@ private:
 	TrackSample sample_route(double chainage_m) const;
 	double solve_trailing_chainage(double leading_chainage_m) const;
 	void apply_vehicle_pose();
+	void log_node_position(
+		const char *label,
+		const Unigine::NodePtr &node) const;
+	void log_track_sample(
+		const char *label,
+		double chainage_m,
+		const TrackSample &sample) const;
 	double normalize_route_chainage(double chainage_m) const;
 
 	Unigine::SplineGraphPtr spline_graph;
@@ -72,6 +81,7 @@ private:
 	double current_speed_mps = 0.0;
 	bool ready = false;
 	bool visualizer_was_enabled = false;
+	int diagnostic_ticks_remaining = 0;
 
 	Unigine::Math::Vec3 debug_front_proxy;
 	Unigine::Math::Vec3 debug_rear_proxy;

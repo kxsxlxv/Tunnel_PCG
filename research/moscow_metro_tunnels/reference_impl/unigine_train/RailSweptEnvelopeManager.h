@@ -89,6 +89,8 @@ public:
 
 	PROP_PARAM(Toggle, debug_visualization, true);
 	PROP_PARAM(Toggle, log_detection_changes, false);
+	PROP_PARAM(Toggle, diagnostic_logging, true);
+	PROP_PARAM(Int, diagnostic_updates, 5);
 
 	struct Detection
 	{
@@ -265,4 +267,5 @@ private:
 	bool ready = false;
 	bool visualizer_was_enabled = false;
 	int previous_detection_count = -1;
+	int diagnostic_updates_remaining = 0;
 };

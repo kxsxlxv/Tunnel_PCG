@@ -142,6 +142,12 @@ def test_stage10_face_orientation_policy_reverses_only_requested_types():
     )
     assert result[1] is untouched
 
+    second_pass = production_module._apply_stage10_face_orientation_policy(
+        result
+    )
+    assert second_pass[0].faces == result[0].faces
+    assert second_pass[0].vertices == result[0].vertices
+
 
 def test_stage10_5_requested_face_orientation_is_applied_to_named_assets():
     profile = load_stage10_initial_moscow_profile(

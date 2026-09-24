@@ -4698,6 +4698,16 @@ def _apply_stage10_face_orientation_policy(
         if obj.object_type not in STAGE10_INVERTED_FACE_WINDING_OBJECT_TYPES:
             result.append(obj)
             continue
+        if bool(obj.extra_properties.get("faceOrientationInverted", False)):
+            if (
+                obj.extra_properties.get("faceOrientationPolicy")
+                != "stage10_requested_reverse_winding_v1"
+            ):
+                raise ValueError(
+                    f"{obj.name}: unknown pre-existing face orientation policy"
+                )
+            result.append(obj)
+            continue
         props = dict(obj.extra_properties)
         props.update(
             {
@@ -7008,6 +7018,7 @@ def iter_chunk_scene_packages(
                 for obj in objects
             ]
 
+        objects = list(_apply_stage10_face_orientation_policy(objects))
         yield ScenePackage(
             name=f"{production.scene.name}_chunk_{chunk.chunk_id:05d}",
             mode=SceneMode.MULTI_RING_TUNNEL,

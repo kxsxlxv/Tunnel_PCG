@@ -105,7 +105,15 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--no-bolts", action="store_true")
     parser.add_argument("--pretty-json", action="store_true")
-    parser.add_argument("--prototype-json", action="store_true")
+    parser.add_argument(
+        "--prototype-json",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=(
+            "Write canonical shared meshes once plus rigid instance transforms "
+            "(default). Use --no-prototype-json only for expanded debug JSON."
+        ),
+    )
     parser.add_argument(
         "--global-chunk-coordinates",
         action="store_true",

@@ -4709,6 +4709,17 @@ def _apply_stage10_face_orientation_policy(
             result.append(obj)
             continue
         props = dict(obj.extra_properties)
+        prototype_key = props.get("meshPrototypeKey")
+        if prototype_key is not None:
+            source_key = str(prototype_key)
+            revised_key = f"{source_key}/face-winding-reversed-v1"
+            props["meshPrototypeKey"] = revised_key
+            if props.get("meshClusterPrototypeKey") == source_key:
+                props["meshClusterPrototypeKey"] = revised_key
+            props["faceOrientationPrototypeSourceKey"] = source_key
+            props["faceOrientationPrototypeRevision"] = (
+                "face-winding-reversed-v1"
+            )
         props.update(
             {
                 "faceOrientationInverted": True,

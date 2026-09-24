@@ -189,6 +189,15 @@ def test_stage10_5_requested_face_orientation_is_applied_to_named_assets():
             == "stage10_requested_reverse_winding_v1"
             for obj in objects
         )
+        for obj in objects:
+            if "meshPrototypeKey" in obj.custom_properties:
+                assert str(obj.custom_properties["meshPrototypeKey"]).endswith(
+                    "/face-winding-reversed-v1"
+                )
+                assert (
+                    obj.custom_properties["faceOrientationPrototypeRevision"]
+                    == "face-winding-reversed-v1"
+                )
 
     lvt = build.scene.objects_of_type("production_lvt_block")
     assert lvt

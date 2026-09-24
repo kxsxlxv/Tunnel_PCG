@@ -11,6 +11,7 @@ from tunnel_scanner_core import (
     R65ProductionProfile,
     RingConfig,
     RingRotationStrategy,
+    SceneObject,
     SurfaceMeshingConfig,
     TunnelAssemblyConfig,
     audit_exact_coincident_faces,
@@ -98,6 +99,101 @@ def _rail_centers(profile):
         profile=r65,
         measurement_below_top_m=profile.track.gauge_measurement_below_ugr_m,
     )
+
+
+def test_stage10_face_orientation_policy_reverses_only_requested_types():
+    vertices = (
+        (0.0, 0.0, 0.0),
+        (1.0, 0.0, 0.0),
+        (1.0, 1.0, 0.0),
+        (0.0, 1.0, 0.0),
+    )
+    faces = ((0, 1, 2), (0, 2, 3))
+    target = SceneObject(
+        name="RAIL",
+        vertices=vertices,
+        faces=faces,
+        object_type="production_rail",
+        ring_id=0,
+        label_id=1,
+        instance_id=1,
+        semantic_class="rail",
+    )
+    untouched = SceneObject(
+        name="LVT",
+        vertices=vertices,
+        faces=faces,
+        object_type="production_lvt_block",
+        ring_id=0,
+        label_id=1,
+        instance_id=2,
+        semantic_class="sleeper",
+    )
+
+    result = production_module._apply_stage10_face_orientation_policy(
+        (target, untouched)
+    )
+    assert result[0].faces == ((2, 1, 0), (3, 2, 0))
+    assert result[0].vertices == target.vertices
+    assert result[0].custom_properties["faceOrientationInverted"] is True
+    assert (
+        result[0].custom_properties["faceOrientationPolicy"]
+        == "stage10_requested_reverse_winding_v1"
+    )
+    assert result[1] is untouched
+
+
+def test_stage10_5_requested_face_orientation_is_applied_to_named_assets():
+    profile = load_stage10_initial_moscow_profile(
+        civil_archetype="rc_block_6100_5600"
+    )
+    build = build_production_tunnel(
+        assembly_config=TunnelAssemblyConfig(
+            n_rings=5,
+            ring_width_m=1.35,
+            axis_noise_sigma_m=0.0,
+        ),
+        surface_meshing=SurfaceMeshingConfig(max_sagitta_m=0.005),
+        include_bolts=False,
+        production_config=ProductionConfig(
+            namespace="stage10-5-face-orientation",
+            moscow_profile=profile,
+            moscow_stage="10.5",
+            moscow_service_preset="modern",
+        ),
+        seed=5812,
+    )
+    expected_types = {
+        "production_track_concrete",
+        "production_rail",
+        "production_moscow_walkway",
+        "production_service_cable",
+        "production_cable_rack_r2k11",
+        "production_water_main",
+        "production_contact_rail_bracket",
+        "production_contact_rail_cover_span",
+        "production_contact_rail",
+    }
+    for object_type in expected_types:
+        objects = build.scene.objects_of_type(object_type)
+        assert objects, object_type
+        assert all(
+            obj.custom_properties["faceOrientationInverted"] is True
+            and obj.custom_properties["faceOrientationPolicy"]
+            == "stage10_requested_reverse_winding_v1"
+            for obj in objects
+        )
+
+    lvt = build.scene.objects_of_type("production_lvt_block")
+    assert lvt
+    assert all(
+        "faceOrientationInverted" not in obj.custom_properties
+        for obj in lvt
+    )
+    policy = build.scene.metadata["faceOrientationPolicy"]
+    assert policy["operation"] == "reverse_face_vertex_order"
+    assert policy["geometryCoordinatesChanged"] is False
+    assert expected_types.issubset(set(policy["objectTypes"]))
 
 
 def test_stage10_5_profile_contains_modern_default_and_legacy_alternative():

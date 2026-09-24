@@ -4666,6 +4666,64 @@ class ProductionConfig:
         return bool(self.compact_exact_collinear_continuous_stations)
 
 
+STAGE10_INVERTED_FACE_WINDING_OBJECT_TYPES = frozenset(
+    {
+        "production_track_concrete",
+        "production_rail",
+        "production_walkway",
+        "production_moscow_walkway",
+        "production_service_cable",
+        "production_cable_rack_r2k11",
+        "production_water_main",
+        "production_contact_rail_bracket",
+        "production_contact_rail_cover_span",
+        "production_contact_rail",
+    }
+)
+
+
+def _apply_stage10_face_orientation_policy(
+    objects: Sequence[SceneObject],
+) -> tuple[SceneObject, ...]:
+    """Reverse winding for engine assets whose current normals face inward.
+
+    This is intentionally a final topology-only policy. Geometry generation,
+    Boolean/CSG operations, prototype transforms and object placement all run
+    first; only the per-face vertex order is reversed before ScenePackage
+    serialization. Shared-mesh instances therefore keep one identical index
+    buffer with the corrected winding.
+    """
+    result: list[SceneObject] = []
+    for obj in objects:
+        if obj.object_type not in STAGE10_INVERTED_FACE_WINDING_OBJECT_TYPES:
+            result.append(obj)
+            continue
+        props = dict(obj.extra_properties)
+        props.update(
+            {
+                "faceOrientationInverted": True,
+                "faceOrientationPolicy": "stage10_requested_reverse_winding_v1",
+                "faceOrientationSourceObjectType": obj.object_type,
+            }
+        )
+        result.append(
+            replace(
+                obj,
+                faces=tuple(
+                    tuple(reversed(face))
+                    for face in obj.faces
+                ),
+                reconstruction=(
+                    f"{obj.reconstruction}+reverse_face_winding"
+                    if obj.reconstruction
+                    else "reverse_face_winding"
+                ),
+                extra_properties=props,
+            )
+        )
+    return tuple(result)
+
+
 @dataclass(frozen=True)
 class ProductionTunnelBuild:
     scene: ScenePackage
@@ -5674,6 +5732,13 @@ def build_production_scene(
             }
         )
 
+    objects = list(_apply_stage10_face_orientation_policy(objects))
+    metadata["faceOrientationPolicy"] = {
+        "policy": "stage10_requested_reverse_winding_v1",
+        "objectTypes": sorted(STAGE10_INVERTED_FACE_WINDING_OBJECT_TYPES),
+        "operation": "reverse_face_vertex_order",
+        "geometryCoordinatesChanged": False,
+    }
     scene = ScenePackage(
         name=f"tunnel_production_{config.namespace}",
         mode=SceneMode.MULTI_RING_TUNNEL,
@@ -6716,6 +6781,7 @@ def build_stage10_5_rc_modern_chunk_scene_package(
             for obj in objects
         ]
 
+    objects = list(_apply_stage10_face_orientation_policy(objects))
     return ScenePackage(
         name=f"{plan.scene_name}_chunk_{chunk.chunk_id:05d}",
         mode=SceneMode.MULTI_RING_TUNNEL,
@@ -6723,6 +6789,14 @@ def build_stage10_5_rc_modern_chunk_scene_package(
         objects=tuple(objects),
         metadata={
             **dict(plan.metadata),
+            "faceOrientationPolicy": {
+                "policy": "stage10_requested_reverse_winding_v1",
+                "objectTypes": sorted(
+                    STAGE10_INVERTED_FACE_WINDING_OBJECT_TYPES
+                ),
+                "operation": "reverse_face_vertex_order",
+                "geometryCoordinatesChanged": False,
+            },
             "productionChunk": {
                 "chunkID": chunk.chunk_id,
                 "startChainageM": start,

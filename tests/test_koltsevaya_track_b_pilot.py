@@ -124,6 +124,32 @@ def test_koltsevaya_track_b_first_chunk_builds_on_frame_aware_route():
     assert chunk.objects_of_type("lining_segment") == ()
     assert chunk.objects_of_type("production_lvt_block")
     assert chunk.objects_of_type("production_rail")
+    winding_types = {
+        "production_track_concrete",
+        "production_rail",
+        "production_moscow_walkway",
+        "production_service_cable",
+        "production_cable_rack_r2k11",
+        "production_water_main",
+        "production_contact_rail_bracket",
+        "production_contact_rail_cover_span",
+        "production_contact_rail",
+    }
+    present_winding_types = {
+        obj.object_type for obj in chunk.objects
+        if obj.object_type in winding_types
+    }
+    assert present_winding_types
+    for obj in chunk.objects:
+        if obj.object_type in present_winding_types:
+            assert obj.custom_properties["faceOrientationInverted"] is True
+            assert (
+                obj.custom_properties["faceOrientationPolicy"]
+                == "stage10_requested_reverse_winding_v1"
+            )
+    assert chunk.metadata["faceOrientationPolicy"][
+        "geometryCoordinatesChanged"
+    ] is False
     assert chunk.metadata["productionChunk"]["vertexCoordinatesLocalized"] is True
 
     vertices = [

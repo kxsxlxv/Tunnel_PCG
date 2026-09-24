@@ -68,7 +68,7 @@ void RailSweptEnvelopeManager::init()
 			"[RailEnvelope] INIT begin hypotheses=%d active_route='%s' "
 			"lookahead=%.3f step=%.3f pose_tol=%.6f\n",
 			route_hypotheses.size(),
-			active_route_id.get().get(),
+			active_route_id.get(),
 			double(lookahead_m.get()),
 			double(max_chainage_step_m.get()),
 			double(max_pose_deviation_m.get()));

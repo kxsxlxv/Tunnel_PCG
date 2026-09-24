@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 import math
 from pathlib import Path
+import subprocess
+import sys
 
 from tunnel_scanner_core import (
     ChunkBoundaryPolicy,
@@ -57,6 +59,48 @@ def test_koltsevaya_track_b_geometry_test_alignment_contract():
     assert handoff["scope"]["engineering_z_status"] == "Z_UNRESOLVED"
     assert handoff["scope"]["track_id"] == "KOLTSEVAYA_TRACK_B"
     assert handoff["scope"]["direction"] == "counterclockwise"
+
+
+def test_koltsevaya_unigine_spline_only_skips_chunk_generation(tmp_path):
+    output = tmp_path / "koltsevaya_refresh.json"
+    script = ROOT / "examples" / "generate_koltsevaya_track_b_pilot.py"
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(script),
+            "--unigine-spline-only",
+            "--output",
+            str(output),
+        ],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    spline = output.with_name(output.stem + "_track.spl")
+    summary_path = output.with_name(output.stem + "_summary.json")
+    chunk_dir = output.with_name(output.stem + "_chunks")
+
+    assert spline.is_file()
+    assert summary_path.is_file()
+    assert not output.exists()
+    assert not chunk_dir.exists()
+
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    stdout_summary = json.loads(completed.stdout)
+    assert stdout_summary == summary
+    assert summary["mode"] == "unigine_spline_only"
+    assert summary["chunkGenerationSkipped"] is True
+    assert summary["chunkManifest"] is None
+    assert summary["sceneJson"] is None
+    assert summary["unigineRailSpline"] == spline.name
+    assert summary["unigineRailSplineDatum"] == "TRACK_AXIS_UGR"
+    assert math.isclose(
+        summary["unigineRailSplineLocalZOffsetM"],
+        -1.67,
+        abs_tol=1e-12,
+    )
 
 
 def test_koltsevaya_track_b_first_chunk_builds_on_frame_aware_route():

@@ -27,6 +27,22 @@ continuous rail geometry as a native UNIGINE SplineGraph text file. Its points
 are vertically shifted to the Stage-10 **track-axis UGR** datum before export;
 do not replace it with the raw alignment/core-origin spline.
 
+To refresh only the train path without regenerating any tunnel chunks:
+
+```bash
+python examples/generate_koltsevaya_track_b_pilot.py \
+  --unigine-spline-only \
+  --output examples/koltsevaya_track_b_train_path.json
+```
+
+This writes:
+- `examples/koltsevaya_track_b_train_path_track.spl`;
+- `examples/koltsevaya_track_b_train_path_summary.json`.
+
+It deliberately does **not** create the requested `.json` scene file,
+`*_chunks/`, a chunk manifest, or prototype geometry. The `--output` value
+is only the naming/location anchor in spline-only mode.
+
 The component:
 1. loads the SplineGraph;
 2. builds an arc-length lookup per cubic segment;

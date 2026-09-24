@@ -105,6 +105,16 @@ def parse_args() -> argparse.Namespace:
             "longitudinal curve tolerance."
         ),
     )
+    parser.add_argument(
+        "--unigine-spline-only",
+        action="store_true",
+        help=(
+            "Write only the UNIGINE track .spl and its summary. "
+            "Skip Stage 10.5 scene planning, chunk generation, prototype JSON "
+            "and manifest creation. Use this to refresh the train path without "
+            "regenerating an existing tunnel."
+        ),
+    )
     parser.add_argument("--no-bolts", action="store_true")
     parser.add_argument("--pretty-json", action="store_true")
     parser.add_argument(
@@ -261,12 +271,13 @@ def _write_worker(chunk_id: int) -> dict:
 
 def main() -> None:
     args = parse_args()
-    if args.chunk_m <= 0.0:
-        raise ValueError("--chunk-m must be positive")
-    if args.workers < 1:
-        raise ValueError("--workers must be >=1")
-    if args.sagitta_mm <= 0.0:
-        raise ValueError("--sagitta-mm must be positive")
+    if not args.unigine_spline_only:
+        if args.chunk_m <= 0.0:
+            raise ValueError("--chunk-m must be positive")
+        if args.workers < 1:
+            raise ValueError("--workers must be >=1")
+        if args.sagitta_mm <= 0.0:
+            raise ValueError("--sagitta-mm must be positive")
 
     handoff = json.loads(args.handoff.read_text(encoding="utf-8"))
     vertical_profile = json.loads(
@@ -298,6 +309,59 @@ def main() -> None:
     ):
         raise ValueError("alignment/handoff route length mismatch")
 
+    profile = load_stage10_initial_moscow_profile(
+        civil_archetype="rc_block_6100_5600"
+    )
+    output = args.output.resolve()
+    output.parent.mkdir(parents=True, exist_ok=True)
+    unigine_spline_path = output.with_name(output.stem + "_track.spl")
+    _track_x_core, track_ugr_core_z_m = (
+        profile.coordinate.research_xz_to_core_xz(
+            profile.datums.track_axis_x_m,
+            profile.datums.ugr_z_m,
+        )
+    )
+    write_unigine_spline_graph_spl(
+        alignment,
+        unigine_spline_path,
+        local_z_offset_m=track_ugr_core_z_m,
+    )
+
+    if args.unigine_spline_only:
+        horizontal_status = handoff["horizontal_provenance"][
+            "geometry_authority_for_this_handoff"
+        ]["status"]
+        summary = {
+            "stage": "10.5",
+            "pilot": "KOLTSEVAYA_TRACK_B_BELORUSSKAYA_PARK_KULTURY",
+            "mode": "unigine_spline_only",
+            "trackID": "KOLTSEVAYA_TRACK_B",
+            "direction": "counterclockwise",
+            "routeLengthM": route_length_m,
+            "alignmentStations": len(alignment),
+            "horizontalStatus": horizontal_status,
+            "sourceTruthVerticalStatus": scope["engineering_z_status"],
+            "runtimeVerticalStatus": vertical_profile["status"],
+            "mayClaimAsBuilt": False,
+            "unigineRailSpline": str(
+                unigine_spline_path.relative_to(output.parent)
+            ),
+            "unigineRailSplineFormat": "UNIGINE_SPLINE_GRAPH_SPL_V1",
+            "unigineRailSplineMatchesRuntimeAlignment": True,
+            "unigineRailSplineDatum": "TRACK_AXIS_UGR",
+            "unigineRailSplineLocalZOffsetM": track_ugr_core_z_m,
+            "chunkGenerationSkipped": True,
+            "chunkManifest": None,
+            "sceneJson": None,
+        }
+        summary_path = output.with_name(output.stem + "_summary.json")
+        summary_path.write_text(
+            json.dumps(summary, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        print(json.dumps(summary, indent=2, ensure_ascii=False))
+        return
+
     nominal_source_width_m = 1.35
     source_ring_count = math.ceil(route_length_m / nominal_source_width_m)
     scaffold_width_m = route_length_m / source_ring_count
@@ -313,9 +377,6 @@ def main() -> None:
     )
     surface_meshing = SurfaceMeshingConfig(
         max_sagitta_m=args.sagitta_mm / 1000.0
-    )
-    profile = load_stage10_initial_moscow_profile(
-        civil_archetype="rc_block_6100_5600"
     )
     production_config = ProductionConfig(
         namespace=args.namespace,
@@ -382,20 +443,6 @@ def main() -> None:
         },
     )
 
-    output = args.output.resolve()
-    output.parent.mkdir(parents=True, exist_ok=True)
-    unigine_spline_path = output.with_name(output.stem + "_track.spl")
-    _track_x_core, track_ugr_core_z_m = (
-        profile.coordinate.research_xz_to_core_xz(
-            profile.datums.track_axis_x_m,
-            profile.datums.ugr_z_m,
-        )
-    )
-    write_unigine_spline_graph_spl(
-        alignment,
-        unigine_spline_path,
-        local_z_offset_m=track_ugr_core_z_m,
-    )
     chunk_dir = output.with_name(output.stem + "_chunks")
     chunk_dir.mkdir(parents=True, exist_ok=True)
     localize = not args.global_chunk_coordinates

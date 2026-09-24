@@ -455,6 +455,149 @@ class RouteSweptEnvelope:
 
 
 @dataclass(frozen=True)
+class EnvelopeBVHNode:
+    """Immutable BVH node over world AABBs of future vehicle OBBs."""
+
+    bound: AABB3
+    box_indices: tuple[int, ...] = ()
+    left: "EnvelopeBVHNode | None" = None
+    right: "EnvelopeBVHNode | None" = None
+
+    @property
+    def is_leaf(self) -> bool:
+        return self.left is None and self.right is None
+
+
+@dataclass(frozen=True)
+class RouteSweptEnvelopeIndex:
+    """Exact acceleration structure for point-vs-route-envelope queries."""
+
+    route: RouteSweptEnvelope
+    root: EnvelopeBVHNode
+    leaf_size: int = 4
+
+    @classmethod
+    def build(
+        cls,
+        route: RouteSweptEnvelope,
+        *,
+        leaf_size: int = 4,
+    ) -> "RouteSweptEnvelopeIndex":
+        if leaf_size < 1:
+            raise ValueError("BVH leaf_size must be >= 1")
+        aabbs = tuple(box.world_aabb() for box in route.boxes)
+
+        def centroid(box: AABB3, axis: int) -> float:
+            return 0.5 * (box.minimum[axis] + box.maximum[axis])
+
+        def build_node(indices: tuple[int, ...]) -> EnvelopeBVHNode:
+            bound = AABB3.union(tuple(aabbs[index] for index in indices))
+            if len(indices) <= leaf_size:
+                return EnvelopeBVHNode(bound=bound, box_indices=indices)
+
+            spans = tuple(
+                max(centroid(aabbs[index], axis) for index in indices)
+                - min(centroid(aabbs[index], axis) for index in indices)
+                for axis in range(3)
+            )
+            axis = max(range(3), key=lambda item: spans[item])
+            ordered = tuple(
+                sorted(
+                    indices,
+                    key=lambda index: (centroid(aabbs[index], axis), index),
+                )
+            )
+            middle = len(ordered) // 2
+            left = build_node(ordered[:middle])
+            right = build_node(ordered[middle:])
+            return EnvelopeBVHNode(bound=bound, left=left, right=right)
+
+        return cls(
+            route=route,
+            root=build_node(tuple(range(len(route.boxes)))),
+            leaf_size=int(leaf_size),
+        )
+
+    def candidate_box_indices(self, point: Vec3) -> tuple[int, ...]:
+        if not self.root.bound.contains_point(point):
+            return ()
+        candidates: list[int] = []
+        stack = [self.root]
+        while stack:
+            node = stack.pop()
+            if not node.bound.contains_point(point):
+                continue
+            if node.is_leaf:
+                for index in node.box_indices:
+                    if self.route.boxes[index].world_aabb().contains_point(point):
+                        candidates.append(index)
+                continue
+            if node.left is not None:
+                stack.append(node.left)
+            if node.right is not None:
+                stack.append(node.right)
+        return tuple(sorted(candidates))
+
+    def contains_point(self, point: Vec3) -> bool:
+        return any(
+            self.route.boxes[index].contains_point(point)
+            for index in self.candidate_box_indices(point)
+        )
+
+
+@dataclass(frozen=True)
+class MultiRouteSweptEnvelopeIndex:
+    """BVH-accelerated multi-route point classifier with unchanged semantics."""
+
+    route_indices: tuple[RouteSweptEnvelopeIndex, ...]
+
+    @classmethod
+    def build(
+        cls,
+        envelope: "MultiRouteSweptEnvelope",
+        *,
+        leaf_size: int = 4,
+    ) -> "MultiRouteSweptEnvelopeIndex":
+        return cls(
+            route_indices=tuple(
+                RouteSweptEnvelopeIndex.build(route, leaf_size=leaf_size)
+                for route in envelope.routes
+            )
+        )
+
+    def classify_point(
+        self,
+        point: Vec3,
+        *,
+        active_route_id: str | None = None,
+    ) -> RouteObstacleClassification:
+        intersections = {
+            indexed.route.route_id: indexed.contains_point(point)
+            for indexed in self.route_indices
+        }
+        return classify_route_hypothesis_intersections(
+            intersections,
+            active_route_id=active_route_id,
+        )
+
+    def classify_points(
+        self,
+        points: Sequence[Vec3],
+        *,
+        active_route_id: str | None = None,
+    ) -> tuple[RouteObstacleClassification, ...]:
+        return tuple(
+            self.classify_point(point, active_route_id=active_route_id)
+            for point in points
+        )
+
+    def candidate_obb_test_count(self, point: Vec3) -> int:
+        return sum(
+            len(indexed.candidate_box_indices(point))
+            for indexed in self.route_indices
+        )
+
+@dataclass(frozen=True)
 class MultiRouteSweptEnvelope:
     routes: tuple[RouteSweptEnvelope, ...]
 
@@ -476,6 +619,16 @@ class MultiRouteSweptEnvelope:
     @property
     def broad_phase_aabb(self) -> AABB3:
         return AABB3.union(tuple(route.broad_phase_aabb for route in self.routes))
+
+    def build_spatial_index(
+        self,
+        *,
+        leaf_size: int = 4,
+    ) -> MultiRouteSweptEnvelopeIndex:
+        return MultiRouteSweptEnvelopeIndex.build(
+            self,
+            leaf_size=leaf_size,
+        )
 
     def classify_point(
         self,

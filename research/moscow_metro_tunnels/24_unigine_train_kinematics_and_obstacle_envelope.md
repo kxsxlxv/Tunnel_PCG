@@ -462,6 +462,9 @@ Implemented in the engine-neutral Python core:
   sourced overall width/height/coupler-head length;
 - adaptive future-pose sampling by rigid-body midpoint deviation;
 - per-route sampled/inflated OBB union and broad-phase world AABB;
+- immutable BVH over per-pose OBB world AABBs for LiDAR point queries;
+- BVH classification is semantically identical to the naive OBB-union test but
+  prunes most future OBBs before the expensive oriented containment test;
 - union/classification across unresolved route hypotheses.
 
 Modules:

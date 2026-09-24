@@ -265,6 +265,46 @@ def test_missing_path_uncertainty_is_not_silently_treated_as_zero():
     assert exact.safety_complete is True
 
 
+def test_bvh_index_preserves_classification_and_reduces_obb_candidates():
+    sampling = SweptEnvelopeSamplingConfig(
+        max_chainage_step_m=1.0,
+        max_pose_deviation_m=0.005,
+    )
+    envelope = build_multi_route_swept_envelope(
+        (
+            RouteHypothesis(
+                route_id="straight",
+                frame_at=_straight_frame,
+                leading_chainage_m=25.0,
+                maximum_leading_chainage_m=85.0,
+            ),
+        ),
+        lookahead_m=60.0,
+        path_uncertainties_by_route={
+            "straight": PathEstimationUncertainty.exact_ground_truth(),
+        },
+        sampling=sampling,
+    )
+    index = envelope.build_spatial_index(leaf_size=4)
+
+    points = (
+        (0.0, 30.0, 1.5),
+        (0.0, 50.0, 1.5),
+        (1.0, 70.0, 2.0),
+        (3.0, 50.0, 1.5),
+        (0.0, 50.0, 5.0),
+        (100.0, 100.0, 100.0),
+    )
+    assert index.classify_points(points) == envelope.classify_points(points)
+
+    total_boxes = sum(len(route.boxes) for route in envelope.routes)
+    candidate_count = index.candidate_obb_test_count((0.0, 50.0, 1.5))
+    assert candidate_count > 0
+    assert candidate_count < total_boxes / 2
+
+    assert index.candidate_obb_test_count((100.0, 100.0, 100.0)) == 0
+
+
 def test_envelope_reports_incomplete_safety_allowance_budget():
     envelope = build_route_swept_envelope(
         RouteHypothesis(

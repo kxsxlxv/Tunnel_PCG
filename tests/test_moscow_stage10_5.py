@@ -1856,7 +1856,10 @@ def test_stage10_5_clustered_civil_rings_share_one_prebaked_mesh():
     assert plan.civil_ring_asset is not None
     assert plan.civil_ring_asset.segment_count == 6
     assert plan.civil_ring_asset.bolt_pocket_count == 18
+    assert plan.civil_ring_asset.bolt_pocket_cutters_applied == 18
     assert plan.civil_ring_asset.bolt_head_count == 18
+    assert plan.civil_ring_asset.hidden_extrados_faces_removed > 0
+    assert plan.civil_ring_asset.segment_boundary_faces_removed > 0
     assert plan.civil_ring_asset.csg_backend == "manifold3d"
     assert plan.metadata["productionGeometry"]["civilRingCanonicalMeshCount"] == 1
     assert plan.metadata["productionGeometry"][
@@ -1883,6 +1886,12 @@ def test_stage10_5_clustered_civil_rings_share_one_prebaked_mesh():
         is False
         and ring.custom_properties["canonicalCivilRingPerInstanceGeometrySampling"]
         is False
+        and ring.custom_properties["canonicalCivilRingBoltPocketCuttersApplied"]
+        == 18
+        and ring.custom_properties["canonicalCivilRingHiddenExtradosFacesRemoved"]
+        > 0
+        and ring.custom_properties["canonicalCivilRingSegmentBoundaryFacesRemoved"]
+        > 0
         and ring.faces == rings[0].faces
         for ring in rings
     )

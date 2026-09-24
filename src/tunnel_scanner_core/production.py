@@ -3532,7 +3532,10 @@ class _CanonicalCivilRingAsset:
     face_groups: tuple[Mapping[str, Any], ...]
     segment_count: int
     bolt_pocket_count: int
+    bolt_pocket_cutters_applied: int
     bolt_head_count: int
+    hidden_extrados_faces_removed: int
+    segment_boundary_faces_removed: int
     csg_backend: str
 
 
@@ -3654,6 +3657,10 @@ def _build_canonical_moscow_rc_ring_asset(
     parts: list[tuple[Sequence[Vec3], Sequence[Face]]] = []
     face_groups: list[Mapping[str, Any]] = []
     face_cursor = 0
+    applied_cutter_count = 0
+    hidden_extrados_faces_removed = 0
+    segment_boundary_faces_removed = 0
+    extrados_tolerance_m = 1e-7
     for segment in segments:
         segment_cutters = cutters_by_target.get(segment.name, [])
         if segment_cutters:
@@ -3670,8 +3677,66 @@ def _build_canonical_moscow_rc_ring_asset(
                 ),
                 name=f"canonical_ring:{topology}:{segment.segment_name}",
             )
+            applied_cutter_count += len(segment_cutters)
         else:
             vertices, faces = segment.vertices, segment.faces
+
+        # Match the former post-Boolean production cleanup once at asset bake:
+        # the tunnel is scanned/rendered from the intrados, so untouched outer
+        # cylinder faces are hidden and need not live in every shared instance.
+        kept_after_extrados: list[Face] = []
+        for face in faces:
+            is_extrados = all(
+                abs(
+                    math.hypot(
+                        vertices[index][0],
+                        vertices[index][2],
+                    )
+                    - profile.extrados_radius_m
+                )
+                <= extrados_tolerance_m
+                for index in face
+            )
+            if is_extrados:
+                hidden_extrados_faces_removed += 1
+            else:
+                kept_after_extrados.append(face)
+        faces = tuple(kept_after_extrados)
+
+        # K/B/A blocks remain disconnected mesh islands, but their touching
+        # radial side walls are hidden coincident surfaces. Strip those walls
+        # from the canonical asset while retaining the topological seam edges.
+        classifier_props = dict(segment.extra_properties)
+        classifier_props.update(
+            {
+                "ringTranslationX": 0.0,
+                "ringTranslationY": 0.0,
+                "ringTranslationZ": 0.0,
+                "ringRotationDeg": 0.0,
+                "productionRingAlignmentStitched": False,
+            }
+        )
+        classifier = replace(
+            segment,
+            vertices=vertices,
+            faces=faces,
+            extra_properties=classifier_props,
+        )
+        kept_after_boundaries: list[Face] = []
+        for face in faces:
+            if _face_follows_segment_boundary(
+                classifier,
+                face,
+                ring_width_m=width_m,
+                angle_tolerance_deg=1e-4,
+                radial_span_tolerance_m=1e-5,
+                y_span_tolerance_m=1e-8,
+            ):
+                segment_boundary_faces_removed += 1
+            else:
+                kept_after_boundaries.append(face)
+        faces = tuple(kept_after_boundaries)
+
         parts.append((vertices, faces))
         face_groups.append(
             {
@@ -3717,6 +3782,12 @@ def _build_canonical_moscow_rc_ring_asset(
         )
         face_cursor += len(joint.faces)
 
+    if applied_cutter_count != len(cutters):
+        raise AssertionError(
+            "canonical civil-ring pocket bake did not consume every cutter: "
+            f"{applied_cutter_count} of {len(cutters)}"
+        )
+
     vertices, faces = _combine_geometry_parts(parts)
     sagitta_um = int(round(surface_meshing.max_sagitta_m * 1_000_000.0))
     width_um = int(round(width_m * 1_000_000.0))
@@ -3733,7 +3804,10 @@ def _build_canonical_moscow_rc_ring_asset(
         face_groups=tuple(face_groups),
         segment_count=len(segments),
         bolt_pocket_count=len(cutters),
+        bolt_pocket_cutters_applied=applied_cutter_count,
         bolt_head_count=len(heads),
+        hidden_extrados_faces_removed=hidden_extrados_faces_removed,
+        segment_boundary_faces_removed=segment_boundary_faces_removed,
         csg_backend=("manifold3d" if cutters else "none"),
     )
 
@@ -3847,7 +3921,16 @@ def _build_clustered_moscow_rc_ring_objects(
                     "canonicalCivilRingSegmentCount": asset.segment_count,
                     "canonicalCivilRingFaceGroups": asset.face_groups,
                     "canonicalCivilRingBoltPocketCount": asset.bolt_pocket_count,
+                    "canonicalCivilRingBoltPocketCuttersApplied": (
+                        asset.bolt_pocket_cutters_applied
+                    ),
                     "canonicalCivilRingBoltHeadCount": asset.bolt_head_count,
+                    "canonicalCivilRingHiddenExtradosFacesRemoved": (
+                        asset.hidden_extrados_faces_removed
+                    ),
+                    "canonicalCivilRingSegmentBoundaryFacesRemoved": (
+                        asset.segment_boundary_faces_removed
+                    ),
                     "canonicalCivilRingCSGBackend": asset.csg_backend,
                     "canonicalCivilRingPocketsPrebaked": (
                         asset.bolt_pocket_count > 0

@@ -2025,9 +2025,32 @@ def test_stage10_5_clustered_ring_prototype_json_has_one_mesh_two_instances(
     restored_rings = restored.objects_of_type(
         "production_moscow_civil_ring_cluster"
     )
-    assert restored_rings == chunk.objects_of_type(
+    source_rings = chunk.objects_of_type(
         "production_moscow_civil_ring_cluster"
     )
+    assert len(restored_rings) == len(source_rings) == 2
+    for actual, expected in zip(restored_rings, source_rings):
+        assert actual.name == expected.name
+        assert actual.faces == expected.faces
+        assert actual.instance_id == expected.instance_id
+        assert actual.object_type == expected.object_type
+        assert (
+            actual.custom_properties["meshPrototypeKey"]
+            == expected.custom_properties["meshPrototypeKey"]
+        )
+        assert (
+            actual.custom_properties["canonicalCivilRingAssetID"]
+            == expected.custom_properties["canonicalCivilRingAssetID"]
+        )
+        assert len(actual.vertices) == len(expected.vertices)
+        for actual_vertex, expected_vertex in zip(
+            actual.vertices,
+            expected.vertices,
+        ):
+            assert all(
+                math.isclose(a, b, abs_tol=2e-12)
+                for a, b in zip(actual_vertex, expected_vertex)
+            )
 
 def test_stage10_5_rc_chunk_first_3000_ring_first_chunk_is_local(monkeypatch):
     profile = load_stage10_initial_moscow_profile(

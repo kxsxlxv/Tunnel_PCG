@@ -1814,11 +1814,23 @@ def test_stage10_5_periodic_assets_declare_exact_reusable_mesh_prototypes():
         if obj.object_type == "production_cable_rack_r2k11"
     }
     assert len(rack_keys) == 1
+    racks = [
+        obj for obj in objects
+        if obj.object_type == "production_cable_rack_r2k11"
+    ]
     assert all(
         float(obj.custom_properties["meshPrototypeLocalVariantResidualM"])
         <= 1e-9
-        for obj in objects
-        if obj.object_type == "production_cable_rack_r2k11"
+        for obj in racks
+    )
+    assert all(
+        math.isclose(
+            float(obj.custom_properties["meshPrototypeTransformDeterminant"]),
+            1.0,
+            abs_tol=1e-10,
+        )
+        and obj.custom_properties["meshPrototypeUsesReflection"] is False
+        for obj in racks
     )
 
     # At least the 600 mm permanent-way chain must create many logical

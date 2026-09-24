@@ -2220,10 +2220,10 @@ def _r2k11_canonical_variant_transform(
     """Map one canonical R2K11 mesh into either side-specific wall frame.
 
     R2K11 uses the same physical upright and K1350.002 horns on both walls.
-    The side convention reverses the tangential "up" basis, so the exact
-    mapping is an orthogonal isometry and is a reflection for opposite sides.
-    Engine Mesh Cluster instances support scale, therefore the mirrored side
-    still uses the identical vertex/index buffer.
+    The side convention reverses the tangential "up" basis.  The rack solids
+    are symmetric about local longitudinal Y=0, so reversing Y at the same
+    time converts the cross-section reflection into a proper 3D rotation.
+    Thus both walls share one vertex/index buffer without negative scale.
     """
     if canonical_side_sign not in (-1, 1) or side_sign not in (-1, 1):
         raise ValueError("R2K11 side signs must be +/-1")
@@ -2240,9 +2240,12 @@ def _r2k11_canonical_variant_transform(
     source = basis(canonical_side_sign)
     target = basis(side_sign)
     xz = target @ source.T
+    longitudinal_sign = (
+        1.0 if side_sign == canonical_side_sign else -1.0
+    )
     return (
         float(xz[0, 0]), 0.0, float(xz[0, 1]), 0.0,
-        0.0, 1.0, 0.0, 0.0,
+        0.0, longitudinal_sign, 0.0, 0.0,
         float(xz[1, 0]), 0.0, float(xz[1, 1]), 0.0,
         0.0, 0.0, 0.0, 1.0,
     )

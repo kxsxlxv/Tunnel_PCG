@@ -108,6 +108,15 @@ def test_koltsevaya_track_b_first_chunk_builds_on_frame_aware_route():
     meta = plan.metadata["productionGeometry"]
     assert meta["externalAlignment"] is True
     assert meta["alignmentFrameAware"] is True
+    assert (
+        meta["externalAlignmentInterpolation"]
+        == "cubic_hermite_c1_between_source_samples"
+    )
+    assert math.isclose(
+        meta["runningRailCurveChordToleranceM"],
+        0.002,
+        abs_tol=1e-12,
+    )
     assert math.isclose(
         plan.assembly.length_by_chainage_m,
         route_length,
@@ -162,4 +171,25 @@ def test_koltsevaya_track_b_first_chunk_builds_on_frame_aware_route():
         math.isfinite(component)
         for vertex in vertices
         for component in vertex
+    )
+
+    # Around chainage 300 m the geometry-test alignment is visibly curved.
+    # A 5 m chunk must no longer be represented by one straight rail chord.
+    curved_chunk = build_stage10_5_rc_modern_chunk_scene_package(
+        plan,
+        60,
+        localize_coordinates=True,
+    )
+    curved_rail = curved_chunk.objects_of_type("production_rail")[0]
+    assert math.isclose(
+        curved_rail.custom_properties["longitudinalCurveChordToleranceM"],
+        0.002,
+        abs_tol=1e-12,
+    )
+    assert curved_rail.custom_properties[
+        "smoothExternalAlignmentInterpolation"
+    ] is True
+    assert (
+        curved_rail.custom_properties["curveRefinedAlignmentStationCount"]
+        > curved_rail.custom_properties["sourceAlignmentStationCount"]
     )

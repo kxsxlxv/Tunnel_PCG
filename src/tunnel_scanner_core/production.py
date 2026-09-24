@@ -290,6 +290,72 @@ def _normalize_vec3(
     return (x / norm, y / norm, z / norm)
 
 
+def _station_supports_smooth_external_interpolation(
+    station: AlignmentStation,
+) -> bool:
+    return (
+        station.source.startswith("external_geojson:")
+        or station.source.startswith("external_cubic_hermite:")
+    )
+
+
+def _cubic_hermite_alignment_station(
+    a: AlignmentStation,
+    b: AlignmentStation,
+    chainage_m: float,
+) -> AlignmentStation:
+    """Interpolate a frame-aware external alignment as a C1 cubic path.
+
+    Endpoint origins remain exact. Endpoint derivatives are the supplied unit
+    3D tangents scaled by chainage span. This smooths a sampled alignment for
+    runtime geometry but does not claim the source is an exact clothoid or
+    circular engineering fit.
+    """
+    span = b.chainage_m - a.chainage_m
+    if span <= 0.0:
+        raise ValueError("cubic alignment span must be positive")
+    u = (float(chainage_m) - a.chainage_m) / span
+    u = min(1.0, max(0.0, u))
+    p0 = alignment_station_origin(a)
+    p1 = alignment_station_origin(b)
+    t0 = _normalize_vec3(a.tangent_world, name="cubic alignment tangent a")
+    t1 = _normalize_vec3(b.tangent_world, name="cubic alignment tangent b")
+    m0 = tuple(component * span for component in t0)
+    m1 = tuple(component * span for component in t1)
+
+    u2 = u * u
+    u3 = u2 * u
+    h00 = 2.0 * u3 - 3.0 * u2 + 1.0
+    h10 = u3 - 2.0 * u2 + u
+    h01 = -2.0 * u3 + 3.0 * u2
+    h11 = u3 - u2
+    position = tuple(
+        h00 * p0[i] + h10 * m0[i] + h01 * p1[i] + h11 * m1[i]
+        for i in range(3)
+    )
+
+    dh00 = 6.0 * u2 - 6.0 * u
+    dh10 = 3.0 * u2 - 4.0 * u + 1.0
+    dh01 = -6.0 * u2 + 6.0 * u
+    dh11 = 3.0 * u2 - 2.0 * u
+    derivative = tuple(
+        dh00 * p0[i] + dh10 * m0[i] + dh01 * p1[i] + dh11 * m1[i]
+        for i in range(3)
+    )
+    tangent = _normalize_vec3(
+        derivative,
+        name="cubic Hermite alignment derivative",
+    )
+    return AlignmentStation(
+        chainage_m=float(chainage_m),
+        world_y_m=position[1],
+        offset_x_m=position[0],
+        offset_z_m=position[2],
+        source="external_cubic_hermite:interpolated",
+        tangent_world=tangent,
+    )
+
+
 def alignment_station_origin(
     station: AlignmentStation,
 ) -> tuple[float, float, float]:
@@ -717,6 +783,12 @@ def sample_alignment_station(
     ):
         raise AssertionError("binary alignment bracket does not contain chainage")
 
+    if (
+        _station_supports_smooth_external_interpolation(a)
+        and _station_supports_smooth_external_interpolation(b)
+    ):
+        return _cubic_hermite_alignment_station(a, b, chainage_m)
+
     u = (chainage_m - a.chainage_m) / (b.chainage_m - a.chainage_m)
     tangent = _normalize_vec3(
         tuple(
@@ -898,6 +970,92 @@ def compact_exact_collinear_alignment_stations(
         kept.append(b)
     kept.append(result[-1])
     return tuple(kept)
+
+
+def _point_segment_distance_3d(
+    point: Sequence[float],
+    a: Sequence[float],
+    b: Sequence[float],
+) -> float:
+    ab = tuple(float(b[i]) - float(a[i]) for i in range(3))
+    ap = tuple(float(point[i]) - float(a[i]) for i in range(3))
+    denom = sum(value * value for value in ab)
+    if denom <= 1e-24:
+        return math.sqrt(sum(value * value for value in ap))
+    u = sum(ap[i] * ab[i] for i in range(3)) / denom
+    u = min(1.0, max(0.0, u))
+    delta = tuple(
+        float(point[i]) - (float(a[i]) + u * ab[i])
+        for i in range(3)
+    )
+    return math.sqrt(sum(value * value for value in delta))
+
+
+def refine_external_alignment_for_sweep(
+    stations: Sequence[AlignmentStation],
+    *,
+    max_chord_error_m: float,
+    max_depth: int = 16,
+) -> tuple[AlignmentStation, ...]:
+    """Adaptively tessellate a smooth external alignment for mesh sweeps.
+
+    Legacy/piecewise-linear alignments are left unchanged. For external
+    frame-aware cubic spans, quarter/mid/three-quarter samples are checked
+    against the retained chord and the interval is recursively split until the
+    requested geometric error is met.
+    """
+    base = tuple(stations)
+    if not base:
+        return base
+    if not math.isfinite(max_chord_error_m) or max_chord_error_m <= 0.0:
+        raise ValueError("curve chord tolerance must be finite and positive")
+    if max_depth < 1:
+        raise ValueError("curve refinement max_depth must be >= 1")
+    if not all(
+        _station_supports_smooth_external_interpolation(station)
+        for station in base
+    ):
+        return base
+
+    result: list[AlignmentStation] = [base[0]]
+
+    def append_interval(
+        left: AlignmentStation,
+        right: AlignmentStation,
+        depth: int,
+    ) -> None:
+        s0 = left.chainage_m
+        s1 = right.chainage_m
+        if s1 <= s0:
+            raise ValueError("curve refinement stations must increase")
+        p0 = alignment_station_origin(left)
+        p1 = alignment_station_origin(right)
+        probes = tuple(
+            _cubic_hermite_alignment_station(
+                left,
+                right,
+                s0 + fraction * (s1 - s0),
+            )
+            for fraction in (0.25, 0.5, 0.75)
+        )
+        error = max(
+            _point_segment_distance_3d(
+                alignment_station_origin(sample),
+                p0,
+                p1,
+            )
+            for sample in probes
+        )
+        if error <= max_chord_error_m or depth >= max_depth:
+            result.append(right)
+            return
+        middle = probes[1]
+        append_interval(left, middle, depth + 1)
+        append_interval(middle, right, depth + 1)
+
+    for left, right in zip(base, base[1:]):
+        append_interval(left, right, 0)
+    return tuple(result)
 
 
 def _stable_unit_fraction(*parts: object) -> float:
@@ -1864,6 +2022,29 @@ def build_continuous_asset_specs(
                 )
             )
 
+    rail_curve_tolerance_m = min(
+        0.002,
+        float(surface_meshing.max_sagitta_m),
+    )
+    general_curve_tolerance_m = float(surface_meshing.max_sagitta_m)
+    specs = [
+        replace(
+            spec,
+            properties={
+                **dict(spec.properties),
+                "longitudinalCurveChordToleranceM": (
+                    rail_curve_tolerance_m
+                    if spec.object_type
+                    in {"production_rail", "production_contact_rail"}
+                    else general_curve_tolerance_m
+                ),
+                "longitudinalCurveInterpolationMode": (
+                    "external_cubic_hermite_adaptive_v1"
+                ),
+            },
+        )
+        for spec in specs
+    ]
     return tuple(specs)
 
 
@@ -1887,6 +2068,17 @@ def scene_object_from_continuous_asset(
         if compact_exact_collinear_stations
         else tuple(stations)
     )
+    curve_tolerance_m = float(
+        spec.properties.get("longitudinalCurveChordToleranceM", 0.0)
+    )
+    curve_refined_stations = (
+        refine_external_alignment_for_sweep(
+            base_sweep_stations,
+            max_chord_error_m=curve_tolerance_m,
+        )
+        if curve_tolerance_m > 0.0
+        else base_sweep_stations
+    )
     sag_m = float(spec.properties.get("longitudinalSagM", 0.0))
     sag_variation = float(
         spec.properties.get("longitudinalSagVariationFraction", 0.0)
@@ -1899,7 +2091,7 @@ def scene_object_from_continuous_asset(
     )
     if spec.category == "cable" and sag_m > 0.0:
         sweep_stations = _periodic_cable_sag_alignment_stations(
-            base_sweep_stations,
+            curve_refined_stations,
             support_pitch_m=float(spec.properties["supportPitchM"]),
             support_phase_m=float(spec.properties["supportPhaseM"]),
             midspan_sag_m=sag_m,
@@ -1908,7 +2100,7 @@ def scene_object_from_continuous_asset(
             asset_key=spec.persistent_key,
         )
     else:
-        sweep_stations = base_sweep_stations
+        sweep_stations = curve_refined_stations
     mesh = build_sweep_mesh(
         spec.cross_section_xz,
         sweep_stations,
@@ -1927,7 +2119,16 @@ def scene_object_from_continuous_asset(
         "productionCrossSectionVertices": mesh.cross_section_vertices,
         "productionStationCount": mesh.station_count,
         "sourceAlignmentStationCount": source_station_count,
+        "curveRefinedAlignmentStationCount": len(curve_refined_stations),
         "sweepAlignmentStationCount": len(sweep_stations),
+        "longitudinalCurveChordToleranceM": curve_tolerance_m,
+        "smoothExternalAlignmentInterpolation": bool(
+            curve_tolerance_m > 0.0
+            and all(
+                _station_supports_smooth_external_interpolation(station)
+                for station in base_sweep_stations
+            )
+        ),
         "exactCollinearAlignmentStationsRemoved": (
             source_station_count - len(base_sweep_stations)
         ),
@@ -2582,9 +2783,11 @@ def _build_stage10_5_modern_contact_scene_objects(
     label_policy: LabelPolicy,
     running_support_pitch_m: float,
     running_support_phase_m: float,
+    surface_meshing: SurfaceMeshingConfig | None = None,
     start_chainage_m: float | None = None,
     end_chainage_m: float | None = None,
 ) -> tuple[SceneObject, ...]:
+    surface_meshing = surface_meshing or SurfaceMeshingConfig()
     local_meshes = build_modern_contact_support_meshes(profile)
     chainages = modern_contact_support_chainages(
         assembly.length_by_chainage_m,
@@ -2725,9 +2928,13 @@ def _build_stage10_5_modern_contact_scene_objects(
             start_chainage_m=start_chainage,
             end_chainage_m=end_chainage,
         )
+        cover_sweep_stations = refine_external_alignment_for_sweep(
+            clipped,
+            max_chord_error_m=float(surface_meshing.max_sagitta_m),
+        )
         mesh = build_sweep_mesh(
             cover_section,
-            clipped,
+            cover_sweep_stations,
             cap_start=True,
             cap_end=True,
         )
@@ -2771,6 +2978,15 @@ def _build_stage10_5_modern_contact_scene_objects(
                     "coverSpanIndex": span_index,
                     "coverSpanStartChainageM": start_chainage,
                     "coverSpanEndChainageM": end_chainage,
+                    "sourceAlignmentStationCount": len(clipped),
+                    "sweepAlignmentStationCount": len(cover_sweep_stations),
+                    "longitudinalCurveChordToleranceM": float(
+                        surface_meshing.max_sagitta_m
+                    ),
+                    "smoothExternalAlignmentInterpolation": all(
+                        _station_supports_smooth_external_interpolation(station)
+                        for station in clipped
+                    ),
                     "geometryMode": "rounded_wrap_profile_from_exact_envelope",
                     "outerTopWidthM": modern.cover_top_width_m,
                     "outerBaseWidthM": modern.cover_base_width_m,
@@ -4906,6 +5122,7 @@ def build_production_scene(
             label_policy=source_scene.label_policy,
             running_support_pitch_m=modern_pw.support_pitch_m,
             running_support_phase_m=0.5 * modern_pw.support_pitch_m,
+            surface_meshing=surface_meshing,
         )
         objects.extend(stage10_5_modern_contact)
 
@@ -6471,6 +6688,18 @@ def build_stage10_5_rc_modern_chunk_plan(
             if production_config.resolved_compact_exact_collinear_continuous_stations
             else "disabled"
         ),
+        "externalAlignmentInterpolation": (
+            "cubic_hermite_c1_between_source_samples"
+            if external_alignment
+            else "legacy_piecewise_linear"
+        ),
+        "continuousCurveChordToleranceM": float(
+            surface_meshing.max_sagitta_m
+        ),
+        "runningRailCurveChordToleranceM": min(
+            0.002,
+            float(surface_meshing.max_sagitta_m),
+        ),
         "permanentWayStatus": "implemented_stage10_5_modern_LVT_M_APC4",
         "permanentWayPresetID": modern_pw.preset_id,
         "modernLVTSupportCount": lvt_block_count,
@@ -6635,6 +6864,7 @@ def build_stage10_5_rc_modern_chunk_scene_package(
             label_policy=plan.source_build.scene.label_policy,
             running_support_pitch_m=modern_pw.support_pitch_m,
             running_support_phase_m=0.5 * modern_pw.support_pitch_m,
+            surface_meshing=plan.surface_meshing,
             start_chainage_m=start,
             end_chainage_m=end,
         )

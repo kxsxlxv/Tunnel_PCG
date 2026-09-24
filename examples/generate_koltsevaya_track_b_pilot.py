@@ -97,10 +97,11 @@ def parse_args() -> argparse.Namespace:
         type=float,
         default=5.0,
         help=(
-            "Maximum curved-surface chord sagitta in millimetres for non-rail "
-            "sensor/render geometry. Default: 5 mm. Use 10 for a coarser "
-            "realtime/LiDAR build or 2 for the former high-density baseline. "
-            "The R65 rail profile is generated independently."
+            "Maximum chord error in millimetres for non-rail curved surfaces "
+            "and longitudinal external-alignment sweeps. Default: 5 mm. Use "
+            "10 for a coarser realtime/LiDAR build or 2 for the former "
+            "high-density baseline. Running/contact rails keep a <=2 mm "
+            "longitudinal curve tolerance."
         ),
     )
     parser.add_argument("--no-bolts", action="store_true")
@@ -490,6 +491,15 @@ def main() -> None:
         "moscowProfileSHA256": profile.provenance.canonical_sha256,
         "civilTopology": args.civil_topology,
         "surfaceToleranceM": surface_meshing.max_sagitta_m,
+        "continuousCurveChordToleranceM": production_meta[
+            "continuousCurveChordToleranceM"
+        ],
+        "runningRailCurveChordToleranceM": production_meta[
+            "runningRailCurveChordToleranceM"
+        ],
+        "externalAlignmentInterpolation": production_meta[
+            "externalAlignmentInterpolation"
+        ],
         "routeSections": sections,
         "stationEvents": station_events,
         "junctionEvents": handoff["junction_events"],

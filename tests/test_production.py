@@ -3,6 +3,8 @@ import math
 
 import numpy as np
 
+import tunnel_scanner_core.production as production_module
+
 from tunnel_scanner_core import (
     AlignmentStation,
     AncillaryConfig,
@@ -153,6 +155,86 @@ def test_load_frame_alignment_geojson_uses_explicit_chainage_and_3d_tangent(
             0.0,
             abs_tol=1e-12,
         )
+
+
+def test_external_alignment_sampling_uses_c1_cubic_hermite_between_vertices():
+    quarter_turn_length = 0.5 * math.pi
+    stations = (
+        AlignmentStation(
+            chainage_m=0.0,
+            world_y_m=0.0,
+            offset_x_m=1.0,
+            offset_z_m=0.0,
+            source="external_geojson:test:vertex_0000",
+            tangent_world=(0.0, 1.0, 0.0),
+        ),
+        AlignmentStation(
+            chainage_m=quarter_turn_length,
+            world_y_m=1.0,
+            offset_x_m=0.0,
+            offset_z_m=0.0,
+            source="external_geojson:test:vertex_0001",
+            tangent_world=(-1.0, 0.0, 0.0),
+        ),
+    )
+    middle = sample_alignment_station(
+        stations,
+        0.5 * quarter_turn_length,
+    )
+    assert middle.source.startswith("external_cubic_hermite:")
+    assert middle.offset_x_m > 0.68
+    assert middle.world_y_m > 0.68
+    assert math.isclose(
+        math.hypot(middle.offset_x_m, middle.world_y_m),
+        1.0,
+        abs_tol=0.02,
+    )
+    assert middle.offset_x_m - 0.5 > 0.15
+    assert middle.world_y_m - 0.5 > 0.15
+
+
+def test_external_curve_sweep_refinement_is_error_driven_and_legacy_safe():
+    quarter_turn_length = 0.5 * math.pi * 300.0
+    external = (
+        AlignmentStation(
+            chainage_m=0.0,
+            world_y_m=0.0,
+            offset_x_m=300.0,
+            offset_z_m=0.0,
+            source="external_geojson:test:vertex_0000",
+            tangent_world=(0.0, 1.0, 0.0),
+        ),
+        AlignmentStation(
+            chainage_m=quarter_turn_length,
+            world_y_m=300.0,
+            offset_x_m=0.0,
+            offset_z_m=0.0,
+            source="external_geojson:test:vertex_0001",
+            tangent_world=(-1.0, 0.0, 0.0),
+        ),
+    )
+    coarse = production_module.refine_external_alignment_for_sweep(
+        external,
+        max_chord_error_m=0.010,
+    )
+    rail = production_module.refine_external_alignment_for_sweep(
+        external,
+        max_chord_error_m=0.002,
+    )
+    assert len(coarse) > len(external)
+    assert len(rail) > len(coarse)
+
+    legacy = (
+        AlignmentStation(0.0, 0.0, 0.0, 0.0, "legacy-a"),
+        AlignmentStation(25.0, 25.0, 0.0, 0.0, "legacy-b"),
+    )
+    assert (
+        production_module.refine_external_alignment_for_sweep(
+            legacy,
+            max_chord_error_m=0.002,
+        )
+        == legacy
+    )
 
 
 def test_stable_instance_ids_are_deterministic_positive_and_key_sensitive():

@@ -173,6 +173,29 @@ Rail cross-sections from Stage 4 already have analytic reconstruction/fixtures.
 
 ---
 
+### Runtime LOD0 curve tessellation
+
+The engineering alignment and the render mesh are separate resolutions.
+
+For a frame-aware external alignment, runtime geometry should interpolate
+between supplied samples with a C1 path using the supplied endpoint tangents,
+then tessellate that path adaptively by chord error. This prevents a 25 m GIS
+sample interval from becoming a visible 25 m straight rail segment.
+
+Current LOD0 policy:
+- running rail and contact rail longitudinal chord error: **<=2 mm**;
+- other continuous tunnel infrastructure: use `SurfaceMeshingConfig.max_sagitta_m`
+  (normally **5 mm**, optionally **10 mm** for the realtime/LiDAR build);
+- exact straight ranges remain coarse because adaptive subdivision adds no
+  samples when chord error is already below tolerance;
+- ring lining remains discrete rigid rings placed on the smooth alignment; do
+  not bend the canonical ring mesh along a Curve modifier.
+
+This runtime interpolation is only a smooth representation of the supplied
+samples. It is **not** a substitute for the engineering-fit mode below:
+project-quality plan geometry must still be represented by tangents, circular
+arcs and radioidal/clothoid-like transition curves constrained by SP rules.
+
 ## 8. Horizontal OSM geometry smoothing
 
 Do not attach a Bezier curve to raw OSM vertices and enable Blender “Auto” handles. It can:

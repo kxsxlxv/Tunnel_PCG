@@ -420,13 +420,25 @@ Implemented in the engine-neutral Python core:
 - rigid carbody chord pose;
 - exact and small-angle circular-throw screening;
 - explicit incomplete allowance budget;
-- turnout route-hypothesis obstacle classification.
+- turnout route-hypothesis obstacle classification;
+- above-TOR rectangular 81-775 screening OBB derived only from the currently
+  sourced overall width/height/coupler-head length;
+- adaptive future-pose sampling by rigid-body midpoint deviation;
+- per-route sampled/inflated OBB union and broad-phase world AABB;
+- union/classification across unresolved route hypotheses.
 
-Module:
-src/tunnel_scanner_core/rail_vehicle.py
+Modules:
+- src/tunnel_scanner_core/rail_vehicle.py
+- src/tunnel_scanner_core/rail_obstacle.py
 
 Tests:
-tests/test_rail_vehicle.py
+- tests/test_rail_vehicle.py
+- tests/test_rail_obstacle.py
+
+The OBB layer is intentionally named a **screening proxy**, not a final
+kinematic gauge. Its lower plane is Top Of Rail because the supplied source
+does not give a complete underframe/bogie/current-collector contour. Detailed
+running gear remains a separate future volume.
 
 UNIGINE path bridge:
 - src/tunnel_scanner_core/unigine_spline.py converts the same C1 alignment used
@@ -445,9 +457,16 @@ UNIGINE SDK-facing reference:
 - applies independent bogie tangent/up frames and one rigid carbody chord;
 - supports one already-resolved route hypothesis only.
 
-The route-hypothesis/swept-volume manager remains the next runtime layer. It
-must sit above this single-route vehicle component so a turnout is not resolved
-implicitly by whichever spline happens to be loaded first.
+The next UNIGINE runtime layer mirrors rail_obstacle.py:
+- route hypotheses are separate SplineGraph paths;
+- each hypothesis produces a future sampled OBB chain from the same two-bogie
+  chord kinematics;
+- World::getIntersection(WorldBoundBox, ...) is used only as broad phase;
+- candidate world nodes are then tested against the route OBB chain;
+- unresolved routes are unioned and retain ROUTE_AMBIGUOUS classification.
+
+This manager must sit above the single-route vehicle component so a turnout is
+not resolved implicitly by whichever spline happens to be loaded first.
 
 ---
 
